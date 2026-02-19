@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BlocklyForWeb - Visual HTML/CSS Builder</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://unpkg.com/blockly/blockly.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Comic Neue', cursive, Arial, sans-serif;
+        }
+
+        :root {
+            --primary: #4285f4;
+            --secondary: #34a853;
+            --accent: #ea4335;
+            --warning: #fbbc05;
+            --light: #f8f9fa;
+            --dark: #202124;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: var(--dark);
+            line-height: 1.6;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header Styles */
+        header {
+            background-color: white;
+            box-shadow: var(--shadow);
+            padding: 15px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .logo i {
+            color: var(--accent);
+        }
+
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 25px;
+        }
+
+        nav a {
+            text-decoration: none;
+            color: var(--dark);
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: color 0.3s;
+        }
+
+        nav a:hover {
+            color: var(--primary);
+        }
+
+        /* Button Styles - Inspired by the provided UI */
+        .btn {
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: var(--primary);
+            color: white;
+            padding: 12px 28px;
+            border-radius: 12px;
+            border: none;
+            font-weight: 700;
+            font-size: 1.1rem;
+            border-bottom: 4px solid rgba(0, 0, 0, 0.2);
+            box-shadow: var(--shadow);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            border-bottom-width: 6px;
+            box-shadow: 0 6px 16px rgba(66, 133, 244, 0.3);
+        }
+
+        .btn:active {
+            transform: translateY(2px);
+            border-bottom-width: 2px;
+        }
+
+        .btn-secondary {
+            background-color: var(--secondary);
+        }
+
+        .btn-accent {
+            background-color: var(--accent);
+        }
+
+        /* Hero Section */
+        .hero {
+            padding: 80px 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 40px;
+        }
+
+        .hero-content {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .hero-content h1 {
+            font-size: 3.2rem;
+            margin-bottom: 20px;
+            color: var(--dark);
+            line-height: 1.2;
+        }
+
+        .hero-content h1 span {
+            color: var(--primary);
+        }
+
+        .hero-content p {
+            font-size: 1.3rem;
+            margin-bottom: 30px;
+            color: #5f6368;
+        }
+
+        .hero-image {
+            flex: 1;
+            min-width: 300px;
+            background-color: white;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: var(--shadow);
+            border: 8px solid var(--warning);
+        }
+
+        .blockly-preview {
+            width: 100%;
+            height: 300px;
+            background: linear-gradient(145deg, #e6e9ef, #ffffff);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .block {
+            width: 80px;
+            height: 80px;
+            border-radius: 10px;
+            margin: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1.5rem;
+        }
+
+        .block-html {
+            background-color: var(--primary);
+        }
+
+        .block-css {
+            background-color: var(--secondary);
+        }
+
+        .block-js {
+            background-color: var(--accent);
+        }
+
+        .block-connect {
+            width: 20px;
+            height: 20px;
+            background-color: var(--warning);
+            border-radius: 50%;
+        }
+
+        /* Features Section */
+        .section-title {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 50px;
+            color: var(--dark);
+            position: relative;
+        }
+
+        .section-title:after {
+            content: '';
+            position: absolute;
+            width: 100px;
+            height: 6px;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            bottom: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-radius: 3px;
+        }
+
+        .features {
+            padding: 80px 0;
+            background-color: white;
+            border-radius: 30px 30px 0 0;
+            margin-top: 40px;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        .feature-card {
+            background-color: var(--light);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: var(--shadow);
+            transition: transform 0.3s;
+            border-top: 6px solid var(--primary);
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+        }
+
+        .feature-card:nth-child(2) {
+            border-top-color: var(--secondary);
+        }
+
+        .feature-card:nth-child(3) {
+            border-top-color: var(--accent);
+        }
+
+        .feature-card:nth-child(4) {
+            border-top-color: var(--warning);
+        }
+
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            color: var(--primary);
+        }
+
+        .feature-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            color: var(--dark);
+        }
+
+        .feature-card p {
+            color: #5f6368;
+        }
+
+        /* Stats Section */
+        .stats {
+            padding: 60px 0;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 40px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 20px;
+            min-width: 200px;
+        }
+
+        .stat-number {
+            font-size: 3rem;
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+
+        .stat-label {
+            font-size: 1.2rem;
+            color: var(--dark);
+            font-weight: 600;
+        }
+
+        /* CTA Section */
+        .cta {
+            padding: 80px 0;
+            text-align: center;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border-radius: 30px;
+            margin: 40px 0;
+        }
+
+        .cta h2 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+        }
+
+        .cta p {
+            font-size: 1.2rem;
+            max-width: 700px;
+            margin: 0 auto 40px;
+            opacity: 0.9;
+        }
+
+        .cta .btn {
+            background-color: white;
+            color: var(--primary);
+            font-size: 1.2rem;
+            padding: 15px 40px;
+        }
+
+        /* Footer */
+        footer {
+            background-color: var(--dark);
+            color: white;
+            padding: 60px 0 30px;
+            border-radius: 30px 30px 0 0;
+        }
+
+        .footer-content {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .footer-column {
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .footer-column h3 {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: var(--warning);
+        }
+
+        .footer-links {
+            list-style: none;
+        }
+
+        .footer-links li {
+            margin-bottom: 10px;
+        }
+
+        .footer-links a {
+            color: #ddd;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .footer-links a:hover {
+            color: white;
+        }
+
+        .copyright {
+            text-align: center;
+            padding-top: 30px;
+            border-top: 1px solid #444;
+            color: #aaa;
+            font-size: 0.9rem;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .hero-content h1 {
+                font-size: 2.5rem;
+            }
+            
+            .section-title {
+                font-size: 2rem;
+            }
+            
+            nav ul {
+                display: none;
+            }
+            
+            .hero {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container header-content">
+            <div class="logo">
+                <i class="fas fa-puzzle-piece"></i>
+                <span>BlocklyForWeb</span>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="#features">Features</a></li>
+                    <li><a href="#why">Why Blockly</a></li>
+                    <li><a href="#resources">Resources</a></li>
+                    <li><a href="#try">Try It</a></li>
+                </ul>
+            </nav>
+            <button class="btn btn-accent">Get Started</button>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero container">
+        <div class="hero-content">
+            <h1>Build <span>HTML & CSS</span> with colorful blocks</h1>
+            <p>A visual programming editor that makes web development fun and accessible for learners of all ages. Drag, drop, and create beautiful websites without writing code!</p>
+            <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                <button class="btn">Try Blockly For Free</button>
+                <button class="btn btn-secondary">Watch Tutorial</button>
+            </div>
+        </div>
+        <div class="hero-image">
+            <div class="blockly-preview">
+                <div class="block block-html">HTML</div>
+                <div class="block-connect"></div>
+                <div class="block block-css">CSS</div>
+                <div class="block-connect"></div>
+                <div class="block block-js">JS</div>
+            </div>
+            <div style="text-align: center; margin-top: 20px; font-weight: bold; color: var(--dark);">
+                Drag and drop blocks to build your webpage
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="features">
+        <div class="container">
+            <h2 class="section-title">Powerful Features</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-drafting-compass"></i>
+                    </div>
+                    <h3>Visual Editor</h3>
+                    <p>Create HTML structure and CSS styling using intuitive drag-and-drop blocks. No coding experience required!</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-code"></i>
+                    </div>
+                    <h3>Real-time Code Preview</h3>
+                    <p>See the actual HTML and CSS code generated by your blocks. Learn how code works as you build.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-share-alt"></i>
+                    </div>
+                    <h3>Share & Collaborate</h3>
+                    <p>Share your creations with friends or collaborate on projects in real-time with our multiplayer mode.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-graduation-cap"></i>
+                    </div>
+                    <h3>Educational Resources</h3>
+                    <p>Step-by-step tutorials and challenges designed to teach web development concepts in a fun way.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="container stats">
+        <div class="stat-item">
+            <div class="stat-number">100+</div>
+            <div class="stat-label">Block Types</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-number">10+</div>
+            <div class="stat-label">Interactive Tutorials</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-number">94%</div>
+            <div class="stat-label">Student Satisfaction</div>
+        </div>
+    </section>
+
+    <!-- Why Blockly Section -->
+    <section id="why" class="features" style="background-color: #f0f7ff;">
+        <div class="container">
+            <h2 class="section-title">Why BlocklyForWeb?</h2>
+            <div class="features-grid">
+                <div class="feature-card" style="background-color: white;">
+                    <div class="feature-icon">
+                        <i class="fas fa-child"></i>
+                    </div>
+                    <h3>Beginner Friendly</h3>
+                    <p>Designed for kids and beginners with a colorful, intuitive interface that makes learning to code fun and engaging.</p>
+                </div>
+                <div class="feature-card" style="background-color: white;">
+                    <div class="feature-icon">
+                        <i class="fas fa-rocket"></i>
+                    </div>
+                    <h3>Powerful & Flexible</h3>
+                    <p>Create responsive websites with modern HTML5 and CSS3 features. Export your projects to continue coding in any editor.</p>
+                </div>
+                <div class="feature-card" style="background-color: white;">
+                    <div class="feature-icon">
+                        <i class="fas fa-school"></i>
+                    </div>
+                    <h3>Classroom Ready</h3>
+                    <p>Teacher dashboards, classroom management tools, and curriculum-aligned lessons for schools and coding camps.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="container cta">
+        <h2>Start Building with Blocks Today!</h2>
+        <p>Join thousands of students, teachers, and creators who are learning web development the fun way. No installation required - works right in your browser!</p>
+        <button class="btn">Sign Up for BlocklyForWeb</button>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-column">
+                    <h3>BlocklyForWeb</h3>
+                    <p>The visual programming editor for HTML and CSS. Making web development accessible and fun for everyone.</p>
+                </div>
+                <div class="footer-column">
+                    <h3>Resources</h3>
+                    <ul class="footer-links">
+                        <li><a href="#">Documentation</a></li>
+                        <li><a href="#">Tutorials</a></li>
+                        <li><a href="#">Teacher Resources</a></li>
+                        <li><a href="#">Blog</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Community</h3>
+                    <ul class="footer-links">
+                        <li><a href="#">Gallery</a></li>
+                        <li><a href="#">Forum</a></li>
+                        <li><a href="#">Events</a></li>
+                        <li><a href="#">Contributors</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Contact</h3>
+                    <ul class="footer-links">
+                        <li><a href="#">Support</a></li>
+                        <li><a href="#">Partnerships</a></li>
+                        <li><a href="#">Schools & Institutions</a></li>
+                        <li><a href="#">Feedback</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="copyright">
+                &copy; 2023 BlocklyForWeb. All rights reserved. This project is based on Google's Blockly framework.
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Add interactivity to buttons
+        document.querySelectorAll('.btn').forEach(button => {
+            button.addEventListener('click', function() {
+                // Add a fun animation on click
+                this.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    this.style.transform = '';
+                }, 200);
+                
+                // If it's the "Get Started" or "Sign Up" button, show a message
+                if (this.textContent.includes('Get Started') || this.textContent.includes('Sign Up')) {
+                    alert('Welcome to BlocklyForWeb! The visual editor will open in a new tab.');
+                }
+                
+                // If it's the "Try Blockly For Free" button
+                if (this.textContent.includes('Try Blockly')) {
+                    alert('Opening the Blockly visual editor... Try dragging and dropping blocks to create your first webpage!');
+                }
+            });
+        });
+        
+        // Animate the blockly preview
+        const blocks = document.querySelectorAll('.block');
+        let animationStep = 0;
+        
+        function animateBlocks() {
+            blocks.forEach((block, index) => {
+                // Reset and apply new animation with delay
+                block.style.transform = 'translateY(0)';
+                setTimeout(() => {
+                    block.style.transition = 'transform 0.5s ease';
+                    block.style.transform = `translateY(${animationStep % 2 === 0 ? '-10px' : '10px'})`;
+                }, index * 200);
+            });
+            
+            animationStep++;
+            setTimeout(animateBlocks, 2000);
+        }
+        
+        // Start animation after page loads
+        window.addEventListener('load', () => {
+            setTimeout(animateBlocks, 1000);
+        });
+    </script>
+</body>
+</html>

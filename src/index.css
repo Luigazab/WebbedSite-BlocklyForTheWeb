@@ -1,0 +1,357 @@
+@import "tailwindcss";
+@import "tailwindcss/preflight" disable;
+
+
+*{
+    font-family: 'Comic Neue', cursive, Arial, sans-serif;
+}
+.hero-content h1{
+    font-size: 3.2rem;
+    margin-bottom: 20px;
+    color: var(--blockly-dark);
+    line-height: 1.2;
+}
+.hero-content h1 span {
+    color: var(--blockly-blue);
+}
+.hero-content p {
+    font-size: 1.3rem;
+    margin-bottom: 30px;
+    color: #5f6368;
+}
+
+.flex-col.lg\:flex-row {
+    align-items: stretch;
+}
+
+.signup{
+    background-color: var(--blockly-light);
+    padding: 2rem;
+    font-weight: 700;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    box-shadow: 0 10px 25px -5px rgb(0 0 0 / 0.2);
+    border-bottom: 5px solid rgba(0, 0, 0, 0.2);
+}
+.signup h2{
+    font-size: 2rem;
+    margin-bottom: 3px;
+}
+.signup p{
+    font-size: large;
+    color: gray;
+    margin-bottom: 8px;
+}
+.signup ul{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    list-style-type: "> ";
+    list-style-position: inside;
+    padding: 2rem;
+    color: #202124;
+    background-color: #c8d0da;
+    line-height: 1.8rem;
+    font-size: large;
+    border-radius: 0 2rem;
+}
+.signup img{
+    max-width: 6rem;
+}
+.signup button{
+    background-color: var(--blockly-yellow);
+    width: 100%;
+    color: var(--blockly-dark);
+}
+
+
+
+:root {
+    --blockly-blue: #4285F4;
+    --blockly-green: #34A853;
+    --blockly-red: #EA4335;
+    --blockly-yellow: #FBBC05;
+    --blockly-dark: #202124;
+    --blockly-light: #F8F9FA;
+    --blockly-purple: #7b5ddd;
+}
+
+.container{
+    @apply w-full max-w-7xl mx-auto px-6 font-bold;
+}
+
+@theme {
+    --color-blockly-blue: var(--blockly-blue);
+    --color-blockly-green: var(--blockly-green);
+    --color-blockly-red: var(--blockly-red);
+    --color-blockly-yellow: var(--blockly-yellow);
+    --color-blockly-dark: var(--blockly-dark);
+    --color-blockly-light: var(--blockly-light);
+    --color-blockly-purple: var(--blockly-purple);
+
+    --font-comic: "Comic Neue", cursive, system-ui;
+    --font-rounded: "Nunito", sans-serif;
+
+    --animate-float: float 3s ease-in-out infinite;
+    --animate-pulse-glow: pulse-glow 2s ease-in-out infinite;
+    --animate-bounce-slow: bounce 2s infinite;
+
+    @keyframes float {
+
+        0%,
+        100% {
+            transform: translateY(0);
+        }
+
+        50% {
+            transform: translateY(-12px);
+        }
+    }
+
+    @keyframes pulse-glow {
+
+        0%,
+        100% {
+            opacity: 1;
+        }
+
+        50% {
+            opacity: 0.6;
+        }
+    }
+}
+@layer base{
+    a.topActive.active {
+    @apply bg-white border border-black/10 shadow-lg  text-black;
+  }
+  a.navButtons.active {
+    @apply font-extrabold text-lg bg-slate-50 text-slate-950 border-3 border-black drop-shadow-[-1px_1px_0px_rgba(0,0,0,1)] hover:-translate-y-1 hover:translate-x-1 hover:drop-shadow-[-4px_4px_0px_rgba(0,0,0,1)] hover:bg-white hover:scale-105 ;
+  }
+  .navButtons{
+    @apply  px-2 py-1 hover:bg-white  rounded-2xl transition-all duration-300 ease-in-out cursor-pointer;
+  }
+  button{
+    @apply cursor-pointer;
+  }
+  .blocklyTreeRowContentContainer{
+    @apply flex flex-col items-center;
+  }
+  .blocklyToolboxCategoryLabel{
+    @apply text-sm
+  }
+  /* .blocklyToolbox {
+    @apply border-2 border-black
+  } */
+  .blocklyToolbox {
+    @apply bg-blockly-light! border-r border-gray-200
+  }
+  .blocklyTreeSeparator{
+    @apply border-t-3  border-black! rounded-full p-0!
+  }
+  .blocklyToolboxCategory{
+    @apply px-3! py-2 my-1 flex items-center justify-center rounded-sm btn transition-all;
+
+    background: var(--cat-color) !important;
+
+
+    transition:
+      transform .15s ease,
+      border-bottom-width .15s ease,
+      background .15s ease !important;
+  }
+
+  /* SELECTED = darker shade that STAYS */
+  .blocklyToolboxCategory.blocklyToolboxCategorySelected{
+
+    background:
+      color-mix(in srgb, var(--cat-color), black 20%) !important;
+
+    border-bottom: 0px solid
+      color-mix(in srgb, var(--cat-color), black 65%) !important;
+  }
+
+  /* keep text + icon readable */
+  .blocklyToolboxCategoryLabel,
+  .blocklyToolboxCategory svg{
+    color:white;
+  }
+
+
+  .htmlCategory{
+    @apply  py-1 bg-[#f16529] hover:bg-[#f16529]! border-2! border-black! min-w-42.5! my-1 hover:drop-shadow-[0_3px_0_black] hover:-translate-y-1 transition-all rounded-sm
+  }
+  .cssCategory{
+    @apply  py-1 bg-[#29a8e0] hover:bg-[#29a8e0]! border-2! border-black! min-w-42.5! my-1 hover:drop-shadow-[0_3px_0_black] hover:-translate-y-1 transition-all rounded-sm
+  }
+  .blocklySvg{
+    @apply bg-gray-200!;
+  }
+
+  .blocklyToolboxCategoryGroup{
+    @apply  text-center px-2 ;
+  }
+  .customLabel{
+    @apply font-bold text-center
+  }
+  .blocklyFlyout{
+    @apply flex p-0! bg-slate-950/60! rounded-tr-2xl rounded-br-2xl
+  }
+  .adminButton{
+    @apply text-white hover:bg-blue-50/90 hover:text-indigo-900 transition-all ease-in-out duration-300
+  }
+  a.adminButton.active {
+    @apply bg-blue-50/90 text-indigo-900
+  }
+}
+
+/* 
+.blocklyToolbox{
+  max-height: 90% !important;
+  height:fit-content !important;
+} */
+.blocklyToolboxScrollbar {
+  fill:#b370ff;
+}
+.blocklyToolboxCategory {
+  height: initial;
+}
+.blocklyScrollbarHandle {
+  fill: #b370ff; /* Tailwind's orange-700 */
+}
+.blocklyDiv {
+  scrollbar-width: thin;
+  scrollbar-color: #4a90e2 #1a1a1a;
+}
+
+.blocklyDiv::-webkit-scrollbar {
+  width: 12px;
+}
+
+.blocklyDiv::-webkit-scrollbar-track {
+  background: #1a1a1a;
+}
+
+.blocklyDiv::-webkit-scrollbar-thumb {
+  background-color: #4a90e2;
+  border-radius: 10px;
+  border: 3px solid #1a1a1a;
+}
+
+@utility btn {
+    position: relative;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    padding: 6px 1rem;
+    border-radius: 0.75rem;
+    border:none;
+    font-weight: 700;
+    font-size: 1.2rem;
+    border-bottom: 4px solid rgba(0, 0, 0, 0.2);
+    box-shadow: 0 10px 25px -5px rgb(0 0 0 / 0.1);
+
+    &:hover {
+        transform: translateY(-1px);
+        border-bottom-width: 8px;
+    }
+
+    &:hover::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: inherit;
+    }
+
+
+    &:active {
+        transform: translateY(2px);
+        border-bottom-width: 2px;
+        box-shadow: 0 5px 15px -5px rgb(0 0 0 / 0.1);
+    }
+
+    &:active::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: inherit;
+    }
+}
+
+@utility btn-primary {
+    background-color: var(--blockly-blue);
+    color: white;
+}
+
+@utility btn-secondary {
+    background-color: var(--blockly-green);
+    color: white;
+}
+
+@utility btn-accent {
+    background-color: var(--blockly-red);
+    color: white;
+}
+
+@utility btn-lead {
+    background-color: var(--blockly-purple);
+    color: white;
+}
+
+@utility btn-warning {
+    background-color: var(--blockly-yellow);
+    color: black;
+    border-color: color-mix(in srgb, var(--blockly-yellow) 80%, black);
+}
+.block {
+    @apply w-20 h-20 rounded-xl flex items-center justify-center text-white font-bold text-[1.5rem] shadow-xl
+}
+body {
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    font-family: var(--font-comic);
+    min-height: 100vh;
+}
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 20px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--blockly-purple);
+    border-radius: 5px;
+    border-bottom: 6px solid rgba(0, 0, 0, 0.2);
+    transition: all 3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: color-mix(in srgb, var(--blockly-purple) 90%, white);
+    border-bottom: 12px solid rgba(0, 0, 0, 0.2);
+}
+
+::-webkit-scrollbar-thumb:active {
+    background: color-mix(in srgb, var(--blockly-purple) 90%, black);
+    border-bottom: 4px solid rgba(0, 0, 0, 0.2);
+}
+
+.blocklyFlyoutScrollbar {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+.blocklyFlyoutBackground {
+  fill: #222 !important;   /* background color */
+  fill-opacity: .3 !important; /* opacity */
+  stroke: #444 !important; /* border color */
+}
+.blocklyFlyoutLabelText {
+  font-weight: bold;
+  fill: white !important;
+  font-size: 20px;
+}
