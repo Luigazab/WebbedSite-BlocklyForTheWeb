@@ -1,93 +1,109 @@
-import { useState } from 'react'
+// src/components/shared/ProjectsPage.jsx
+import { useState, useEffect, useCallback } from 'react'
+import { useNavigate } from 'react-router'
 import { useAuthStore } from '../../store/authStore'
 import PageWrapper from '../layout/PageWrapper'
 import CreateProjectModal from './CreateProjectModal'
 import ProjectDetailsModal from './ProjectDetailsModal'
+import { projectService } from '../../services/project.service'
 import {
   Search, ChevronDown, Image as ImageIcon,
-  ThumbsUp, MessageSquare
+  ThumbsUp, MessageSquare, Loader2, RefreshCw,
 } from 'lucide-react'
-import { Divider } from '../../../../WebbedSite Blockly try/WebbedSite/src/components/Divider'
 
-const FILTERS = ['All', 'Public', 'Private']
+const FILTERS      = ['All', 'Public', 'Private']
 const SORT_OPTIONS = ['Recent', 'Name', 'Most Liked']
 
-// Mock data - replace with actual fetch later
-const MOCK_PROJECTS = [
-  {
-    id: '1',
-    title: 'My Website',
-    description: 'A cool website project',
-    thumbnail: null,
-    likes: 12,
-    comments: 3,
-    isPublic: true,
-    createdAt: new Date(),
-  },
-  {
-    id: '2',
-    title: 'Game Project',
-    description: 'Interactive game using Blockly',
-    thumbnail: null,
-    likes: 8,
-    comments: 1,
-    isPublic: false,
-    createdAt: new Date(),
-  },
-]
-
 export default function ProjectsPage() {
-  const profile = useAuthStore((s) => s.profile)
-  const [search, setSearch] = useState('')
-  const [filter, setFilter] = useState('All')
-  const [sortBy, setSortBy] = useState('Recent')
-  const [showFilterMenu, setShowFilterMenu] = useState(false)
-  const [showSortMenu, setShowSortMenu] = useState(false)
+  const profile  = useAuthStore((s) => s.profile)
+  const navigate = useNavigate()
+
+  const [projects,        setProjects]        = useState([])
+  const [loading,         setLoading]         = useState(true)
+  const [error,           setError]           = useState(null)
+  const [search,          setSearch]          = useState('')
+  const [filter,          setFilter]          = useState('All')
+  const [sortBy,          setSortBy]          = useState('Recent')
+  const [showFilterMenu,  setShowFilterMenu]  = useState(false)
+  const [showSortMenu,    setShowSortMenu]    = useState(false)
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [selectedProject, setSelectedProject] = useState(null)
 
-  const projects = MOCK_PROJECTS // TODO: Replace with actual filtered/sorted data
+  // ── Fetch ──────────────────────────────────────────────────
+  const fetchProjects = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const data = await projectService.getUserProjects({ filter, sortBy })
+      setProjects(data)
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
+  }, [filter, sortBy])
 
-  const handleCreateProject = (projectData) => {
-    console.log('Creating project:', projectData)
-    // TODO: Call create service
+  useEffect(() => { fetchProjects() }, [fetchProjects])
+
+  // ── Derived list (client-side search only) ─────────────────
+  const displayed = projects.filter((p) =>
+    p.title.toLowerCase().includes(search.toLowerCase()) ||
+    (p.description || '').toLowerCase().includes(search.toLowerCase())
+  )
+
+  // ── Handlers ───────────────────────────────────────────────
+  // Called by CreateProjectModal after it has already saved to DB and navigates away (Blocks mode).
+  // For future Code mode, it would just refresh the list.
+  const handleProjectCreated = () => {
     setShowCreateModal(false)
+    fetchProjects()
+  }
+
+  const handleDeleteProject = async (projectId) => {
+    try {
+      await projectService.deleteProject(projectId)
+      setProjects((prev) => prev.filter((p) => p.id !== projectId))
+      setSelectedProject(null)
+    } catch (err) {
+      console.error('Delete failed:', err.message)
+    }
+  }
+
+  const handleToggleVisibility = async (project) => {
+    try {
+      const updated = await projectService.toggleVisibility(project.id, !project.is_public)
+      setProjects((prev) => prev.map((p) => (p.id === updated.id ? updated : p)))
+      setSelectedProject(updated)
+    } catch (err) {
+      console.error('Visibility toggle failed:', err.message)
+    }
   }
 
   return (
-    <PageWrapper
-      title="Projects"
-      subtitle="View all projects you have"
-    >
+    <PageWrapper title="Projects" subtitle="View all projects you have">
       <div className="flex flex-col gap-6">
-        {/* Controls bar */}
+
+        {/* ── Controls bar ─────────────────────────────────── */}
         <div className="flex flex-wrap items-center gap-3">
-          {/* Filter dropdown */}
+
+          {/* Filter */}
           <div className="relative">
             <button
-              onClick={() => {
-                setShowFilterMenu(!showFilterMenu)
-                setShowSortMenu(false)
-              }}
+              onClick={() => { setShowFilterMenu(!showFilterMenu); setShowSortMenu(false) }}
               className="btn flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold btn-lead"
             >
-              {filter}
-              <ChevronDown className="w-4 h-4" />
+              {filter}<ChevronDown className="w-4 h-4" />
             </button>
             {showFilterMenu && (
               <div className="absolute top-full left-0 mt-1 w-40 bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden z-10">
                 {FILTERS.map((f) => (
                   <button
                     key={f}
-                    onClick={() => {
-                      setFilter(f)
-                      setShowFilterMenu(false)
-                    }}
-                    className={`w-full px-4 py-2.5 text-sm text-left
+                    onClick={() => { setFilter(f); setShowFilterMenu(false) }}
+                    className={`w-full px-4 py-2.5 text-sm text-left transition-colors
                       ${filter === f
                         ? 'bg-blockly-purple/10 text-blockly-purple font-semibold'
-                        : 'text-gray-700 hover:bg-gray-50'
-                      }`}
+                        : 'text-gray-600 hover:bg-gray-50'}`}
                   >
                     {f}
                   </button>
@@ -96,34 +112,26 @@ export default function ProjectsPage() {
             )}
           </div>
 
-          {/* Sort dropdown */}
+          {/* Sort */}
           <div className="relative">
             <button
-              onClick={() => {
-                setShowSortMenu(!showSortMenu)
-                setShowFilterMenu(false)
-              }}
+              onClick={() => { setShowSortMenu(!showSortMenu); setShowFilterMenu(false) }}
               className="btn flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold btn-lead"
             >
-              Sort by
-              <ChevronDown className="w-4 h-4" />
+              {sortBy}<ChevronDown className="w-4 h-4" />
             </button>
             {showSortMenu && (
-              <div className="absolute top-full left-0 mt-1 w-48 bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden z-10">
-                {SORT_OPTIONS.map((option) => (
+              <div className="absolute top-full left-0 mt-1 w-44 bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden z-10">
+                {SORT_OPTIONS.map((s) => (
                   <button
-                    key={option}
-                    onClick={() => {
-                      setSortBy(option)
-                      setShowSortMenu(false)
-                    }}
+                    key={s}
+                    onClick={() => { setSortBy(s); setShowSortMenu(false) }}
                     className={`w-full px-4 py-2.5 text-sm text-left transition-colors
-                      ${sortBy === option
+                      ${sortBy === s
                         ? 'bg-blockly-purple/10 text-blockly-purple font-semibold'
-                        : 'text-gray-700 hover:bg-gray-50'
-                      }`}
+                        : 'text-gray-600 hover:bg-gray-50'}`}
                   >
-                    {option}
+                    {s}
                   </button>
                 ))}
               </div>
@@ -131,42 +139,65 @@ export default function ProjectsPage() {
           </div>
 
           {/* Search */}
-          <div className="flex-1 relative min-w-75">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <div className="flex-1 relative min-w-48">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input
-              type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search"
-              className="w-full pl-11 pr-4 py-4 bg-gray-200 border-none rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blockly-purple/20 transition"
+              placeholder="Search projects…"
+              className="w-full pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-blockly-purple focus:ring-2 focus:ring-blockly-purple/10 transition"
             />
           </div>
 
-          {/* Create new button */}
+          {/* Refresh */}
+          <button
+            onClick={fetchProjects}
+            className="p-2 rounded-lg hover:bg-gray-100 transition text-gray-500"
+            title="Refresh"
+          >
+            <RefreshCw className="w-4 h-4" />
+          </button>
+
+          {/* Create */}
           <button
             onClick={() => setShowCreateModal(true)}
-            className="btn btn-primary"
+            className="btn btn-primary px-4 py-2 text-sm font-semibold ml-auto"
           >
-            Create new
+            + New Project
           </button>
         </div>
-        <Divider/>
 
-        {/* Projects grid or empty state */}
-        {projects.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 px-6 bg-linear-to-br from-purple-50 to-blue-50 rounded-3xl">
-            <p className="text-lg font-bold text-gray-800 mb-2">No saved projects</p>
-            <p className="text-sm text-gray-500 mb-6">Create now to start</p>
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="btn bg-gray-900 text-white btn-primary"
-            >
-              Create new
-            </button>
+        {/* ── Project Grid ─────────────────────────────────── */}
+        {loading ? (
+          <div className="flex items-center justify-center py-24">
+            <Loader2 className="w-8 h-8 text-blockly-purple animate-spin" />
+          </div>
+        ) : error ? (
+          <div className="flex flex-col items-center justify-center py-20 text-center">
+            <p className="text-red-500 font-semibold mb-2">Failed to load projects</p>
+            <p className="text-sm text-gray-400 mb-4">{error}</p>
+            <button onClick={fetchProjects} className="btn btn-primary text-sm">Try Again</button>
+          </div>
+        ) : displayed.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20 px-6 bg-gradient-to-br from-purple-50 to-blue-50 rounded-3xl">
+            <p className="text-lg font-bold text-gray-800 mb-2">
+              {search ? 'No projects match your search' : 'No saved projects yet'}
+            </p>
+            <p className="text-sm text-gray-500 mb-6">
+              {search ? 'Try a different keyword' : 'Create one to get started!'}
+            </p>
+            {!search && (
+              <button
+                onClick={() => setShowCreateModal(true)}
+                className="btn bg-gray-900 text-white btn-primary"
+              >
+                Create new
+              </button>
+            )}
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-            {projects.map((project) => (
+            {displayed.map((project) => (
               <ProjectCard
                 key={project.id}
                 project={project}
@@ -177,11 +208,11 @@ export default function ProjectsPage() {
         )}
       </div>
 
-      {/* Modals */}
+      {/* ── Modals ───────────────────────────────────────────── */}
       {showCreateModal && (
         <CreateProjectModal
           onClose={() => setShowCreateModal(false)}
-          onConfirm={handleCreateProject}
+          onCreated={handleProjectCreated}
         />
       )}
 
@@ -189,28 +220,30 @@ export default function ProjectsPage() {
         <ProjectDetailsModal
           project={selectedProject}
           onClose={() => setSelectedProject(null)}
+          onDelete={() => handleDeleteProject(selectedProject.id)}
+          onToggleVisibility={() => handleToggleVisibility(selectedProject)}
         />
       )}
     </PageWrapper>
   )
 }
 
-// ──────────────────────────────────────────────────────────
-// Project Card Component
-// ──────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────
+// Project Card
+// ─────────────────────────────────────────────────────────────
 function ProjectCard({ project, onClick }) {
   return (
     <button
       onClick={onClick}
-      className="bg-white rounded-2xl border-2 border-gray-200 overflow-hidden hover:border-blockly-purple hover:shadow-md transition-all text-left"
+      className="bg-white rounded-2xl border-2 border-gray-200 overflow-hidden hover:border-blockly-purple hover:shadow-md transition-all text-left group"
     >
       {/* Thumbnail */}
-      <div className="aspect-video bg-gray-100 flex items-center justify-center">
-        {project.thumbnail ? (
+      <div className="aspect-video bg-gray-100 flex items-center justify-center overflow-hidden">
+        {project.thumbnail_url ? (
           <img
-            src={project.thumbnail}
+            src={project.thumbnail_url}
             alt={project.title}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           />
         ) : (
           <ImageIcon className="w-12 h-12 text-gray-300" />
@@ -219,21 +252,35 @@ function ProjectCard({ project, onClick }) {
 
       {/* Content */}
       <div className="p-4 flex flex-col gap-2">
-        <div>
-          <h3 className="font-bold text-gray-800 text-sm truncate">{project.title}</h3>
-          <p className="text-xs text-gray-400 mt-1 line-clamp-2">{project.description}</p>
+        <div className="flex items-start justify-between gap-2">
+          <h3 className="font-bold text-gray-800 text-sm truncate flex-1">{project.title}</h3>
+          <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full shrink-0 ${
+            project.is_public
+              ? 'bg-green-100 text-green-700'
+              : 'bg-gray-100 text-gray-500'
+          }`}>
+            {project.is_public ? 'Public' : 'Private'}
+          </span>
         </div>
+        {project.description && (
+          <p className="text-xs text-gray-400 line-clamp-2">{project.description}</p>
+        )}
 
         {/* Stats */}
-        <div className="flex items-center gap-4 text-xs text-gray-400">
+        <div className="flex items-center gap-4 text-xs text-gray-400 mt-1">
           <div className="flex items-center gap-1.5">
             <ThumbsUp className="w-3.5 h-3.5" />
-            <span>{project.likes}</span>
+            <span>{project.likes_count ?? 0}</span>
           </div>
           <div className="flex items-center gap-1.5">
             <MessageSquare className="w-3.5 h-3.5" />
-            <span>{project.comments}</span>
+            <span>{project.comments_count ?? 0}</span>
           </div>
+          {project.updated_at && (
+            <span className="ml-auto text-[10px] text-gray-300">
+              {new Date(project.updated_at).toLocaleDateString()}
+            </span>
+          )}
         </div>
       </div>
     </button>

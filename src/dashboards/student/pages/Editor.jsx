@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate, useParams } from 'react-router'
+import { useNavigate, useParams, useLocation } from 'react-router'
 import { javascriptGenerator } from 'blockly/javascript'
 import BlocklyWorkspace from '../../../components/editor/BlocklyWorkspace'
 import PreviewPane from '../../../components/editor/PreviewPane'
@@ -13,9 +13,14 @@ const Editor = () => {
   const { id } = useParams()
   const navigate = useNavigate()
   const profile = useAuthStore((s) => s.profile)
+  const location = useLocation()
+
+  const [projectTitle, setProjectTitle] = useState(
+    location.state?.projectTitle ?? 'Untitled'
+  )
   
   const [generatedCode, setGeneratedCode] = useState('')
-  const [projectTitle, setProjectTitle] = useState('Untitled')
+  // const [projectTitle, setProjectTitle] = useState('Untitled')
   const [projectDescription, setProjectDescription] = useState('')
   const [currentProjectId, setCurrentProjectId] = useState(null)
   const [showSaveModal, setShowSaveModal] = useState(false)
@@ -24,6 +29,7 @@ const Editor = () => {
   const [responsive, setResponsive] = useState(true)
   const [selectedDevice, setSelectedDevice] = useState('desktop')
   const [initialWorkspaceState, setInitialWorkspaceState] = useState(null)
+  
   
   const { 
     projects, 
@@ -150,6 +156,7 @@ const Editor = () => {
         onNew={createNewProject}
         onSave={() => setShowSaveModal(true)}
         onLoad={() => setShowLoadModal(true)}
+        projectTitle={projectTitle}
       />
 
       {message && (
