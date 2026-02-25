@@ -1,10 +1,10 @@
-import { useState, useRef } from 'react'
-import { useProfile }   from '../../hooks/useProfile'
-import PageWrapper      from '../layout/PageWrapper'
+import { useState } from 'react'
+import { useAuthStore } from '../../store/authStore'
+import DeleteModal from '../ui/DeleteModal'
 import {
-  Camera, Save, Lock, Loader2,
-  User, Mail, FileText, Calendar,
-  Shield, Eye, EyeOff,
+  MoreVertical, Eye, EyeOff, Pencil, Trash2,
+  Calendar, ThumbsUp, MessageSquare, Trophy,
+  Loader2
 } from 'lucide-react'
 import { format } from 'date-fns'
 
@@ -14,288 +14,271 @@ const ROLE_CONFIG = {
   admin:   { label: 'Admin',   class: 'bg-rose-100   text-rose-700'   },
 }
 
-export default function ProfilePage() {
-  const { profile, saving, uploading, handleUpdateProfile, handleAvatarUpload, handleUpdatePassword } = useProfile()
+// Mock project data — replace with actual fetch later
+const MOCK_PROJECTS = [
+  {
+    id: '1',
+    title: 'Project Title',
+    description: 'Project description',
+    thumbnail: null,
+    likes: 0,
+    comments: 0,
+    isPublic: true,
+  },
+  {
+    id: '2',
+    title: 'Another Project',
+    description: 'Another project description',
+    thumbnail: null,
+    likes: 5,
+    comments: 2,
+    isPublic: false,
+  },
+]
 
-  const [form, setForm]         = useState({
-    username: profile?.username ?? '',
-    bio:      profile?.bio      ?? '',
-  })
-  const [passwords, setPasswords] = useState({
-    newPassword: '', confirmPassword: '',
-  })
-  const [showPasswords, setShowPasswords] = useState(false)
-  const [activeSection, setActiveSection] = useState('info') // 'info' | 'security'
-  const fileRef = useRef(null)
+export default function ProfilePage() {
+  const profile = useAuthStore((s) => s.profile)
+  const [activeTab, setActiveTab] = useState('Projects')
+  const [showMenu, setShowMenu] = useState(null) // Track which project menu is open
+  const [showDeleteModal, setShowDeleteModal] = useState(null)
+  const [deleting, setDeleting] = useState(false)
 
   if (!profile) return null
 
   const roleConfig = ROLE_CONFIG[profile.role] ?? ROLE_CONFIG.student
-  const isDirty    = form.username !== profile.username || form.bio !== (profile.bio ?? '')
+  const isOwnProfile = true // For now — later check if viewing own profile
 
-  const onSaveProfile = (e) => {
-    e.preventDefault()
-    if (!form.username.trim()) return
-    handleUpdateProfile(form)
+  const handleDeleteProject = async () => {
+    setDeleting(true)
+    // TODO: Call delete service
+    setTimeout(() => {
+      setDeleting(false)
+      setShowDeleteModal(null)
+      setShowMenu(null)
+    }, 1000)
   }
 
-  const onSavePassword = (e) => {
-    e.preventDefault()
-    handleUpdatePassword(passwords.newPassword, passwords.confirmPassword)
-    setPasswords({ newPassword: '', confirmPassword: '' })
+  const handleToggleVisibility = (projectId) => {
+    // TODO: Toggle project visibility
+    console.log('Toggle visibility for', projectId)
+    setShowMenu(null)
   }
 
-  const onFileChange = (e) => {
-    const file = e.target.files?.[0]
-    if (file) handleAvatarUpload(file)
+  const handleEditProject = (projectId) => {
+    // TODO: Navigate to edit
+    console.log('Edit project', projectId)
+    setShowMenu(null)
   }
 
   return (
-    <PageWrapper title="My Profile" subtitle="Manage your account information">
-      <div className="max-w-3xl mx-auto flex flex-col gap-6">
-
-        {/* Profile hero card */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5">
-            {/* Avatar */}
-            <div className="relative shrink-0">
-              <img
-                src={profile.avatar_url || '/default-avatar.png'}
-                alt="avatar"
-                className="w-24 h-24 rounded-2xl object-cover border-2 border-gray-100"
-              />
-              <button
-                onClick={() => fileRef.current?.click()}
-                disabled={uploading}
-                className="absolute -bottom-2 -right-2 w-8 h-8 bg-blockly-purple text-white rounded-full flex items-center justify-center shadow-md hover:bg-blockly-purple/90 disabled:opacity-60 transition-colors"
-                title="Change avatar"
-              >
-                {uploading
-                  ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  : <Camera className="w-3.5 h-3.5" />
-                }
-              </button>
-              <input
-                ref={fileRef}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={onFileChange}
-              />
-            </div>
-
-            {/* Info */}
-            <div className="flex-1 text-center sm:text-left">
-              <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                <h2 className="text-xl font-black text-gray-800">{profile.username}</h2>
-                <span className={`text-xs font-bold px-2.5 py-1 rounded-full w-fit mx-auto sm:mx-0 ${roleConfig.class}`}>
-                  {roleConfig.label}
-                </span>
-              </div>
-              <p className="text-sm text-gray-400 mt-1">{profile.email}</p>
-              {profile.bio && (
-                <p className="text-sm text-gray-600 mt-2 leading-relaxed">{profile.bio}</p>
-              )}
-            </div>
-
-            {/* Stats */}
-            <div className="flex sm:flex-col items-center gap-4 sm:gap-2 text-center shrink-0">
-              <div>
-                <p className="text-xs text-gray-400 font-medium">Member since</p>
-                <p className="text-sm font-bold text-gray-700">
-                  {format(new Date(profile.created_at), 'MMM yyyy')}
-                </p>
-              </div>
-              {profile.last_login && (
-                <div>
-                  <p className="text-xs text-gray-400 font-medium">Last seen</p>
-                  <p className="text-sm font-bold text-gray-700">
-                    {format(new Date(profile.last_login), 'MMM d')}
-                  </p>
-                </div>
-              )}
-            </div>
+    <div className="flex h-full overflow-hidden">
+      {/* Left sidebar - Profile info */}
+      <aside className="w-80 bg-white border-r border-gray-100 p-6 flex flex-col gap-6 overflow-y-auto shrink-0">
+        {/* Avatar */}
+        <div className="flex flex-col items-center gap-3">
+          <img
+            src={profile.avatar_url || '/default-avatar.png'}
+            alt="avatar"
+            className="w-32 h-32 rounded-full object-cover border-4 border-gray-100"
+          />
+          <div className="text-center">
+            <h2 className="text-xl font-black text-gray-800">{profile.username}</h2>
+            <p className="text-sm text-gray-400 mt-1">{profile.email}</p>
+            <span className={`inline-block text-xs font-bold px-3 py-1 rounded-full mt-2 ${roleConfig.class}`}>
+              {roleConfig.label}
+            </span>
           </div>
         </div>
 
-        {/* Section tabs */}
-        <div className="flex gap-1 bg-gray-100 p-1 rounded-xl w-fit">
-          {[
-            { key: 'info',     label: 'Profile Info', icon: User  },
-            { key: 'security', label: 'Security',     icon: Lock  },
-          ].map(({ key, label, icon: Icon }) => (
-            <button
-              key={key}
-              onClick={() => setActiveSection(key)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors
-                ${activeSection === key
-                  ? 'bg-white text-blockly-purple shadow-sm'
-                  : 'text-gray-500 hover:text-gray-700'
-                }`}
-            >
-              <Icon className="w-4 h-4" />
-              {label}
-            </button>
-          ))}
-        </div>
-
-        {/* ── Profile Info ─────────────────────────────── */}
-        {activeSection === 'info' && (
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-50">
-              <h3 className="font-bold text-gray-800">Profile Information</h3>
-              <p className="text-xs text-gray-400 mt-0.5">Update your public profile details</p>
-            </div>
-
-            <form onSubmit={onSaveProfile} className="p-6 flex flex-col gap-5">
-              {/* Username */}
-              <div className="flex flex-col gap-1.5">
-                <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                  <User className="w-4 h-4 text-gray-400" />
-                  Username
-                </label>
-                <input
-                  type="text"
-                  value={form.username}
-                  onChange={(e) => setForm((p) => ({ ...p, username: e.target.value }))}
-                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-blockly-purple focus:ring-2 focus:ring-blockly-purple/10 transition"
-                  required
-                />
-              </div>
-
-              {/* Email — read only */}
-              <div className="flex flex-col gap-1.5">
-                <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                  <Mail className="w-4 h-4 text-gray-400" />
-                  Email
-                  <span className="text-xs text-gray-400 font-normal">(cannot be changed)</span>
-                </label>
-                <input
-                  type="email"
-                  value={profile.email ?? ''}
-                  readOnly
-                  className="w-full border border-gray-100 rounded-lg px-4 py-2.5 text-sm bg-gray-50 text-gray-400 cursor-not-allowed"
-                />
-              </div>
-
-              {/* Role — read only */}
-              <div className="flex flex-col gap-1.5">
-                <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                  <Shield className="w-4 h-4 text-gray-400" />
-                  Role
-                </label>
-                <div className="flex items-center gap-2 px-4 py-2.5 border border-gray-100 rounded-lg bg-gray-50">
-                  <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${roleConfig.class}`}>
-                    {roleConfig.label}
-                  </span>
-                  <span className="text-xs text-gray-400">
-                    Role cannot be changed from this page
-                  </span>
-                </div>
-              </div>
-
-              {/* Bio */}
-              <div className="flex flex-col gap-1.5">
-                <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                  <FileText className="w-4 h-4 text-gray-400" />
-                  Bio
-                  <span className="text-xs text-gray-400 font-normal">(optional)</span>
-                </label>
-                <textarea
-                  value={form.bio}
-                  onChange={(e) => setForm((p) => ({ ...p, bio: e.target.value }))}
-                  placeholder="Tell others a little about yourself..."
-                  rows={3}
-                  maxLength={200}
-                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blockly-purple focus:ring-2 focus:ring-blockly-purple/10 transition resize-none"
-                />
-                <p className="text-xs text-gray-400 text-right">{form.bio.length}/200</p>
-              </div>
-
-              <button
-                type="submit"
-                disabled={saving || !isDirty}
-                className="flex items-center justify-center gap-2 w-full sm:w-auto sm:self-end px-6 py-2.5 bg-blockly-purple text-white text-sm font-semibold rounded-lg hover:bg-blockly-purple/90 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-              >
-                {saving
-                  ? <Loader2 className="w-4 h-4 animate-spin" />
-                  : <><Save className="w-4 h-4" />Save Changes</>
-                }
-              </button>
-            </form>
+        {/* Bio */}
+        {profile.bio && (
+          <div className="flex flex-col gap-2">
+            <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Bio</h3>
+            <p className="text-sm text-gray-600 leading-relaxed">{profile.bio}</p>
           </div>
         )}
 
-        {/* ── Security ─────────────────────────────────── */}
-        {activeSection === 'security' && (
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-50">
-              <h3 className="font-bold text-gray-800">Change Password</h3>
-              <p className="text-xs text-gray-400 mt-0.5">Must be at least 8 characters</p>
+        {/* Member info */}
+        <div className="flex flex-col gap-3 pt-4 border-t border-gray-100">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold text-gray-500">Member since:</span>
+            <span className="text-sm font-bold text-gray-700">
+              {format(new Date(profile.created_at), 'MMM dd, yyyy')}
+            </span>
+          </div>
+          {profile.last_login && (
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-gray-500">Last Seen:</span>
+              <span className="text-sm font-bold text-gray-700">
+                {format(new Date(profile.last_login), 'MMM dd, yyyy')}
+              </span>
             </div>
+          )}
+        </div>
+      </aside>
 
-            <form onSubmit={onSavePassword} className="p-6 flex flex-col gap-5">
-              {[
-                { key: 'newPassword',     label: 'New Password'     },
-                { key: 'confirmPassword', label: 'Confirm Password' },
-              ].map(({ key, label }) => (
-                <div key={key} className="flex flex-col gap-1.5">
-                  <label className="text-sm font-semibold text-gray-700">{label}</label>
-                  <div className="relative">
-                    <input
-                      type={showPasswords ? 'text' : 'password'}
-                      value={passwords[key]}
-                      onChange={(e) => setPasswords((p) => ({ ...p, [key]: e.target.value }))}
-                      placeholder="••••••••"
-                      className="w-full border border-gray-200 rounded-lg px-4 py-2.5 pr-10 text-sm focus:outline-none focus:border-blockly-purple focus:ring-2 focus:ring-blockly-purple/10 transition"
-                      required
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPasswords((p) => !p)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                    >
-                      {showPasswords ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  </div>
-                </div>
+      {/* Right content - Projects/Achievements */}
+      <main className="flex-1 flex flex-col overflow-hidden bg-gray-50">
+
+        <div className="px-8 py-4 bg-white border-b border-gray-100">
+          <div className="flex gap-2">
+            {['Projects', 'Achievements'].map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`px-6 py-2 rounded-lg text-sm font-semibold transition-colors
+                  ${activeTab === tab
+                    ? 'bg-blockly-purple text-white'
+                    : 'bg-transparent text-gray-500 hover:bg-gray-100'
+                  }`}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto p-8">
+          {activeTab === 'Projects' && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              {MOCK_PROJECTS.map((project) => (
+                <ProjectCard
+                  key={project.id}
+                  project={project}
+                  isOwnProfile={isOwnProfile}
+                  showMenu={showMenu === project.id}
+                  onToggleMenu={() => setShowMenu(showMenu === project.id ? null : project.id)}
+                  onToggleVisibility={() => handleToggleVisibility(project.id)}
+                  onEdit={() => handleEditProject(project.id)}
+                  onDelete={() => {
+                    setShowDeleteModal(project.id)
+                    setShowMenu(null)
+                  }}
+                />
               ))}
+            </div>
+          )}
 
-              {/* Match indicator */}
-              {passwords.newPassword && passwords.confirmPassword && (
-                <div className={`flex items-center gap-2 text-xs font-medium
-                  ${passwords.newPassword === passwords.confirmPassword ? 'text-green-500' : 'text-red-400'}`}
-                >
-                  {passwords.newPassword === passwords.confirmPassword
-                    ? <><CheckCircle2Placeholder />Passwords match</>
-                    : <>✕ Passwords don't match</>
-                  }
-                </div>
-              )}
+          {activeTab === 'Achievements' && (
+            <div className="flex flex-col items-center justify-center py-20 gap-4">
+              <div className="w-16 h-16 rounded-2xl bg-yellow-100 flex items-center justify-center">
+                <Trophy className="w-8 h-8 text-yellow-600" />
+              </div>
+              <p className="text-sm text-gray-400">No achievements yet.</p>
+            </div>
+          )}
+        </div>
+      </main>
 
-              <button
-                type="submit"
-                disabled={
-                  saving ||
-                  !passwords.newPassword ||
-                  passwords.newPassword !== passwords.confirmPassword
-                }
-                className="flex items-center justify-center gap-2 w-full sm:w-auto sm:self-end px-6 py-2.5 bg-blockly-purple text-white text-sm font-semibold rounded-lg hover:bg-blockly-purple/90 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-              >
-                {saving
-                  ? <Loader2 className="w-4 h-4 animate-spin" />
-                  : <><Lock className="w-4 h-4" />Update Password</>
-                }
-              </button>
-            </form>
-          </div>
-        )}
-      </div>
-    </PageWrapper>
+      {/* Delete modal */}
+      <DeleteModal
+        isOpen={!!showDeleteModal}
+        onClose={() => setShowDeleteModal(null)}
+        onConfirm={handleDeleteProject}
+        title="Delete Project"
+        message="Deleting this project will remove any data of it forever."
+        confirmText="Confirm"
+        loading={deleting}
+      />
+    </div>
   )
 }
 
-// Inline tiny icon to avoid extra import
-function CheckCircle2Placeholder() {
-  return <span className="text-green-500">✓</span>
+// ──────────────────────────────────────────────────────────
+// Project Card Component
+// ──────────────────────────────────────────────────────────
+function ProjectCard({ 
+  project, 
+  isOwnProfile, 
+  showMenu, 
+  onToggleMenu, 
+  onToggleVisibility, 
+  onEdit, 
+  onDelete 
+}) {
+  return (
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+      {/* Thumbnail */}
+      <div className="relative aspect-video bg-gray-200">
+        {project.thumbnail ? (
+          <img
+            src={project.thumbnail}
+            alt={project.title}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <span className="text-gray-400 text-sm">No preview</span>
+          </div>
+        )}
+        
+        {/* Three-dot menu */}
+        {isOwnProfile && (
+          <div className="absolute top-3 right-3">
+            <div className="relative">
+              <button
+                onClick={onToggleMenu}
+                className="w-8 h-8 bg-white rounded-lg shadow-md flex items-center justify-center hover:bg-gray-50 transition-colors"
+              >
+                <MoreVertical className="w-4 h-4 text-gray-600" />
+              </button>
+              
+              {/* Dropdown menu */}
+              {showMenu && (
+                <div className="absolute right-0 top-full mt-1 w-40 bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden z-10">
+                  <button
+                    onClick={onToggleVisibility}
+                    className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors text-left"
+                  >
+                    {project.isPublic ? (
+                      <><EyeOff className="w-4 h-4" />Hide</>
+                    ) : (
+                      <><Eye className="w-4 h-4" />Show</>
+                    )}
+                  </button>
+                  <button
+                    onClick={onEdit}
+                    className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors text-left"
+                  >
+                    <Pencil className="w-4 h-4" />
+                    Edit
+                  </button>
+                  <button
+                    onClick={onDelete}
+                    className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors text-left"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    Delete
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Content */}
+      <div className="p-4 flex flex-col gap-3">
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex-1 min-w-0">
+            <h3 className="font-bold text-gray-800 text-sm truncate">{project.title}</h3>
+            <p className="text-xs text-gray-400 mt-0.5 line-clamp-2">{project.description}</p>
+          </div>
+        </div>
+
+        {/* Stats */}
+        <div className="flex items-center gap-4 pt-2 border-t border-gray-50">
+          <div className="flex items-center gap-1.5 text-xs text-gray-400">
+            <ThumbsUp className="w-3.5 h-3.5" />
+            <span>{project.likes} likes</span>
+          </div>
+          <div className="flex items-center gap-1.5 text-xs text-gray-400">
+            <MessageSquare className="w-3.5 h-3.5" />
+            <span>{project.comments} comments</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
 }

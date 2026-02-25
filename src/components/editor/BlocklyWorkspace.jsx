@@ -19,6 +19,20 @@ const BlocklyWorkspace = ({
   const blocklyDiv = useRef(null);
   const workspace = useRef(null);
   const [isInitialized, setIsInitialized] = useState(false);
+  const initialStateLoaded = useRef(false);
+  
+  // Store callbacks in refs so they don't cause re-initialization
+  const onWorkspaceChangeRef = useRef(onWorkspaceChange);
+  const onWorkspaceLoadRef = useRef(onWorkspaceLoad);
+  
+  // Update refs when callbacks change
+  useEffect(() => {
+    onWorkspaceChangeRef.current = onWorkspaceChange;
+  }, [onWorkspaceChange]);
+  
+  useEffect(() => {
+    onWorkspaceLoadRef.current = onWorkspaceLoad;
+  }, [onWorkspaceLoad]);
 
   // Initialize blocks and generators
   const initializeBlockly = useCallback(() => {
@@ -34,6 +48,19 @@ const BlocklyWorkspace = ({
     registerCustomCategory();
   }, []);
 
+  // Separate effect for loading initial workspace state
+  useEffect(() => {
+    if (workspace.current && initialWorkspaceState && !initialStateLoaded.current) {
+      try {
+        Blockly.serialization.workspaces.load(initialWorkspaceState, workspace.current);
+        initialStateLoaded.current = true;
+      } catch (error) {
+        console.error('Error loading workspace state:', error);
+      }
+    }
+  }, [initialWorkspaceState]);
+
+  // Main workspace initialization - runs ONCE
   useEffect(() => {
     if (blocklyDiv.current && !workspace.current) {
       // Initialize Blockly
@@ -65,33 +92,30 @@ const BlocklyWorkspace = ({
         }
       });
 
-      // Add workspace change listener
+      // Add workspace change listener using ref
       workspace.current.addChangeListener(() => {
-        if (onWorkspaceChange) {
-          onWorkspaceChange(workspace.current);
+        if (onWorkspaceChangeRef.current && workspace.current) {
+          onWorkspaceChangeRef.current(workspace.current);
         }
       });
 
-      // Load initial workspace state if provided
-      if (initialWorkspaceState) {
-        Blockly.serialization.workspaces.load(initialWorkspaceState, workspace.current);
-      }
-
-      // Notify parent that workspace is loaded
-      if (onWorkspaceLoad) {
-        onWorkspaceLoad(workspace.current);
-      }
-
       setIsInitialized(true);
+
+      // Call load callback using ref
+      if (onWorkspaceLoadRef.current) {
+        onWorkspaceLoadRef.current(workspace.current);
+      }
 
       return () => {
         if (workspace.current) {
           workspace.current.dispose();
           workspace.current = null;
+          setIsInitialized(false);
+          initialStateLoaded.current = false;
         }
       };
     }
-  }, [initializeBlockly, onWorkspaceChange, onWorkspaceLoad, initialWorkspaceState]);
+  }, [initializeBlockly]); // ONLY initializeBlockly in dependencies!
 
   const toggleToolbox = useCallback((visible) => {
     if (!workspace.current) return;
@@ -117,12 +141,14 @@ const BlocklyWorkspace = ({
   const loadWorkspaceState = useCallback((state) => {
     if (workspace.current && state) {
       Blockly.serialization.workspaces.load(state, workspace.current);
+      initialStateLoaded.current = true;
     }
   }, []);
   
   const clearWorkspace = useCallback(() => {
     if (workspace.current) {
       workspace.current.clear();
+      initialStateLoaded.current = false;
     }
   }, []);
   

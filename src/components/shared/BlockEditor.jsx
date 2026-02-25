@@ -9,7 +9,7 @@ import LoadModal from '../../../components/editor/LoadModal'
 import EditorHeader from '../../../components/layout/EditorHeader'
 import { useAuthStore } from '../../../store/authStore'
 
-const Editor = () => {
+const BlockEditor = () => {
   const { id } = useParams()
   const navigate = useNavigate()
   const profile = useAuthStore((s) => s.profile)
@@ -196,4 +196,4 @@ const Editor = () => {
   )
 }
 
-export default Editor
+export default BlockEditor

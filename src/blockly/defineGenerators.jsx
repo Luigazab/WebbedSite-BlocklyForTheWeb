@@ -1,13 +1,6 @@
 import { javascriptGenerator } from 'blockly/javascript';
-import * as Blockly from 'blockly/core';
 
 export const defineGenerators = () => {
-  // =============================================================================
-  // IMPORTANT: Using javascriptGenerator for HTML generation
-  // Statement blocks return strings directly
-  // Value blocks return [code, ORDER] tuples
-  // =============================================================================
-
   const INDENT = '  ';
 
   // =============================================================================
@@ -15,17 +8,17 @@ export const defineGenerators = () => {
   // =============================================================================
 
   javascriptGenerator.forBlock['html_doctype'] = function(block) {
-    const htmlContent = Blockly.JavaScript.statementToCode(block, 'HTML');
+    const htmlContent = javascriptGenerator.statementToCode(block, 'HTML');
     return `<!DOCTYPE html>\n<html>\n${htmlContent}</html>\n`;
   };
 
   javascriptGenerator.forBlock['head'] = function(block) {
-    const content = Blockly.JavaScript.statementToCode(block, 'head_element');
+    const content = javascriptGenerator.statementToCode(block, 'head_element');
     return `<head>\n${content}</head>\n`;
   };
 
   javascriptGenerator.forBlock['body'] = function(block) {
-    const content = Blockly.JavaScript.statementToCode(block, 'body_element');
+    const content = javascriptGenerator.statementToCode(block, 'body_element');
     return `<body>\n${content}</body>\n`;
   };
 
@@ -39,37 +32,37 @@ export const defineGenerators = () => {
   // =============================================================================
 
   javascriptGenerator.forBlock['div'] = function(block) {
-    const content = Blockly.JavaScript.statementToCode(block, 'CONTENT');
+    const content = javascriptGenerator.statementToCode(block, 'CONTENT');
     return `${INDENT}<div>\n${content}${INDENT}</div>\n`;
   };
 
   javascriptGenerator.forBlock['header'] = function(block) {
-    const content = Blockly.JavaScript.statementToCode(block, 'CONTENT');
+    const content = javascriptGenerator.statementToCode(block, 'CONTENT');
     return `${INDENT}<header>\n${content}${INDENT}</header>\n`;
   };
 
   javascriptGenerator.forBlock['footer'] = function(block) {
-    const content = Blockly.JavaScript.statementToCode(block, 'CONTENT');
+    const content = javascriptGenerator.statementToCode(block, 'CONTENT');
     return `${INDENT}<footer>\n${content}${INDENT}</footer>\n`;
   };
 
   javascriptGenerator.forBlock['section'] = function(block) {
-    const content = Blockly.JavaScript.statementToCode(block, 'CONTENT');
+    const content = javascriptGenerator.statementToCode(block, 'CONTENT');
     return `${INDENT}<section>\n${content}${INDENT}</section>\n`;
   };
 
   javascriptGenerator.forBlock['article'] = function(block) {
-    const content = Blockly.JavaScript.statementToCode(block, 'CONTENT');
+    const content = javascriptGenerator.statementToCode(block, 'CONTENT');
     return `${INDENT}<article>\n${content}${INDENT}</article>\n`;
   };
 
   javascriptGenerator.forBlock['nav'] = function(block) {
-    const content = Blockly.JavaScript.statementToCode(block, 'CONTENT');
+    const content = javascriptGenerator.statementToCode(block, 'CONTENT');
     return `${INDENT}<nav>\n${content}${INDENT}</nav>\n`;
   };
 
   javascriptGenerator.forBlock['main'] = function(block) {
-    const content = Blockly.JavaScript.statementToCode(block, 'CONTENT');
+    const content = javascriptGenerator.statementToCode(block, 'CONTENT');
     return `${INDENT}<main>\n${content}${INDENT}</main>\n`;
   };
 
@@ -97,7 +90,7 @@ export const defineGenerators = () => {
   };
 
   javascriptGenerator.forBlock['span'] = function(block) {
-    const content = Blockly.JavaScript.statementToCode(block, 'CONTENT');
+    const content = javascriptGenerator.statementToCode(block, 'CONTENT');
     return `${INDENT}<span>${content}</span>\n`;
   };
 
@@ -122,7 +115,7 @@ export const defineGenerators = () => {
   // =============================================================================
 
   javascriptGenerator.forBlock['form'] = function(block) {
-    const content = Blockly.JavaScript.statementToCode(block, 'CONTENT');
+    const content = javascriptGenerator.statementToCode(block, 'CONTENT');
     return `${INDENT}<form>\n${content}${INDENT}</form>\n`;
   };
 
@@ -179,12 +172,12 @@ export const defineGenerators = () => {
   // =============================================================================
 
   javascriptGenerator.forBlock['ul'] = function(block) {
-    const content = Blockly.JavaScript.statementToCode(block, 'CONTENT');
+    const content = javascriptGenerator.statementToCode(block, 'CONTENT');
     return `${INDENT}<ul>\n${content}${INDENT}</ul>\n`;
   };
 
   javascriptGenerator.forBlock['ol'] = function(block) {
-    const content = Blockly.JavaScript.statementToCode(block, 'CONTENT');
+    const content = javascriptGenerator.statementToCode(block, 'CONTENT');
     return `${INDENT}<ol>\n${content}${INDENT}</ol>\n`;
   };
 
@@ -198,12 +191,12 @@ export const defineGenerators = () => {
   // =============================================================================
 
   javascriptGenerator.forBlock['table'] = function(block) {
-    const content = Blockly.JavaScript.statementToCode(block, 'CONTENT');
+    const content = javascriptGenerator.statementToCode(block, 'CONTENT');
     return `${INDENT}<table>\n${content}${INDENT}</table>\n`;
   };
 
   javascriptGenerator.forBlock['tr'] = function(block) {
-    const content = Blockly.JavaScript.statementToCode(block, 'CONTENT');
+    const content = javascriptGenerator.statementToCode(block, 'CONTENT');
     return `${INDENT}${INDENT}<tr>\n${content}${INDENT}${INDENT}</tr>\n`;
   };
 
@@ -222,7 +215,7 @@ export const defineGenerators = () => {
   // =============================================================================
 
   javascriptGenerator.forBlock['style'] = function(block) {
-    const content = Blockly.JavaScript.statementToCode(block, 'CONTENT');
+    const content = javascriptGenerator.statementToCode(block, 'CONTENT');
     return `${INDENT}<style>\n${content}${INDENT}</style>\n`;
   };
 
@@ -234,7 +227,7 @@ export const defineGenerators = () => {
 
   javascriptGenerator.forBlock['css_rule'] = function(block) {
     const selector = block.getFieldValue('SELECTOR');
-    const properties = Blockly.JavaScript.statementToCode(block, 'PROPERTIES');
+    const properties = javascriptGenerator.statementToCode(block, 'PROPERTIES');
     return `${INDENT}${INDENT}${selector} {\n${properties}${INDENT}${INDENT}}\n`;
   };
 

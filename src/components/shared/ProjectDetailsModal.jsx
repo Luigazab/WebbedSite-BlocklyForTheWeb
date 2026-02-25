@@ -1,0 +1,107 @@
+import { useState } from 'react'
+import { X, ThumbsUp, MessageSquare } from 'lucide-react'
+
+export default function ProjectDetailsModal({ project, onClose }) {
+  const [comment, setComment] = useState('')
+
+  const handleSubmitComment = (e) => {
+    e.preventDefault()
+    if (!comment.trim()) return
+    console.log('Submitting comment:', comment)
+    // TODO: Call comment service
+    setComment('')
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 shrink-0">
+          <h2 className="text-lg font-bold text-gray-800">{project.title}</h2>
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+          >
+            <X className="w-5 h-5 text-gray-500" />
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6">
+            {/* Left: Preview */}
+            <div className="flex flex-col gap-4">
+              <div className="aspect-video bg-gray-100 rounded-xl flex items-center justify-center border-2 border-gray-200">
+                {project.thumbnail ? (
+                  <img
+                    src={project.thumbnail}
+                    alt={project.title}
+                    className="w-full h-full object-cover rounded-xl"
+                  />
+                ) : (
+                  <div className="flex items-center justify-center w-full h-full">
+                    <div className="w-32 h-32 border-l-2 border-t-2 border-gray-300 rotate-45" />
+                    <div className="w-32 h-32 border-r-2 border-b-2 border-gray-300 rotate-45 -ml-32" />
+                  </div>
+                )}
+              </div>
+
+              {/* Stats */}
+              <div className="flex items-center gap-4">
+                <button className="btn flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-600 rounded-lg text-sm font-semibold hover:bg-blue-200 transition-colors">
+                  <ThumbsUp className="w-4 h-4" />
+                  {project.likes}
+                </button>
+                <button className="btn flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-600 rounded-lg text-sm font-semibold hover:bg-gray-200 transition-colors">
+                  <MessageSquare className="w-4 h-4" />
+                  {project.comments}
+                </button>
+              </div>
+
+              {/* Edit button */}
+              <button className="btn w-full py-2.5 bg-gray-900 text-white text-sm font-semibold rounded-lg hover:bg-gray-800 transition-colors">
+                Edit
+              </button>
+            </div>
+
+            {/* Right: Comments */}
+            <div className="flex flex-col gap-4">
+              <h3 className="font-bold text-gray-800">Comments</h3>
+
+              {/* Comment form */}
+              <form onSubmit={handleSubmitComment} className="flex flex-col gap-3 p-4 bg-gray-50 rounded-xl">
+                <textarea
+                  value={comment}
+                  onChange={(e) => setComment(e.target.value)}
+                  placeholder="Add a comment..."
+                  rows={3}
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blockly-purple focus:ring-2 focus:ring-blockly-purple/10 transition resize-none bg-white"
+                />
+                <button
+                  type="submit"
+                  disabled={!comment.trim()}
+                  className="btn self-end px-4 py-2 bg-blockly-purple text-white text-sm font-semibold rounded-lg hover:bg-blockly-purple/90 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                >
+                  Post
+                </button>
+              </form>
+
+              {/* Comments list */}
+              <div className="flex flex-col gap-3">
+                {/* Mock comment */}
+                <div className="flex gap-3 p-3 bg-gray-50 rounded-xl">
+                  <div className="w-8 h-8 rounded-full bg-gray-300 shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-gray-800">Username</p>
+                    <p className="text-sm text-gray-600 mt-1">This is a sample comment</p>
+                    <p className="text-xs text-gray-400 mt-1">2 days ago</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
