@@ -8,8 +8,9 @@ import StudentClassroomDetail from '../dashboards/student/pages/StudentClassroom
 import ProjectsPage from '../components/shared/ProjectsPage'
 import SettingsPage from '../components/shared/SettingsPage'
 import ProfilePage from '../dashboards/student/pages/StudentProfile'
-import Editor from '../dashboards/student/pages/Editor'
 import EditorLayout from '../components/layout/EditorLayout'
+import BlockEditor from '../components/shared/BlockEditor'
+import LearnPage from '../dashboards/student/pages/LearnPage'
 
 export const studentRoutes = [
   {
@@ -19,6 +20,7 @@ export const studentRoutes = [
       { path: 'projects', element: <ProjectsPage /> },
       { path: 'classrooms', element: <StudentClassrooms /> },
       { path: 'classrooms/:classroomId', element: <StudentClassroomDetail /> },
+      { path: 'learn', element: <LearnPage /> },
       { path: 'lessons', element: <LessonPage /> },
       { path: 'lessons/:lessonId', element: <LessonPage /> },
       { path: 'tutorials', element: <TutorialPage /> },
@@ -31,8 +33,8 @@ export const studentRoutes = [
   {
     element: <EditorLayout />,
     children: [
-      { path: 'editor', element: <Editor /> },
-      { path: 'editor/:id', element: <Editor /> },
+      { path: 'editor', element: <BlockEditor /> },
+      { path: 'editor/:id', element: <BlockEditor /> },
     ]
   }
 ]

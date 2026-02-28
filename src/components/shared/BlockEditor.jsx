@@ -1,31 +1,36 @@
-import { useState, useEffect } from 'react'
+// src/dashboards/student/pages/Editor.jsx (or wherever your BlockEditor is)
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useParams, useLocation } from 'react-router'
 import { javascriptGenerator } from 'blockly/javascript'
-import BlocklyWorkspace from '../../../components/editor/BlocklyWorkspace'
-import PreviewPane from '../../../components/editor/PreviewPane'
-import { useProjectDatabase } from '../../../hooks/useProjectDatabase'
-import SaveModal from '../../../components/editor/SaveModal'
-import LoadModal from '../../../components/editor/LoadModal'
-import EditorHeader from '../../../components/layout/EditorHeader'
-import { useAuthStore } from '../../../store/authStore'
+import BlocklyWorkspace from '../editor/BlocklyWorkspace'
+import PreviewPane from '../editor/PreviewPane'
+import { useProjectDatabase } from '../../hooks/useProjectDatabase'
+import SaveModal from '../editor/SaveModal'
+import LoadModal from '../editor/LoadModal'
+import CreateProjectModal from '../shared/CreateProjectModal'
+import EditorHeader from '../layout/EditorHeader'
+import { useAuthStore } from '../../store/authStore'
+import { useUIStore } from '../../store/uiStore'
+
 
 const BlockEditor = () => {
   const { id } = useParams()
   const navigate = useNavigate()
   const profile = useAuthStore((s) => s.profile)
+  const addToast = useUIStore((s) => s.addToast)
   const location = useLocation()
+  const fileInputRef = useRef(null)
 
   const [projectTitle, setProjectTitle] = useState(
     location.state?.projectTitle ?? 'Untitled'
   )
   
   const [generatedCode, setGeneratedCode] = useState('')
-  // const [projectTitle, setProjectTitle] = useState('Untitled')
   const [projectDescription, setProjectDescription] = useState('')
   const [currentProjectId, setCurrentProjectId] = useState(null)
   const [showSaveModal, setShowSaveModal] = useState(false)
   const [showLoadModal, setShowLoadModal] = useState(false)
-  const [message, setMessage] = useState('')
+  const [showCreateModal, setShowCreateModal] = useState(false)
   const [responsive, setResponsive] = useState(true)
   const [selectedDevice, setSelectedDevice] = useState('desktop')
   const [initialWorkspaceState, setInitialWorkspaceState] = useState(null)
@@ -70,9 +75,10 @@ const BlockEditor = () => {
         setProjectDescription(project.description || '')
         setCurrentProjectId(project.id)
         setInitialWorkspaceState(project.blocks_json)
+        addToast(`Loaded "${project.title}"`, 'success')
       }
     } catch (error) {
-      showMessage('Error loading project', true)
+      addToast('Error loading project', 'error')
     }
   }
 
@@ -81,7 +87,9 @@ const BlockEditor = () => {
     setGeneratedCode(code)
   }
 
-  const handleSave = async ({ title, description }) => {
+  // ─── Save Handlers ─────────────────────────────────────
+
+  const handleSaveToAccount = async ({ title, description }) => {
     try {
       const workspaceState = workspace.getWorkspaceState()
       const code = workspace.getGeneratedCode()
@@ -103,11 +111,88 @@ const BlockEditor = () => {
       }
       
       setShowSaveModal(false)
-      showMessage(`Project "${title}" saved successfully!`)
+      addToast(`Project "${title}" saved successfully!`, 'success')
       loadUserProjects()
     } catch (error) {
-      showMessage(error.message, true)
+      addToast(error.message || 'Failed to save project', 'error')
     }
+  }
+
+  const handleExportHTML = () => {
+    const code = workspace.getGeneratedCode()
+    if (!code) {
+      addToast('No code to export', 'error')
+      return
+    }
+    
+    const blob = new Blob([code], { type: 'text/html' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${projectTitle || 'website'}.html`
+    a.click()
+    URL.revokeObjectURL(url)
+    addToast('HTML file downloaded!', 'success')
+  }
+
+  const handleExportJSON = () => {
+    const workspaceState = workspace.getWorkspaceState()
+    if (!workspaceState) {
+      addToast('No workspace to export', 'error')
+      return
+    }
+    
+    const dataToSave = {
+      title: projectTitle,
+      description: projectDescription,
+      blocks_json: workspaceState,
+      timestamp: new Date().toISOString()
+    }
+    
+    const blob = new Blob([JSON.stringify(dataToSave, null, 2)], { 
+      type: 'application/json' 
+    })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${projectTitle || 'blockly-project'}.json`
+    a.click()
+    URL.revokeObjectURL(url)
+    addToast('Blockly project exported!', 'success')
+  }
+
+  // ─── Load Handlers ─────────────────────────────────────
+
+  const handleLoadFromDevice = () => {
+    fileInputRef.current?.click()
+  }
+
+  const handleFileSelect = (event) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      try {
+        const data = JSON.parse(e.target?.result)
+        
+        if (!data.blocks_json) {
+          addToast('Invalid project file format', 'error')
+          return
+        }
+
+        setProjectTitle(data.title || 'Loaded Project')
+        setProjectDescription(data.description || '')
+        setCurrentProjectId(null)
+        setInitialWorkspaceState(data.blocks_json)
+        
+        addToast(`Loaded "${data.title || 'project'}" from device`, 'success')
+      } catch (error) {
+        addToast('Failed to parse project file', 'error')
+      }
+    }
+    reader.readAsText(file)
+    event.target.value = ''
   }
 
   const handleLoadProject = (project) => {
@@ -116,8 +201,7 @@ const BlockEditor = () => {
     setCurrentProjectId(project.id)
     setInitialWorkspaceState(project.blocks_json)
     navigate(`/${profile?.role}/editor/${project.id}`)
-    setShowLoadModal(false)
-    showMessage(`Loaded "${project.title}"`)
+    addToast(`Loaded "${project.title}"`, 'success')
   }
 
   const handleDeleteProject = async (projectId) => {
@@ -126,43 +210,41 @@ const BlockEditor = () => {
     try {
       await deleteProject(projectId)
       if (currentProjectId === projectId) {
-        createNewProject()
+        handleCreateNew()
       }
-      showMessage('Project deleted')
+      addToast('Project deleted', 'info')
+      loadUserProjects()
     } catch (error) {
-      showMessage('Error deleting project', true)
+      addToast('Error deleting project', 'error')
     }
   }
 
-  const createNewProject = () => {
+  // ─── Create New ────────────────────────────────────────
+
+  const handleCreateNew = () => {
+    // Always show the CreateProjectModal when New button is clicked
+    setShowCreateModal(true)
+  }
+
+  const handleCreateNewConfirm = () => {
     workspace.clearWorkspace()
     setProjectTitle('Untitled')
     setProjectDescription('')
     setCurrentProjectId(null)
     setInitialWorkspaceState(null)
     navigate(`/${profile?.role}/editor`, { replace: true })
-    showMessage('New project created')
-  }
-
-  const showMessage = (msg, isError = false) => {
-    setMessage(msg)
-    setTimeout(() => setMessage(''), 3000)
+    setShowCreateModal(false)
+    addToast('New project created', 'info')
   }
 
   return (
     <div className="flex flex-col h-screen overflow-hidden">
       <EditorHeader
-        onNew={createNewProject}
+        onNew={(handleCreateNew)}
         onSave={() => setShowSaveModal(true)}
         onLoad={() => setShowLoadModal(true)}
         projectTitle={projectTitle}
       />
-
-      {message && (
-        <div className="fixed top-20 right-4 z-50 bg-gray-900 text-white px-6 py-3 rounded-lg shadow-lg">
-          {message}
-        </div>
-      )}
       
       <div className="flex flex-col md:flex-row flex-1 overflow-hidden p-4 gap-4">
         {/* Blockly Workspace */}
@@ -183,20 +265,42 @@ const BlockEditor = () => {
         </div>
       </div>
 
-      <SaveModal 
-        isOpen={showSaveModal} 
-        onClose={() => setShowSaveModal(false)} 
-        onSave={handleSave} 
-        initialTitle={projectTitle} 
-        initialDescription={projectDescription} 
+      {/* Hidden file input for loading JSON from device */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".json"
+        onChange={handleFileSelect}
+        className="hidden"
       />
-      
-      <LoadModal 
-        isOpen={showLoadModal} 
-        onClose={() => setShowLoadModal(false)} 
-        projects={projects} 
-        onLoadProject={handleLoadProject} 
-        onDeleteProject={handleDeleteProject} 
+
+      {/* Modals */}
+      {showCreateModal && (
+        <CreateProjectModal
+          isOpen={showCreateModal}
+          onClose={() => setShowCreateModal(false)}
+          onCreated={handleCreateNewConfirm}
+        />
+      )}
+
+      <SaveModal
+        isOpen={showSaveModal}
+        onClose={() => setShowSaveModal(false)}
+        onSaveToAccount={handleSaveToAccount}
+        onExportHTML={handleExportHTML}
+        onExportJSON={handleExportJSON}
+        isNewProject={!currentProjectId}
+        initialTitle={projectTitle}
+        initialDescription={projectDescription}
+      />
+
+      <LoadModal
+        isOpen={showLoadModal}
+        onClose={() => setShowLoadModal(false)}
+        projects={projects}
+        onLoadProject={handleLoadProject}
+        onDeleteProject={handleDeleteProject}
+        onLoadFromDevice={handleLoadFromDevice}
       />
     </div>
   )

@@ -1,7 +1,6 @@
 @import "tailwindcss";
 @import "tailwindcss/preflight" disable;
 
-
 *{
     font-family: 'Comic Neue', cursive, Arial, sans-serif;
 }
@@ -26,7 +25,7 @@
 
 .card{
     background-color: var(--blockly-light);
-    padding: 0.5rem;
+    padding: 2rem;
     border-radius: 12px;
     width: 100%;
     overflow: hidden;
@@ -389,7 +388,7 @@ body {
 }
 /* Custom scrollbar */
 ::-webkit-scrollbar {
-    width: 20px;
+    width: 10px;
 }
 
 ::-webkit-scrollbar-track {

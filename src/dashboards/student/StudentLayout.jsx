@@ -11,7 +11,7 @@ export default function StudentLayout() {
       <StudentSidebar />
       <div className={`flex flex-col flex-1 transition-all duration-300 ${sidebarOpen ? 'ml-64' : 'ml-16'}`}>
         <StudentNavbar />
-        <main className="flex-1 overflow-y-auto">
+        <main className="wrapper flex-1 overflow-y-auto">
           <Outlet />
         </main>
       </div>

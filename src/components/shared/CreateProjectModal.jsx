@@ -32,20 +32,15 @@ export default function CreateProjectModal({ onClose, onCreated }) {
 
     try {
       if (form.mode === 'Blocks') {
-        // 1. Save an empty Blockly project to the DB immediately
         const project = await projectService.createBlocksProject({
           title:       form.title.trim(),
           description: form.description.trim(),
         })
 
-        // 2. Navigate straight to the editor with the new project ID.
-        //    The editor will pick up the title via the project record.
         navigate(`/${profile?.role}/editor/${project.id}`, {
           state: { projectTitle: project.title },
         })
-        // No need to call onCreated — we're leaving the page
       } else {
-        // Code mode: for now just notify parent (extend later)
         onCreated?.({ ...form })
         onClose()
       }
@@ -56,23 +51,23 @@ export default function CreateProjectModal({ onClose, onCreated }) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-99 flex items-center justify-center p-4">
       <div className="card max-w-xl w-full">
 
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-100">
+        <div className="flex items-center justify-between border-b border-gray-100">
           <h2 className="text-xl font-bold text-gray-800">Create Project</h2>
           <button
             onClick={onClose}
             disabled={loading}
-            className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+            className="p-1.5 rounded-lg hover:bg-slate-200 transition-colors"
           >
             <X className="w-5 h-5 text-gray-500" />
           </button>
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="flex flex-col gap-5 p-4">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-5 py-2">
           <div className="flex gap-5">
 
             {/* Left: title + description */}
@@ -106,7 +101,7 @@ export default function CreateProjectModal({ onClose, onCreated }) {
             </div>
 
             {/* Right: mode selector */}
-            <div className="w-1/2 flex flex-col gap-2">
+            <div className="w-1/2 flex flex-col gap-2 justify-end">
               <label className="text-sm font-bold text-gray-700">Mode</label>
               {MODES.map((m) => (
                 <button
@@ -134,12 +129,12 @@ export default function CreateProjectModal({ onClose, onCreated }) {
           )}
 
           {/* Actions */}
-          <div className="flex justify-end gap-3 pt-1">
+          <div className="flex justify-end gap-3">
             <button
               type="button"
               onClick={onClose}
               disabled={loading}
-              className="btn px-5 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-100 rounded-lg transition"
+              className="btn px-5 py-2 text-sm font-semibold text-gray-600 bg-slate-200"
             >
               Cancel
             </button>

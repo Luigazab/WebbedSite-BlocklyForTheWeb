@@ -1,16 +1,8 @@
-// src/components/layout/EditorHeader.jsx
 import { useState, useRef, useEffect } from 'react'
 import { Menu, Home, FolderOpen, University, BookOpen, UserSquare2, Settings, Plus, Save, Download } from 'lucide-react'
 import { useNavigate } from 'react-router'
 import { useAuthStore } from '../../store/authStore'
 
-/**
- * Props:
- *  onNew()       — create a new project
- *  onSave()      — open save modal
- *  onLoad()      — open load modal
- *  projectTitle  — current project title shown beside the logo (optional, falls back to 'WebbedSite')
- */
 const EditorHeader = ({ onNew, onSave, onLoad, projectTitle }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const navigate       = useNavigate()
@@ -28,14 +20,22 @@ const EditorHeader = ({ onNew, onSave, onLoad, projectTitle }) => {
   ]
 
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      const isDesktopClickOutside = desktopMenuRef.current && !desktopMenuRef.current.contains(event.target)
-      const isMobileClickOutside  = mobileMenuRef.current  && !mobileMenuRef.current.contains(event.target)
-      if (isDesktopClickOutside && isMobileClickOutside) setIsMenuOpen(false)
+  const handleClickOutside = (event) => {
+    if (!isMenuOpen) return;
+
+    const desktopMenu = desktopMenuRef.current;
+    const mobileMenu  = mobileMenuRef.current;
+
+    const isDesktopOpen = window.innerWidth >= 1024;
+    const activeMenu = isDesktopOpen ? desktopMenu : mobileMenu;
+
+    if (activeMenu && !activeMenu.contains(event.target)) {
+      setIsMenuOpen(false);
     }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
+  };
+  document.addEventListener('mousedown', handleClickOutside);
+  return () => document.removeEventListener('mousedown', handleClickOutside);
+}, [isMenuOpen]);
 
   const handleNavigation = (href) => {
     setIsMenuOpen(false)
@@ -162,13 +162,13 @@ const EditorHeader = ({ onNew, onSave, onLoad, projectTitle }) => {
 
         {/* Mobile action buttons */}
         <div className="flex justify-center space-x-2 px-4 pb-3">
-          <button onClick={onNew}  className="btn flex items-center space-x-1 bg-orange-600 text-white text-sm px-3 py-2 rounded-md font-semibold">
+          <button onClick={onNew}  className="btn flex items-center space-x-1 btn-lead text-sm px-3 py-2 rounded-md font-semibold">
             <Plus size={16} /><span>New</span>
           </button>
-          <button onClick={onSave} className="btn flex items-center space-x-1 bg-green-600 text-white text-sm px-3 py-2 rounded-md font-semibold">
+          <button onClick={onSave} className="btn flex items-center space-x-1 btn-secondary text-sm px-3 py-2 rounded-md font-semibold">
             <Save size={16} /><span>Save</span>
           </button>
-          <button onClick={onLoad} className="btn flex items-center space-x-1 bg-blue-600 text-white text-sm px-3 py-2 rounded-md font-semibold">
+          <button onClick={onLoad} className="btn flex items-center space-x-1 btn-primary text-sm px-3 py-2 rounded-md font-semibold">
             <Download size={16} /><span>Load</span>
           </button>
         </div>

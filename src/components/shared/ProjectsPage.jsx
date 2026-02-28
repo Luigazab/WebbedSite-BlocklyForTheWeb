@@ -5,6 +5,9 @@ import { useAuthStore } from '../../store/authStore'
 import PageWrapper from '../layout/PageWrapper'
 import CreateProjectModal from './CreateProjectModal'
 import ProjectDetailsModal from './ProjectDetailsModal'
+import { useTour } from '../tour/TourProvider'
+import TourSpotlight from '../tour/TourSpotlight'
+import { projectsTourSteps } from '../../dashboards/student/tours/projectsTour'
 import { projectService } from '../../services/project.service'
 import {
   Search, ChevronDown, Image as ImageIcon,
@@ -17,6 +20,7 @@ const SORT_OPTIONS = ['Recent', 'Name', 'Most Liked']
 export default function ProjectsPage() {
   const profile  = useAuthStore((s) => s.profile)
   const navigate = useNavigate()
+  const { activeTour, isVisible } = useTour()
 
   const [projects,        setProjects]        = useState([])
   const [loading,         setLoading]         = useState(true)
@@ -161,6 +165,7 @@ export default function ProjectsPage() {
           {/* Create */}
           <button
             onClick={() => setShowCreateModal(true)}
+            data-tour="create-button"
             className="btn btn-primary px-4 py-2 text-sm font-semibold ml-auto"
           >
             + New Project
@@ -179,7 +184,7 @@ export default function ProjectsPage() {
             <button onClick={fetchProjects} className="btn btn-primary text-sm">Try Again</button>
           </div>
         ) : displayed.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 px-6 bg-gradient-to-br from-purple-50 to-blue-50 rounded-3xl">
+          <div className="flex flex-col items-center justify-center py-20 px-6 bg-linear-to-br from-purple-50 to-blue-50 rounded-3xl">
             <p className="text-lg font-bold text-gray-800 mb-2">
               {search ? 'No projects match your search' : 'No saved projects yet'}
             </p>
@@ -224,6 +229,7 @@ export default function ProjectsPage() {
           onToggleVisibility={() => handleToggleVisibility(selectedProject)}
         />
       )}
+      {activeTour === 'projects' && isVisible && <TourSpotlight steps={projectsTourSteps} />}
     </PageWrapper>
   )
 }

@@ -11,6 +11,7 @@ import TeacherRegister from '../pages/auth/TeacherRegister'
 import NotFound from '../pages/public/NotFound'
 import ErrorPage from '../pages/public/ErrorPage'
 import { PublicRoute } from '../components/layout/PublicRoute'
+import BlocklyTabs from '../components/editor/BlocklyTabs'
 
 const router = createBrowserRouter([
   { path: '/', element: <Navigate to="/login" replace />, errorElement: <ErrorPage/> },
@@ -42,7 +43,8 @@ const router = createBrowserRouter([
     errorElement: <ErrorPage />,
     children: adminRoutes
   },
-  { path: '*', element: <NotFound /> }
+  { path: '*', element: <NotFound /> },
+  { path: '/tryEditor', element: <BlocklyTabs/> },
 ])
 
 export default function Router() {
