@@ -1,5 +1,5 @@
-import { useEffect } from 'react'
-import { Globe, CodeXml, BookOpenText, LandPlot, EarthLockIcon } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Globe, CodeXml, BookOpenText, LandPlot, EarthLockIcon, ArrowRight, Loader2 } from 'lucide-react'
 import RecentProjectCard from '../components/RecentProjectCard'
 import ProjectCard from '../components/ProjectCard'
 import { Divider } from '../../../components/public/Divider'
@@ -8,10 +8,14 @@ import { useNavigate } from 'react-router'
 import { useTour } from '../../../components/tour/TourProvider'
 import TourSpotlight from '../../../components/tour/TourSpotlight'
 import { homeTourSteps } from '../tours/homeTour'
+import { projectService } from '../../../services/project.service'
 
 const StudentHome = () => {
   const navigate = useNavigate()
   const { startTour, activeTour, isVisible } = useTour()
+  
+  const [recentProjects, setRecentProjects] = useState([])
+  const [loadingProjects, setLoadingProjects] = useState(true)
 
   const projectTypes = [
     { icon: CodeXml, title: 'Create', color: 'bg-blockly-blue/90', to: 'editor', tourId: 'create-button' },
@@ -20,15 +24,21 @@ const StudentHome = () => {
     { icon: EarthLockIcon, title: 'Join', color: 'bg-blockly-purple/90', to: 'classrooms', tourId: 'join-button' },
   ]
 
-  const recentProjects = [
-    {
-      title: 'Broken Wave',
-      type: 'HTML',
-      tags: ['Blocks'],
-      editedTime: 'Edited 13 seconds ago',
-      icon: Globe
+  useEffect(() => {
+    const fetchRecentProjects = async () => {
+      try {
+        setLoadingProjects(true)
+        const projects = await projectService.getUserProjects({ sortBy: 'Recent' })
+        setRecentProjects(projects.slice(0, 4))
+      } catch (error) {
+        console.error('Error fetching recent projects:', error)
+      } finally {
+        setLoadingProjects(false)
+      }
     }
-  ]
+
+    fetchRecentProjects()
+  }, [])
 
   // Check if user has seen the tour
   useEffect(() => {
@@ -86,14 +96,44 @@ const StudentHome = () => {
         {/* Recent Projects */}
         <section data-tour="recent-projects">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">Recent Projects</h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {recentProjects.map((project, index) => (
-              <RecentProjectCard
-                key={index}
-                {...project}
-              />
-            ))}
-          </div>
+          
+          {loadingProjects ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin text-blockly-blue" />
+            </div>
+          ) : recentProjects.length === 0 ? (
+            <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
+              <Globe className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-500">No projects yet. Create your first project to get started!</p>
+            </div>
+          ) : (
+            <div className="flex gap-4 overflow-scroll ">
+              {recentProjects.map((project) => (
+                <RecentProjectCard
+                  key={project.id}
+                  id={project.id}
+                  title={project.title}
+                  description={project.description}
+                  updated_at={project.updated_at}
+                  onClick={() => navigate(`/student/editor/${project.id}`)}
+                />
+              ))}
+              
+              {recentProjects.length > 0 && (
+                <div 
+                  onClick={() => navigate('/student/projects')}
+                  className="bg-blockly-blue border border-gray-200 rounded-lg p-4 hover:shadow-md transition-all cursor-pointer flex items-center justify-center group"
+                >
+                  <div className="text-center">
+                    <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center mx-auto mb-2">
+                      <ArrowRight className="w-6 h-6 text-white group-hover:translate-x-1 transition-transform" />
+                    </div>
+                    <h3 className="font-bold text-white truncate">See More</h3>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </section>
       </div>
 
