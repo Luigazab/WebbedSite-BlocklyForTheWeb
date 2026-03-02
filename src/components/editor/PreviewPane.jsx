@@ -1,4 +1,3 @@
-// components/PreviewPane.jsx
 import { useState } from 'react';
 import { Play } from 'lucide-react';
 import DeviceSelector from './DeviceSelector';
@@ -26,7 +25,7 @@ const PreviewPane = ({
       <h4 className="absolute -top-6 left-2 font-bold z-1 text-5xl font-mono [text-shadow:1px_1px_0_white,-1px_-1px_0_white,1px_-1px_0_white,-1px_1px_0_white] px-2">
         Preview
       </h4>
-      <div id="outputPanel" className="flex-1 my-6 h-[96%] flex flex-col border-2 drop-shadow-[4px_4px_0_rgba(0,0,0,1)] bg-white relative">
+      <div id="outputPanel" className="flex-1 my-6 h-[96%] flex flex-col border-2 border-slate-500 rounded-lg bg-white relative">
         <button onClick={onRunCode} 
           className="absolute -top-6 left-45 px-2 py-2 bg-green-500 border-3 border-black text-black hover:bg-green-60 rounded-full hover:bg-green-600 hover:-translate-y-1 font-medium transition-all"
         >

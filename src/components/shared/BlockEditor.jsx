@@ -1,17 +1,19 @@
-// src/dashboards/student/pages/Editor.jsx (or wherever your BlockEditor is)
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useParams, useLocation } from 'react-router'
 import { javascriptGenerator } from 'blockly/javascript'
 import BlocklyWorkspace from '../editor/BlocklyWorkspace'
 import PreviewPane from '../editor/PreviewPane'
+import FileTabs from '../editor/FileTabs'
 import { useProjectDatabase } from '../../hooks/useProjectDatabase'
+import { useProjectFiles } from '../../hooks/useProjectFiles'
+import { createDefaultProjectFiles } from '../../services/projectfiles.service'
 import SaveModal from '../editor/SaveModal'
 import LoadModal from '../editor/LoadModal'
 import CreateProjectModal from '../shared/CreateProjectModal'
 import EditorHeader from '../layout/EditorHeader'
 import { useAuthStore } from '../../store/authStore'
 import { useUIStore } from '../../store/uiStore'
-
+import { localProjectFilesService } from '../../services/localProjectFiles.service'
 
 const BlockEditor = () => {
   const { id } = useParams()
@@ -42,6 +44,18 @@ const BlockEditor = () => {
     deleteProject 
   } = useProjectDatabase()
 
+  // Multi-file support
+  const { 
+    files, 
+    activeFile, 
+    isLocal,
+    saveFile, 
+    deleteFile, 
+    setActiveFile,
+    createFile,
+    migrateLocalFilesToDb 
+  } = useProjectFiles(id || currentProjectId)
+
   // Initialize Blockly workspace
   const workspace = BlocklyWorkspace({
     initialWorkspaceState,
@@ -51,11 +65,23 @@ const BlockEditor = () => {
     },
     onWorkspaceLoad: () => {
       if (id && !initialWorkspaceState) {
-        loadProjectById(id)
       }
     }
   })
-
+  useEffect(() => {
+    if (id && id !== currentProjectId) {
+      setCurrentProjectId(id)
+    }
+  }, [id])
+  useEffect(() => {
+    if (id && projects.length > 0) {
+      const project = projects.find((p) => p.id === id)
+      if (project) {
+        setProjectTitle(project.title)
+        setProjectDescription(project.description || '')
+      }
+    }
+  }, [id, projects])
   useEffect(() => {
     loadUserProjects()
   }, [])
@@ -67,53 +93,129 @@ const BlockEditor = () => {
     }
   }, [workspace.isInitialized])
 
-  const loadProjectById = async (projectId) => {
-    try {
-      const project = projects.find((p) => p.id === projectId)
-      if (project) {
-        setProjectTitle(project.title)
-        setProjectDescription(project.description || '')
-        setCurrentProjectId(project.id)
-        setInitialWorkspaceState(project.blocks_json)
-        addToast(`Loaded "${project.title}"`, 'success')
+  useEffect(() => {
+    if (activeFile && files.length > 0 && workspace.isInitialized) {
+      const file = files.find(f => f.id === activeFile)
+      if (file && file.blocks_json) {
+        try {
+          workspace.loadWorkspaceState(file.blocks_json)
+        } catch (error) {
+          console.error('Error loading file blocks:', error)
+          workspace.clearWorkspace()
+          addToast('Error loading file blocks', 'error')
+        }
       }
-    } catch (error) {
-      addToast('Error loading project', 'error')
     }
-  }
+  }, [activeFile, files, workspace.isInitialized])
+
+  // const loadProjectById = async (projectId) => {
+  //   try {
+  //     const project = projects.find((p) => p.id === projectId)
+  //     if (project) {
+  //       setProjectTitle(project.title)
+  //       setProjectDescription(project.description || '')
+  //       setCurrentProjectId(project.id)
+        
+  //       // Files will be loaded by useProjectFiles hook
+  //       addToast(`Loaded "${project.title}"`, 'success')
+  //     }
+  //   } catch (error) {
+  //     addToast('Error loading project', 'error')
+  //   }
+  // }
 
   const runCode = () => {
     const code = workspace.getGeneratedCode()
     setGeneratedCode(code)
   }
 
-  // ─── Save Handlers ─────────────────────────────────────
+
+  const handleFileChange = async (fileId) => {
+    if (!activeFile) return
+
+    try {
+      // Save current file before switching
+      const workspaceState = workspace.getWorkspaceState()
+      await saveFile(currentProjectId, activeFile, workspaceState)
+      
+      // Switch to new file
+      setActiveFile(fileId)
+    } catch (error) {
+      addToast('Error switching files', 'error')
+    }
+  }
+
+  const handleCreateFile = async (filename) => {
+    try {
+      if (activeFile) {
+        const workspaceState = workspace.getWorkspaceState()
+        await saveFile(currentProjectId, activeFile, workspaceState)
+      }
+      
+      await createFile(currentProjectId, filename)
+      addToast(`Created ${filename}`, 'success')
+    } catch (error) {
+      addToast('Error creating file', 'error')
+    }
+  }
+
+  const handleDeleteFile = async (fileId) => {
+    try {
+      await deleteFile(fileId, currentProjectId)
+      addToast('File deleted', 'info')
+    } catch (error) {
+      addToast('Error deleting file', 'error')
+    }
+  }
+
 
   const handleSaveToAccount = async ({ title, description }) => {
     try {
-      const workspaceState = workspace.getWorkspaceState()
-      const code = workspace.getGeneratedCode()
-      
-      const savedProject = await saveProject({
-        title,
-        description,
-        workspaceState,
-        code,
-        projectId: id || currentProjectId
-      })
-      
-      setCurrentProjectId(savedProject.id)
-      setProjectTitle(title)
-      setProjectDescription(description)
-      
-      if (!(id || currentProjectId)) {
+      if (activeFile) {
+        const workspaceState = workspace.getWorkspaceState()
+        await saveFile(currentProjectId, activeFile, workspaceState)
+      }
+
+      if (!currentProjectId) {
+        const code = workspace.getGeneratedCode()
+        
+        const savedProject = await saveProject({
+          title,
+          description,
+          workspaceState: { blocks: { languageVersion: 0, blocks: [] } },
+          code,
+          projectId: null
+        })
+        
+        setCurrentProjectId(savedProject.id)
+        setProjectTitle(title)
+        setProjectDescription(description)
+        
+        if (isLocal) {
+          await migrateLocalFilesToDb(savedProject.id)
+          addToast('Local files migrated to your account', 'success')
+        }
+        
         navigate(`/${profile?.role}/editor/${savedProject.id}`, { replace: true })
+      } else {
+        const code = workspace.getGeneratedCode()
+        await saveProject({
+          title,
+          description,
+          workspaceState: { blocks: { languageVersion: 0, blocks: [] } },
+          code,
+          projectId: currentProjectId
+        })
+        
+        setProjectTitle(title)
+        setProjectDescription(description)
       }
       
       setShowSaveModal(false)
       addToast(`Project "${title}" saved successfully!`, 'success')
       loadUserProjects()
     } catch (error) {
+      console.error('Save error:', error)
       addToast(error.message || 'Failed to save project', 'error')
     }
   }
@@ -161,7 +263,6 @@ const BlockEditor = () => {
     addToast('Blockly project exported!', 'success')
   }
 
-  // ─── Load Handlers ─────────────────────────────────────
 
   const handleLoadFromDevice = () => {
     fileInputRef.current?.click()
@@ -199,7 +300,6 @@ const BlockEditor = () => {
     setProjectTitle(project.title)
     setProjectDescription(project.description || '')
     setCurrentProjectId(project.id)
-    setInitialWorkspaceState(project.blocks_json)
     navigate(`/${profile?.role}/editor/${project.id}`)
     addToast(`Loaded "${project.title}"`, 'success')
   }
@@ -222,38 +322,68 @@ const BlockEditor = () => {
   // ─── Create New ────────────────────────────────────────
 
   const handleCreateNew = () => {
-    // Always show the CreateProjectModal when New button is clicked
-    setShowCreateModal(true)
+    if (currentProjectId || files.some(f => f.blocks_json?.blocks?.blocks?.length > 0)) {
+      if (window.confirm('Create a new project? Any unsaved changes will be lost.')) {
+        workspace.clearWorkspace()
+        setProjectTitle('Untitled')
+        setProjectDescription('')
+        setCurrentProjectId(null)
+        setInitialWorkspaceState(null)
+        
+        localProjectFilesService.clearLocalFiles()
+        const newFiles = localProjectFilesService.createDefaultLocalFiles()
+        
+        navigate(`/${profile?.role}/editor`, { replace: true })
+        addToast('New project started', 'info')
+      }
+    } else {
+      workspace.clearWorkspace()
+      setProjectTitle('Untitled')
+      setProjectDescription('')
+      setCurrentProjectId(null)
+      setInitialWorkspaceState(null)
+      addToast('Ready for new project', 'info')
+    }
   }
 
-  const handleCreateNewConfirm = () => {
-    workspace.clearWorkspace()
-    setProjectTitle('Untitled')
-    setProjectDescription('')
-    setCurrentProjectId(null)
-    setInitialWorkspaceState(null)
-    navigate(`/${profile?.role}/editor`, { replace: true })
-    setShowCreateModal(false)
-    addToast('New project created', 'info')
-  }
+  // const handleCreateNewConfirm = () => {
+  //   workspace.clearWorkspace()
+  //   setProjectTitle('Untitled')
+  //   setProjectDescription('')
+  //   setCurrentProjectId(null)
+  //   setInitialWorkspaceState(null)
+  //   navigate(`/${profile?.role}/editor`, { replace: true })
+  //   setShowCreateModal(false)
+  //   addToast('New project created', 'info')
+  // }
 
   return (
     <div className="flex flex-col h-screen overflow-hidden">
       <EditorHeader
-        onNew={(handleCreateNew)}
+        onNew={handleCreateNew}
         onSave={() => setShowSaveModal(true)}
         onLoad={() => setShowLoadModal(true)}
         projectTitle={projectTitle}
       />
       
-      <div className="flex flex-col md:flex-row flex-1 overflow-hidden p-4 gap-4">
-        {/* Blockly Workspace */}
-        <div className="flex md:w-2/3 h-full border-4 rounded-xl border-gray-600 bg-white overflow-hidden">
-          <div ref={workspace.blocklyDiv} className="blocklyDiv flex-1" />
+      <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
+        {/* Blockly Workspace with File Tabs */}
+        <div className="flex flex-col md:w-2/3 h-full border-2 border-gray-800 bg-white overflow-hidden">
+          {/* File Tabs */}
+          <FileTabs
+            files={files}
+            activeFile={activeFile}
+            isLocal={isLocal}
+            onFileChange={handleFileChange}
+            onFileCreate={handleCreateFile}
+            onFileDelete={handleDeleteFile}
+          />
+          
+          {/* Workspace */}
+          <div ref={workspace.blocklyDiv} className="blocklyDiv flex-1 h-full" />
         </div>
-        
         {/* Preview Pane */}
-        <div className="flex-1 h-full overflow-hidden"> 
+        <div className="flex-1 h-full overflow-hidden mx-2"> 
           <PreviewPane
             generatedCode={generatedCode}
             onRunCode={runCode}
@@ -275,13 +405,13 @@ const BlockEditor = () => {
       />
 
       {/* Modals */}
-      {showCreateModal && (
+      {/* {showCreateModal && (
         <CreateProjectModal
           isOpen={showCreateModal}
           onClose={() => setShowCreateModal(false)}
           onCreated={handleCreateNewConfirm}
         />
-      )}
+      )} */}
 
       <SaveModal
         isOpen={showSaveModal}

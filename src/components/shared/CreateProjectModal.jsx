@@ -1,8 +1,8 @@
-// src/components/shared/CreateProjectModal.jsx
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import { useAuthStore } from '../../store/authStore'
 import { projectService } from '../../services/project.service'
+import { createDefaultProjectFiles } from '../../services/projectfiles.service'
 import { X, Loader2 } from 'lucide-react'
 
 const MODES = [
@@ -10,11 +10,6 @@ const MODES = [
   { title: 'Code',   description: 'Code in traditional text mode'  },
 ]
 
-/**
- * Props:
- *  onClose()   — called when the modal is dismissed
- *  onCreated() — called after a non-Blocks project is created (or to refresh list)
- */
 export default function CreateProjectModal({ onClose, onCreated }) {
   const navigate = useNavigate()
   const profile  = useAuthStore((s) => s.profile)
@@ -37,6 +32,8 @@ export default function CreateProjectModal({ onClose, onCreated }) {
           description: form.description.trim(),
         })
 
+        await createDefaultProjectFiles(project.id)
+
         navigate(`/${profile?.role}/editor/${project.id}`, {
           state: { projectTitle: project.title },
         })
@@ -45,7 +42,8 @@ export default function CreateProjectModal({ onClose, onCreated }) {
         onClose()
       }
     } catch (err) {
-      setError(err.message)
+      console.error('Error creating project:', err)
+      setError(err.message || 'Failed to create project')
       setLoading(false)
     }
   }

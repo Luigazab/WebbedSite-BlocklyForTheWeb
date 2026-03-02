@@ -140,8 +140,20 @@ const BlocklyWorkspace = ({
   
   const loadWorkspaceState = useCallback((state) => {
     if (workspace.current && state) {
-      Blockly.serialization.workspaces.load(state, workspace.current);
-      initialStateLoaded.current = true;
+      try {
+        // Validate state structure before loading
+        if (state && typeof state === 'object') {
+          workspace.current.clear();
+          Blockly.serialization.workspaces.load(state, workspace.current);
+          initialStateLoaded.current = true;
+        } else {
+          console.warn('Invalid workspace state:', state);
+          workspace.current.clear();
+        }
+      } catch (error) {
+        console.error('Error loading workspace state:', error);
+        workspace.current.clear();
+      }
     }
   }, []);
   

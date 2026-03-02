@@ -64,6 +64,19 @@ export const useProjectDatabase = () => {
     setProjects(prev => prev.filter(p => p.id !== projectId));
   }, []);
 
+  // Add this to your useProjectDatabase hook
+  const ensureProjectFiles = useCallback(async (projectId) => {
+    const { data: existingFiles } = await supabase
+      .from('project_files')
+      .select('id')
+      .eq('project_id', projectId);
+
+    if (!existingFiles || existingFiles.length === 0) {
+      // No files exist, create default ones
+      await createDefaultProjectFiles(projectId);
+    }
+  }, []);
+
   return {
     projects,
     loading,

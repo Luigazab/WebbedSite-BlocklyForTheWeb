@@ -38,8 +38,8 @@ const DeviceSelector = ({
               onClick={() => onSelectDevice(key)}
               className={`flex flex-col items-center rounded-sm btn py-2 px-2 md:py-3 ${
                 isSelected 
-                  ? 'bg-green-500 text-white' 
-                  : 'bg-sky-400'
+                  ? 'btn-secondary' 
+                  : 'btn-lead'
               }`}
             >
               <IconComponent size={24} />

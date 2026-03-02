@@ -1,23 +1,93 @@
-import { useState } from 'react'
-import { X, ThumbsUp, MessageSquare } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { X, ThumbsUp, MessageSquare, Monitor, Code } from 'lucide-react'
+import * as Blockly from 'blockly/core'
+import 'blockly/blocks'
+import Theme from '@blockly/theme-modern'
 
-export default function ProjectDetailsModal({ project, onClose }) {
+export default function ProjectDetailsModal({ project, onClose, srcDoc }) {
   const [comment, setComment] = useState('')
+  const [viewMode, setViewMode] = useState('preview')
+  const [blocksJson, setBlocksJson] = useState(null);
+  const blocklyDivRef = useRef(null);
+  const workspaceRef = useRef(null);
 
   const handleSubmitComment = (e) => {
     e.preventDefault()
     if (!comment.trim()) return
     console.log('Submitting comment:', comment)
-    // TODO: Call comment service
     setComment('')
   }
 
+  const handleViewModeToggle = (mode) => {
+    if(workspaceRef.current){
+      workspaceRef.current.dispose();
+      workspaceRef.current = null;
+    }
+    setViewMode(mode)
+  }
+  useEffect(() => {
+    if (viewMode === 'blocks' && blocksJson && blocklyDivRef.current && !workspaceRef.current) {
+      renderBlocklyWorkspace();
+    }
+    
+    return () => {
+      if (workspaceRef.current) {
+        workspaceRef.current.dispose();
+        workspaceRef.current = null;
+      }
+    };
+  }, [viewMode, blocksJson]);
+  const renderBlocklyWorkspace = () => {
+    if (!blocklyDivRef.current || !blocksJson) return;
+
+    try {
+      if (workspaceRef.current) {
+        workspaceRef.current.dispose();
+      }
+
+      const workspace = Blockly.inject(blocklyDivRef.current, {
+        readOnly: true,
+        theme: Theme,
+        renderer: "zelos",
+        zoom: {
+          controls: true,
+          wheel: true,
+          startScale: 0.8,
+          maxScale: 3,
+          minScale: 0.3,
+          scaleSpeed: 1.2
+        },
+        move: {
+          scrollbars: true,
+          drag: true,
+          wheel: true
+        },
+        sounds: false,
+      });
+
+      workspaceRef.current = workspace;
+
+      if (blocksJson) {
+        Blockly.serialization.workspaces.load(blocksJson, workspace);
+      }
+
+      setTimeout(() => {
+        workspace.scrollCenter();
+      }, 100);
+    } catch (error) {
+      console.error('Error rendering Blockly workspace:', error);
+    }
+  };
+
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+      <div className="card l max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 shrink-0">
-          <h2 className="text-lg font-bold text-gray-800">{project.title}</h2>
+        <div className="flex items-center justify-between shrink-0">
+          <div>
+            <h2 className="text-lg font-bold text-gray-800">{project.title}</h2>
+            <p className="text-sm font-bold text-gray-400 ml-2 pl-2 border-l-4">{project.description}</p>
+          </div>
           <button
             onClick={onClose}
             className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
@@ -31,41 +101,73 @@ export default function ProjectDetailsModal({ project, onClose }) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6">
             {/* Left: Preview */}
             <div className="flex flex-col gap-4">
-              <div className="aspect-video bg-gray-100 rounded-xl flex items-center justify-center border-2 border-gray-200">
-                {project.thumbnail ? (
-                  <img
-                    src={project.thumbnail}
-                    alt={project.title}
-                    className="w-full h-full object-cover rounded-xl"
-                  />
+              <div className='flex gap-2 mb-3'>
+                <button
+                  onClick={() => handleViewModeToggle('preview')}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-bold text-sm btn ${
+                    viewMode === 'preview'
+                      ? 'btn-primary'
+                      : 'bg-white text-gray-700 hover:bg-gray-100'
+                  }`}
+                >
+                  <Monitor size={18} />
+                  Preview
+                </button>
+                <button
+                  onClick={() => handleViewModeToggle('blocks')}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-bold text-sm btn ${
+                    viewMode === 'blocks'
+                      ? 'btn-lead'
+                      : 'bg-white text-gray-700 hover:bg-gray-100'
+                  }`}
+                >
+                  <Code size={18} />
+                  Blocks
+                </button>
+              </div>
+              <div className="flex-1 border-2 border-black bg-white rounded-lg overflow-hidden drop-shadow-[4px_4px_0_rgba(0,0,0,1)]">
+                {viewMode === 'preview' ? (
+                  srcDoc ? ( 
+                    <iframe 
+                      srcDoc={srcDoc} 
+                      title={`Preview of ${title}`} 
+                      sandbox="allow-scripts"
+                      className="w-full h-full border-0"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-gray-100 text-gray-400 text-lg">
+                      No preview available
+                    </div>
+                  )
                 ) : (
-                  <div className="flex items-center justify-center w-full h-full">
-                    <div className="w-32 h-32 border-l-2 border-t-2 border-gray-300 rotate-45" />
-                    <div className="w-32 h-32 border-r-2 border-b-2 border-gray-300 rotate-45 -ml-32" />
-                  </div>
+                  <div 
+                    ref={blocklyDivRef}
+                    className="w-full h-full bg-gray-50"
+                    style={{ minHeight: '400px' }}
+                  />
                 )}
               </div>
+            </div>
 
+            {/* Right: Comments */}
+            <div className="flex flex-col gap-4">
+              
               {/* Stats */}
-              <div className="flex items-center gap-4">
-                <button className="btn flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-600 rounded-lg text-sm font-semibold hover:bg-blue-200 transition-colors">
+              <div className="flex items-center justify-end gap-4">
+                <button className="flex items-center gap-2 px-2 py-2 bg-blue-100 text-blue-600 rounded-lg text-sm font-semibold hover:bg-blue-200 transition-colors">
                   <ThumbsUp className="w-4 h-4" />
                   {project.likes}
                 </button>
-                <button className="btn flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-600 rounded-lg text-sm font-semibold hover:bg-gray-200 transition-colors">
+                <button className="flex items-center gap-2 px-2 py-2 bg-gray-100 text-gray-600 rounded-lg text-sm font-semibold hover:bg-gray-200 transition-colors">
                   <MessageSquare className="w-4 h-4" />
                   {project.comments}
                 </button>
               </div>
 
               {/* Edit button */}
-              <button className="btn w-full py-2.5 bg-gray-900 text-white text-sm font-semibold rounded-lg hover:bg-gray-800 transition-colors">
+              <button className="btn w-full py-2.5 btn-lead text-sm ">
                 Edit
               </button>
-            </div>
-
-            {/* Right: Comments */}
-            <div className="flex flex-col gap-4">
               <h3 className="font-bold text-gray-800">Comments</h3>
 
               {/* Comment form */}

@@ -153,10 +153,10 @@
     @apply border-2 border-black
   } */
   .blocklyToolbox {
-    @apply bg-blockly-light! border-r border-gray-200
+    @apply bg-gray-800! border-r border-black
   }
   .blocklyTreeSeparator{
-    @apply border-t-3  border-black! rounded-full p-0!
+    @apply border-3  border-blockly-blue! rounded-full
   }
   .blocklyToolboxCategory{
     @apply px-3! py-2 my-1 flex items-center justify-center rounded-sm btn transition-all;
@@ -185,23 +185,26 @@
   .blocklyToolboxCategory svg{
     color:white;
   }
-
-
   .htmlCategory{
     @apply  py-1 bg-[#f16529] hover:bg-[#f16529]! border-2! border-black! min-w-42.5! my-1 hover:drop-shadow-[0_3px_0_black] hover:-translate-y-1 transition-all rounded-sm
   }
   .cssCategory{
     @apply  py-1 bg-[#29a8e0] hover:bg-[#29a8e0]! border-2! border-black! min-w-42.5! my-1 hover:drop-shadow-[0_3px_0_black] hover:-translate-y-1 transition-all rounded-sm
   }
-  .blocklySvg{
-    @apply bg-gray-200!;
+  .externalCSS{
+    @apply btn btn-secondary! rounded-sm my-1 border-l-0! px-2! items-center flex justify-center;
   }
-
+  .internalCSS{
+    @apply btn btn-primary! rounded-sm my-1 border-l-0! px-2! items-center flex justify-center;
+  }
+  .blocklySvg{
+    @apply bg-amber-50!;
+  }
   .blocklyToolboxCategoryGroup{
-    @apply  text-center px-2 ;
+    @apply  text-center px-2 border-l-blockly-yellow border-l-2;
   }
   .customLabel{
-    @apply font-bold text-center
+    @apply font-bold text-center text-white! text-xl
   }
   .blocklyFlyout{
     @apply flex p-0! bg-slate-950/60! rounded-tr-2xl rounded-br-2xl

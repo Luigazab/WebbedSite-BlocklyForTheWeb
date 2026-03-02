@@ -114,6 +114,9 @@ export const toolboxConfig = {
       kind: 'category',
       name: 'External',
       colour: '#ff6b6b',
+      cssconfig: {
+        row: 'externalCSS'
+      },
       contents: [
         {
           kind: 'category',
@@ -131,6 +134,9 @@ export const toolboxConfig = {
       kind: 'category',
       name: 'Internal',
       colour: '#ff6b6b',
+      cssconfig: {
+        row: 'internalCSS'
+      },
       contents: [
         {
           kind: 'category',

@@ -2,21 +2,20 @@ import { useEffect } from "react";
 import { useProjectFilesStore } from "../store/projectFilesStore";
 
 export function useProjectFiles(projectId) {
-  const { files, activeFile, loadFiles, saveFile, deleteFile, setActiveFile } =
-    useProjectFilesStore();
+  const { files, activeFile, isLocal, loadFiles, saveFile, deleteFile, setActiveFile, createFile, migrateLocalFilesToDb } = useProjectFilesStore();
 
   useEffect(() => {
-    if (projectId) {
-      loadFiles(projectId)
-      addToast('Account created! Please check your email to confirm.', 'success')
-    };
-  }, [projectId]);
+    loadFiles(projectId);
+  }, [projectId, loadFiles]);
 
   return {
     files,
     activeFile,
+    isLocal,
     saveFile,
     deleteFile,
     setActiveFile,
+    createFile,
+    migrateLocalFilesToDb,
   };
 }
