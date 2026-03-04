@@ -8,13 +8,13 @@ import {
 } from 'lucide-react'
 
 const links = [
-  { to: '/student',             label: 'Home',        icon: Home},
-  { to: '/student/projects',    label: 'Projects',    icon: FolderOpen},
-  { to: '/student/classrooms',  label: 'Classrooms',  icon: University},
-  { to: '/student/learn',     label: 'Learn',       icon: BookOpen},
+  { to: '/student',             label: 'Home',        icon: Home        },
+  { to: '/student/projects',    label: 'Projects',    icon: FolderOpen  },
+  { to: '/student/classrooms',  label: 'Classrooms',  icon: University  },
+  { to: '/student/learn',       label: 'Learn',       icon: BookOpen    },
   // { to: '/student/tutorials', label: 'Tutorials', icon: PlayCircle},
-  { to: '/student/profile',     label: 'Profile',     icon: UserSquare2},
-  { to: '/student/settings',    label: 'Settings',    icon: Settings},
+  { to: '/student/profile',     label: 'Profile',     icon: UserSquare2 },
+  { to: '/student/settings',    label: 'Settings',    icon: Settings    },
 ]
 
 export default function StudentSidebar() {

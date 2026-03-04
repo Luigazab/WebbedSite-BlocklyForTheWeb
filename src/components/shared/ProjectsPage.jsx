@@ -12,6 +12,7 @@ import { projectService } from '../../services/project.service'
 import {
   Search, ChevronDown, Image as ImageIcon,
   ThumbsUp, MessageSquare, Loader2, RefreshCw,
+  FoldersIcon,
 } from 'lucide-react'
 
 const FILTERS      = ['All', 'Public', 'Private']
@@ -178,23 +179,28 @@ export default function ProjectsPage() {
             <Loader2 className="w-8 h-8 text-blockly-purple animate-spin" />
           </div>
         ) : error ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center">
-            <p className="text-red-500 font-semibold mb-2">Failed to load projects</p>
-            <p className="text-sm text-gray-400 mb-4">{error}</p>
+          <div className="flex flex-col bg-gray-200 rounded-3xl items-center justify-center py-20 gap-4 text-center">
+            <p className="text-red-500 font-semibold">Failed to load projects</p>
+            <p className="text-sm text-gray-400">{error}</p>
             <button onClick={fetchProjects} className="btn btn-primary text-sm">Try Again</button>
           </div>
         ) : displayed.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 px-6 bg-linear-to-br from-purple-50 to-blue-50 rounded-3xl">
-            <p className="text-lg font-bold text-gray-800 mb-2">
-              {search ? 'No projects match your search' : 'No saved projects yet'}
-            </p>
-            <p className="text-sm text-gray-500 mb-6">
-              {search ? 'Try a different keyword' : 'Create one to get started!'}
-            </p>
+          <div className="flex flex-col bg-gray-200 rounded-3xl items-center justify-center py-20 gap-4">
+            <div className='w-16 h-16 rounded-2xl bg-blockly-purple/10 flex items-center justify-center'>
+              <FoldersIcon className='w-8 h-8 text-blockly-purple' />
+            </div>
+            <div className='flex flex-col items-center'>
+              <p className="text-lg font-bold text-gray-800">
+                {search ? 'No projects match your search' : 'No saved projects yet'}
+              </p>
+              <p className="text-sm text-gray-400">
+                {search ? 'Try a different keyword' : 'Create one to get started!'}
+              </p>
+            </div>
             {!search && (
               <button
                 onClick={() => setShowCreateModal(true)}
-                className="btn bg-gray-900 text-white btn-primary"
+                className="px-4 btn py-2 btn-lead text-sm font-semibold rounded-lg"
               >
                 Create new
               </button>

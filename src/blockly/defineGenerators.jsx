@@ -32,38 +32,45 @@ export const defineGenerators = () => {
   // =============================================================================
 
   javascriptGenerator.forBlock['div'] = function(block) {
+    const attributes = javascriptGenerator.valueToCode(block, 'attributes', 0) || '';
     const content = javascriptGenerator.statementToCode(block, 'CONTENT');
-    return `${INDENT}<div>\n${content}${INDENT}</div>\n`;
+    return `${INDENT}<div${attributes}>\n${content}${INDENT}</div>\n`;
   };
 
   javascriptGenerator.forBlock['header'] = function(block) {
+    const attributes = javascriptGenerator.valueToCode(block, 'attributes', 0) || '';
     const content = javascriptGenerator.statementToCode(block, 'CONTENT');
-    return `${INDENT}<header>\n${content}${INDENT}</header>\n`;
+    return `${INDENT}<header${attributes}>\n${content}${INDENT}</header>\n`;
   };
 
   javascriptGenerator.forBlock['footer'] = function(block) {
+    const attributes = javascriptGenerator.valueToCode(block, 'attributes', 0) || '';
     const content = javascriptGenerator.statementToCode(block, 'CONTENT');
-    return `${INDENT}<footer>\n${content}${INDENT}</footer>\n`;
+    return `${INDENT}<footer${attributes}>\n${content}${INDENT}</footer>\n`;
   };
 
   javascriptGenerator.forBlock['section'] = function(block) {
+    const attributes = javascriptGenerator.valueToCode(block, 'attributes', 0) || '';
     const content = javascriptGenerator.statementToCode(block, 'CONTENT');
-    return `${INDENT}<section>\n${content}${INDENT}</section>\n`;
+    return `${INDENT}<section${attributes}>\n${content}${INDENT}</section>\n`;
   };
 
   javascriptGenerator.forBlock['article'] = function(block) {
+    const attributes = javascriptGenerator.valueToCode(block, 'attributes', 0) || '';
     const content = javascriptGenerator.statementToCode(block, 'CONTENT');
-    return `${INDENT}<article>\n${content}${INDENT}</article>\n`;
+    return `${INDENT}<article${attributes}>\n${content}${INDENT}</article>\n`;
   };
 
   javascriptGenerator.forBlock['nav'] = function(block) {
+    const attributes = javascriptGenerator.valueToCode(block, 'attributes', 0) || '';
     const content = javascriptGenerator.statementToCode(block, 'CONTENT');
-    return `${INDENT}<nav>\n${content}${INDENT}</nav>\n`;
+    return `${INDENT}<nav${attributes}>\n${content}${INDENT}</nav>\n`;
   };
 
   javascriptGenerator.forBlock['main'] = function(block) {
+    const attributes = javascriptGenerator.valueToCode(block, 'attributes', 0) || '';
     const content = javascriptGenerator.statementToCode(block, 'CONTENT');
-    return `${INDENT}<main>\n${content}${INDENT}</main>\n`;
+    return `${INDENT}<main${attributes}>\n${content}${INDENT}</main>\n`;
   };
 
   javascriptGenerator.forBlock['br'] = function(block) {
@@ -79,35 +86,41 @@ export const defineGenerators = () => {
   // =============================================================================
 
   javascriptGenerator.forBlock['heading'] = function(block) {
+    const attributes = javascriptGenerator.valueToCode(block, 'attributes', 0) || '';
     const level = block.getFieldValue('LEVEL');
     const text = block.getFieldValue('TEXT');
-    return `${INDENT}<h${level}>${text}</h${level}>\n`;
+    return `${INDENT}<h${level}${attributes}>${text}</h${level}>\n`;
   };
 
   javascriptGenerator.forBlock['paragraph'] = function(block) {
+    const attributes = javascriptGenerator.valueToCode(block, 'attributes', 0) || '';
     const text = block.getFieldValue('TEXT');
-    return `${INDENT}<p>${text}</p>\n`;
+    return `${INDENT}<p${attributes}>${text}</p>\n`;
   };
 
   javascriptGenerator.forBlock['span'] = function(block) {
+    const attributes = javascriptGenerator.valueToCode(block, 'attributes', 0) || '';
     const content = javascriptGenerator.statementToCode(block, 'CONTENT');
-    return `${INDENT}<span>${content}</span>\n`;
+    return `${INDENT}<span${attributes}>${content}</span>\n`;
   };
 
   javascriptGenerator.forBlock['a_tag'] = function(block) {
+    const attributes = javascriptGenerator.valueToCode(block, 'attributes', 0) || '';
     const url = block.getFieldValue('URL');
     const text = block.getFieldValue('TEXT');
-    return `${INDENT}<a href="${url}">${text}</a>\n`;
+    return `${INDENT}<a href="${url}"${attributes}>${text}</a>\n`;
   };
 
   javascriptGenerator.forBlock['strong'] = function(block) {
+    const attributes = javascriptGenerator.valueToCode(block, 'attributes', 0) || '';
     const text = block.getFieldValue('TEXT');
-    return `${INDENT}<strong>${text}</strong>\n`;
+    return `${INDENT}<strong${attributes}>${text}</strong>\n`;
   };
 
   javascriptGenerator.forBlock['em'] = function(block) {
+    const attributes = javascriptGenerator.valueToCode(block, 'attributes', 0) || '';
     const text = block.getFieldValue('TEXT');
-    return `${INDENT}<em>${text}</em>\n`;
+    return `${INDENT}<em${attributes}>${text}</em>\n`;
   };
 
   // =============================================================================
@@ -115,31 +128,36 @@ export const defineGenerators = () => {
   // =============================================================================
 
   javascriptGenerator.forBlock['form'] = function(block) {
+    const attributes = javascriptGenerator.valueToCode(block, 'attributes', 0) || '';
     const content = javascriptGenerator.statementToCode(block, 'CONTENT');
-    return `${INDENT}<form>\n${content}${INDENT}</form>\n`;
+    return `${INDENT}<form${attributes}>\n${content}${INDENT}</form>\n`;
   };
 
   javascriptGenerator.forBlock['label'] = function(block) {
+    const attributes = javascriptGenerator.valueToCode(block, 'attributes', 0) || '';
     const text = block.getFieldValue('TEXT');
-    return `${INDENT}${INDENT}<label>${text}</label>\n`;
+    return `${INDENT}${INDENT}<label${attributes}>${text}</label>\n`;
   };
 
   javascriptGenerator.forBlock['input'] = function(block) {
+    const attributes = javascriptGenerator.valueToCode(block, 'attributes', 0) || '';
     const type = block.getFieldValue('TYPE');
     const placeholder = block.getFieldValue('PLACEHOLDER');
-    return `${INDENT}${INDENT}<input type="${type}" placeholder="${placeholder}">\n`;
+    return `${INDENT}${INDENT}<input type="${type}" placeholder="${placeholder}"${attributes}>\n`;
   };
 
   javascriptGenerator.forBlock['textarea'] = function(block) {
+    const attributes = javascriptGenerator.valueToCode(block, 'attributes', 0) || '';
     const rows = block.getFieldValue('ROWS');
     const cols = block.getFieldValue('COLS');
     const text = block.getFieldValue('TEXT');
-    return `${INDENT}${INDENT}<textarea rows="${rows}" cols="${cols}">${text}</textarea>\n`;
+    return `${INDENT}${INDENT}<textarea rows="${rows}" cols="${cols}"${attributes}>${text}</textarea>\n`;
   };
 
   javascriptGenerator.forBlock['button'] = function(block) {
+    const attributes = javascriptGenerator.valueToCode(block, 'attributes', 0) || '';
     const text = block.getFieldValue('TEXT');
-    return `${INDENT}${INDENT}<button>${text}</button>\n`;
+    return `${INDENT}${INDENT}<button${attributes}>${text}</button>\n`;
   };
 
   // =============================================================================
@@ -172,18 +190,21 @@ export const defineGenerators = () => {
   // =============================================================================
 
   javascriptGenerator.forBlock['ul'] = function(block) {
+    const attributes = javascriptGenerator.valueToCode(block, 'attributes', 0) || '';
     const content = javascriptGenerator.statementToCode(block, 'CONTENT');
-    return `${INDENT}<ul>\n${content}${INDENT}</ul>\n`;
+    return `${INDENT}<ul${attributes}>\n${content}${INDENT}</ul>\n`;
   };
 
   javascriptGenerator.forBlock['ol'] = function(block) {
+    const attributes = javascriptGenerator.valueToCode(block, 'attributes', 0) || '';
     const content = javascriptGenerator.statementToCode(block, 'CONTENT');
-    return `${INDENT}<ol>\n${content}${INDENT}</ol>\n`;
+    return `${INDENT}<ol${attributes}>\n${content}${INDENT}</ol>\n`;
   };
 
   javascriptGenerator.forBlock['li'] = function(block) {
-    const text = block.getFieldValue('TEXT');
-    return `${INDENT}${INDENT}<li>${text}</li>\n`;
+    const attributes = javascriptGenerator.valueToCode(block, 'attributes', 0) || '';
+    const content = javascriptGenerator.statementToCode(block, 'CONTENT');
+    return `${INDENT}${INDENT}<li${attributes}>${content}</li>\n`;
   };
 
   // =============================================================================
@@ -191,154 +212,447 @@ export const defineGenerators = () => {
   // =============================================================================
 
   javascriptGenerator.forBlock['table'] = function(block) {
+    const attributes = javascriptGenerator.valueToCode(block, 'attributes', 0) || '';
     const content = javascriptGenerator.statementToCode(block, 'CONTENT');
-    return `${INDENT}<table>\n${content}${INDENT}</table>\n`;
+    return `${INDENT}<table${attributes}>\n${content}${INDENT}</table>\n`;
   };
 
   javascriptGenerator.forBlock['tr'] = function(block) {
+    const attributes = javascriptGenerator.valueToCode(block, 'attributes', 0) || '';
     const content = javascriptGenerator.statementToCode(block, 'CONTENT');
-    return `${INDENT}${INDENT}<tr>\n${content}${INDENT}${INDENT}</tr>\n`;
+    return `${INDENT}${INDENT}<tr${attributes}>\n${content}${INDENT}${INDENT}</tr>\n`;
   };
 
   javascriptGenerator.forBlock['th'] = function(block) {
-    const text = block.getFieldValue('TEXT');
-    return `${INDENT}${INDENT}${INDENT}<th>${text}</th>\n`;
+    const attributes = javascriptGenerator.valueToCode(block, 'attributes', 0) || '';
+    const content = javascriptGenerator.statementToCode(block, 'CONTENT');
+    return `${INDENT}${INDENT}${INDENT}<th${attributes}>\n${content}${INDENT}${INDENT}${INDENT}</th>\n`;
   };
 
   javascriptGenerator.forBlock['td'] = function(block) {
-    const text = block.getFieldValue('TEXT');
-    return `${INDENT}${INDENT}${INDENT}<td>${text}</td>\n`;
-  };
-
-  // =============================================================================
-  // CSS STYLES
-  // =============================================================================
-
-  javascriptGenerator.forBlock['style'] = function(block) {
+    const attributes = javascriptGenerator.valueToCode(block, 'attributes', 0) || '';
     const content = javascriptGenerator.statementToCode(block, 'CONTENT');
-    return `${INDENT}<style>\n${content}${INDENT}</style>\n`;
+    return `${INDENT}${INDENT}${INDENT}<td${attributes}>\n${content}${INDENT}${INDENT}${INDENT}</td>\n`;
+  };
+  // =============================================================================
+  // LISTS (additional)
+  // =============================================================================
+
+  javascriptGenerator.forBlock['select'] = function(block) {
+    const attributes = javascriptGenerator.valueToCode(block, 'attributes', 0) || '';
+    const content = javascriptGenerator.statementToCode(block, 'CONTENT');
+    return `${INDENT}<select${attributes}>\n${content}${INDENT}</select>\n`;
   };
 
-  javascriptGenerator.forBlock['link_rel'] = function(block) {
-    const rel = block.getFieldValue('REL');
-    const href = block.getFieldValue('HREF');
-    return `${INDENT}<link rel="${rel}" href="${href}">\n`;
-  };
-
-  javascriptGenerator.forBlock['css_rule'] = function(block) {
-    const selector = block.getFieldValue('SELECTOR');
-    const properties = javascriptGenerator.statementToCode(block, 'PROPERTIES');
-    return `${INDENT}${INDENT}${selector} {\n${properties}${INDENT}${INDENT}}\n`;
+  javascriptGenerator.forBlock['option'] = function(block) {
+    const attributes = javascriptGenerator.valueToCode(block, 'attributes', 0) || '';
+    const text = block.getFieldValue('TEXT');
+    return `${INDENT}${INDENT}<option${attributes}>${text}</option>\n`;
   };
 
   // =============================================================================
-  // CSS PROPERTIES
+  // CSS STYLES (head & internal)
   // =============================================================================
 
-  javascriptGenerator.forBlock['color'] = function(block) {
-    const color = block.getFieldValue('COLOR');
-    return `${INDENT}${INDENT}${INDENT}color: ${color};\n`;
+  javascriptGenerator.forBlock['head_style'] = function(block) {
+    const content = javascriptGenerator.statementToCode(block, 'CONTENT');
+    return `<style>\n${content}</style>\n`;
   };
 
-  javascriptGenerator.forBlock['background_color'] = function(block) {
-    const color = block.getFieldValue('COLOR');
-    return `${INDENT}${INDENT}${INDENT}background-color: ${color};\n`;
+  javascriptGenerator.forBlock['head_link'] = function(block) {
+    const type = block.getFieldValue('TYPE');
+    const url = block.getFieldValue('URL');
+    const extra = javascriptGenerator.valueToCode(block, 'NAME', 0) || '';
+    return `<link rel="${type}" href="${url}"${extra}>\n`;
   };
 
-  javascriptGenerator.forBlock['font_family'] = function(block) {
-    const family = block.getFieldValue('FAMILY');
-    return `${INDENT}${INDENT}${INDENT}font-family: ${family};\n`;
+  javascriptGenerator.forBlock['style_target'] = function(block) {
+    const target = block.getFieldValue('TARGET');
+    const effect = javascriptGenerator.valueToCode(block, 'STYLE_FOR', 0) || '';
+    const content = javascriptGenerator.statementToCode(block, 'CONTENT');
+    return `${INDENT}${target}${effect} {\n${content}${INDENT}}\n`;
   };
 
-  javascriptGenerator.forBlock['font_size'] = function(block) {
+  javascriptGenerator.forBlock['style_effect'] = function(block) {
+    return block.getFieldValue('effect');
+  };
+
+  // =============================================================================
+  // EXTERNAL STYLE BLOCKS (used inside <style>)
+  // Each returns a CSS declaration followed by a newline.
+  // =============================================================================
+
+  javascriptGenerator.forBlock['external_text_color'] = function(block) {
+    return `color: ${block.getFieldValue('COLOR')};\n`;
+  };
+
+  javascriptGenerator.forBlock['external_font_family'] = function(block) {
+    return `font-family: ${block.getFieldValue('FONT')};\n`;
+  };
+
+  javascriptGenerator.forBlock['external_font_size'] = function(block) {
     const size = block.getFieldValue('SIZE');
     const unit = block.getFieldValue('UNIT');
-    return `${INDENT}${INDENT}${INDENT}font-size: ${size}${unit};\n`;
+    return `font-size: ${size}${unit};\n`;
   };
 
-  javascriptGenerator.forBlock['text_align'] = function(block) {
-    const align = block.getFieldValue('ALIGN');
-    return `${INDENT}${INDENT}${INDENT}text-align: ${align};\n`;
+  javascriptGenerator.forBlock['external_font_size_descriptive'] = function(block) {
+    return `font-size: ${block.getFieldValue('SIZE')};\n`;
   };
 
-  javascriptGenerator.forBlock['margin'] = function(block) {
-    const value = block.getFieldValue('VALUE');
+  javascriptGenerator.forBlock['external_text_align'] = function(block) {
+    return `text-align: ${block.getFieldValue('ALIGN')};\n`;
+  };
+
+  javascriptGenerator.forBlock['external_text_transform'] = function(block) {
+    return `text-transform: ${block.getFieldValue('TRANSFORM')};\n`;
+  };
+
+  javascriptGenerator.forBlock['external_text_decoration'] = function(block) {
+    const dec = block.getFieldValue('DECORATION');
+    const style = block.getFieldValue('DECORATION_STYLE');
+    return `text-decoration: ${dec} ${style};\n`;
+  };
+
+  javascriptGenerator.forBlock['external_text_shadow'] = function(block) {
+    const h = block.getFieldValue('H-SHADOW');
+    const v = block.getFieldValue('V-SHADOW');
+    const r = block.getFieldValue('RADIUS');
+    const c = block.getFieldValue('COLOR');
+    return `text-shadow: ${h} ${v} ${r} ${c};\n`;
+  };
+
+  javascriptGenerator.forBlock['external_display'] = function(block) {
+    return `display: ${block.getFieldValue('DISPLAY')};\n`;
+  };
+
+  javascriptGenerator.forBlock['external_overflow'] = function(block) {
+    const axis = block.getFieldValue('AXIS');
+    const overflow = block.getFieldValue('OVERFLOW');
+    return `overflow-${axis}: ${overflow};\n`;
+  };
+
+  javascriptGenerator.forBlock['external_float'] = function(block) {
+    return `float: ${block.getFieldValue('FLOAT')};\n`;
+  };
+
+  javascriptGenerator.forBlock['external_height'] = function(block) {
+    const size = block.getFieldValue('SIZE');
     const unit = block.getFieldValue('UNIT');
-    return `${INDENT}${INDENT}${INDENT}margin: ${value}${unit};\n`;
+    return `height: ${size}${unit};\n`;
   };
 
-  javascriptGenerator.forBlock['padding'] = function(block) {
-    const value = block.getFieldValue('VALUE');
+  javascriptGenerator.forBlock['external_width'] = function(block) {
+    const size = block.getFieldValue('SIZE');
     const unit = block.getFieldValue('UNIT');
-    return `${INDENT}${INDENT}${INDENT}padding: ${value}${unit};\n`;
+    return `width: ${size}${unit};\n`;
   };
 
-  javascriptGenerator.forBlock['width'] = function(block) {
-    const value = block.getFieldValue('VALUE');
+  javascriptGenerator.forBlock['external_margin'] = function(block) {
+    const size = block.getFieldValue('SIZE');
     const unit = block.getFieldValue('UNIT');
-    if (unit === 'auto') {
-      return `${INDENT}${INDENT}${INDENT}width: auto;\n`;
-    }
-    return `${INDENT}${INDENT}${INDENT}width: ${value}${unit};\n`;
+    return `margin: ${size}${unit};\n`;
   };
 
-  javascriptGenerator.forBlock['height'] = function(block) {
-    const value = block.getFieldValue('VALUE');
+  javascriptGenerator.forBlock['external_margin_specific'] = function(block) {
+    const dir = block.getFieldValue('DIRECTION');
+    const size = block.getFieldValue('SIZE');
     const unit = block.getFieldValue('UNIT');
-    if (unit === 'auto') {
-      return `${INDENT}${INDENT}${INDENT}height: auto;\n`;
-    }
-    return `${INDENT}${INDENT}${INDENT}height: ${value}${unit};\n`;
+    return `margin-${dir}: ${size}${unit};\n`;
   };
 
-  javascriptGenerator.forBlock['border'] = function(block) {
-    const width = block.getFieldValue('WIDTH');
-    const style = block.getFieldValue('STYLE');
+  javascriptGenerator.forBlock['external_padding'] = function(block) {
+    const size = block.getFieldValue('SIZE');
+    const unit = block.getFieldValue('UNIT');
+    return `padding: ${size}${unit};\n`;
+  };
+
+  javascriptGenerator.forBlock['external_padding_specific'] = function(block) {
+    const dir = block.getFieldValue('DIRECTION');
+    const size = block.getFieldValue('SIZE');
+    const unit = block.getFieldValue('UNIT');
+    return `padding-${dir}: ${size}${unit};\n`;
+  };
+
+  javascriptGenerator.forBlock['external_background_color'] = function(block) {
+    return `background-color: ${block.getFieldValue('COLOR')};\n`;
+  };
+
+  javascriptGenerator.forBlock['external_background_image'] = function(block) {
+    return `background-image: url("${block.getFieldValue('URL')}");\n`;
+  };
+
+  javascriptGenerator.forBlock['external_background_repeat'] = function(block) {
+    return `background-repeat: ${block.getFieldValue('REPEAT')};\n`;
+  };
+
+  javascriptGenerator.forBlock['external_background_position'] = function(block) {
+    return `background-position: ${block.getFieldValue('POSITION')};\n`;
+  };
+
+  javascriptGenerator.forBlock['external_background_size'] = function(block) {
+    return `background-size: ${block.getFieldValue('SIZE')};\n`;
+  };
+
+  javascriptGenerator.forBlock['external_background_clip'] = function(block) {
+    return `background-clip: ${block.getFieldValue('CLIP')};\n`;
+  };
+
+  javascriptGenerator.forBlock['external_border'] = function(block) {
+    const size = block.getFieldValue('SIZE');
+    const unit = block.getFieldValue('UNIT');
+    const style = block.getFieldValue('BORDER_STYLE');
     const color = block.getFieldValue('COLOR');
-    return `${INDENT}${INDENT}${INDENT}border: ${width}px ${style} ${color};\n`;
+    return `border: ${size}${unit} ${style} ${color};\n`;
   };
 
-  javascriptGenerator.forBlock['border_radius'] = function(block) {
-    const value = block.getFieldValue('VALUE');
-    return `${INDENT}${INDENT}${INDENT}border-radius: ${value}px;\n`;
+  javascriptGenerator.forBlock['external_border_specific'] = function(block) {
+    const side = block.getFieldValue('SIDE');
+    const size = block.getFieldValue('SIZE');
+    const unit = block.getFieldValue('UNIT');
+    const style = block.getFieldValue('BORDER_STYLE');
+    const color = block.getFieldValue('COLOR');
+    return `border-${side}: ${size}${unit} ${style} ${color};\n`;
   };
 
-  javascriptGenerator.forBlock['display'] = function(block) {
-    const display = block.getFieldValue('DISPLAY');
-    return `${INDENT}${INDENT}${INDENT}display: ${display};\n`;
+  javascriptGenerator.forBlock['external_border_radius'] = function(block) {
+    const size = block.getFieldValue('SIZE');
+    const unit = block.getFieldValue('UNIT');
+    return `border-radius: ${size}${unit};\n`;
   };
 
-  javascriptGenerator.forBlock['text_decoration'] = function(block) {
-    const decoration = block.getFieldValue('DECORATION');
-    return `${INDENT}${INDENT}${INDENT}text-decoration: ${decoration};\n`;
+  javascriptGenerator.forBlock['external_border_radius_specific'] = function(block) {
+    const side = block.getFieldValue('SIDE');
+    const size = block.getFieldValue('SIZE');
+    const unit = block.getFieldValue('UNIT');
+    return `border-${side}-radius: ${size}${unit};\n`;
   };
 
-  javascriptGenerator.forBlock['text_transform'] = function(block) {
-    const transform = block.getFieldValue('TRANSFORM');
-    return `${INDENT}${INDENT}${INDENT}text-transform: ${transform};\n`;
+  javascriptGenerator.forBlock['external_cursor'] = function(block) {
+    return `cursor: ${block.getFieldValue('TYPE')};\n`;
   };
 
-  javascriptGenerator.forBlock['float'] = function(block) {
-    const float = block.getFieldValue('FLOAT');
-    return `${INDENT}${INDENT}${INDENT}float: ${float};\n`;
-  };
-
-  javascriptGenerator.forBlock['position'] = function(block) {
-    const position = block.getFieldValue('POSITION');
-    return `${INDENT}${INDENT}${INDENT}position: ${position};\n`;
+  javascriptGenerator.forBlock['external_box_shadow'] = function(block) {
+    const h = block.getFieldValue('H-SHADOW');
+    const v = block.getFieldValue('V-SHADOW');
+    const r = block.getFieldValue('RADIUS');
+    const c = block.getFieldValue('COLOR');
+    return `box-shadow: ${h} ${v} ${r} ${c};\n`;
   };
 
   // =============================================================================
-  // ATTRIBUTES
+  // INTERNAL STYLE BLOCKS (used in inline style="...")
+  // Each returns a CSS declaration without a newline (for concatenation).
   // =============================================================================
 
-  javascriptGenerator.forBlock['class_attr'] = function(block) {
-    const className = block.getFieldValue('CLASS');
-    return ` class="${className}"`;
+  javascriptGenerator.forBlock['internal_text_color'] = function(block) {
+    const code = `color: ${block.getFieldValue('COLOR')};`;
+    return [code, javascriptGenerator.ORDER_ATOMIC];
+  };
+  javascriptGenerator.forBlock['internal_font_family'] = function(block) {
+    const code = `font-family: ${block.getFieldValue('FONT')};`;
+    return [code, javascriptGenerator.ORDER_ATOMIC];
   };
 
-  javascriptGenerator.forBlock['id_attr'] = function(block) {
-    const id = block.getFieldValue('ID');
-    return ` id="${id}"`;
+  javascriptGenerator.forBlock['internal_font_size'] = function(block) {
+    const size = block.getFieldValue('SIZE');
+    const unit = block.getFieldValue('UNIT');
+    const code = `font-size: ${size}${unit};`;
+    return [code, javascriptGenerator.ORDER_ATOMIC];
+  };
+
+  javascriptGenerator.forBlock['internal_font_size_descriptive'] = function(block) {
+    const code = `font-size: ${block.getFieldValue('SIZE')};`;
+    return [code, javascriptGenerator.ORDER_ATOMIC];
+  };
+
+  javascriptGenerator.forBlock['internal_text_align'] = function(block) {
+    const code = `text-align: ${block.getFieldValue('ALIGN')};`;
+    return [code, javascriptGenerator.ORDER_ATOMIC];
+  };
+
+  javascriptGenerator.forBlock['internal_text_transform'] = function(block) {
+    const code = `text-transform: ${block.getFieldValue('TRANSFORM')};`;
+    return [code, javascriptGenerator.ORDER_ATOMIC];
+  };
+
+  javascriptGenerator.forBlock['internal_text_decoration'] = function(block) {
+    const dec = block.getFieldValue('DECORATION');
+    const style = block.getFieldValue('DECORATION_STYLE');
+    const code = `text-decoration: ${dec} ${style};`;
+    return [code, javascriptGenerator.ORDER_ATOMIC];
+  };
+
+  javascriptGenerator.forBlock['internal_text_shadow'] = function(block) {
+    const h = block.getFieldValue('H-SHADOW');
+    const v = block.getFieldValue('V-SHADOW');
+    const r = block.getFieldValue('RADIUS');
+    const c = block.getFieldValue('COLOR');
+    const code = `text-shadow: ${h} ${v} ${r} ${c};`;
+    return [code, javascriptGenerator.ORDER_ATOMIC];
+  };
+
+  javascriptGenerator.forBlock['internal_display'] = function(block) {
+    const code = `display: ${block.getFieldValue('DISPLAY')};`;
+    return [code, javascriptGenerator.ORDER_ATOMIC];
+  };
+
+  javascriptGenerator.forBlock['internal_overflow'] = function(block) {
+    const axis = block.getFieldValue('AXIS');
+    const overflow = block.getFieldValue('OVERFLOW');
+    const code = `overflow-${axis}: ${overflow};`;
+    return [code, javascriptGenerator.ORDER_ATOMIC];
+  };
+
+  javascriptGenerator.forBlock['internal_float'] = function(block) {
+    const code = `float: ${block.getFieldValue('FLOAT')};`;
+    return [code, javascriptGenerator.ORDER_ATOMIC];
+  };
+
+  javascriptGenerator.forBlock['internal_height'] = function(block) {
+    const size = block.getFieldValue('SIZE');
+    const unit = block.getFieldValue('UNIT');
+    const code = `height: ${size}${unit};`;
+    return [code, javascriptGenerator.ORDER_ATOMIC];
+  };
+
+  javascriptGenerator.forBlock['internal_width'] = function(block) {
+    const size = block.getFieldValue('SIZE');
+    const unit = block.getFieldValue('UNIT');
+    const code = `width: ${size}${unit};`;
+    return [code, javascriptGenerator.ORDER_ATOMIC];
+  };
+
+  javascriptGenerator.forBlock['internal_margin'] = function(block) {
+    const size = block.getFieldValue('SIZE');
+    const unit = block.getFieldValue('UNIT');
+    const code = `margin: ${size}${unit};`;
+    return [code, javascriptGenerator.ORDER_ATOMIC];
+  };
+
+  javascriptGenerator.forBlock['internal_margin_specific'] = function(block) {
+    const dir = block.getFieldValue('DIRECTION');
+    const size = block.getFieldValue('SIZE');
+    const unit = block.getFieldValue('UNIT');
+    const code = `margin-${dir}: ${size}${unit};`;
+    return [code, javascriptGenerator.ORDER_ATOMIC];
+  };
+
+  javascriptGenerator.forBlock['internal_padding'] = function(block) {
+    const size = block.getFieldValue('SIZE');
+    const unit = block.getFieldValue('UNIT');
+    const code = `padding: ${size}${unit};`;
+    return [code, javascriptGenerator.ORDER_ATOMIC];
+  };
+
+  javascriptGenerator.forBlock['internal_padding_specific'] = function(block) {
+    const dir = block.getFieldValue('DIRECTION');
+    const size = block.getFieldValue('SIZE');
+    const unit = block.getFieldValue('UNIT');
+    const code = `padding-${dir}: ${size}${unit};`;
+    return [code, javascriptGenerator.ORDER_ATOMIC];
+  };
+
+  javascriptGenerator.forBlock['internal_background_color'] = function(block) {
+    const code = `background-color: ${block.getFieldValue('COLOR')};`;
+    return [code, javascriptGenerator.ORDER_ATOMIC];
+  };
+
+  javascriptGenerator.forBlock['internal_background_image'] = function(block) {
+    const code = `background-image: url("${block.getFieldValue('URL')}");`;
+    return [code, javascriptGenerator.ORDER_ATOMIC];
+  };
+
+  javascriptGenerator.forBlock['internal_background_repeat'] = function(block) {
+    const code = `background-repeat: ${block.getFieldValue('REPEAT')};`;
+    return [code, javascriptGenerator.ORDER_ATOMIC];
+  };
+
+  javascriptGenerator.forBlock['internal_background_position'] = function(block) {
+    const code = `background-position: ${block.getFieldValue('POSITION')};`;
+    return [code, javascriptGenerator.ORDER_ATOMIC];
+  };
+
+  javascriptGenerator.forBlock['internal_background_size'] = function(block) {
+    const code = `background-size: ${block.getFieldValue('SIZE')};`;
+    return [code, javascriptGenerator.ORDER_ATOMIC];
+  };
+
+  javascriptGenerator.forBlock['internal_background_clip'] = function(block) {
+    const code = `background-clip: ${block.getFieldValue('CLIP')};`;
+    return [code, javascriptGenerator.ORDER_ATOMIC];
+  };
+
+  javascriptGenerator.forBlock['internal_border'] = function(block) {
+    const size = block.getFieldValue('SIZE');
+    const unit = block.getFieldValue('UNIT');
+    const style = block.getFieldValue('BORDER_STYLE');
+    const color = block.getFieldValue('COLOR');
+    const code = `border: ${size}${unit} ${style} ${color};`;
+    return [code, javascriptGenerator.ORDER_ATOMIC];
+  };
+
+  javascriptGenerator.forBlock['internal_border_specific'] = function(block) {
+    const side = block.getFieldValue('SIDE');
+    const size = block.getFieldValue('SIZE');
+    const unit = block.getFieldValue('UNIT');
+    const style = block.getFieldValue('BORDER_STYLE');
+    const color = block.getFieldValue('COLOR');
+    const code = `border-${side}: ${size}${unit} ${style} ${color};`;
+    return [code, javascriptGenerator.ORDER_ATOMIC];
+  };
+
+  javascriptGenerator.forBlock['internal_border_radius'] = function(block) {
+    const size = block.getFieldValue('SIZE');
+    const unit = block.getFieldValue('UNIT');
+    const code = `border-radius: ${size}${unit};`;
+    return [code, javascriptGenerator.ORDER_ATOMIC];
+  };
+
+  javascriptGenerator.forBlock['internal_border_radius_specific'] = function(block) {
+    const side = block.getFieldValue('SIDE');
+    const size = block.getFieldValue('SIZE');
+    const unit = block.getFieldValue('UNIT');
+    const code = `border-${side}-radius: ${size}${unit};`;
+    return [code, javascriptGenerator.ORDER_ATOMIC];
+  };
+
+  javascriptGenerator.forBlock['internal_cursor'] = function(block) {
+    const code = `cursor: ${block.getFieldValue('TYPE')};`;
+    return [code, javascriptGenerator.ORDER_ATOMIC];
+  };
+
+  javascriptGenerator.forBlock['internal_box_shadow'] = function(block) {
+    const h = block.getFieldValue('H-SHADOW');
+    const v = block.getFieldValue('V-SHADOW');
+    const r = block.getFieldValue('RADIUS');
+    const c = block.getFieldValue('COLOR');
+    const code = `box-shadow: ${h} ${v} ${r} ${c};`;
+    return [code, javascriptGenerator.ORDER_ATOMIC];
+  };
+
+  // =============================================================================
+  // ATTRIBUTE BLOCKS (value blocks – return tuple)
+  // =============================================================================
+
+  javascriptGenerator.forBlock['class'] = function(block) {
+    const code = ` class="${block.getFieldValue('NAME')}"`;
+    return [code, javascriptGenerator.ORDER_ATOMIC];
+  };
+
+  javascriptGenerator.forBlock['id'] = function(block) {
+    const code = ` id="${block.getFieldValue('NAME')}"`;
+    return [code, javascriptGenerator.ORDER_ATOMIC];
+  };
+
+  javascriptGenerator.forBlock['body_style'] = function(block) {
+    const inner = javascriptGenerator.valueToCode(block, 'body_style', javascriptGenerator.ORDER_ATOMIC) || '';
+    const code = ` style="${inner}"`;
+    return [code, javascriptGenerator.ORDER_ATOMIC];
+  };
+
+  javascriptGenerator.forBlock['extra_attributes'] = function(block) {
+    const code = javascriptGenerator.valueToCode(block, 'body_style', javascriptGenerator.ORDER_ATOMIC) || '';
+    return [code, javascriptGenerator.ORDER_ATOMIC];
   };
 };

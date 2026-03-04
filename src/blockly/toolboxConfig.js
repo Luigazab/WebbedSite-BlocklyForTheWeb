@@ -33,6 +33,8 @@ export const toolboxConfig = {
         { kind: 'label', text: 'HTML structure elements' },
         { kind: 'block', type: 'div' },
         { kind: 'block', type: 'header' },
+        { kind: 'block', type: 'nav' },
+        { kind: 'block', type: 'main' },
         { kind: 'block', type: 'footer' },
         { kind: 'block', type: 'section' },
         { kind: 'block', type: 'article' },
@@ -49,6 +51,8 @@ export const toolboxConfig = {
         { kind: 'block', type: 'paragraph' },
         { kind: 'block', type: 'span' },
         { kind: 'block', type: 'a_tag' },
+        { kind: 'block', type: 'strong' },
+        { kind: 'block', type: 'em' },
       ]
     },
     {
@@ -56,7 +60,10 @@ export const toolboxConfig = {
       name: 'Attributes',
       colour: '#F5B945',
       contents: [
-        { kind: 'block', type: 'attribute' },
+        { kind: 'block', type: 'class' },
+        { kind: 'block', type: 'id' },
+        { kind: 'block', type: 'body_style' },
+        { kind: 'block', type: 'extra_attributes' },
       ]
     },
     {
@@ -76,6 +83,9 @@ export const toolboxConfig = {
       contents: [
         { kind: 'block', type: 'form' },
         { kind: 'block', type: 'label' },
+        { kind: 'block', type: 'input' },
+        { kind: 'block', type: 'textarea' },
+        { kind: 'block', type: 'button' },
       ]
     },
     {
@@ -97,6 +107,8 @@ export const toolboxConfig = {
         { kind: 'block', type: 'li' },
         { kind: 'block', type: 'ul' },
         { kind: 'block', type: 'ol' },
+        { kind: 'block', type: 'select' },
+        { kind: 'block', type: 'option' },
       ]
     },
     {
@@ -113,19 +125,90 @@ export const toolboxConfig = {
     {
       kind: 'category',
       name: 'External',
-      colour: '#ff6b6b',
+      colour: '#34A853',
       cssconfig: {
         row: 'externalCSS'
       },
       contents: [
+        {kind: 'block', type: 'head_style'},
+        {kind: 'block', type: 'head_link'},
+        {kind: 'block', type: 'style_target'},
+        {kind: 'block', type: 'style_effect'},
         {
           kind: 'category',
-          name: 'Lists',
-          colour: '#ff6b6b',
+          name: 'Text',
+          colour: '#34A853',
           contents: [
-            { kind: 'block', type: 'li' },
-            { kind: 'block', type: 'ul' },
-            { kind: 'block', type: 'ol' },
+            { kind: 'label', text: 'Text styling for style tag' },
+            { kind: 'block', type: 'external_text_color' },
+            { kind: 'block', type: 'external_font_family' },
+            { kind: 'block', type: 'external_font_size' },
+            { kind: 'block', type: 'external_font_size_descriptive' },
+            { kind: 'block', type: 'external_text_align' },
+            { kind: 'block', type: 'external_text_transform' },
+            { kind: 'block', type: 'external_text_decoration' },
+            { kind: 'block', type: 'external_text_shadow' },
+          ]
+        },
+        {
+          kind: 'category',
+          name: 'Display',
+          colour: '#34A853',
+          contents: [
+            { kind: 'label', text: 'Display styling for style tag' },
+            { kind: 'block', type: 'external_display' },
+            { kind: 'block', type: 'external_overflow' },
+            { kind: 'block', type: 'external_float' },
+            { kind: 'block', type: 'external_height' },
+            { kind: 'block', type: 'external_width' },
+          ]
+        },
+        {
+          kind: 'category',
+          name: 'Spacing',
+          colour: '#34A853',
+          contents: [
+            { kind: 'label', text: 'Spacing styling for style tag' },
+            { kind: 'block', type: 'external_margin' },
+            { kind: 'block', type: 'external_margin_specific' },
+            { kind: 'block', type: 'external_padding' },
+            { kind: 'block', type: 'external_padding_specific' },
+          ]
+        },
+        {
+          kind: 'category',
+          name: 'Background',
+          colour: '#34A853',
+          contents: [
+            { kind: 'label', text: 'Background styling for style tag' },
+            { kind: 'block', type: 'external_background_color' },
+            { kind: 'block', type: 'external_background_image' },
+            { kind: 'block', type: 'external_background_repeat' },
+            { kind: 'block', type: 'external_background_position' },
+            { kind: 'block', type: 'external_background_size' },
+            { kind: 'block', type: 'external_background_clip' },
+          ]
+        },
+        {
+          kind: 'category',
+          name: 'Border',
+          colour: '#34A853',
+          contents: [
+            { kind: 'label', text: 'Border styling for style tag' },
+            { kind: 'block', type: 'external_border' },
+            { kind: 'block', type: 'external_border_specific' },
+            { kind: 'block', type: 'external_border_radius' },
+            { kind: 'block', type: 'external_border_radius_specific' },
+          ]
+        },
+        {
+          kind: 'category',
+          name: 'Other',
+          colour: '#34A853',
+          contents: [
+            { kind: 'label', text: 'Other stylings for style tag' },
+            { kind: 'block', type: 'external_cursor' },
+            { kind: 'block', type: 'external_box_shadow' },
           ]
         },
       ]
@@ -140,15 +223,93 @@ export const toolboxConfig = {
       contents: [
         {
           kind: 'category',
-          name: 'Lists',
-          colour: '#ff6b6b',
+          name: 'Text',
+          colour: '#4285F4',
           contents: [
-            { kind: 'block', type: 'li' },
-            { kind: 'block', type: 'ul' },
-            { kind: 'block', type: 'ol' },
+            { kind: 'label', text: 'Text styling for style tag' },
+            { kind: 'block', type: 'internal_text_color' },
+            { kind: 'block', type: 'internal_font_family' },
+            { kind: 'block', type: 'internal_font_size' },
+            { kind: 'block', type: 'internal_font_size_descriptive' },
+            { kind: 'block', type: 'internal_text_align' },
+            { kind: 'block', type: 'internal_text_transform' },
+            { kind: 'block', type: 'internal_text_decoration' },
+            { kind: 'block', type: 'internal_text_shadow' },
+          ]
+        },
+        {
+          kind: 'category',
+          name: 'Display',
+          colour: '#4285F4',
+          contents: [
+            { kind: 'label', text: 'Display styling for style tag' },
+            { kind: 'block', type: 'internal_display' },
+            { kind: 'block', type: 'internal_overflow' },
+            { kind: 'block', type: 'internal_float' },
+            { kind: 'block', type: 'internal_height' },
+            { kind: 'block', type: 'internal_width' },
+          ]
+        },
+        {
+          kind: 'category',
+          name: 'Spacing',
+          colour: '#4285F4',
+          contents: [
+            { kind: 'label', text: 'Spacing styling for style tag' },
+            { kind: 'block', type: 'internal_margin' },
+            { kind: 'block', type: 'internal_margin_specific' },
+            { kind: 'block', type: 'internal_padding' },
+            { kind: 'block', type: 'internal_padding_specific' },
+          ]
+        },
+        {
+          kind: 'category',
+          name: 'Background',
+          colour: '#4285F4',
+          contents: [
+            { kind: 'label', text: 'Background styling for style tag' },
+            { kind: 'block', type: 'internal_background_color' },
+            { kind: 'block', type: 'internal_background_image' },
+            { kind: 'block', type: 'internal_background_repeat' },
+            { kind: 'block', type: 'internal_background_position' },
+            { kind: 'block', type: 'internal_background_size' },
+            { kind: 'block', type: 'internal_background_clip' },
+          ]
+        },
+        {
+          kind: 'category',
+          name: 'Border',
+          colour: '#4285F4',
+          contents: [
+            { kind: 'label', text: 'Border styling for style tag' },
+            { kind: 'block', type: 'internal_border' },
+            { kind: 'block', type: 'internal_border_specific' },
+            { kind: 'block', type: 'internal_border_radius' },
+            { kind: 'block', type: 'internal_border_radius_specific' },
+          ]
+        },
+        {
+          kind: 'category',
+          name: 'Other',
+          colour: '#4285F4',
+          contents: [
+            { kind: 'label', text: 'Other stylings for style tag' },
+            { kind: 'block', type: 'internal_cursor' },
+            { kind: 'block', type: 'internal_box_shadow' },
           ]
         },
       ]
+    },
+    {
+      kind: 'sep'
+    },
+    {
+      kind: 'toolboxlabel',
+      name: 'JavaScript',
+      colour: '#000000',
+      cssconfig: {
+        label: 'customLabel'
+      }
     },
     {
       kind: 'sep'

@@ -6,9 +6,10 @@ import { javascriptGenerator } from 'blockly/javascript';
 import { defineBlocks } from '../../blockly/defineBlocks';
 import { defineGenerators } from '../../blockly/defineGenerators';
 import { registerToolboxLabel } from '../../blockly/ToolBoxLabel';
-import { registerCustomCategory } from '../../blockly/CustomCategory';
+import { registerCustomCategory } from '../../blockly/customCategory';
 import { FieldColour } from '@blockly/field-colour';
 import { toolboxConfig } from '../../blockly/toolboxConfig';
+import "@blockly/block-plus-minus";
 import '../../blockly/custom';
 
 const BlocklyWorkspace = ({ 

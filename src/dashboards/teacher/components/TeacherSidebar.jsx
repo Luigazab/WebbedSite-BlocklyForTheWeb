@@ -3,20 +3,25 @@ import { useUIStore } from '../../../store/uiStore'
 import { useAuthStore } from '../../../store/authStore'
 import { useTour } from '../../../components/tour/TourProvider'
 import {
-  Home, BookOpen, PlayCircle, Users, FolderOpen,
-  BarChart2, MessageSquare, User, ChevronLeft, ChevronRight,
-  HelpCircle
+  Home, BookOpen, PlayCircle, FolderOpen,
+  BarChart2, ChevronLeft, ChevronRight,
+  HelpCircle,
+  Settings,
+  UserSquare2,
+  University,
+  ClipboardMinus
 } from 'lucide-react'
 
 const links = [
-  { to: '/teacher',                   label: 'Home',        icon: Home        },
-  { to: '/teacher/projects',          label: 'Projects',    icon: FolderOpen  },
-  { to: '/teacher/classrooms',        label: 'Classrooms',  icon: Users       },
-  { to: '/teacher/performance',       label: 'Performance', icon: BarChart2   },
-  { to: '/teacher/lessons',           label: 'Lessons',     icon: BookOpen    },
-  { to: '/teacher/tutorials/create',  label: 'Tutorials',   icon: PlayCircle  },
-  { to: '/teacher/profile',           label: 'Feedback',    icon: MessageSquare },
-  { to: '/teacher/settings',          label: 'Profile',     icon: User        },
+  { to: '/teacher',                   label: 'Home',            icon: Home            },
+  { to: '/teacher/projects',          label: 'Projects',        icon: FolderOpen      },
+  { to: '/teacher/lessons',           label: 'Class Materials', icon: ClipboardMinus  },
+  { to: '/teacher/classrooms',        label: 'Classrooms',      icon: University      },
+  { to: '/teacher/performance',       label: 'Performance',     icon: BarChart2       },
+  { to: '/teacher/learn',             label: 'Learn',           icon: BookOpen        },
+  { to: '/teacher/tutorials/create',  label: 'Tutorials',       icon: PlayCircle      },
+  { to: '/teacher/profile',           label: 'Profile',         icon: UserSquare2     },
+  { to: '/teacher/settings',          label: 'Settings',        icon: Settings        },
 ]
 
 export default function TeacherSidebar() {

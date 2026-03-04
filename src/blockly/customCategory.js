@@ -1,6 +1,6 @@
 import * as Blockly from 'blockly';
 import React from 'react'; 
-import { FileText, Type, Image, File, Blocks, Plus, Table2, Form, List, Table2Icon } from 'lucide-react'; 
+import { FileText, Type, Image, File, Blocks, Plus, Form, List, Table2Icon, Palette, Monitor, Space, Wallpaper, SquareRoundCorner } from 'lucide-react'; 
 import { createRoot } from 'react-dom/client';
 
 
@@ -131,6 +131,18 @@ class CustomCategory extends Blockly.ToolboxCategory {
         break;
       case 'Lists':
         IconComponent = List;
+        break;
+      case 'Display':
+        IconComponent = Monitor;
+        break;
+      case 'Spacing':
+        IconComponent = Space;
+        break;
+      case 'Background':
+        IconComponent = Wallpaper;
+        break;
+      case 'Border':
+        IconComponent = SquareRoundCorner;
         break;
       default:
         IconComponent = FileText;

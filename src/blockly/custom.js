@@ -1,4 +1,5 @@
 import * as Blockly from 'blockly/core';
+import "@blockly/block-plus-minus";
 
 class CustomConstantProvider extends Blockly.zelos.ConstantProvider {
   constructor() {
