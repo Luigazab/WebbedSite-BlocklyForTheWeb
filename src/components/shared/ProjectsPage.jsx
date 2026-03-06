@@ -18,6 +18,8 @@ import {
 const FILTERS      = ['All', 'Public', 'Private']
 const SORT_OPTIONS = ['Recent', 'Name', 'Most Liked']
 
+
+
 export default function ProjectsPage() {
   const profile  = useAuthStore((s) => s.profile)
   const navigate = useNavigate()
@@ -243,20 +245,38 @@ export default function ProjectsPage() {
 // ─────────────────────────────────────────────────────────────
 // Project Card
 // ─────────────────────────────────────────────────────────────
+// At the top of ProjectsPage.jsx, add this new component
 function ProjectCard({ project, onClick }) {
+  const [showPreview, setShowPreview] = useState(false)
+
   return (
     <button
       onClick={onClick}
+      onMouseEnter={() => setShowPreview(true)}
+      onMouseLeave={() => setShowPreview(false)}
       className="bg-white rounded-2xl border-2 border-gray-200 overflow-hidden hover:border-blockly-purple hover:shadow-md transition-all text-left group"
     >
       {/* Thumbnail */}
-      <div className="aspect-video bg-gray-100 flex items-center justify-center overflow-hidden">
+      <div className="aspect-video bg-gray-100 flex items-center justify-center overflow-hidden relative">
         {project.thumbnail_url ? (
-          <img
-            src={project.thumbnail_url}
-            alt={project.title}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-          />
+          <>
+            <img
+              src={project.thumbnail_url}
+              alt={project.title}
+              className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 ${
+                showPreview ? 'opacity-0' : 'opacity-100'
+              }`}
+            />
+            {/* ✅ Iframe preview on hover */}
+            {showPreview && project.generated_html && (
+              <iframe
+                srcDoc={project.generated_html}
+                className="absolute inset-0 w-full h-full border-0 pointer-events-none"
+                sandbox="allow-scripts"
+                title={`Preview of ${project.title}`}
+              />
+            )}
+          </>
         ) : (
           <ImageIcon className="w-12 h-12 text-gray-300" />
         )}
@@ -278,7 +298,6 @@ function ProjectCard({ project, onClick }) {
           <p className="text-xs text-gray-400 line-clamp-2">{project.description}</p>
         )}
 
-        {/* Stats */}
         <div className="flex items-center gap-4 text-xs text-gray-400 mt-1">
           <div className="flex items-center gap-1.5">
             <ThumbsUp className="w-3.5 h-3.5" />

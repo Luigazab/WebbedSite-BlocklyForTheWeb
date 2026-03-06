@@ -13,6 +13,7 @@ const SaveModal = ({
   onSaveToAccount,
   onExportHTML, 
   onExportJSON,
+  onExportZip,
   isNewProject,
   initialTitle = '',
   initialDescription = ''
@@ -186,6 +187,12 @@ const SaveModal = ({
                 <p className="text-sm text-gray-600">Save project to your device as .json file</p>
               </div>
             </div>
+          </button>
+          <button
+            onClick={onExportZip}
+            className="btn btn-secondary"
+          >
+            Export as ZIP
           </button>
         </div>
 

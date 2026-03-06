@@ -11,6 +11,8 @@ import { FieldColour } from '@blockly/field-colour';
 import { toolboxConfig } from '../../blockly/toolboxConfig';
 import "@blockly/block-plus-minus";
 import '../../blockly/custom';
+import { defineCSSBlocks } from '../../blockly/defineCSSBlocks';
+import { defineCSSGenerators } from '../../blockly/defineCSSGenerators';
 
 const BlocklyWorkspace = ({ 
   onWorkspaceChange, 
@@ -22,11 +24,9 @@ const BlocklyWorkspace = ({
   const [isInitialized, setIsInitialized] = useState(false);
   const initialStateLoaded = useRef(false);
   
-  // Store callbacks in refs so they don't cause re-initialization
   const onWorkspaceChangeRef = useRef(onWorkspaceChange);
   const onWorkspaceLoadRef = useRef(onWorkspaceLoad);
   
-  // Update refs when callbacks change
   useEffect(() => {
     onWorkspaceChangeRef.current = onWorkspaceChange;
   }, [onWorkspaceChange]);
@@ -35,21 +35,18 @@ const BlocklyWorkspace = ({
     onWorkspaceLoadRef.current = onWorkspaceLoad;
   }, [onWorkspaceLoad]);
 
-  // Initialize blocks and generators
   const initializeBlockly = useCallback(() => {
-    // Register colour field
     Blockly.fieldRegistry.register('field_colour', FieldColour);
     
-    // Define blocks and generators from local files
     defineBlocks();
+    defineCSSBlocks();
+    defineCSSGenerators();
     defineGenerators();
     
-    // Register custom components
     registerToolboxLabel();
     registerCustomCategory();
   }, []);
 
-  // Separate effect for loading initial workspace state
   useEffect(() => {
     if (workspace.current && initialWorkspaceState && !initialStateLoaded.current) {
       try {
@@ -61,10 +58,8 @@ const BlocklyWorkspace = ({
     }
   }, [initialWorkspaceState]);
 
-  // Main workspace initialization - runs ONCE
   useEffect(() => {
     if (blocklyDiv.current && !workspace.current) {
-      // Initialize Blockly
       initializeBlockly();
       
       workspace.current = Blockly.inject(blocklyDiv.current, {
@@ -93,7 +88,6 @@ const BlocklyWorkspace = ({
         }
       });
 
-      // Add workspace change listener using ref
       workspace.current.addChangeListener(() => {
         if (onWorkspaceChangeRef.current && workspace.current) {
           onWorkspaceChangeRef.current(workspace.current);
@@ -102,7 +96,6 @@ const BlocklyWorkspace = ({
 
       setIsInitialized(true);
 
-      // Call load callback using ref
       if (onWorkspaceLoadRef.current) {
         onWorkspaceLoadRef.current(workspace.current);
       }
@@ -116,7 +109,7 @@ const BlocklyWorkspace = ({
         }
       };
     }
-  }, [initializeBlockly]); // ONLY initializeBlockly in dependencies!
+  }, [initializeBlockly]);
 
   const toggleToolbox = useCallback((visible) => {
     if (!workspace.current) return;

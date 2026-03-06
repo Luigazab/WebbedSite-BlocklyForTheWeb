@@ -1,19 +1,19 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useParams, useLocation } from 'react-router'
-import { javascriptGenerator } from 'blockly/javascript'
 import BlocklyWorkspace from '../editor/BlocklyWorkspace'
 import PreviewPane from '../editor/PreviewPane'
 import FileTabs from '../editor/FileTabs'
 import { useProjectDatabase } from '../../hooks/useProjectDatabase'
 import { useProjectFiles } from '../../hooks/useProjectFiles'
-import { createDefaultProjectFiles } from '../../services/projectfiles.service'
+import { codeGeneratorService } from '../../services/codeGenerator.service'
+import { zipExportService } from '../../services/zipExport.service'
+import { defineFileReferenceBlocks } from '../../blockly/fileReferenceBlocks'
+import { localProjectFilesService } from '../../services/localProjectFiles.service'
 import SaveModal from '../editor/SaveModal'
 import LoadModal from '../editor/LoadModal'
-import CreateProjectModal from '../shared/CreateProjectModal'
 import EditorHeader from '../layout/EditorHeader'
 import { useAuthStore } from '../../store/authStore'
 import { useUIStore } from '../../store/uiStore'
-import { localProjectFilesService } from '../../services/localProjectFiles.service'
 
 const BlockEditor = () => {
   const { id } = useParams()
@@ -23,124 +23,140 @@ const BlockEditor = () => {
   const location = useLocation()
   const fileInputRef = useRef(null)
 
-  const [projectTitle, setProjectTitle] = useState(
-    location.state?.projectTitle ?? 'Untitled'
-  )
-  
+  const [projectTitle, setProjectTitle] = useState(location.state?.projectTitle ?? 'Untitled')
   const [generatedCode, setGeneratedCode] = useState('')
   const [projectDescription, setProjectDescription] = useState('')
   const [currentProjectId, setCurrentProjectId] = useState(null)
   const [showSaveModal, setShowSaveModal] = useState(false)
   const [showLoadModal, setShowLoadModal] = useState(false)
-  const [showCreateModal, setShowCreateModal] = useState(false)
   const [responsive, setResponsive] = useState(true)
   const [selectedDevice, setSelectedDevice] = useState('desktop')
   const [initialWorkspaceState, setInitialWorkspaceState] = useState(null)
+  const [filesWithCode, setFilesWithCode] = useState([])
+  const [activePreviewFile, setActivePreviewFile] = useState(null)
   
-  const { 
-    projects, 
-    loadUserProjects, 
-    saveProject, 
-    deleteProject 
-  } = useProjectDatabase()
+  const isLoadingRef = useRef(false)
+  
+  const { projects, loadUserProjects, saveProject, deleteProject } = useProjectDatabase()
+  const { files, activeFile, isLocal, saveFile, deleteFile, setActiveFile, createFile, migrateLocalFilesToDb } = useProjectFiles(id || currentProjectId)
 
-  // Multi-file support
-  const { 
-    files, 
-    activeFile, 
-    isLocal,
-    saveFile, 
-    deleteFile, 
-    setActiveFile,
-    createFile,
-    migrateLocalFilesToDb 
-  } = useProjectFiles(id || currentProjectId)
-
-  // Initialize Blockly workspace
   const workspace = BlocklyWorkspace({
     initialWorkspaceState,
     onWorkspaceChange: (workspaceRef) => {
-      const code = javascriptGenerator.workspaceToCode(workspaceRef)
-      setGeneratedCode(code)
+      if (isLoadingRef.current) return
+      
+      const file = files.find(f => f.id === activeFile)
+      if (!file) return
+      
+      const code = codeGeneratorService.generateCode(workspaceRef, file.filename)
+      updateFileCode(activeFile, code)
     },
     onWorkspaceLoad: () => {
-      if (id && !initialWorkspaceState) {
-      }
+      defineFileReferenceBlocks(files)
     }
   })
+
   useEffect(() => {
-    if (id && id !== currentProjectId) {
-      setCurrentProjectId(id)
-    }
+    if (id && id !== currentProjectId) setCurrentProjectId(id)
   }, [id])
+
   useEffect(() => {
     if (id && projects.length > 0) {
-      const project = projects.find((p) => p.id === id)
+      const project = projects.find(p => p.id === id)
       if (project) {
         setProjectTitle(project.title)
         setProjectDescription(project.description || '')
       }
     }
   }, [id, projects])
+
   useEffect(() => {
     loadUserProjects()
   }, [])
 
   useEffect(() => {
-    if (workspace.isInitialized) {
-      const code = workspace.getGeneratedCode()
-      setGeneratedCode(code)
+    if (workspace.isInitialized && files.length > 0) {
+      defineFileReferenceBlocks(files)
     }
-  }, [workspace.isInitialized])
+  }, [files, workspace.isInitialized])
 
   useEffect(() => {
-    if (activeFile && files.length > 0 && workspace.isInitialized) {
+    if (activeFile && files.length > 0) {
       const file = files.find(f => f.id === activeFile)
-      if (file && file.blocks_json) {
-        try {
-          workspace.loadWorkspaceState(file.blocks_json)
-        } catch (error) {
-          console.error('Error loading file blocks:', error)
-          workspace.clearWorkspace()
-          addToast('Error loading file blocks', 'error')
+      if (file) {
+        if (file.filename.endsWith('.html')) {
+          setActivePreviewFile(activeFile)
+        } else if (!activePreviewFile) {
+          const indexFile = files.find(f => f.filename === 'index.html')
+          const firstHtmlFile = files.find(f => f.filename.endsWith('.html'))
+          setActivePreviewFile(indexFile?.id || firstHtmlFile?.id || null)
         }
       }
     }
-  }, [activeFile, files, workspace.isInitialized])
+  }, [activeFile, files])
 
-  // const loadProjectById = async (projectId) => {
-  //   try {
-  //     const project = projects.find((p) => p.id === projectId)
-  //     if (project) {
-  //       setProjectTitle(project.title)
-  //       setProjectDescription(project.description || '')
-  //       setCurrentProjectId(project.id)
-        
-  //       // Files will be loaded by useProjectFiles hook
-  //       addToast(`Loaded "${project.title}"`, 'success')
-  //     }
-  //   } catch (error) {
-  //     addToast('Error loading project', 'error')
-  //   }
-  // }
+  useEffect(() => {
+    if (!activeFile || !workspace.isInitialized || files.length === 0) return
+    
+    const file = files.find(f => f.id === activeFile)
+    if (!file || !file.blocks_json) return
 
-  const runCode = () => {
-    const code = workspace.getGeneratedCode()
-    setGeneratedCode(code)
+    isLoadingRef.current = true
+
+    workspace.clearWorkspace()
+    workspace.loadWorkspaceState(file.blocks_json)
+    
+    const code = codeGeneratorService.generateCode(workspace.getWorkspace(), file.filename)
+    updateFileCode(activeFile, code)
+
+    setTimeout(() => {
+      isLoadingRef.current = false
+    }, 100)
+  }, [activeFile, workspace.isInitialized])
+
+  useEffect(() => {
+    if (filesWithCode.length > 0 && activePreviewFile) {
+      const previewFile = files.find(f => f.id === activePreviewFile)
+      const combined = codeGeneratorService.combineFilesForPreview(filesWithCode, previewFile?.filename)
+      setGeneratedCode(combined)
+    }
+  }, [filesWithCode, activePreviewFile, files])
+
+  const updateFileCode = (fileId, code) => {
+    setFilesWithCode(prev => {
+      const existing = prev.find(f => f.id === fileId)
+      const file = files.find(f => f.id === fileId)
+      
+      if (existing) {
+        return prev.map(f => f.id === fileId ? { ...f, generatedCode: code } : f)
+      } else if (file) {
+        return [...prev, { id: fileId, filename: file.filename, generatedCode: code }]
+      }
+      return prev
+    })
   }
 
+  const runCode = () => {
+    const file = files.find(f => f.id === activeFile)
+    if (file && workspace.getWorkspace()) {
+      const code = codeGeneratorService.generateCode(workspace.getWorkspace(), file.filename)
+      updateFileCode(activeFile, code)
+    }
+  }
 
+  // ✅ SIMPLE: Just save and switch
   const handleFileChange = async (fileId) => {
-    if (!activeFile) return
+    if (!activeFile || fileId === activeFile) return
 
     try {
-      // Save current file before switching
+      // Save current file
       const workspaceState = workspace.getWorkspaceState()
       await saveFile(currentProjectId, activeFile, workspaceState)
       
-      // Switch to new file
+      // Switch to new file (this will trigger the load effect)
       setActiveFile(fileId)
     } catch (error) {
+      console.error('Error switching files:', error)
       addToast('Error switching files', 'error')
     }
   }
@@ -151,7 +167,6 @@ const BlockEditor = () => {
         const workspaceState = workspace.getWorkspaceState()
         await saveFile(currentProjectId, activeFile, workspaceState)
       }
-      
       await createFile(currentProjectId, filename)
       addToast(`Created ${filename}`, 'success')
     } catch (error) {
@@ -162,12 +177,12 @@ const BlockEditor = () => {
   const handleDeleteFile = async (fileId) => {
     try {
       await deleteFile(fileId, currentProjectId)
+      setFilesWithCode(prev => prev.filter(f => f.id !== fileId))
       addToast('File deleted', 'info')
     } catch (error) {
       addToast('Error deleting file', 'error')
     }
   }
-
 
   const handleSaveToAccount = async ({ title, description }) => {
     try {
@@ -177,13 +192,11 @@ const BlockEditor = () => {
       }
 
       if (!currentProjectId) {
-        const code = workspace.getGeneratedCode()
-        
         const savedProject = await saveProject({
           title,
           description,
           workspaceState: { blocks: { languageVersion: 0, blocks: [] } },
-          code,
+          code: generatedCode,
           projectId: null
         })
         
@@ -198,12 +211,11 @@ const BlockEditor = () => {
         
         navigate(`/${profile?.role}/editor/${savedProject.id}`, { replace: true })
       } else {
-        const code = workspace.getGeneratedCode()
         await saveProject({
           title,
           description,
           workspaceState: { blocks: { languageVersion: 0, blocks: [] } },
-          code,
+          code: generatedCode,
           projectId: currentProjectId
         })
         
@@ -220,14 +232,25 @@ const BlockEditor = () => {
     }
   }
 
+  const handleExportZip = async () => {
+    if (filesWithCode.length === 0) {
+      addToast('No files to export', 'error')
+      return
+    }
+    try {
+      await zipExportService.exportProjectAsZip(projectTitle, projectDescription, filesWithCode)
+      addToast('Project exported as ZIP!', 'success')
+    } catch (error) {
+      addToast('Failed to export ZIP', 'error')
+    }
+  }
+
   const handleExportHTML = () => {
-    const code = workspace.getGeneratedCode()
-    if (!code) {
+    if (!generatedCode) {
       addToast('No code to export', 'error')
       return
     }
-    
-    const blob = new Blob([code], { type: 'text/html' })
+    const blob = new Blob([generatedCode], { type: 'text/html' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
@@ -243,17 +266,13 @@ const BlockEditor = () => {
       addToast('No workspace to export', 'error')
       return
     }
-    
     const dataToSave = {
       title: projectTitle,
       description: projectDescription,
       blocks_json: workspaceState,
       timestamp: new Date().toISOString()
     }
-    
-    const blob = new Blob([JSON.stringify(dataToSave, null, 2)], { 
-      type: 'application/json' 
-    })
+    const blob = new Blob([JSON.stringify(dataToSave, null, 2)], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
@@ -263,30 +282,23 @@ const BlockEditor = () => {
     addToast('Blockly project exported!', 'success')
   }
 
-
-  const handleLoadFromDevice = () => {
-    fileInputRef.current?.click()
-  }
+  const handleLoadFromDevice = () => fileInputRef.current?.click()
 
   const handleFileSelect = (event) => {
     const file = event.target.files?.[0]
     if (!file) return
-
     const reader = new FileReader()
     reader.onload = (e) => {
       try {
         const data = JSON.parse(e.target?.result)
-        
         if (!data.blocks_json) {
           addToast('Invalid project file format', 'error')
           return
         }
-
         setProjectTitle(data.title || 'Loaded Project')
         setProjectDescription(data.description || '')
         setCurrentProjectId(null)
         setInitialWorkspaceState(data.blocks_json)
-        
         addToast(`Loaded "${data.title || 'project'}" from device`, 'success')
       } catch (error) {
         addToast('Failed to parse project file', 'error')
@@ -306,20 +318,15 @@ const BlockEditor = () => {
 
   const handleDeleteProject = async (projectId) => {
     if (!window.confirm('Are you sure you want to delete this project?')) return
-    
     try {
       await deleteProject(projectId)
-      if (currentProjectId === projectId) {
-        handleCreateNew()
-      }
+      if (currentProjectId === projectId) handleCreateNew()
       addToast('Project deleted', 'info')
       loadUserProjects()
     } catch (error) {
       addToast('Error deleting project', 'error')
     }
   }
-
-  // ─── Create New ────────────────────────────────────────
 
   const handleCreateNew = () => {
     if (currentProjectId || files.some(f => f.blocks_json?.blocks?.blocks?.length > 0)) {
@@ -329,10 +336,8 @@ const BlockEditor = () => {
         setProjectDescription('')
         setCurrentProjectId(null)
         setInitialWorkspaceState(null)
-        
+        setFilesWithCode([])
         localProjectFilesService.clearLocalFiles()
-        const newFiles = localProjectFilesService.createDefaultLocalFiles()
-        
         navigate(`/${profile?.role}/editor`, { replace: true })
         addToast('New project started', 'info')
       }
@@ -342,20 +347,37 @@ const BlockEditor = () => {
       setProjectDescription('')
       setCurrentProjectId(null)
       setInitialWorkspaceState(null)
+      setFilesWithCode([])
       addToast('Ready for new project', 'info')
     }
   }
 
-  // const handleCreateNewConfirm = () => {
-  //   workspace.clearWorkspace()
-  //   setProjectTitle('Untitled')
-  //   setProjectDescription('')
-  //   setCurrentProjectId(null)
-  //   setInitialWorkspaceState(null)
-  //   navigate(`/${profile?.role}/editor`, { replace: true })
-  //   setShowCreateModal(false)
-  //   addToast('New project created', 'info')
-  // }
+  const getCurrentFileCode = () => {
+    if (!activeFile) return ''
+    const fileData = filesWithCode.find(f => f.id === activeFile)
+    return fileData?.generatedCode || ''
+  }
+
+  const getCurrentFileName = () => {
+    if (!activeFile) return ''
+    const file = files.find(f => f.id === activeFile)
+    return file?.filename || ''
+  }
+
+  const getHtmlFilesList = () => {
+    return files.filter(f => f.filename.endsWith('.html')).map(f => ({ id: f.id, filename: f.filename }))
+  }
+
+  const handleNavigateToFile = (filename) => {
+    const targetFile = files.find(f => f.filename === filename)
+    if (targetFile) setActivePreviewFile(targetFile.id)
+  }
+
+  const getPreviewFileName = () => {
+    if (!activePreviewFile) return ''
+    const file = files.find(f => f.id === activePreviewFile)
+    return file?.filename || ''
+  }
 
   return (
     <div className="flex flex-col h-screen overflow-hidden">
@@ -367,9 +389,7 @@ const BlockEditor = () => {
       />
       
       <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
-        {/* Blockly Workspace with File Tabs */}
-        <div className="flex flex-col md:w-2/3 h-full border-2 border-gray-800 bg-white overflow-hidden">
-          {/* File Tabs */}
+        <div className="flex flex-col md:w-2/3 h-full border border-gray-600 bg-white overflow-hidden">
           <FileTabs
             files={files}
             activeFile={activeFile}
@@ -378,15 +398,18 @@ const BlockEditor = () => {
             onFileCreate={handleCreateFile}
             onFileDelete={handleDeleteFile}
           />
-          
-          {/* Workspace */}
-          <div ref={workspace.blocklyDiv} className="blocklyDiv flex-1 h-full" />
+          <div ref={workspace.blocklyDiv} className="blocklyDiv flex-1" />
         </div>
-        {/* Preview Pane */}
-        <div className="flex-1 h-full overflow-hidden mx-2"> 
+        
+        <div className="flex-1 h-full overflow-hidden"> 
           <PreviewPane
             generatedCode={generatedCode}
+            currentFileCode={getCurrentFileCode()}
+            currentFileName={getCurrentFileName()}
+            previewFileName={getPreviewFileName()}
+            htmlFiles={getHtmlFilesList()}
             onRunCode={runCode}
+            onNavigateToFile={handleNavigateToFile}
             responsive={responsive}
             selectedDevice={selectedDevice}
             onToggleResponsive={() => setResponsive(!responsive)}
@@ -395,23 +418,7 @@ const BlockEditor = () => {
         </div>
       </div>
 
-      {/* Hidden file input for loading JSON from device */}
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept=".json"
-        onChange={handleFileSelect}
-        className="hidden"
-      />
-
-      {/* Modals */}
-      {/* {showCreateModal && (
-        <CreateProjectModal
-          isOpen={showCreateModal}
-          onClose={() => setShowCreateModal(false)}
-          onCreated={handleCreateNewConfirm}
-        />
-      )} */}
+      <input ref={fileInputRef} type="file" accept=".json" onChange={handleFileSelect} className="hidden" />
 
       <SaveModal
         isOpen={showSaveModal}
@@ -419,6 +426,7 @@ const BlockEditor = () => {
         onSaveToAccount={handleSaveToAccount}
         onExportHTML={handleExportHTML}
         onExportJSON={handleExportJSON}
+        onExportZip={handleExportZip}
         isNewProject={!currentProjectId}
         initialTitle={projectTitle}
         initialDescription={projectDescription}

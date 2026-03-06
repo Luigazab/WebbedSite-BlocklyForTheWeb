@@ -314,6 +314,25 @@ export const toolboxConfig = {
     {
       kind: 'sep'
     },
+    {
+      kind: 'category',
+      name: 'File Links',
+      colour: 160,
+      contents: [
+        {
+          kind: 'block',
+          type: 'link_css_file'
+        },
+        {
+          kind: 'block',
+          type: 'script_js_file'
+        },
+        {
+          kind: 'block',
+          type: 'link_to_page'
+        }
+      ]
+    }
   ]
 };
 

@@ -1,12 +1,17 @@
-import { useState } from 'react';
-import { Play } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Play, Eye } from 'lucide-react';
 import DeviceSelector from './DeviceSelector';
 import DevicePreviewModal from './DevicePreviewModal';
 import { deviceSizes } from '../utils/deviceConstant';
 
 const PreviewPane = ({ 
-  generatedCode, 
+  generatedCode,
+  currentFileCode,
+  currentFileName,
+  previewFileName,
+  htmlFiles,
   onRunCode, 
+  onNavigateToFile,
   responsive, 
   selectedDevice, 
   onToggleResponsive, 
@@ -20,6 +25,51 @@ const PreviewPane = ({
     setShowDeviceModal(device !== 'desktop');
   };
 
+  // Listen for navigation from iframe
+  useEffect(() => {
+    const handleMessage = (event) => {
+      if (event.data?.type === 'NAVIGATE_TO_FILE') {
+        onNavigateToFile?.(event.data.filename);
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [onNavigateToFile]);
+
+  // Inject navigation handler for links
+  const previewCode = generatedCode + `
+    <script>
+      (function() {
+        document.addEventListener('click', function(e) {
+          let target = e.target;
+          
+          while (target && target.tagName !== 'A') {
+            target = target.parentElement;
+          }
+          
+          if (target && target.tagName === 'A') {
+            // Check for data-page attribute
+            const dataPage = target.getAttribute('data-page');
+            if (dataPage) {
+              e.preventDefault();
+              window.parent.postMessage({ type: 'NAVIGATE_TO_FILE', filename: dataPage }, '*');
+              return;
+            }
+            
+            // Check for regular href to .html files
+            const href = target.getAttribute('href');
+            if (href && href.endsWith('.html')) {
+              e.preventDefault();
+              window.parent.postMessage({ type: 'NAVIGATE_TO_FILE', filename: href }, '*');
+              return;
+            }
+          }
+        });
+      })();
+    </script>
+  `;
+
   return (
     <div className='w-full h-full relative'>
       <h4 className="absolute -top-6 left-2 font-bold z-1 text-5xl font-mono [text-shadow:1px_1px_0_white,-1px_-1px_0_white,1px_-1px_0_white,-1px_1px_0_white] px-2">
@@ -31,7 +81,16 @@ const PreviewPane = ({
         >
           <Play className='hover:stroke-white hover:fill-black transition-all' fill='white' />
         </button>
-        <div className="flex justify-around px-4 pt-8 bg-gray-900 border-b border-gray-200 group transition-all">
+        
+        <div className="flex justify-around px-4 pt-8 bg-gray-900 border-b border-gray-200 group transition-all relative">
+          {/* ✅ Show which file is being previewed */}
+          {previewFileName && previewFileName !== currentFileName && (
+            <div className="absolute left-2 top-2 flex items-center gap-1 px-2 py-1 bg-blue-500 text-white text-xs rounded">
+              <Eye size={12} />
+              <span>Previewing: {previewFileName}</span>
+            </div>
+          )}
+          
           <button 
             onClick={() => setActiveTab('preview')}
             className={`px-5 py-2 font-bold border-b-4 ${
@@ -52,18 +111,77 @@ const PreviewPane = ({
           >
             Code
           </button>
-        </div>
-        <div className="flex-1 overflow-auto">
-          {activeTab === 'preview' ? (
-            <div className="w-full h-full flex items-center justify-center bg-gray-100">
-              <iframe srcDoc={generatedCode} className="w-full h-full border-0" title="preview" sandbox="allow-scripts"/>
-            </div>
-          ) : (
-            <pre className="p-4 bg-gray-900 text-green-400 text-sm h-full overflow-auto font-mono">
-              {generatedCode}
-            </pre>
+          {htmlFiles && htmlFiles.length > 1 && (
+            <button 
+              onClick={() => setActiveTab('pages')}
+              className={`px-5 py-2 font-bold border-b-4 ${
+                activeTab === 'pages'
+                  ? 'border-green-500 text-green-600'
+                  : 'border-transparent text-gray-600'
+              }`}
+            >
+              Pages
+            </button>
           )}
         </div>
+
+        <div className="flex-1 overflow-auto">
+          {activeTab === 'preview' && (
+            <div className="w-full h-full flex items-center justify-center bg-gray-100">
+              <iframe 
+                srcDoc={previewCode} 
+                className="w-full h-full border-0" 
+                title="preview" 
+                sandbox="allow-scripts"
+              />
+            </div>
+          )}
+          
+          {activeTab === 'code' && (
+            <pre className="p-4 bg-gray-900 text-green-400 text-sm h-full overflow-auto font-mono">
+              {currentFileCode || generatedCode}
+            </pre>
+          )}
+          
+          {activeTab === 'pages' && htmlFiles && (
+            <div className="p-6 bg-gray-50 h-full overflow-auto">
+              <h3 className="text-lg font-bold text-gray-800 mb-4">HTML Pages</h3>
+              <p className="text-sm text-gray-600 mb-4">
+                Click to preview a page (workspace stays on current file)
+              </p>
+              <div className="flex flex-col gap-2">
+                {htmlFiles.map(file => (
+                  <button
+                    key={file.id}
+                    onClick={() => {
+                      onNavigateToFile(file.filename);
+                      setActiveTab('preview');
+                    }}
+                    className={`p-4 rounded-lg border-2 text-left transition-all ${
+                      file.filename === previewFileName
+                        ? 'border-green-500 bg-green-50 text-green-700 font-semibold'
+                        : 'border-gray-200 bg-white hover:border-gray-400 text-gray-700'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="text-2xl">📄</span>
+                      <div className="flex flex-col">
+                        <span>{file.filename}</span>
+                        {file.filename === currentFileName && (
+                          <span className="text-xs text-blue-600">Currently editing</span>
+                        )}
+                        {file.filename === previewFileName && (
+                          <span className="text-xs text-green-600">Currently previewing</span>
+                        )}
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
         <DeviceSelector 
           deviceSizes={deviceSizes} 
           responsive={responsive} 
