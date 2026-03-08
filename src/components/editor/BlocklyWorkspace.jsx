@@ -5,7 +5,7 @@ import Theme from '@blockly/theme-modern';
 import { javascriptGenerator } from 'blockly/javascript';
 import { defineBlocks } from '../../blockly/defineBlocks';
 import { defineGenerators } from '../../blockly/defineGenerators';
-import { registerToolboxLabel } from '../../blockly/ToolBoxLabel';
+import { registerToolboxLabel } from '../../blockly/ToolboxLabel';
 import { registerCustomCategory } from '../../blockly/customCategory';
 import { FieldColour } from '@blockly/field-colour';
 import { toolboxConfig } from '../../blockly/toolboxConfig';
