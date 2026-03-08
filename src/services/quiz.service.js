@@ -1,65 +1,36 @@
 import { supabase } from '../supabaseClient'
 
 export const quizService = {
-  // ─── Teacher ───────────────────────────────────────────
-
-  async createQuizWithQuestions(lessonId, title, questions) {
-    // 1. Create quiz
-    const { data: quiz, error: quizError } = await supabase
+  // ─── CRUD Operations ────────────────────────────────────
+  
+  async createQuiz(payload) {
+    const { data, error } = await supabase
       .from('quizzes')
-      .insert({ lesson_id: lessonId, title })
+      .insert({
+        teacher_id: payload.teacher_id,
+        title: payload.title,
+        description: payload.description,
+        time_limit: payload.time_limit,
+        passing_score: payload.passing_score || 70,
+      })
       .select()
       .single()
-    if (quizError) throw quizError
-
-    // 2. Insert all questions
-    const questionsPayload = questions.map((q, i) => ({
-      quiz_id: quiz.id,
-      question_text: q.question_text,
-      options: q.options,           // ["A", "B", "C", "D"]
-      correct_answer: q.correct_answer,
-      order_index: i,
-    }))
-
-    const { error: questionsError } = await supabase
-      .from('quiz_questions')
-      .insert(questionsPayload)
-    if (questionsError) throw questionsError
-
-    return quiz
+    if (error) throw error
+    return data
   },
 
-  async updateQuizWithQuestions(quizId, title, questions) {
-    // Update quiz title
-    const { error: quizError } = await supabase
+  async updateQuiz(quizId, updates) {
+    const { data, error } = await supabase
       .from('quizzes')
-      .update({ title })
+      .update(updates)
       .eq('id', quizId)
-    if (quizError) throw quizError
-
-    // Delete old questions and re-insert
-    const { error: deleteError } = await supabase
-      .from('quiz_questions')
-      .delete()
-      .eq('quiz_id', quizId)
-    if (deleteError) throw deleteError
-
-    const questionsPayload = questions.map((q, i) => ({
-      quiz_id: quizId,
-      question_text: q.question_text,
-      options: q.options,
-      correct_answer: q.correct_answer,
-      order_index: i,
-    }))
-
-    const { error: questionsError } = await supabase
-      .from('quiz_questions')
-      .insert(questionsPayload)
-    if (questionsError) throw questionsError
+      .select()
+      .single()
+    if (error) throw error
+    return data
   },
 
   async deleteQuiz(quizId) {
-    // cascade deletes questions too (set up ON DELETE CASCADE in DB)
     const { error } = await supabase
       .from('quizzes')
       .delete()
@@ -67,14 +38,76 @@ export const quizService = {
     if (error) throw error
   },
 
-  // ─── Student ───────────────────────────────────────────
+  async getQuizzesByTeacher(teacherId) {
+    const { data, error } = await supabase
+      .from('quizzes')
+      .select(`
+        *,
+        questions:quiz_questions(id),
+        lessons:lesson_quizzes(
+          lesson:lessons(id, title)
+        )
+      `)
+      .eq('teacher_id', teacherId)
+      .order('created_at', { ascending: false })
+    if (error) throw error
+    return data
+  },
 
+  async getQuizById(quizId) {
+    const { data, error } = await supabase
+      .from('quizzes')
+      .select(`
+        *,
+        questions:quiz_questions(*),
+        teacher:profiles!quizzes_teacher_id_fkey(id, username, avatar_url)
+      `)
+      .eq('id', quizId)
+      .single()
+    if (error) throw error
+    return data
+  },
+
+  // Questions remain the same...
+  async addQuestion(quizId, question) {
+    const { data, error } = await supabase
+      .from('quiz_questions')
+      .insert({
+        quiz_id: quizId,
+        ...question,
+      })
+      .select()
+      .single()
+    if (error) throw error
+    return data
+  },
+
+  async updateQuestion(questionId, updates) {
+    const { data, error } = await supabase
+      .from('quiz_questions')
+      .update(updates)
+      .eq('id', questionId)
+      .select()
+      .single()
+    if (error) throw error
+    return data
+  },
+
+  async deleteQuestion(questionId) {
+    const { error } = await supabase
+      .from('quiz_questions')
+      .delete()
+      .eq('id', questionId)
+    if (error) throw error
+  },
+
+  // Attempts remain similar...
   async submitAttempt(quizId, studentId, answers, questions) {
-    // answers: { [questionId]: selectedAnswer }
-    let score = 0
+    let correct = 0
     questions.forEach((q) => {
-      if (answers[q.id] === q.correct_answer) score++
+      if (answers[q.id] === q.correct_answer) correct++
     })
+    const score = Math.round((correct / questions.length) * 100)
 
     const { data, error } = await supabase
       .from('quiz_attempts')
@@ -84,35 +117,10 @@ export const quizService = {
         score,
         total_items: questions.length,
         answers,
-        completed_at: new Date().toISOString(),
       })
       .select()
       .single()
     if (error) throw error
-    return { ...data, score, total_items: questions.length }
-  },
-
-  async getAttemptsByStudent(studentId, quizId) {
-    const { data, error } = await supabase
-      .from('quiz_attempts')
-      .select('*')
-      .eq('student_id', studentId)
-      .eq('quiz_id', quizId)
-      .order('completed_at', { ascending: false })
-    if (error) throw error
     return data
-  },
-
-  async getBestAttempt(studentId, quizId) {
-    const { data, error } = await supabase
-      .from('quiz_attempts')
-      .select('*')
-      .eq('student_id', studentId)
-      .eq('quiz_id', quizId)
-      .order('score', { ascending: false })
-      .limit(1)
-      .single()
-    if (error && error.code !== 'PGRST116') throw error // PGRST116 = no rows
-    return data ?? null
   },
 }

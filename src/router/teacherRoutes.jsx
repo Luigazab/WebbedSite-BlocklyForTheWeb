@@ -13,6 +13,8 @@ import SettingsPage from '../components/shared/SettingsPage'
 import ProfilePage from '../dashboards/teacher/pages/TeacherProfile'
 import EditorLayout from '../components/layout/EditorLayout'
 import BlockEditor from '../components/shared/BlockEditor'
+import EditQuiz from '../dashboards/teacher/pages/EditQuiz'
+import QuizManagement from '../dashboards/teacher/pages/QuizManagement'
 
 export const teacherRoutes = [
   {
@@ -24,6 +26,8 @@ export const teacherRoutes = [
       { path: 'lessons', element: <Lessons /> },
       { path: 'lessons/create', element: <CreateLesson /> },
       { path: 'lessons/:lessonId/edit', element: <CreateLesson /> }, 
+      { path: 'quizzes', element: <QuizManagement /> }, 
+      { path: 'quizzes/:quizId/edit', element: <EditQuiz /> }, 
       { path: 'tutorials/create', element: <CreateTutorial /> },
       { path: 'tutorials/:tutorialId/edit', element: <CreateTutorial /> },
       { path: 'classrooms', element: <Classrooms /> },

@@ -13,7 +13,9 @@ import {
   Search, ChevronDown, Image as ImageIcon,
   ThumbsUp, MessageSquare, Loader2, RefreshCw,
   FoldersIcon,
+  Plus,
 } from 'lucide-react'
+import { useLikes } from '../../hooks/useLikes'
 
 const FILTERS      = ['All', 'Public', 'Private']
 const SORT_OPTIONS = ['Recent', 'Name', 'Most Liked']
@@ -58,9 +60,6 @@ export default function ProjectsPage() {
     (p.description || '').toLowerCase().includes(search.toLowerCase())
   )
 
-  // ── Handlers ───────────────────────────────────────────────
-  // Called by CreateProjectModal after it has already saved to DB and navigates away (Blocks mode).
-  // For future Code mode, it would just refresh the list.
   const handleProjectCreated = () => {
     setShowCreateModal(false)
     fetchProjects()
@@ -84,6 +83,20 @@ export default function ProjectsPage() {
     } catch (err) {
       console.error('Visibility toggle failed:', err.message)
     }
+  }
+  const handleLikeToggled = (projectId, newCount) => {
+    setProjects(prev =>
+      prev.map(p => p.id === projectId ? { ...p, likes_count: newCount } : p)
+    )
+  }
+
+  const handleCommentsCountChanged = (projectId, delta) => {
+    setProjects(prev =>
+      prev.map(p => p.id === projectId
+        ? { ...p, comments_count: (p.comments_count || 0) + delta }
+        : p
+      )
+    )
   }
 
   return (
@@ -152,7 +165,7 @@ export default function ProjectsPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search projects…"
-              className="w-full pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-blockly-purple focus:ring-2 focus:ring-blockly-purple/10 transition"
+              className="w-full pl-9 pr-4 py-4 bg-white text-sm border border-gray-400 rounded-lg focus:outline-none focus:border-blockly-purple focus:ring-2 focus:ring-blockly-purple/10 transition"
             />
           </div>
 
@@ -169,9 +182,10 @@ export default function ProjectsPage() {
           <button
             onClick={() => setShowCreateModal(true)}
             data-tour="create-button"
-            className="btn btn-primary px-4 py-2 text-sm font-semibold ml-auto"
+            className="btn btn-primary text-lg flex items-center gap-2"
           >
-            + New Project
+            <Plus className="w-4 h-4" />
+            New Project
           </button>
         </div>
 
@@ -235,6 +249,8 @@ export default function ProjectsPage() {
           onClose={() => setSelectedProject(null)}
           onDelete={() => handleDeleteProject(selectedProject.id)}
           onToggleVisibility={() => handleToggleVisibility(selectedProject)}
+          onLikeToggled={handleLikeToggled}
+          onCommentsCountChanged={handleCommentsCountChanged}
         />
       )}
       {activeTour === 'projects' && isVisible && <TourSpotlight steps={projectsTourSteps} />}
@@ -248,22 +264,36 @@ export default function ProjectsPage() {
 // At the top of ProjectsPage.jsx, add this new component
 function ProjectCard({ project, onClick }) {
   const [showPreview, setShowPreview] = useState(false)
+  const [likesCount, setLikesCount] = useState(project.likes_count || 0)
+  const { isLiked, toggleLike } = useLikes([project.id])
+
+  const handleLike = async (e) => {
+    e.stopPropagation() 
+    
+    try {
+      const nowLiked = await toggleLike(project.id)
+      setLikesCount(prev => nowLiked ? prev + 1 : prev - 1)
+    } catch (error) {
+      console.error('Error toggling like:', error)
+    }
+  }
+
 
   return (
     <button
       onClick={onClick}
       onMouseEnter={() => setShowPreview(true)}
       onMouseLeave={() => setShowPreview(false)}
-      className="bg-white rounded-2xl border-2 border-gray-200 overflow-hidden hover:border-blockly-purple hover:shadow-md transition-all text-left group"
+      className="bg-white rounded-2xl  hover:btn shadow border-2 border-white overflow-hidden hover:border-blockly-purple hover:border hover:shadow-5xl transition-all text-left group"
     >
       {/* Thumbnail */}
-      <div className="aspect-video bg-gray-100 flex items-center justify-center overflow-hidden relative">
+      <div className="aspect-video bg-linear-to-b from-green-50 to-amber-50 flex items-center justify-center overflow-hidden relative">
         {project.thumbnail_url ? (
           <>
             <img
               src={project.thumbnail_url}
               alt={project.title}
-              className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 ${
+              className={`w-full h-full object-contain group-hover:scale-105 transition-all duration-300 ${
                 showPreview ? 'opacity-0' : 'opacity-100'
               }`}
             />
@@ -278,7 +308,7 @@ function ProjectCard({ project, onClick }) {
             )}
           </>
         ) : (
-          <ImageIcon className="w-12 h-12 text-gray-300" />
+          <ImageIcon className="w-12 h-12 text-slate-500" />
         )}
       </div>
 
@@ -295,10 +325,10 @@ function ProjectCard({ project, onClick }) {
           </span>
         </div>
         {project.description && (
-          <p className="text-xs text-gray-400 line-clamp-2">{project.description}</p>
+          <p className="text-xs text-slate-400 line-clamp-2">{project.description || 'No description'}</p>
         )}
 
-        <div className="flex items-center gap-4 text-xs text-gray-400 mt-1">
+        <div className="flex items-center gap-4 text-xs text-slate-400 mt-1">
           <div className="flex items-center gap-1.5">
             <ThumbsUp className="w-3.5 h-3.5" />
             <span>{project.likes_count ?? 0}</span>
@@ -308,7 +338,7 @@ function ProjectCard({ project, onClick }) {
             <span>{project.comments_count ?? 0}</span>
           </div>
           {project.updated_at && (
-            <span className="ml-auto text-[10px] text-gray-300">
+            <span className="ml-auto text-[10px] text-slate-300">
               {new Date(project.updated_at).toLocaleDateString()}
             </span>
           )}

@@ -1,12 +1,19 @@
 import { supabase } from '../supabaseClient'
 
 export const lessonService = {
-  // ─── Teacher ───────────────────────────────────────────
-
+  // ─── CRUD Operations ────────────────────────────────────
+  
   async createLesson(payload) {
     const { data, error } = await supabase
       .from('lessons')
-      .insert(payload)
+      .insert({
+        teacher_id: payload.teacher_id,
+        title: payload.title,
+        content_markdown: payload.content_markdown,
+        thumbnail_url: payload.thumbnail_url,
+        estimated_duration: payload.estimated_duration,
+        is_published: payload.is_published || false,
+      })
       .select()
       .single()
     if (error) throw error
@@ -16,7 +23,7 @@ export const lessonService = {
   async updateLesson(lessonId, updates) {
     const { data, error } = await supabase
       .from('lessons')
-      .update({ ...updates, updated_at: new Date().toISOString() })
+      .update(updates)
       .eq('id', lessonId)
       .select()
       .single()
@@ -32,39 +39,18 @@ export const lessonService = {
     if (error) throw error
   },
 
-  async getLessonsByTeacher(teacherId) {
-    const { data, error } = await supabase
-      .from('lessons')
-      .select('*, classroom:classrooms(id, name)')
-      .eq('teacher_id', teacherId)
-      .order('created_at', { ascending: false })
-    if (error) throw error
-    return data
-  },
-
-  // ─── Student ───────────────────────────────────────────
-
-  async getLessonsByClassroom(classroomId) {
-    const { data, error } = await supabase
-      .from('lessons')
-      .select('*, teacher:profiles!lessons_teacher_id_fkey(username, avatar_url)')
-      .eq('classroom_id', classroomId)
-      .eq('is_published', true)
-      .order('order_index', { ascending: true })
-    if (error) throw error
-    return data
-  },
-
   async getLessonById(lessonId) {
     const { data, error } = await supabase
       .from('lessons')
       .select(`
         *,
-        teacher:profiles!lessons_teacher_id_fkey(username, avatar_url),
-        quizzes(
-          id,
-          title,
-          quiz_questions(id, question_text, options, order_index)
+        teacher:profiles!lessons_teacher_id_fkey(id, username, avatar_url),
+        attachments:lesson_attachments(*),
+        quizzes:lesson_quizzes(
+          quiz:quizzes(
+            *,
+            questions:quiz_questions(*)
+          )
         )
       `)
       .eq('id', lessonId)
@@ -73,24 +59,131 @@ export const lessonService = {
     return data
   },
 
-  async getLessonProgress(studentId, classroomId) {
+  async getLessonsByTeacher(teacherId) {
     const { data, error } = await supabase
-      .from('lesson_progress')
-      .select('lesson_id, is_completed, completed_at')
-      .eq('student_id', studentId)
+      .from('lessons')
+      .select('*, attachments:lesson_attachments(id)')
+      .eq('teacher_id', teacherId)
+      .order('created_at', { ascending: false })
     if (error) throw error
-    return data // array of { lesson_id, is_completed }
+    return data
   },
 
-  async markLessonComplete(studentId, lessonId) {
+  // ─── Attachments ────────────────────────────────────────
+  
+  async addAttachment(lessonId, attachment) {
+    const { data, error } = await supabase
+      .from('lesson_attachments')
+      .insert({
+        lesson_id: lessonId,
+        ...attachment,
+      })
+      .select()
+      .single()
+    if (error) throw error
+    return data
+  },
+
+  async deleteAttachment(attachmentId) {
     const { error } = await supabase
+      .from('lesson_attachments')
+      .delete()
+      .eq('id', attachmentId)
+    if (error) throw error
+  },
+
+  async uploadAttachmentFile(lessonId, file) {
+    const ext = file.name.split('.').pop()
+    const fileName = `${Date.now()}.${ext}`
+    const path = `lessons/${lessonId}/${fileName}`
+
+    const { error: uploadError } = await supabase.storage
+      .from('lesson-files')
+      .upload(path, file)
+    if (uploadError) throw uploadError
+
+    const { data } = supabase.storage
+      .from('lesson-files')
+      .getPublicUrl(path)
+
+    return { file_url: data.publicUrl, file_name: file.name }
+  },
+
+  // ─── Quiz Linking ───────────────────────────────────────
+  
+  async attachQuiz(lessonId, quizId) {
+    const { data, error } = await supabase
+      .from('lesson_quizzes')
+      .insert({ lesson_id: lessonId, quiz_id: quizId })
+      .select()
+      .single()
+    if (error) throw error
+    return data
+  },
+
+  async detachQuiz(lessonId, quizId) {
+    const { error } = await supabase
+      .from('lesson_quizzes')
+      .delete()
+      .eq('lesson_id', lessonId)
+      .eq('quiz_id', quizId)
+    if (error) throw error
+  },
+
+  // ─── Classroom Assignment ───────────────────────────────
+  
+  async assignToClassroom(payload) {
+    const { data, error } = await supabase
+      .from('lesson_assignments')
+      .insert(payload)
+      .select()
+      .single()
+    if (error) throw error
+    return data
+  },
+
+  async getClassroomAssignments(classroomId) {
+    const { data, error } = await supabase
+      .from('lesson_assignments')
+      .select(`
+        *,
+        lesson:lessons(*),
+        classroom:classrooms(id, name)
+      `)
+      .eq('classroom_id', classroomId)
+      .order('assigned_at', { ascending: false })
+    if (error) throw error
+    return data
+  },
+
+  // ─── Progress Tracking ──────────────────────────────────
+  
+  async updateProgress(studentId, lessonId, updates) {
+    const { data, error } = await supabase
       .from('lesson_progress')
       .upsert({
         student_id: studentId,
         lesson_id: lessonId,
-        is_completed: true,
-        completed_at: new Date().toISOString(),
-      }, { onConflict: 'student_id,lesson_id' })
+        ...updates,
+        last_accessed: new Date().toISOString(),
+      })
+      .select()
+      .single()
     if (error) throw error
+    return data
+  },
+
+  async getStudentProgress(studentId, lessonId) {
+    const { data, error } = await supabase
+      .from('lesson_progress')
+      .select('*')
+      .eq('student_id', studentId)
+      .eq('lesson_id', lessonId)
+      .single()
+    if (error) {
+      if (error.code === 'PGRST116') return null // No progress yet
+      throw error
+    }
+    return data
   },
 }

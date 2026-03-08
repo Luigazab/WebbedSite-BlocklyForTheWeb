@@ -1,8 +1,6 @@
-// src/services/project.service.js
 import { supabase } from '../supabaseClient'
 
 export const projectService = {
-  // Fetch all projects for the current user, with optional filter and sort
   async getUserProjects({ filter = 'All', sortBy = 'Recent' } = {}) {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) throw new Error('Not authenticated')
@@ -14,6 +12,7 @@ export const projectService = {
         title,
         description,
         thumbnail_url,
+        generated_html,
         is_public,
         created_at,
         updated_at,
@@ -34,7 +33,6 @@ export const projectService = {
     return data
   },
 
-  // Create a brand-new empty Blockly project and return it
   async createBlocksProject({ title, description = '' }) {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) throw new Error('Not authenticated')
@@ -57,7 +55,6 @@ export const projectService = {
     return data
   },
 
-  // Update visibility
   async toggleVisibility(projectId, isPublic) {
     const { data, error } = await supabase
       .from('projects')
@@ -69,7 +66,6 @@ export const projectService = {
     return data
   },
 
-  // Delete a project
   async deleteProject(projectId) {
     const { error } = await supabase
       .from('projects')
@@ -77,4 +73,15 @@ export const projectService = {
       .eq('id', projectId)
     if (error) throw error
   },
+  async updateProjectGeneratedHtml(projectId, generatedHtml) {
+    const { error } = await supabase
+      .from('projects')
+      .update({ 
+        generated_html: generatedHtml,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', projectId)
+
+    if (error) throw error
+  }
 }

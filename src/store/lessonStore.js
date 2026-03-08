@@ -1,16 +1,14 @@
 import { create } from 'zustand'
 import { lessonService } from '../services/lesson.service'
-import { quizService } from '../services/quiz.service'
 
-export const useLessonStore = create((set, get) => ({
+export const useLessonStore = create((set) => ({
   lessons: [],
   currentLesson: null,
-  lessonProgress: {},   // { [lessonId]: { is_completed, completed_at } }
-  quizAttempt: null,    // result of the latest quiz submission
+  lessonProgress: {},
   loading: false,
   error: null,
 
-  // ─── Teacher ─────────────────────────────────────────
+  // ─── Teacher: CRUD Operations ──────────────────────────
 
   fetchTeacherLessons: async (teacherId) => {
     set({ loading: true, error: null })
@@ -22,41 +20,8 @@ export const useLessonStore = create((set, get) => ({
     }
   },
 
-  createLesson: async (payload) => {
-    const lesson = await lessonService.createLesson(payload)
-    set((state) => ({ lessons: [lesson, ...state.lessons] }))
-    return lesson
-  },
-
-  updateLesson: async (lessonId, updates) => {
-    const lesson = await lessonService.updateLesson(lessonId, updates)
-    set((state) => ({
-      lessons: state.lessons.map((l) => (l.id === lessonId ? lesson : l)),
-    }))
-    return lesson
-  },
-
-  deleteLesson: async (lessonId) => {
-    await lessonService.deleteLesson(lessonId)
-    set((state) => ({
-      lessons: state.lessons.filter((l) => l.id !== lessonId),
-    }))
-  },
-
-  // ─── Student ─────────────────────────────────────────
-
-  fetchClassroomLessons: async (classroomId) => {
-    set({ loading: true, error: null })
-    try {
-      const lessons = await lessonService.getLessonsByClassroom(classroomId)
-      set({ lessons, loading: false })
-    } catch (err) {
-      set({ error: err.message, loading: false })
-    }
-  },
-
   fetchLesson: async (lessonId) => {
-    set({ loading: true, error: null, quizAttempt: null })
+    set({ loading: true, error: null })
     try {
       const lesson = await lessonService.getLessonById(lessonId)
       set({ currentLesson: lesson, loading: false })
@@ -65,28 +30,111 @@ export const useLessonStore = create((set, get) => ({
     }
   },
 
-  fetchProgress: async (studentId, classroomId) => {
-    const progress = await lessonService.getLessonProgress(studentId, classroomId)
-    const progressMap = {}
-    progress.forEach((p) => { progressMap[p.lesson_id] = p })
-    set({ lessonProgress: progressMap })
+  createLesson: async (payload) => {
+    try {
+      const lesson = await lessonService.createLesson(payload)
+      set((state) => ({
+        lessons: [lesson, ...state.lessons],
+        currentLesson: lesson,
+      }))
+      return lesson
+    } catch (err) {
+      set({ error: err.message })
+      throw err
+    }
   },
 
-  markComplete: async (studentId, lessonId) => {
-    await lessonService.markLessonComplete(studentId, lessonId)
-    set((state) => ({
-      lessonProgress: {
-        ...state.lessonProgress,
-        [lessonId]: { is_completed: true, completed_at: new Date().toISOString() },
-      },
-    }))
+  updateLesson: async (lessonId, updates) => {
+    try {
+      const lesson = await lessonService.updateLesson(lessonId, updates)
+      set((state) => ({
+        lessons: state.lessons.map((l) => (l.id === lessonId ? lesson : l)),
+        currentLesson: lesson,
+      }))
+      return lesson
+    } catch (err) {
+      set({ error: err.message })
+      throw err
+    }
   },
 
-  submitQuiz: async (quizId, studentId, answers, questions) => {
-    const result = await quizService.submitAttempt(quizId, studentId, answers, questions)
-    set({ quizAttempt: result })
-    return result
+  deleteLesson: async (lessonId) => {
+    try {
+      await lessonService.deleteLesson(lessonId)
+      set((state) => ({
+        lessons: state.lessons.filter((l) => l.id !== lessonId),
+      }))
+    } catch (err) {
+      set({ error: err.message })
+      throw err
+    }
   },
 
-  clearCurrentLesson: () => set({ currentLesson: null, quizAttempt: null }),
+  togglePublish: async (lessonId, isPublished) => {
+    try {
+      const lesson = await lessonService.updateLesson(lessonId, { is_published: !isPublished })
+      set((state) => ({
+        lessons: state.lessons.map((l) => (l.id === lessonId ? lesson : l)),
+      }))
+      return lesson
+    } catch (err) {
+      set({ error: err.message })
+      throw err
+    }
+  },
+
+  // ─── Student: Progress Tracking ────────────────────────
+
+  fetchProgress: async (studentId, lessonId) => {
+    try {
+      const progress = await lessonService.getStudentProgress(studentId, lessonId)
+      set((state) => ({
+        lessonProgress: {
+          ...state.lessonProgress,
+          [lessonId]: progress,
+        },
+      }))
+      return progress
+    } catch (err) {
+      set({ error: err.message })
+    }
+  },
+
+  updateProgress: async (studentId, lessonId, updates) => {
+    try {
+      const progress = await lessonService.updateProgress(studentId, lessonId, updates)
+      set((state) => ({
+        lessonProgress: {
+          ...state.lessonProgress,
+          [lessonId]: progress,
+        },
+      }))
+      return progress
+    } catch (err) {
+      set({ error: err.message })
+      throw err
+    }
+  },
+
+  // ─── Classroom Assignments ─────────────────────────────
+
+  fetchClassroomAssignments: async (classroomId) => {
+    set({ loading: true, error: null })
+    try {
+      const assignments = await lessonService.getClassroomAssignments(classroomId)
+      set({ lessons: assignments, loading: false })
+    } catch (err) {
+      set({ error: err.message, loading: false })
+    }
+  },
+
+  assignToClassroom: async (payload) => {
+    try {
+      const assignment = await lessonService.assignToClassroom(payload)
+      return assignment
+    } catch (err) {
+      set({ error: err.message })
+      throw err
+    }
+  },
 }))

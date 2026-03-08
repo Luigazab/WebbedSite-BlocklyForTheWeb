@@ -127,7 +127,13 @@ const PreviewPane = ({
 
         <div className="flex-1 overflow-auto">
           {activeTab === 'preview' && (
-            <div className="w-full h-full flex items-center justify-center bg-gray-100">
+            
+            <div className="flex-col w-full h-full flex items-center justify-center bg-gray-100">
+              <div className="flex w-full items-center justify-end gap-2 px-3 py-1.5 border-b border-slate-600 bg-slate-300">
+                    <span className="w-3 h-3 rounded-full bg-blockly-red"></span>
+                    <span className="w-3 h-3 rounded-full bg-blockly-yellow"></span>
+                    <span className="w-3 h-3 rounded-full bg-blockly-green"></span>
+                </div>
               <iframe 
                 srcDoc={previewCode} 
                 className="w-full h-full border-0" 

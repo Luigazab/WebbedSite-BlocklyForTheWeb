@@ -9,13 +9,15 @@ import {
   Settings,
   UserSquare2,
   University,
-  ClipboardMinus
+  ClipboardMinus,
+  FileQuestion
 } from 'lucide-react'
 
 const links = [
   { to: '/teacher',                   label: 'Home',            icon: Home            },
   { to: '/teacher/projects',          label: 'Projects',        icon: FolderOpen      },
   { to: '/teacher/lessons',           label: 'Class Materials', icon: ClipboardMinus  },
+  { to: '/teacher/quizzes',           label: 'Quizzes',         icon: FileQuestion  },
   { to: '/teacher/classrooms',        label: 'Classrooms',      icon: University      },
   { to: '/teacher/performance',       label: 'Performance',     icon: BarChart2       },
   { to: '/teacher/learn',             label: 'Learn',           icon: BookOpen        },
@@ -71,7 +73,7 @@ export default function TeacherSidebar() {
             to={to}
             end={to === '/teacher'}
             className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors
+              `flex items-center gap-3 px-3 py-2.5 rounded-lg font-bold transition-colors
               ${isActive
                 ? 'bg-blockly-purple/10 text-blockly-purple'
                 : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'

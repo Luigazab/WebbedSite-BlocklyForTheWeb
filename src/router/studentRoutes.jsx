@@ -11,6 +11,7 @@ import ProfilePage from '../dashboards/student/pages/StudentProfile'
 import EditorLayout from '../components/layout/EditorLayout'
 import BlockEditor from '../components/shared/BlockEditor'
 import LearnPage from '../dashboards/student/pages/LearnPage'
+import LessonViewer from '../dashboards/student/pages/LessonViewer'
 
 export const studentRoutes = [
   {
@@ -22,7 +23,7 @@ export const studentRoutes = [
       { path: 'classrooms/:classroomId', element: <StudentClassroomDetail /> },
       { path: 'learn', element: <LearnPage /> },
       { path: 'lessons', element: <LessonPage /> },
-      { path: 'lessons/:lessonId', element: <LessonPage /> },
+      { path: 'lessons/:lessonId', element: <LessonViewer /> },
       { path: 'tutorials', element: <TutorialPage /> },
       { path: 'tutorials/:tutorialId', element: <TutorialPage /> },
       { path: 'feedback', element: <FeedbackPage /> },

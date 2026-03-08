@@ -14,6 +14,8 @@ import LoadModal from '../editor/LoadModal'
 import EditorHeader from '../layout/EditorHeader'
 import { useAuthStore } from '../../store/authStore'
 import { useUIStore } from '../../store/uiStore'
+import { useBlocklyThumbnail } from '../../hooks/useBlocklyThumbnail'
+import { projectService } from '../../services/project.service'
 
 const BlockEditor = () => {
   const { id } = useParams()
@@ -36,6 +38,8 @@ const BlockEditor = () => {
   const [activePreviewFile, setActivePreviewFile] = useState(null)
   
   const isLoadingRef = useRef(false)
+  const lastSavedHtmlRef = useRef('');
+  const { saveThumbnail, loading: thumbnailLoading, error: thumbnailError } = useBlocklyThumbnail();
   
   const { projects, loadUserProjects, saveProject, deleteProject } = useProjectDatabase()
   const { files, activeFile, isLocal, saveFile, deleteFile, setActiveFile, createFile, migrateLocalFilesToDb } = useProjectFiles(id || currentProjectId)
@@ -121,6 +125,48 @@ const BlockEditor = () => {
       setGeneratedCode(combined)
     }
   }, [filesWithCode, activePreviewFile, files])
+  useEffect(() => {
+    setFilesWithCode(prev => {
+      const updated = files.map(file => ({
+        id: file.id,
+        filename: file.filename,
+        generatedCode: prev.find(f => f.id === file.id)?.generatedCode || ''
+      }));
+      return updated;
+    });
+  }, [files]);
+
+
+  useEffect(() => {
+    if (!currentProjectId || filesWithCode.length === 0) return;
+
+    const timer = setTimeout(async () => {
+      // Use the same logic as preview to keep them in sync
+      const previewFile = files.find(f => f.id === activePreviewFile);
+      const targetFile = previewFile || 
+                        files.find(f => f.filename === 'index.html') ||
+                        files.find(f => f.filename.endsWith('.html')) ||
+                        files[0];
+      if (!targetFile) return;
+
+      const combined = codeGeneratorService.combineFilesForPreview(
+        filesWithCode,
+        targetFile.filename
+      );
+
+      // Avoid saving identical content
+      if (combined === lastSavedHtmlRef.current) return;
+
+      try {
+        await projectService.updateProjectGeneratedHtml(currentProjectId, combined);
+        lastSavedHtmlRef.current = combined;
+      } catch (error) {
+        console.error('Auto-save failed:', error);
+      }
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [filesWithCode, currentProjectId, activePreviewFile, files]);
 
   const updateFileCode = (fileId, code) => {
     setFilesWithCode(prev => {
@@ -191,6 +237,8 @@ const BlockEditor = () => {
         await saveFile(currentProjectId, activeFile, workspaceState)
       }
 
+      let projectIdToUse = currentProjectId;
+
       if (!currentProjectId) {
         const savedProject = await saveProject({
           title,
@@ -203,6 +251,7 @@ const BlockEditor = () => {
         setCurrentProjectId(savedProject.id)
         setProjectTitle(title)
         setProjectDescription(description)
+        projectIdToUse = savedProject.id; 
         
         if (isLocal) {
           await migrateLocalFilesToDb(savedProject.id)
@@ -221,11 +270,23 @@ const BlockEditor = () => {
         
         setProjectTitle(title)
         setProjectDescription(description)
+        projectIdToUse = currentProjectId;
       }
       
       setShowSaveModal(false)
       addToast(`Project "${title}" saved successfully!`, 'success')
       loadUserProjects()
+      try {
+        const result = await saveThumbnail(workspace.getWorkspace(), projectIdToUse);
+        if (result) {
+          addToast('Thumbnail saved', 'success');
+        } else {
+          addToast('Failed to save thumbnail', 'error');
+        }
+      } catch (err) {
+        console.error('Thumbnail save failed:', err);
+        addToast('Thumbnail save error', 'error');
+      }
     } catch (error) {
       console.error('Save error:', error)
       addToast(error.message || 'Failed to save project', 'error')

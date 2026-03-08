@@ -30,7 +30,7 @@ export default function ErrorPage() {
 
         {/* Big error code */}
         <div className="relative">
-          <p className="text-[120px] font-black text-gray-100 leading-none select-none">
+          <p className="text-[120px] font-black text-slate-500 leading-none select-none">
             {config.code}
           </p>
           <div className="absolute inset-0 flex items-center justify-center">

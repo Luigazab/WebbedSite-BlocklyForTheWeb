@@ -7,7 +7,7 @@ export default function TeacherLayout() {
   const sidebarOpen = useUIStore((state) => state.sidebarOpen)
 
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden">
+    <div className="flex h-screen bg-[#F2F2F2] overflow-hidden">
       <TeacherSidebar />
       <div className={`flex flex-col flex-1 transition-all duration-300 ${sidebarOpen ? 'ml-64' : 'ml-16'}`}>
         <TeacherNavbar />
