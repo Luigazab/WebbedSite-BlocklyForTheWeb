@@ -1,3 +1,6 @@
+@import './styles/_variables.scss';
+@import './styles/_keyframe-animations.scss';
+
 @import "tailwindcss";
 @import "tailwindcss/preflight" disable;
 
@@ -131,6 +134,9 @@
     }
 }
 @layer base{
+  .btn{
+    transition: all 0.2s ease-in-out !important;
+  }
     a.topActive.active {
     @apply bg-white border border-black/10 shadow-lg  text-black;
   }
@@ -431,3 +437,4 @@ body {
   fill: white !important;
   font-size: 20px;
 }
+

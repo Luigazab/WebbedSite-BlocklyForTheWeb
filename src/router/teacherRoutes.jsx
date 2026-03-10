@@ -15,6 +15,10 @@ import EditorLayout from '../components/layout/EditorLayout'
 import BlockEditor from '../components/shared/BlockEditor'
 import EditQuiz from '../dashboards/teacher/pages/EditQuiz'
 import QuizManagement from '../dashboards/teacher/pages/QuizManagement'
+import LessonsPage from '../dashboards/teacher/pages/LessonsPage'
+import CreateLessonPage from '../dashboards/teacher/pages/CreateLessonPage'
+import QuizzesPage from '../dashboards/teacher/pages/QuizzesPage'
+import CreateQuizPage from '../dashboards/teacher/pages/CreateQuizPage'
 
 export const teacherRoutes = [
   {
@@ -23,11 +27,12 @@ export const teacherRoutes = [
       { index: true, element: <TeacherHome /> },
       { path: 'projects', element: <ProjectsPage /> },
       { path: 'learn', element: <LearnPage /> },
-      { path: 'lessons', element: <Lessons /> },
-      { path: 'lessons/create', element: <CreateLesson /> },
-      { path: 'lessons/:lessonId/edit', element: <CreateLesson /> }, 
-      { path: 'quizzes', element: <QuizManagement /> }, 
-      { path: 'quizzes/:quizId/edit', element: <EditQuiz /> }, 
+      { path: 'lessons', element: <LessonsPage /> },
+      { path: 'lessons/create', element: <CreateLessonPage /> },
+      { path: 'lessons/:id/edit', element: <CreateLessonPage /> }, 
+      { path: 'quizzes', element: <QuizzesPage /> }, 
+      { path: 'quizzes/create', element: <CreateQuizPage /> }, 
+      { path: 'quizzes/:id/edit', element: <CreateQuizPage /> }, 
       { path: 'tutorials/create', element: <CreateTutorial /> },
       { path: 'tutorials/:tutorialId/edit', element: <CreateTutorial /> },
       { path: 'classrooms', element: <Classrooms /> },

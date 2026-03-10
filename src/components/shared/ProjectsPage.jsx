@@ -38,7 +38,6 @@ export default function ProjectsPage() {
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [selectedProject, setSelectedProject] = useState(null)
 
-  // ── Fetch ──────────────────────────────────────────────────
   const fetchProjects = useCallback(async () => {
     setLoading(true)
     setError(null)
@@ -54,7 +53,6 @@ export default function ProjectsPage() {
 
   useEffect(() => { fetchProjects() }, [fetchProjects])
 
-  // ── Derived list (client-side search only) ─────────────────
   const displayed = projects.filter((p) =>
     p.title.toLowerCase().includes(search.toLowerCase()) ||
     (p.description || '').toLowerCase().includes(search.toLowerCase())
@@ -165,7 +163,7 @@ export default function ProjectsPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search projects…"
-              className="w-full pl-9 pr-4 py-4 bg-white text-sm border border-gray-400 rounded-lg focus:outline-none focus:border-blockly-purple focus:ring-2 focus:ring-blockly-purple/10 transition"
+              className="w-full pl-9 pr-4 py-4 bg-white text-sm border border-slate-400 rounded-lg focus:outline-none focus:border-blockly-purple focus:ring-2 focus:ring-blockly-purple/10 transition"
             />
           </div>
 
@@ -191,25 +189,25 @@ export default function ProjectsPage() {
 
         {/* ── Project Grid ─────────────────────────────────── */}
         {loading ? (
-          <div className="flex items-center justify-center py-24">
-            <Loader2 className="w-8 h-8 text-blockly-purple animate-spin" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div key={i} className="h-48 bg-white rounded-2xl border border-slate-200 animate-pulse" />
+            ))}
           </div>
         ) : error ? (
-          <div className="flex flex-col bg-gray-200 rounded-3xl items-center justify-center py-20 gap-4 text-center">
+          <div className="flex flex-col bg-slate-200 rounded-3xl items-center justify-center py-12 gap-4 text-center">
             <p className="text-red-500 font-semibold">Failed to load projects</p>
-            <p className="text-sm text-gray-400">{error}</p>
+            <p className="text-sm text-slate-400">{error}</p>
             <button onClick={fetchProjects} className="btn btn-primary text-sm">Try Again</button>
           </div>
         ) : displayed.length === 0 ? (
-          <div className="flex flex-col bg-gray-200 rounded-3xl items-center justify-center py-20 gap-4">
-            <div className='w-16 h-16 rounded-2xl bg-blockly-purple/10 flex items-center justify-center'>
-              <FoldersIcon className='w-8 h-8 text-blockly-purple' />
-            </div>
+          <div className="flex flex-col bg-slate-200 rounded-3xl items-center justify-center py-12 gap-4">
+            <div className="text-5xl mb-4 text-blockly-light bg-blockly-purple p-4 rounded-xl"><FoldersIcon size={48}/></div>
             <div className='flex flex-col items-center'>
-              <p className="text-lg font-bold text-gray-800">
+              <p className="text-lg font-bold text-slate-700">
                 {search ? 'No projects match your search' : 'No saved projects yet'}
               </p>
-              <p className="text-sm text-gray-400">
+              <p className="text-sm text-slate-700">
                 {search ? 'Try a different keyword' : 'Create one to get started!'}
               </p>
             </div>
@@ -284,7 +282,7 @@ function ProjectCard({ project, onClick }) {
       onClick={onClick}
       onMouseEnter={() => setShowPreview(true)}
       onMouseLeave={() => setShowPreview(false)}
-      className="bg-white rounded-2xl  hover:btn shadow border-2 border-white overflow-hidden hover:border-blockly-purple hover:border hover:shadow-5xl transition-all text-left group"
+      className="bg-white rounded-2xl  hover:btn shadow border border-slate-200 overflow-hidden hover:border-blockly-purple hover:border hover:shadow-5xl transition-all! text-left group"
     >
       {/* Thumbnail */}
       <div className="aspect-video bg-linear-to-b from-green-50 to-amber-50 flex items-center justify-center overflow-hidden relative">
@@ -293,11 +291,10 @@ function ProjectCard({ project, onClick }) {
             <img
               src={project.thumbnail_url}
               alt={project.title}
-              className={`w-full h-full object-contain group-hover:scale-105 transition-all duration-300 ${
+              className={`w-full h-full object-contain group-hover:scale-105 transition-all! duration-300! ${
                 showPreview ? 'opacity-0' : 'opacity-100'
               }`}
             />
-            {/* ✅ Iframe preview on hover */}
             {showPreview && project.generated_html && (
               <iframe
                 srcDoc={project.generated_html}
@@ -338,7 +335,7 @@ function ProjectCard({ project, onClick }) {
             <span>{project.comments_count ?? 0}</span>
           </div>
           {project.updated_at && (
-            <span className="ml-auto text-[10px] text-slate-300">
+            <span className="ml-auto text-[10px] text-slate-500">
               {new Date(project.updated_at).toLocaleDateString()}
             </span>
           )}

@@ -357,8 +357,8 @@ export default function ProjectDetailsModal({ project, onClose, onDelete, onTogg
             {/* Actions */}
             <button
               onClick={() => {
-                const role = project.user_id 
-                window.open(`/student/editor/${project.id}`, '_blank')
+                const role = profile.role
+                window.open(`/${role}/editor/${project.id}`, '_blank')
               }}
               className="btn btn-secondary text-sm rounded-sm"
             >
