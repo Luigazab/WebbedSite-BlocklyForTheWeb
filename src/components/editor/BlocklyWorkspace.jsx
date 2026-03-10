@@ -35,17 +35,6 @@ const BlocklyWorkspace = ({
     onWorkspaceLoadRef.current = onWorkspaceLoad;
   }, [onWorkspaceLoad]);
 
-  const initializeBlockly = useCallback(() => {
-    Blockly.fieldRegistry.register('field_colour', FieldColour);
-    
-    defineBlocks();
-    defineCSSBlocks();
-    defineCSSGenerators();
-    defineGenerators();
-    
-    registerToolboxLabel();
-    registerCustomCategory();
-  }, []);
 
   useEffect(() => {
     if (workspace.current && initialWorkspaceState && !initialStateLoaded.current) {
@@ -60,7 +49,6 @@ const BlocklyWorkspace = ({
 
   useEffect(() => {
     if (blocklyDiv.current && !workspace.current) {
-      initializeBlockly();
       
       workspace.current = Blockly.inject(blocklyDiv.current, {
         toolbox: toolboxConfig,
@@ -109,7 +97,7 @@ const BlocklyWorkspace = ({
         }
       };
     }
-  }, [initializeBlockly]);
+  },[]);
 
   const toggleToolbox = useCallback((visible) => {
     if (!workspace.current) return;

@@ -12,12 +12,13 @@ export const projectService = {
         title,
         description,
         thumbnail_url,
-        generated_html,
         is_public,
         created_at,
         updated_at,
         likes_count,
-        views_count
+        views_count,
+        generated_html,
+        blocks_json 
       `)
       .eq('user_id', user.id)
 
