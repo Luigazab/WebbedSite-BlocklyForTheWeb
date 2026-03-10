@@ -7,7 +7,7 @@ export default function AdminLayout() {
   const sidebarOpen = useUIStore((state) => state.sidebarOpen)
 
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden">
+    <div className="flex h-screen bg-slate-50 overflow-hidden">
       <AdminSidebar />
       <div className={`flex flex-col flex-1 transition-all duration-300 ${sidebarOpen ? 'ml-64' : 'ml-16'}`}>
         <AdminNavbar />

@@ -4,6 +4,8 @@ import UserManagement from '../dashboards/admin/pages/UserManagement'
 import UserEngagement from '../dashboards/admin/pages/UserEngagement'
 import ReportsAndFeedback from '../dashboards/admin/pages/ReportsAndFeedback'
 import AdminProfile from '../dashboards/admin/pages/AdminProfile'
+import ProfilePage from '../dashboards/admin/pages/AdminProfile'
+import SettingsPage from '../components/shared/SettingsPage'
 
 export const adminRoutes = [
   {
@@ -13,7 +15,8 @@ export const adminRoutes = [
       { path: 'users', element: <UserManagement /> },
       { path: 'engagement', element: <UserEngagement /> },
       { path: 'reports', element: <ReportsAndFeedback /> },
-      { path: 'profile', element: <AdminProfile /> },
+      { path: 'profile', element: <ProfilePage /> },
+      { path: 'settings', element: <SettingsPage /> },
     ]
   }
 ]

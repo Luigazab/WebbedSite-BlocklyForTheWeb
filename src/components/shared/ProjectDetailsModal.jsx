@@ -396,7 +396,7 @@ export default function ProjectDetailsModal({ project, onClose, onDelete, onTogg
                   <div className="text-center text-sm text-gray-400 py-4">No comments yet</div>
                 ) : (
                   comments.map(comment => (
-                    <div key={comment.id} className="flex gap-3 p-3 bg-white shadow-lg rounded-lg group">
+                    <div key={comment.id} className="flex gap-3 p-3 bg-white border border-slate-300 shadow rounded-lg group">
                       {comment.profiles?.avatar_url ? (
                         <img
                           src={comment.profiles.avatar_url}

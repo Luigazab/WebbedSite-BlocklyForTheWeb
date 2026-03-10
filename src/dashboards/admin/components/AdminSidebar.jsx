@@ -2,7 +2,8 @@ import { NavLink } from 'react-router'
 import { useUIStore } from '../../../store/uiStore'
 import { useAuthStore } from '../../../store/authStore'
 import {
-  Home, Users, Activity, FileText, User, ChevronRight, ChevronLeft, Icon
+  Home, Users, Activity, FileText, User, ChevronRight, ChevronLeft, Icon,
+  Settings
 } from 'lucide-react'
 
 const links = [
@@ -11,6 +12,7 @@ const links = [
   { to: '/admin/engagement', label: 'Engagement', icon: Activity },
   { to: '/admin/reports',    label: 'Reports',    icon: FileText },
   { to: '/admin/profile',    label: 'Profile',    icon: User     },
+  { to: '/admin/settings',   label: 'Settings',   icon: Settings     },
 ]
 
 export default function StudentSidebar() {
@@ -18,13 +20,13 @@ export default function StudentSidebar() {
   const profile = useAuthStore((state) => state.profile)
 
   return (
-    <aside className={`fixed top-0 left-0 h-screen bg-white border-r border-gray-200 flex flex-col transition-all duration-300 z-30 ${sidebarOpen ? 'w-64' : 'w-16'}`}>
+    <aside className={`fixed top-0 left-0 h-screen bg-blockly-green/90 border-r border-slate-200 flex flex-col transition-all duration-300 z-30 ${sidebarOpen ? 'w-64' : 'w-16'}`}>
       {/* Logo / Brand */}
-      <div className="flex items-center justify-between px-4 py-5 border-b border-gray-100">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-emerald-800">
         {sidebarOpen && (
           <img src="/anotherlogo.png" alt="WebbedSite"  className='h-10 text-lg font-bold text-blockly-purple'/>
         )}
-        <button onClick={toggleSidebar} className="p-1 rounded-md hover:bg-gray-100 ml-auto">
+        <button onClick={toggleSidebar} className="p-1 rounded-md hover:bg-slate-100 ml-auto">
           {sidebarOpen ? <ChevronLeft className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
         </button>
       </div>
@@ -37,10 +39,10 @@ export default function StudentSidebar() {
             to={to}
             end={to === '/admin'}
             className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors
+              `flex items-center gap-3 px-3 py-2.5 rounded-lg font-bolf transition-colors
               ${isActive
-                ? 'bg-blockly-purple/10 text-blockly-purple'
-                : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                ? 'bg-emerald-700 text-blockly-light'
+                : 'text-white hover:bg-slate-100 hover:text-slate-900'
               }`
             }
           >
@@ -52,9 +54,9 @@ export default function StudentSidebar() {
 
       {/* User info at bottom */}
       {sidebarOpen && profile && (
-        <div className="px-4 py-4 border-t border-gray-100">
-          <p className="text-sm font-semibold text-gray-800 truncate">{profile.username}</p>
-          <p className="text-xs text-gray-400 capitalize">{profile.role}</p>
+        <div className="px-4 py-4 border-t border-emerald-800">
+          <p className="text-sm font-bold text-white truncate">{profile.username}</p>
+          <p className="text-xs font-semibold text-slate-50 capitalize border-l-4 border-emerald-300 pl-2">{profile.role}</p>
         </div>
       )}
     </aside>

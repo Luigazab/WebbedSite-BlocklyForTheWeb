@@ -61,7 +61,7 @@ export default function TeacherSidebar() {
         {sidebarOpen && (
           <img src="/anotherlogo.png" alt="WebbedSite"  className='h-10 text-lg font-bold text-blockly-purple'/>
         )}
-        <button onClick={toggleSidebar} className="p-2 rounded-md hover:bg-slate-100 ml-auto">
+        <button onClick={toggleSidebar} className="p-2 rounded-md hover:bg-slate-100 ml-auto ">
           {sidebarOpen ? <ChevronLeft className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
         </button>
       </div>
