@@ -297,6 +297,20 @@
     }
 }
 
+@media (max-width: 640px) {
+  .btn {
+    padding: 4px 0.75rem;
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 400px) {
+  .btn {
+    padding: 3px 0.5rem;
+    font-size: 0.9rem;
+  }
+}
+
 /* 
 @utility btn {
   position: relative;

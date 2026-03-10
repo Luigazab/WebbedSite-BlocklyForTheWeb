@@ -56,12 +56,12 @@ export default function TeacherSidebar() {
   const tourId = getTourForRoute()
 
   return (
-    <aside className={`fixed top-0 left-0 h-screen bg-white border-r border-gray-200 flex flex-col transition-all duration-300 z-30 ${sidebarOpen ? 'w-64' : 'w-16'}`}>
-      <div className="flex items-center justify-between px-4 py-5 border-b border-gray-100">
+    <aside className={`fixed top-0 left-0 h-screen bg-blockly-blue/90 border-r border-slate-200 flex flex-col transition-all duration-300 z-30 ${sidebarOpen ? 'w-64' : 'w-16'}`}>
+      <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
         {sidebarOpen && (
           <img src="/anotherlogo.png" alt="WebbedSite"  className='h-10 text-lg font-bold text-blockly-purple'/>
         )}
-        <button onClick={toggleSidebar} className="p-1 rounded-md hover:bg-gray-100 ml-auto">
+        <button onClick={toggleSidebar} className="p-2 rounded-md hover:bg-slate-100 ml-auto">
           {sidebarOpen ? <ChevronLeft className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
         </button>
       </div>
@@ -75,8 +75,8 @@ export default function TeacherSidebar() {
             className={({ isActive }) =>
               `flex items-center gap-3 px-3 py-2.5 rounded-lg font-bold transition-colors
               ${isActive
-                ? 'bg-blockly-purple/10 text-blockly-purple'
-                : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                ? 'bg-blue-900 text-white'
+                : 'text-blockly-light hover:bg-white/70 hover:text-gray-900'
               }`
             }
           >
@@ -87,7 +87,7 @@ export default function TeacherSidebar() {
         {tourId && (
           <button
             onClick={handleHelpClick}
-            className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors text-gray-600 hover:bg-gray-100 hover:text-blockly-purple mt-auto"
+            className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors text-purple-100 hover:bg-gray-100 hover:text-blockly-purple mt-auto"
             title="Show tour"
           >
             <HelpCircle className="w-5 h-5 shrink-0" />
@@ -99,8 +99,8 @@ export default function TeacherSidebar() {
       {/* User info at bottom */}
       {sidebarOpen && profile && (
         <div className="px-4 py-4 border-t border-gray-100">
-          <p className="text-sm font-semibold text-gray-800 truncate">{profile.username}</p>
-          <p className="text-xs text-gray-400 capitalize">{profile.role}</p>
+          <p className="text-sm font-bold text-white truncate">{profile.username}</p>
+          <p className="text-xs font-semibold text-slate-50 capitalize border-l-4 border-blue-300 pl-2">{profile.role}</p>
         </div>
       )}
     </aside>

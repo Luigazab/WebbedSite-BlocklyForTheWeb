@@ -21,14 +21,21 @@ const Footer = () => {
               accessible and fun for everyone, from kids to adults.
             </p>
             
-            <div className="flex">
-              <button className="btn btn-primary text-sm px-6 py-3">
-                Try Now
-              </button>
-            </div>
+            
           </div>
-
-          {/* Links Grid */}
+          <div className="lg:w-1/3 flex flex-col items-end">
+            <div className="flex space-x-6 mt-4 md:mt-0">
+              <a href="#" className="hover:text-white transition-colors">Terms</a>
+              <a href="#" className="hover:text-white transition-colors">Privacy</a>
+              <a href="#" className="hover:text-white transition-colors">Cookies</a>
+            </div>
+            <div className="flex my-8">
+                <button className="btn btn-primary text-sm px-6 py-3">
+                  Try Now
+                </button>
+              </div>
+          </div>
+{/* 
           <div className="lg:w-2/3 grid grid-cols-2 md:grid-cols-4 gap-8">
             {Object.entries(footerLinks).map(([category, links]) => (
               <div key={category}>
@@ -49,11 +56,11 @@ const Footer = () => {
                 </ul>
               </div>
             ))}
-          </div>
+          </div> */}
         </div>
 
         {/* Divider */}
-        <div className="border-t border-gray-700 my-8"></div>
+        <div className="border-t border-gray-700 mb-8"></div>
 
         {/* Copyright */}
         <div className="flex flex-col md:flex-row justify-between items-center text-gray-400">
@@ -61,13 +68,9 @@ const Footer = () => {
             &copy; 2026 WebbedSite. All rights reserved.
           </div>
           <div className="text-center">
-            Based on Google's Blockly framework. Made with ❤️ for educators and learners.
+            Made with Google's Blockly framework. Made with ❤️ for educators and learners.
           </div>
-          <div className="flex space-x-6 mt-4 md:mt-0">
-            {/* <a href="#" className="hover:text-white transition-colors">Terms</a>
-            <a href="#" className="hover:text-white transition-colors">Privacy</a>
-            <a href="#" className="hover:text-white transition-colors">Cookies</a> */}
-          </div>
+          
         </div>
       </div>
     </footer>

@@ -188,9 +188,9 @@ export default function CreateLessonPage() {
 
   return (
     <div className='bg-slate-200'>
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
+      <div className="max-w-sm md:max-w-2xl lg:max-w-4xl mx-auto sm:px-6 py-8">
         {/* ── Header ────────────────────────────────────────────────────── */}
-        <div className="flex items-center gap-4 mb-8">
+        <div className="flex flex-col md:flex-row items-start justify-center gap-4 mb-8">
           <button
             onClick={() => navigate('/teacher/lessons')}
             className="text-slate-400 hover:text-slate-700 transition-colors text-sm flex items-center gap-1.5"
@@ -200,14 +200,14 @@ export default function CreateLessonPage() {
           <h1 className="flex-1 text-xl font-extrabold text-slate-900">
             {isEdit ? 'Edit Lesson' : 'Create New Lesson'}
           </h1>
-          <div className="flex items-center gap-3">
+          <div className="flex self-end gap-3 ">
             {saveMsg && (
               <span className="text-sm font-semibold text-emerald-600">{saveMsg}</span>
             )}
             <button
               onClick={() => handleSave(false)}
               disabled={saving}
-              className="px-4 py-2 flex items-center gap-2 text-sm font-semibold btn btn-primary disabled:opacity-50"
+              className="px-4 py-2 flex items-center gap-2 text-xs truncate md:text-sm font-semibold btn btn-primary disabled:opacity-50"
             >
               <Save size={15} />
               {saving ? 'Saving…' : 'Save Draft'}
@@ -215,7 +215,7 @@ export default function CreateLessonPage() {
             <button
               onClick={() => handleSave(true)}
               disabled={saving || isPublished}
-              className="px-4 py-2 flex items-center gap-2 text-sm font-semibold btn btn-secondary disabled:opacity-50"
+              className="px-4 py-2 flex items-center gap-2 text-xs truncate md:text-sm font-semibold btn btn-secondary disabled:opacity-50"
             >
               <Check size={15} />
               {isPublished ? 'Published' : 'Save & Publish'}
@@ -342,7 +342,7 @@ export default function CreateLessonPage() {
             <button
               onClick={() => handleSave(false)}
               disabled={saving}
-              className="px-4 py-2 flex items-center gap-2 text-sm font-semibold btn btn-primary disabled:opacity-50"
+              className="px-4 py-2 flex items-center gap-2 text-xs truncate md:text-sm font-semibold btn btn-primary disabled:opacity-50"
             >
               <Save size={15} />
               {saving ? 'Saving…' : 'Save Draft'}
@@ -350,7 +350,7 @@ export default function CreateLessonPage() {
             <button
               onClick={() => handleSave(true)}
               disabled={saving || isPublished}
-              className="px-4 py-2 flex items-center gap-2 text-sm font-semibold btn btn-secondary disabled:opacity-50"
+              className="px-4 py-2 flex items-center gap-2 text-xs truncate md:text-sm font-semibold btn btn-secondary disabled:opacity-50"
             >
               <Check size={15} />
               {isPublished ? 'Published' : 'Save & Publish'}

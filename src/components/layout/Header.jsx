@@ -11,7 +11,7 @@ const Header = () => {
 
   return (
     <header className="sticky top-0 z-50 bg-white shadow-lg">
-      <div className="max-w-400 w-full font-bold mx-auto px-12 py-4">
+      <div className="max-w-400 w-full font-bold mx-auto px-2 md:px-12 py-2 md:py-4">
         <div className="flex items-center justify-between">
           {/* Logo */}
           <a href="/" className="flex items-center space-x-3">
@@ -19,7 +19,7 @@ const Header = () => {
           </a>
 
           {/* Navigation */}
-          <nav className="hidden md:flex text-slate-700 bg-slate-200 rounded-full items-center shadow-[inset_4px_2px_4px_rgba(0,0,0,0.1)]">
+          {/* <nav className="hidden md:flex text-slate-700 bg-slate-200 rounded-full items-center shadow-[inset_4px_2px_4px_rgba(0,0,0,0.1)]">
             {navItems.map((item) => (
               <NavLink
                 key={item.label}
@@ -29,7 +29,7 @@ const Header = () => {
                 {item.label}
               </NavLink>
             ))}
-          </nav>
+          </nav> */}
 
           {/* Get Started Button */}
           <div className='flex items-center space-x-2'>

@@ -1,6 +1,6 @@
 import { supabase } from '../supabaseClient'
 
-// ─── Quizzes ─────────────────────────────────────────────────────────────────
+// ─── Quizzes ──────────────────────────────────────────────────────────────────
 
 export const fetchTeacherQuizzes = async (teacherId) => {
   const { data, error } = await supabase
@@ -8,7 +8,7 @@ export const fetchTeacherQuizzes = async (teacherId) => {
     .select(`
       *,
       quiz_questions(id),
-      badges(id, title, icon_url)
+      badges(id, title, description, icon_url)
     `)
     .eq('teacher_id', teacherId)
     .order('created_at', { ascending: false })
@@ -63,14 +63,12 @@ export const deleteQuiz = async (id) => {
 // ─── Questions ────────────────────────────────────────────────────────────────
 
 export const upsertQuizQuestions = async (quizId, questions) => {
-  // Delete existing, then re-insert in order
   const { error: deleteError } = await supabase
     .from('quiz_questions')
     .delete()
     .eq('quiz_id', quizId)
 
   if (deleteError) throw deleteError
-
   if (questions.length === 0) return []
 
   const rows = questions.map((q, i) => ({
@@ -90,24 +88,28 @@ export const upsertQuizQuestions = async (quizId, questions) => {
   return data
 }
 
-// ─── Badges ───────────────────────────────────────────────────────────────────
+// ─── Badge (one per quiz) ─────────────────────────────────────────────────────
+//
+// Each quiz owns exactly one badge row (badges.quiz_id → quizzes.id).
+// "Preset images" from the admin pool only supply the icon_url — the badge
+// record itself is always freshly created/owned by this quiz.
 
-export const fetchAdminPresetBadges = async () => {
-  // Badges not yet tied to a tutorial (preset icons set by admin)
+export const upsertQuizBadge = async (quizId, { existingBadgeId, title, description, icon_url }) => {
+  if (existingBadgeId) {
+    const { data, error } = await supabase
+      .from('badges')
+      .update({ title, description, icon_url, updated_at: new Date().toISOString() })
+      .eq('id', existingBadgeId)
+      .select()
+      .single()
+
+    if (error) throw error
+    return data
+  }
+
   const { data, error } = await supabase
     .from('badges')
-    .select('*')
-    .is('tutorial_id', null)
-    .order('created_at')
-
-  if (error) throw error
-  return data
-}
-
-export const createBadge = async (badgeData) => {
-  const { data, error } = await supabase
-    .from('badges')
-    .insert(badgeData)
+    .insert({ quiz_id: quizId, title, description, icon_url })
     .select()
     .single()
 
@@ -115,8 +117,29 @@ export const createBadge = async (badgeData) => {
   return data
 }
 
+export const deleteQuizBadge = async (badgeId) => {
+  const { error } = await supabase.from('badges').delete().eq('id', badgeId)
+  if (error) throw error
+}
+
+// ─── Admin preset image pool ──────────────────────────────────────────────────
+// These are badge rows where quiz_id IS NULL and tutorial_id IS NULL.
+// Teachers borrow the icon_url only — they do NOT reuse the row itself.
+
+export const fetchAdminPresetBadgeImages = async () => {
+  const { data, error } = await supabase
+    .from('badges')
+    .select('id, title, icon_url')
+    .is('quiz_id', null)
+    .is('tutorial_id', null)
+    .not('icon_url', 'is', null)
+    .order('created_at')
+
+  if (error) throw error
+  return data
+}
+
 export const uploadBadgeImage = async (file) => {
-  const ext = file.name.split('.').pop()
   const path = `badges/${Date.now()}_${file.name.replace(/\s+/g, '_')}`
 
   const { error: uploadError } = await supabase.storage
@@ -129,7 +152,8 @@ export const uploadBadgeImage = async (file) => {
   return urlData.publicUrl
 }
 
-// For the AttachQuizModal on lessons – search through teacher's quizzes
+// ─── Quiz search (for AttachQuizModal) ───────────────────────────────────────
+
 export const searchTeacherQuizzes = async (teacherId, query = '') => {
   let q = supabase
     .from('quizzes')
@@ -137,9 +161,7 @@ export const searchTeacherQuizzes = async (teacherId, query = '') => {
     .eq('teacher_id', teacherId)
     .order('created_at', { ascending: false })
 
-  if (query) {
-    q = q.ilike('title', `%${query}%`)
-  }
+  if (query) q = q.ilike('title', `%${query}%`)
 
   const { data, error } = await q
   if (error) throw error
