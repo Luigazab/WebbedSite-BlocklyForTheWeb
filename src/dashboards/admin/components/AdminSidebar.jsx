@@ -3,7 +3,8 @@ import { useUIStore } from '../../../store/uiStore'
 import { useAuthStore } from '../../../store/authStore'
 import {
   Home, Users, Activity, FileText, User, ChevronRight, ChevronLeft, Icon,
-  Settings
+  Settings,
+  LucideLibraryBig
 } from 'lucide-react'
 
 const links = [
@@ -11,6 +12,7 @@ const links = [
   { to: '/admin/users',      label: 'Users',      icon: Users    },
   { to: '/admin/engagement', label: 'Engagement', icon: Activity },
   { to: '/admin/reports',    label: 'Reports',    icon: FileText },
+  { to: '/admin/contents',    label: 'Contents',  icon: LucideLibraryBig },
   { to: '/admin/profile',    label: 'Profile',    icon: User     },
   { to: '/admin/settings',   label: 'Settings',   icon: Settings     },
 ]
