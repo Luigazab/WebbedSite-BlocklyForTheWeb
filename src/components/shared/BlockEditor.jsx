@@ -16,6 +16,7 @@ import { useAuthStore } from '../../store/authStore'
 import { useUIStore } from '../../store/uiStore'
 import { useBlocklyThumbnail } from '../../hooks/useBlocklyThumbnail'
 import { projectService } from '../../services/project.service'
+import EditorTour, { useAutoStartEditorTour } from '../tour/EditorTour'
 
 const BlockEditor = () => {
   const { id } = useParams()
@@ -439,9 +440,10 @@ const BlockEditor = () => {
     const file = files.find(f => f.id === activePreviewFile)
     return file?.filename || ''
   }
+  useAutoStartEditorTour
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden">
+    <div className="flex flex-col h-screen">
       <EditorHeader
         onNew={handleCreateNew}
         onSave={() => setShowSaveModal(true)}
@@ -501,6 +503,7 @@ const BlockEditor = () => {
         onDeleteProject={handleDeleteProject}
         onLoadFromDevice={handleLoadFromDevice}
       />
+      <EditorTour />
     </div>
   )
 }

@@ -4,7 +4,8 @@ import { useAuthStore } from '../../../store/authStore'
 import { useTour } from '../../../components/tour/TourProvider'
 import {
   Home, BookOpen, ChevronLeft, ChevronRight,
-  University, FolderOpen, Settings, UserSquare2, HelpCircle
+  University, FolderOpen, Settings, UserSquare2, HelpCircle,
+  LibraryBigIcon
 } from 'lucide-react'
 
 const links = [
@@ -12,6 +13,7 @@ const links = [
   { to: '/student/projects',    label: 'Projects',    icon: FolderOpen  },
   { to: '/student/classrooms',  label: 'Classrooms',  icon: University  },
   { to: '/student/learn',       label: 'Learn',       icon: BookOpen    },
+  { to: '/student/docs',        label: 'Documentation',     icon: LibraryBigIcon    },
   // { to: '/student/tutorials', label: 'Tutorials', icon: PlayCircle},
   { to: '/student/profile',     label: 'Profile',     icon: UserSquare2 },
   { to: '/student/settings',    label: 'Settings',    icon: Settings    },

@@ -8,7 +8,7 @@ const DeviceSelector = ({
   onSelectDevice 
 }) => {
   return (
-    <div className='p-1 border-t-2 bg-slate-300'>
+    <div data-tour='device-selector' className='p-1 border-t-2 bg-slate-300'>
       <div className='flex justify-between items-center mb-2'>
         <h5 className='font-semibold'>Screen Sizes:</h5>
         <button 

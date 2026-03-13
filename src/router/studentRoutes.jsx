@@ -12,6 +12,7 @@ import EditorLayout from '../components/layout/EditorLayout'
 import BlockEditor from '../components/shared/BlockEditor'
 import LearnPage from '../dashboards/student/pages/LearnPage'
 import LessonViewer from '../dashboards/student/pages/LessonViewer'
+import Documentation from '../components/shared/Documentation'
 
 export const studentRoutes = [
   {
@@ -22,6 +23,7 @@ export const studentRoutes = [
       { path: 'classrooms', element: <StudentClassrooms /> },
       { path: 'classrooms/:classroomId', element: <StudentClassroomDetail /> },
       { path: 'learn', element: <LearnPage /> },
+      { path: 'docs', element: <Documentation /> },
       { path: 'lessons', element: <LessonPage /> },
       { path: 'lessons/:lessonId', element: <LessonViewer /> },
       { path: 'tutorials', element: <TutorialPage /> },

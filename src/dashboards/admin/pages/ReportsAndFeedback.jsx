@@ -81,7 +81,7 @@ export default function ReportsAndFeedback() {
             className={`rounded-xl border px-4 py-3 text-left transition-all
               ${filterStatus === value
                 ? `${cls} border-current shadow-sm`
-                : 'bg-white border-gray-100 hover:border-gray-200'
+                : 'bg-white border-slate-200 hover:border-gray-100'
               }`}
           >
             <div className="flex items-center gap-2">

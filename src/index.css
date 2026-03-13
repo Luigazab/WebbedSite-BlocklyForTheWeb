@@ -261,7 +261,7 @@
     cursor: pointer;
     transition: all 0.2s ease;
     padding: 6px 1rem;
-    border-radius: 0.75rem;
+    border-radius: 0.5rem;
     border:none;
     font-weight: 700;
     font-size: 1.2rem;
@@ -299,14 +299,14 @@
 
 @media (max-width: 640px) {
   .btn {
-    padding: 4px 0.75rem;
+    padding: 5px 0.7rem;
     font-size: 1rem;
   }
 }
 
 @media (max-width: 400px) {
   .btn {
-    padding: 3px 0.5rem;
+    padding: 5px 0.5rem;
     font-size: 0.9rem;
   }
 }
@@ -452,3 +452,11 @@ body {
   font-size: 20px;
 }
 
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none; 
+}

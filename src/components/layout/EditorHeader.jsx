@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { Menu, Home, FolderOpen, University, BookOpen, UserSquare2, Settings, Plus, Save, Download } from 'lucide-react'
 import { useNavigate } from 'react-router'
 import { useAuthStore } from '../../store/authStore'
+import { TourHelpButton } from '../tour/EditorTour'
 
 const EditorHeader = ({ onNew, onSave, onLoad, projectTitle }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -47,7 +48,7 @@ const EditorHeader = ({ onNew, onSave, onLoad, projectTitle }) => {
   const isProjectTitle = Boolean(projectTitle?.trim())
 
   return (
-    <header className="w-full bg-white border-b border-gray-200 relative z-99">
+    <header data-tour="editor-header" className="w-full bg-white border-b border-gray-200 relative z-99">
 
       {/* ── Desktop Layout ─────────────────────────────────── */}
       <div className="hidden lg:flex items-center justify-between px-6 py-3">
@@ -99,17 +100,18 @@ const EditorHeader = ({ onNew, onSave, onLoad, projectTitle }) => {
         </div>
 
         {/* Right: action buttons */}
-        <div className="flex gap-2">
+        <div className="flex gap-2" data-tour="file-actions">
           <button onClick={onNew}  className="btn flex items-center space-x-2 btn-lead">
             <Plus size={18} /><span>New</span>
           </button>
-          <button onClick={onSave} className="btn flex items-center space-x-2 btn-secondary">
+          <button onClick={onSave}  data-tour="save-btn" className="btn flex items-center space-x-2 btn-secondary">
             <Save size={18} /><span>Save</span>
           </button>
           <button onClick={onLoad} className="btn flex items-center space-x-2 btn-primary">
             <Download size={18} /><span>Load</span>
           </button>
         </div>
+        <TourHelpButton/>
       </div>
 
       {/* ── Mobile Layout ──────────────────────────────────── */}

@@ -1,19 +1,7 @@
 import React, { useState, useEffect } from "react";
 import * as Blockly from "blockly/core";
-import "blockly/blocks"; // load default blocks
-import "blockly/javascript"; // load JS generator
-
-// Example toolbox config (replace with your own)
-const toolboxConfig = {
-  kind: "flyoutToolbox",
-  contents: [
-    { kind: "block", type: "controls_if" },
-    { kind: "block", type: "logic_compare" },
-    { kind: "block", type: "math_number" },
-    { kind: "block", type: "text" },
-    { kind: "block", type: "text_print" },
-  ],
-};
+import "blockly/blocks"; 
+import "blockly/javascript";
 
 export default function BlocklyTabs() {
   const [files, setFiles] = useState([
@@ -23,7 +11,6 @@ export default function BlocklyTabs() {
   const [activeFile, setActiveFile] = useState("main");
   const [code, setCode] = useState("");
 
-  // Inject Blockly workspaces after mount
   useEffect(() => {
     files.forEach((file) => {
       if (!file.workspace) {
@@ -32,7 +19,6 @@ export default function BlocklyTabs() {
         });
         file.workspace = workspace;
 
-        // Update preview when blocks change
         workspace.addChangeListener(() => {
           if (file.id === activeFile) {
             const generated = Blockly.JavaScript.workspaceToCode(workspace);
@@ -43,7 +29,6 @@ export default function BlocklyTabs() {
     });
   }, [files, activeFile]);
 
-  // Add new file
   function addNewFile() {
     const id = `file-${Date.now()}`;
     const newFile = { id, name: `${id}.blockly`, workspace: null };
@@ -51,7 +36,6 @@ export default function BlocklyTabs() {
     setActiveFile(id);
   }
 
-  // Switch active tab
   function switchTab(id) {
     setActiveFile(id);
     const file = files.find((f) => f.id === id);

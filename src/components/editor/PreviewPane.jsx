@@ -76,13 +76,13 @@ const PreviewPane = ({
         Preview
       </h4>
       <div id="outputPanel" className="flex-1 my-6 h-[96%] flex flex-col border-2 border-slate-500 rounded-lg bg-white relative">
-        <button onClick={onRunCode} 
+        <button onClick={onRunCode} data-tour="run-btn"
           className="z-10 absolute -top-6 left-50 px-2 py-2 bg-green-500 border-3 border-black text-black hover:bg-green-60 rounded-full hover:bg-green-600 hover:-translate-y-1 font-medium transition-all"
         >
           <Play className='hover:stroke-white hover:fill-black transition-all' fill='white' />
         </button>
         
-        <div className="flex justify-around px-4 pt-8 bg-gray-900 border-b border-gray-200 group transition-all relative">
+        <div data-tour="preview-tabs" className="flex justify-around px-4 pt-8 bg-gray-900 border-b border-gray-200 group transition-all relative">
           {previewFileName && previewFileName !== currentFileName && (
             <div className="absolute left-2 top-2 flex items-center gap-1 px-2 py-1 bg-blue-500 text-white text-xs rounded">
               <Eye size={12} />

@@ -21,7 +21,7 @@ const FileTabs = ({ files, activeFile, onFileChange, onFileCreate, onFileDelete,
   };
 
   return (
-    <div className="flex items-center gap-1 bg-gray-800 px-2 py-1 overflow-x-auto">
+    <div data-tour="file-tabs" className="flex items-center gap-1 bg-gray-800 px-2 py-1 overflow-x-auto">
       {isLocal && (
         <div className="flex items-center gap-1 px-2 py-1 text-xs text-yellow-400 bg-yellow-900/30 rounded mr-2">
           <HardDrive size={12} />

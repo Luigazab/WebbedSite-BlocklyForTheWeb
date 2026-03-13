@@ -75,6 +75,8 @@ const BlocklyWorkspace = ({
           snap: true
         }
       });
+      const toolboxEl = blocklyDiv.current?.querySelector('.blocklyToolbox')
+      if (toolboxEl) toolboxEl.setAttribute('data-tour', 'toolbox')
 
       workspace.current.addChangeListener(() => {
         if (onWorkspaceChangeRef.current && workspace.current) {

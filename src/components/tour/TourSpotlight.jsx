@@ -2,10 +2,83 @@ import { useEffect, useState, useRef } from 'react'
 import { X, ChevronRight, ChevronLeft } from 'lucide-react'
 import { useTour } from './TourProvider'
 
+const BUBBLE_WIDTH = 420
+const BUBBLE_HEIGHT = 220 // approximate, adjust to your content
+const BUBBLE_GAP = 20     // gap between target and bubble
+const CHAR_WIDTH = 80     // character image width
+const EDGE_PADDING = 16   // min distance from viewport edges
+
+function computeBubblePosition(rect) {
+  const vw = window.innerWidth
+  const vh = window.innerHeight
+
+  const spaceBelow = vh - rect.bottom
+  const spaceAbove = rect.top
+  const spaceRight = vw - rect.right
+  const spaceLeft = rect.left
+
+  // Total width needed: character + gap + bubble
+  const totalWidth = CHAR_WIDTH + BUBBLE_GAP + BUBBLE_WIDTH
+
+  // Clamp horizontal position so bubble never bleeds off screen
+  const clampedLeft = (ideal) =>
+    Math.max(EDGE_PADDING, Math.min(ideal, vw - BUBBLE_WIDTH - EDGE_PADDING))
+
+  // 1. Below
+  if (spaceBelow >= BUBBLE_HEIGHT + BUBBLE_GAP) {
+    return {
+      placement: 'below',
+      top: rect.bottom + BUBBLE_GAP,
+      left: clampedLeft(rect.left),
+    }
+  }
+
+  // 2. Above
+  if (spaceAbove >= BUBBLE_HEIGHT + BUBBLE_GAP) {
+    return {
+      placement: 'above',
+      top: rect.top - BUBBLE_HEIGHT - BUBBLE_GAP,
+      left: clampedLeft(rect.left),
+    }
+  }
+
+  // 3. Right
+  if (spaceRight >= totalWidth + BUBBLE_GAP) {
+    return {
+      placement: 'right',
+      top: Math.max(EDGE_PADDING, Math.min(rect.top, vh - BUBBLE_HEIGHT - EDGE_PADDING)),
+      left: rect.right + BUBBLE_GAP,
+    }
+  }
+
+  // 4. Left (last resort)
+  return {
+    placement: 'left',
+    top: Math.max(EDGE_PADDING, Math.min(rect.top, vh - BUBBLE_HEIGHT - EDGE_PADDING)),
+    left: Math.max(EDGE_PADDING, rect.left - totalWidth - BUBBLE_GAP),
+  }
+}
+
+// Tail position config per placement
+const TAIL_STYLES = {
+  below: 'absolute -left-3 bottom-8 w-6 h-6 bg-white border-l-4 border-b-4 border-blockly-purple transform rotate-45',
+  above: 'absolute -left-3 bottom-8 w-6 h-6 bg-white border-l-4 border-b-4 border-blockly-purple transform rotate-45',
+  right: 'absolute -right-3 bottom-8 w-6 h-6 bg-white border-r-4 border-t-4 border-blockly-purple transform rotate-45',
+  left:  'absolute -left-3 bottom-8 w-6 h-6 bg-white border-l-4 border-b-4 border-blockly-purple transform rotate-45',
+}
+
+// Flip character to opposite side of bubble based on placement
+const CHAR_ORDER = {
+  below: 'flex-row',      // char left, bubble right
+  above: 'flex-row',
+  right: 'flex-row-reverse', // bubble left, char right (char closer to target)
+  left:  'flex-row',
+}
+
 export default function TourSpotlight({ steps }) {
   const { currentStep, isVisible, nextStep, prevStep, skipTour } = useTour()
   const [highlightRect, setHighlightRect] = useState(null)
-  const [bubblePosition, setBubblePosition] = useState({ top: 0, left: 0 })
+  const [bubblePos, setBubblePos] = useState({ top: 0, left: 0, placement: 'below' })
   const overlayRef = useRef(null)
 
   const step = steps[currentStep]
@@ -17,21 +90,25 @@ export default function TourSpotlight({ steps }) {
 
     const updateHighlight = () => {
       const element = document.querySelector(step.target)
-      if (element) {
-        const rect = element.getBoundingClientRect()
-        setHighlightRect({
-          top: rect.top,
-          left: rect.left,
-          width: rect.width,
-          height: rect.height,
-        })
+      if (!element) return
 
-        // Position bubble near the highlighted element
-        const bubbleTop = rect.bottom + 20
-        const bubbleLeft = Math.max(20, Math.min(rect.left, window.innerWidth - 420))
-        setBubblePosition({ top: bubbleTop, left: bubbleLeft })
+      const rect = element.getBoundingClientRect()
+      setHighlightRect({
+        top: rect.top,
+        left: rect.left,
+        width: rect.width,
+        height: rect.height,
+      })
 
-        // Scroll element into view if needed
+      setBubblePos(computeBubblePosition(rect))
+
+      const isOutOfView =
+        rect.bottom < 0 ||
+        rect.top > window.innerHeight ||
+        rect.right < 0 ||
+        rect.left > window.innerWidth
+
+      if (isOutOfView) {
         element.scrollIntoView({ behavior: 'smooth', block: 'center' })
       }
     }
@@ -48,13 +125,9 @@ export default function TourSpotlight({ steps }) {
 
   if (!isVisible || !step) return null
 
-  const handleNext = () => {
-    if (isLastStep) {
-      skipTour()
-    } else {
-      nextStep()
-    }
-  }
+  const handleNext = () => (isLastStep ? skipTour() : nextStep())
+
+  const { top, left, placement } = bubblePos
 
   return (
     <div className="fixed inset-0 z-9999">
@@ -80,11 +153,8 @@ export default function TourSpotlight({ steps }) {
           </mask>
         </defs>
         <rect
-          x="0"
-          y="0"
-          width="100%"
-          height="100%"
-          fill="rgba(0, 0, 0, 0.75)"
+          x="0" y="0" width="100%" height="100%"
+          fill="rgba(50, 40, 50, 0.75)"
           mask="url(#spotlight-mask)"
         />
       </svg>
@@ -105,16 +175,13 @@ export default function TourSpotlight({ steps }) {
 
       {/* Character + Speech Bubble */}
       <div
-        className="absolute z-10001 flex items-end gap-4 transition-all duration-300"
-        style={{
-          top: `${bubblePosition.top}px`,
-          left: `${bubblePosition.left}px`,
-        }}
+        className={`absolute z-10001 flex items-end gap-4 transition-all duration-300 ${CHAR_ORDER[placement]}`}
+        style={{ top, left }}
       >
         {/* Character */}
         <div className="shrink-0 w-50 h-50 animate-bounce-slow">
           <img
-            src="/remi.png"
+            src="/rim_white.png"
             alt="Tour guide"
             className="w-full h-full object-contain drop-shadow-lg"
           />
@@ -122,8 +189,8 @@ export default function TourSpotlight({ steps }) {
 
         {/* Speech Bubble */}
         <div className="relative bg-white rounded-2xl shadow-2xl p-6 max-w-md border-4 border-blockly-purple">
-          {/* Bubble tail */}
-          <div className="absolute -left-3 bottom-8 w-6 h-6 bg-white border-l-4 border-b-4 border-blockly-purple transform rotate-45" />
+          {/* Bubble tail — changes direction based on placement */}
+          <div className={TAIL_STYLES[placement]} />
 
           {/* Close button */}
           <button

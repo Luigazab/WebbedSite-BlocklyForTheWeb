@@ -1,84 +1,68 @@
-@import url("https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap");
+.tiptap-editor {
+  @import url("https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap");
 
-body {
   --tt-toolbar-height: 44px;
   --tt-theme-text: var(--tt-gray-light-900);
 
   .dark & {
     --tt-theme-text: var(--tt-gray-dark-900);
   }
-}
 
-body {
   font-family: "Inter", sans-serif;
   color: var(--tt-theme-text);
   font-optical-sizing: auto;
   font-weight: 400;
   font-style: normal;
-  padding: 0;
-  overscroll-behavior-y: none;
-}
 
-html,
-body {
-  overscroll-behavior-x: none;
-}
+  .tiptap.ProseMirror {
+    font-family: "DM Sans", sans-serif;
+  }
 
-html,
-body,
-#root,
-#app {
-  height: 100%;
-  background-color: var(--tt-bg-color);
-}
+  .simple-editor-wrapper {
+    overflow: auto;
+    width: 100%;
+    max-width: 100%;
+  }
 
-::-webkit-scrollbar {
-  width: 0.25rem;
-}
+  .simple-editor-content {
+    max-width: min(100%, 56rem);
+    width: 100%;
+    margin: 0 auto;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    box-sizing: border-box;
+  }
 
-* {
-  scrollbar-width: thin;
-  scrollbar-color: var(--tt-scrollbar-color) transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background-color: var(--tt-scrollbar-color);
-  border-radius: 9999px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.tiptap.ProseMirror {
-  font-family: "DM Sans", sans-serif;
-}
-
-.simple-editor-wrapper {
-  overflow: auto;
-  width: 100%;
-  max-width: 100%;
-}
-
-.simple-editor-content {
-  max-width: min(100%, 56rem);
-  width: 100%;
-  margin: 0 auto;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  box-sizing: border-box;
-}
-
-.simple-editor-content .tiptap.ProseMirror.simple-editor {
-  flex: 1;
-  padding: 1rem 1rem 10vh;
-  box-sizing: border-box;
-}
-
-@media screen and (max-width: 480px) {
   .simple-editor-content .tiptap.ProseMirror.simple-editor {
-    padding: 0rem 0rem 10vh;
+    flex: 1;
+    padding: 1rem 1rem 10vh;
+    box-sizing: border-box;
+  }
+
+  @media screen and (max-width: 480px) {
+    .simple-editor-content .tiptap.ProseMirror.simple-editor {
+      padding: 0rem 0rem 10vh;
+    }
+  }
+
+  // Scrollbar styles scoped to editor
+  ::-webkit-scrollbar {
+    width: 0.25rem;
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--tt-scrollbar-color) transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background-color: var(--tt-scrollbar-color);
+    border-radius: 9999px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
   }
 }

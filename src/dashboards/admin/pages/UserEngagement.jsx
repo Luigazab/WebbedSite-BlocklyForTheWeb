@@ -6,34 +6,34 @@ import {
 } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
-  CartesianGrid, PieChart, Pie, Cell, Legend
+  CartesianGrid, PieChart, Pie, Cell, 
 } from "recharts";
 import { supabase } from "../../../supabaseClient";
 
 function MetricCard({ label, value, icon: Icon, sub, color = "amber", loading }) {
   const colors = {
-    amber:   { ring: "ring-amber-500/20",  bg: "bg-amber-500/10",   icon: "text-amber-400"   },
-    sky:     { ring: "ring-sky-500/20",    bg: "bg-sky-500/10",     icon: "text-sky-400"     },
-    violet:  { ring: "ring-violet-500/20", bg: "bg-violet-500/10",  icon: "text-violet-400"  },
-    emerald: { ring: "ring-emerald-500/20",bg: "bg-emerald-500/10", icon: "text-emerald-400" },
-    rose:    { ring: "ring-rose-500/20",   bg: "bg-rose-500/10",    icon: "text-rose-400"    },
-    orange:  { ring: "ring-orange-500/20", bg: "bg-orange-500/10",  icon: "text-orange-400"  },
-    teal:    { ring: "ring-teal-500/20",   bg: "bg-teal-500/10",    icon: "text-teal-400"    },
-    indigo:  { ring: "ring-indigo-500/20", bg: "bg-indigo-500/10",  icon: "text-indigo-400"  },
+    amber:   { ring: "ring-amber-200",  bg: "bg-amber-50",   icon: "text-amber-500"   },
+    sky:     { ring: "ring-sky-200",    bg: "bg-sky-50",     icon: "text-sky-500"     },
+    violet:  { ring: "ring-violet-200", bg: "bg-violet-50",  icon: "text-violet-500"  },
+    emerald: { ring: "ring-emerald-200",bg: "bg-emerald-50", icon: "text-emerald-600" },
+    rose:    { ring: "ring-rose-200",   bg: "bg-rose-50",    icon: "text-rose-500"    },
+    orange:  { ring: "ring-orange-200", bg: "bg-orange-50",  icon: "text-orange-500"  },
+    teal:    { ring: "ring-teal-200",   bg: "bg-teal-50",    icon: "text-teal-600"    },
+    indigo:  { ring: "ring-indigo-200", bg: "bg-indigo-50",  icon: "text-indigo-500"  },
   };
   const c = colors[color];
   return (
-    <div className={`bg-[#13151e] border border-white/[0.06] rounded-xl p-5 ring-1 ${c.ring} hover:border-white/10 transition-all`}>
+    <div className={`bg-white border border-gray-200 rounded-xl p-5 ring-1 ${c.ring} hover:border-gray-200 transition-all`}>
       <div className={`w-10 h-10 rounded-xl ${c.bg} flex items-center justify-center mb-4`}>
         <Icon size={18} className={c.icon} />
       </div>
       {loading ? (
-        <div className="h-8 w-16 bg-white/[0.06] rounded animate-pulse mb-1" />
+        <div className="h-8 w-16 bg-gray-50 rounded animate-pulse mb-1" />
       ) : (
-        <p className="text-white text-3xl font-bold tracking-tight tabular-nums">{value?.toLocaleString() ?? "—"}</p>
+        <p className="text-gray-900 text-3xl font-bold tracking-tight tabular-nums">{value?.toLocaleString() ?? "—"}</p>
       )}
-      <p className="text-white/50 text-sm mt-1">{label}</p>
-      {sub && <p className="text-white/25 text-xs mt-0.5">{sub}</p>}
+      <p className="text-gray-500 text-sm mt-1">{label}</p>
+      {sub && <p className="text-gray-400 text-xs mt-0.5">{sub}</p>}
     </div>
   );
 }
@@ -41,10 +41,10 @@ function MetricCard({ label, value, icon: Icon, sub, color = "amber", loading })
 const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-[#1a1d28] border border-white/10 rounded-xl p-3 shadow-2xl text-xs">
-      <p className="text-white/50 mb-2">{label}</p>
+    <div className="bg-white border border-gray-200 rounded-xl p-3 shadow-2xl text-xs">
+      <p className="text-gray-500 mb-2">{label}</p>
       {payload.map((p) => (
-        <p key={p.name} className="text-white">{p.name}: <span style={{ color: p.color }} className="font-semibold">{p.value}</span></p>
+        <p key={p.name} className="text-gray-800">{p.name}: <span style={{ color: p.color }} className="font-semibold">{p.value}</span></p>
       ))}
     </div>
   );
@@ -130,10 +130,10 @@ export default function UserEngagement() {
   }, []);
 
   return (
-    <div className="max-w-7xl space-y-6 mx-auto">
+    <div className="max-w-7xl space-y-6 mx-auto py-4">
       {/* Primary Metrics */}
       <div>
-        <h2 className="text-white/50 text-xs font-semibold uppercase tracking-widest mb-3">Content</h2>
+        <h2 className="text-gray-500 text-xs font-semibold uppercase tracking-widest mb-3">Content</h2>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <MetricCard label="Total Lessons" value={stats?.lessons} sub={`${stats?.publishedLessons ?? "—"} published`} icon={BookOpen} color="amber" loading={loading} />
           <MetricCard label="Classrooms" value={stats?.classrooms} sub={`${stats?.activeClassrooms ?? "—"} active`} icon={Layout} color="sky" loading={loading} />
@@ -143,7 +143,7 @@ export default function UserEngagement() {
       </div>
 
       <div>
-        <h2 className="text-white/50 text-xs font-semibold uppercase tracking-widest mb-3">Community</h2>
+        <h2 className="text-gray-500 text-xs font-semibold uppercase tracking-widest mb-3">Community</h2>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <MetricCard label="Projects Created" value={stats?.projects} sub={`${stats?.publicProjects ?? "—"} public`} icon={FolderKanban} color="orange" loading={loading} />
           <MetricCard label="Achievements Earned" value={stats?.achievements} icon={Trophy} color="amber" loading={loading} />
@@ -155,14 +155,14 @@ export default function UserEngagement() {
       {/* Charts Row 1 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Monthly content creation */}
-        <div className="bg-[#13151e] border border-white/[0.06] rounded-xl p-5">
-          <h3 className="text-white text-sm font-semibold mb-1">Content Created</h3>
-          <p className="text-white/30 text-xs mb-5">Lessons & tutorials per month</p>
+        <div className="bg-white border border-gray-200 rounded-xl p-5">
+          <h3 className="text-gray-900 text-sm font-semibold mb-1">Content Created</h3>
+          <p className="text-gray-400 text-xs mb-5">Lessons & tutorials per month</p>
           <ResponsiveContainer width="100%" height={200}>
             <BarChart data={lessonsByMonth} barGap={4} margin={{ top: 0, right: 0, bottom: 0, left: -20 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
-              <XAxis dataKey="month" tick={{ fill: "rgba(255,255,255,0.3)", fontSize: 11 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fill: "rgba(255,255,255,0.3)", fontSize: 11 }} axisLine={false} tickLine={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" vertical={false} />
+              <XAxis dataKey="month" tick={{ fill: "#9ca3af", fontSize: 11 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fill: "#9ca3af", fontSize: 11 }} axisLine={false} tickLine={false} />
               <Tooltip content={<CustomTooltip />} />
               <Bar dataKey="Lessons" fill="#f59e0b" radius={[4, 4, 0, 0]} />
               <Bar dataKey="Tutorials" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
@@ -171,14 +171,14 @@ export default function UserEngagement() {
         </div>
 
         {/* Projects per month */}
-        <div className="bg-[#13151e] border border-white/[0.06] rounded-xl p-5">
-          <h3 className="text-white text-sm font-semibold mb-1">Projects Submitted</h3>
-          <p className="text-white/30 text-xs mb-5">Student projects per month</p>
+        <div className="bg-white border border-gray-200 rounded-xl p-5">
+          <h3 className="text-gray-900 text-sm font-semibold mb-1">Projects Submitted</h3>
+          <p className="text-gray-400 text-xs mb-5">Student projects per month</p>
           <ResponsiveContainer width="100%" height={200}>
             <BarChart data={projectsByMonth} margin={{ top: 0, right: 0, bottom: 0, left: -20 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
-              <XAxis dataKey="month" tick={{ fill: "rgba(255,255,255,0.3)", fontSize: 11 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fill: "rgba(255,255,255,0.3)", fontSize: 11 }} axisLine={false} tickLine={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" vertical={false} />
+              <XAxis dataKey="month" tick={{ fill: "#9ca3af", fontSize: 11 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fill: "#9ca3af", fontSize: 11 }} axisLine={false} tickLine={false} />
               <Tooltip content={<CustomTooltip />} />
               <Bar dataKey="Projects" fill="#fb923c" radius={[4, 4, 0, 0]} />
             </BarChart>
@@ -189,28 +189,28 @@ export default function UserEngagement() {
       {/* Charts Row 2 */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Top teachers */}
-        <div className="bg-[#13151e] border border-white/[0.06] rounded-xl p-5 lg:col-span-1">
-          <h3 className="text-white text-sm font-semibold mb-1">Top Content Creators</h3>
-          <p className="text-white/30 text-xs mb-5">Teachers by lessons created</p>
+        <div className="bg-white border border-gray-200 rounded-xl p-5 lg:col-span-1">
+          <h3 className="text-gray-900 text-sm font-semibold mb-1">Top Content Creators</h3>
+          <p className="text-gray-400 text-xs mb-5">Teachers by lessons created</p>
           {loading ? (
             <div className="space-y-3">
-              {Array(5).fill(0).map((_, i) => <div key={i} className="h-8 bg-white/[0.04] rounded animate-pulse" />)}
+              {Array(5).fill(0).map((_, i) => <div key={i} className="h-8 bg-gray-50 rounded animate-pulse" />)}
             </div>
           ) : topTeachers.length === 0 ? (
-            <p className="text-white/25 text-sm text-center py-8">No data yet</p>
+            <p className="text-gray-400 text-sm text-center py-8">No data yet</p>
           ) : (
             <div className="space-y-3">
               {topTeachers.map((t, i) => {
                 const max = topTeachers[0].Lessons;
                 return (
                   <div key={t.name} className="flex items-center gap-3">
-                    <span className="text-white/25 text-xs w-4 tabular-nums">{i + 1}</span>
+                    <span className="text-gray-400 text-xs w-4 tabular-nums">{i + 1}</span>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-white/75 text-xs truncate">@{t.name}</span>
-                        <span className="text-amber-400 text-xs font-semibold tabular-nums ml-2">{t.Lessons}</span>
+                        <span className="text-gray-700 text-xs truncate">@{t.name}</span>
+                        <span className="text-amber-500 text-xs font-semibold tabular-nums ml-2">{t.Lessons}</span>
                       </div>
-                      <div className="h-1 bg-white/[0.05] rounded-full overflow-hidden">
+                      <div className="h-1 bg-gray-50 rounded-full overflow-hidden">
                         <div className="h-full bg-amber-500 rounded-full transition-all" style={{ width: `${(t.Lessons / max) * 100}%` }} />
                       </div>
                     </div>
@@ -222,9 +222,9 @@ export default function UserEngagement() {
         </div>
 
         {/* Quiz outcomes */}
-        <div className="bg-[#13151e] border border-white/[0.06] rounded-xl p-5">
-          <h3 className="text-white text-sm font-semibold mb-1">Quiz Outcomes</h3>
-          <p className="text-white/30 text-xs mb-3">Overall attempt results</p>
+        <div className="bg-white border border-gray-200 rounded-xl p-5">
+          <h3 className="text-gray-900 text-sm font-semibold mb-1">Quiz Outcomes</h3>
+          <p className="text-gray-400 text-xs mb-3">Overall attempt results</p>
           <ResponsiveContainer width="100%" height={200}>
             <PieChart>
               <Pie data={quizStats} cx="50%" cy="50%" innerRadius={55} outerRadius={80} paddingAngle={3} dataKey="value" stroke="none">
@@ -235,7 +235,7 @@ export default function UserEngagement() {
           </ResponsiveContainer>
           <div className="flex justify-center gap-4 mt-2">
             {quizStats.map((s, i) => (
-              <span key={s.name} className="flex items-center gap-1.5 text-[11px] text-white/40">
+              <span key={s.name} className="flex items-center gap-1.5 text-[11px] text-gray-400">
                 <span className="w-2 h-2 rounded-full inline-block" style={{ background: ["#34d399","#f87171","#f59e0b"][i] }} />
                 {s.name}
               </span>
@@ -244,11 +244,11 @@ export default function UserEngagement() {
         </div>
 
         {/* Feedback distribution */}
-        <div className="bg-[#13151e] border border-white/[0.06] rounded-xl p-5">
-          <h3 className="text-white text-sm font-semibold mb-1">Feedback by Category</h3>
-          <p className="text-white/30 text-xs mb-3">Report type distribution</p>
+        <div className="bg-white border border-gray-200 rounded-xl p-5">
+          <h3 className="text-gray-900 text-sm font-semibold mb-1">Feedback by Category</h3>
+          <p className="text-gray-400 text-xs mb-3">Report type distribution</p>
           {feedbackDist.length === 0 && !loading ? (
-            <p className="text-white/25 text-sm text-center py-8">No feedback yet</p>
+            <p className="text-gray-400 text-sm text-center py-8">No feedback yet</p>
           ) : (
             <ResponsiveContainer width="100%" height={200}>
               <PieChart>
@@ -261,7 +261,7 @@ export default function UserEngagement() {
           )}
           <div className="flex flex-wrap justify-center gap-3 mt-2">
             {feedbackDist.map((f, i) => (
-              <span key={f.name} className="flex items-center gap-1.5 text-[11px] text-white/40 capitalize">
+              <span key={f.name} className="flex items-center gap-1.5 text-[11px] text-gray-400 capitalize">
                 <span className="w-2 h-2 rounded-full inline-block" style={{ background: COLORS[i % COLORS.length] }} />
                 {f.name}
               </span>
