@@ -36,12 +36,6 @@ const EDITOR_STEPS = [
       "Click any category here to browse blocks. You'll find blocks for layout, text, images, buttons, styles, and much more. Just drag one onto the canvas to start using it!",
   },
   {
-    target: '[data-tour="run-btn"]',
-    title: 'Run Your Code',
-    content:
-      "Hit this button to instantly see your website come to life in the preview panel. Your blocks get converted to real HTML and displayed right away — no waiting!",
-  },
-  {
     target: '[data-tour="preview-tabs"]',
     title: 'Preview Panel',
     content:

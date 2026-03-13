@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { X, ThumbsUp, MessageSquare, Monitor, Code, FileCode, Palette, Code2Icon, NotebookText, Eye, EyeOff, Trash2 } from 'lucide-react'
+import { X, HelpCircle, ThumbsUp, MessageSquare, Monitor, Code, FileCode, Palette, Code2Icon, NotebookText, Eye, EyeOff, Trash2 } from 'lucide-react'
 import * as Blockly from 'blockly/core'
 import 'blockly/blocks'
 import Theme from '@blockly/theme-modern'
@@ -9,6 +9,9 @@ import { codeGeneratorService } from '../../services/codeGenerator.service'
 import { useCommentsStore } from '../../store/commentsStore'
 import { useAuthStore } from '../../store/authStore'
 import { useLikes } from '../../hooks/useLikes'
+import { useTour } from '../tour/TourProvider'
+import TourSpotlight from '../tour/TourSpotlight'
+import { projectDetailsTourSteps, PROJECT_DETAILS_TOUR_ID } from '../tour/projectDetailsTour'
 
 export default function ProjectDetailsModal({ project, onClose, onDelete, onToggleVisibility }) {
   const [comment, setComment] = useState('')
@@ -25,6 +28,8 @@ export default function ProjectDetailsModal({ project, onClose, onDelete, onTogg
   const profile = useAuthStore((s) => s.profile)
   const { files, activeFile, setActiveFile } = useProjectFiles(project.id)
   const { comments, loading: commentsLoading, loadComments, addComment, deleteComment } = useCommentsStore()
+
+  const { activeTour, isVisible, startTour } = useTour()
 
   useEffect(() => {
     loadComments(project.id)
@@ -199,26 +204,35 @@ export default function ProjectDetailsModal({ project, onClose, onDelete, onTogg
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div className="absolute max-w-6xl w-full h-[90vh] bg-white shadow-2xl rounded-lg transform rotate-3 translate-x-2 translate-y-2 z-40" />
-      <div className="card max-w-6xl w-full h-[90vh]  overflow-hidden flex flex-col shadow z-50 border-2 border-slate-300">
+      <div data-tour="details-modal" className="card max-w-6xl w-full h-[90vh]  overflow-hidden flex flex-col shadow z-50 border-2 border-slate-300">
         {/* Header */}
         <div className="flex justify-between border-b pb-4 items-start">
-          <div>
+          <div data-tour="details-title">
             <h2 className="text-xl font-extrabold text-slate-800">{project.title}</h2>
             {project.description && (
               <p className="text-sm font-bold text-slate-500 ml-4">{project.description}</p>
             )}
           </div>
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-lg hover:bg-slate-300 transition-colors"
-          >
-            <X className="w-5 h-5 text-slate-500" />
-          </button>
+          <div className="flex items-center gap-1 shrink-0">
+            <button
+              onClick={() => startTour(PROJECT_DETAILS_TOUR_ID)}
+              title="Take a tour of this view"
+              className="p-1.5 rounded-lg hover:bg-blockly-purple/10 text-blockly-purple transition-colors"
+            >
+              <HelpCircle className="w-5 h-5" />
+            </button>
+            <button
+              onClick={onClose}
+              className="p-1.5 rounded-lg hover:bg-slate-300 transition-colors"
+            >
+              <X className="w-5 h-5 text-slate-500" />
+            </button>
+          </div>
         </div>
 
         <div className="flex-1 overflow-hidden flex gap-6 pt-6">
           <div className="flex-1 flex">
-            <div className="flex flex-col mt-10">
+            <div data-tour="details-view-tabs" className="flex flex-col mt-10">
               <button
                 onClick={() => setViewMode('preview')}
                 className={`p-3 rounded-l-lg transition-all ${
@@ -247,7 +261,7 @@ export default function ProjectDetailsModal({ project, onClose, onDelete, onTogg
             <div className="flex-1 flex flex-col">
               {/* ✅ File tabs */}
               {files.length > 0 && (
-                <div className="flex overflow-x-auto ">
+                <div data-tour="details-file-tabs" className="flex overflow-x-auto ">
                   {files.map(file => (
                     <button
                       key={file.id}
@@ -266,7 +280,7 @@ export default function ProjectDetailsModal({ project, onClose, onDelete, onTogg
               )}
 
               {/* Display area */}
-              <div className="flex-1 border-2 border-slate-600 bg-white overflow-hidden shadow rounded-tr-xl">
+              <div data-tour="details-preview-area" className="flex-1 border-2 border-slate-600 bg-white overflow-hidden shadow rounded-tr-xl">
                 <div className="flex items-center justify-between gap-2 px-3 py-1.5 border-b border-slate-600 bg-gray-100">
                   <span className="text-xs text-gray-500 font-mono truncate">
                     {activeFile ? activeFile : "Untitled"}
@@ -320,7 +334,7 @@ export default function ProjectDetailsModal({ project, onClose, onDelete, onTogg
           {/* Right: Stats & Comments */}
           <div className="w-80 flex flex-col gap-4">
             <div className="flex items-center gap-3">
-              <button
+              <button data-tour="details-like-btn"
                 onClick={handleLike}
                 className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold transition-colors ${
                   isLiked(project.id)
@@ -336,7 +350,7 @@ export default function ProjectDetailsModal({ project, onClose, onDelete, onTogg
                 {comments.length || 0}
               </button>
               
-              <div className="flex-1 flex justify-center">
+              <div data-tour="details-visibility" className="flex-1 flex justify-center">
                 <div className="flex rounded-full overflow-hidden border border-slate-400 shadow-inset transition-all group">
                   <label className={`flex-1 flex gap-2 px-2 items-center rounded-full text-center py-2 cursor-pointer text-xs font-semibold transition-colors
                     ${project.is_public ? 'bg-slate-100 text-slate-700' : 'bg-blockly-blue text-white'}`}>
@@ -367,7 +381,7 @@ export default function ProjectDetailsModal({ project, onClose, onDelete, onTogg
 
 
             {/* Comments section */}
-            <div className="flex-1 flex flex-col gap-3 overflow-hidden">
+            <div data-tour="details-comments" className="flex-1 flex flex-col gap-3 overflow-hidden">
               <h3 className="font-bold text-gray-800">Comments</h3>
 
               {/* Comment form */}
@@ -434,7 +448,7 @@ export default function ProjectDetailsModal({ project, onClose, onDelete, onTogg
             </div>
             
             <button
-              onClick={onDelete}
+              onClick={onDelete} data-tour="details-delete-btn"
               className="btn btn-accent text-sm max-w-fit rounded-sm self-end"
             >
               Delete Project
@@ -442,6 +456,9 @@ export default function ProjectDetailsModal({ project, onClose, onDelete, onTogg
           </div>
         </div>
       </div>
+      {activeTour === PROJECT_DETAILS_TOUR_ID && isVisible && (
+        <TourSpotlight steps={projectDetailsTourSteps} />
+      )}
     </div>
   )
 }
