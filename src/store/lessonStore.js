@@ -1,14 +1,27 @@
 import { create } from 'zustand'
 import { lessonService } from '../services/lesson.service'
 
-export const useLessonStore = create((set) => ({
+export const useLessonStore = create((set, get) => ({
+  // ── Teacher state ──
   lessons: [],
+
+  // ── Student / shared state ──
   currentLesson: null,
-  lessonProgress: {},
+  lessonProgress: {},       // { [lessonId]: progressRow }
+
+  // ── Student: classroom detail ──
+  classroomAssignments: [], // lesson_assignments enriched with progress + quizAttempt
+  classroomMembers: [],     // enrollment rows with student profiles
+  achievements: [],         // { id, earned_at, badge: {...} }
+  classroomBadges: [],      // all badges for a classroom (including un-earned, for greyed display)
+
+  // ── Student: Assignments tab (cross-classroom) ──
+  lessonAssignments: [],    // lesson_assignments across all enrolled classrooms
+
   loading: false,
   error: null,
 
-  // ─── Teacher: CRUD Operations ──────────────────────────
+  // ─── Teacher: CRUD ─────────────────────────────────────
 
   fetchTeacherLessons: async (teacherId) => {
     set({ loading: true, error: null })
@@ -30,13 +43,12 @@ export const useLessonStore = create((set) => ({
     }
   },
 
+  clearCurrentLesson: () => set({ currentLesson: null }),
+
   createLesson: async (payload) => {
     try {
       const lesson = await lessonService.createLesson(payload)
-      set((state) => ({
-        lessons: [lesson, ...state.lessons],
-        currentLesson: lesson,
-      }))
+      set((state) => ({ lessons: [lesson, ...state.lessons], currentLesson: lesson }))
       return lesson
     } catch (err) {
       set({ error: err.message })
@@ -61,9 +73,7 @@ export const useLessonStore = create((set) => ({
   deleteLesson: async (lessonId) => {
     try {
       await lessonService.deleteLesson(lessonId)
-      set((state) => ({
-        lessons: state.lessons.filter((l) => l.id !== lessonId),
-      }))
+      set((state) => ({ lessons: state.lessons.filter((l) => l.id !== lessonId) }))
     } catch (err) {
       set({ error: err.message })
       throw err
@@ -83,40 +93,7 @@ export const useLessonStore = create((set) => ({
     }
   },
 
-  // ─── Student: Progress Tracking ────────────────────────
-
-  fetchProgress: async (studentId, lessonId) => {
-    try {
-      const progress = await lessonService.getStudentProgress(studentId, lessonId)
-      set((state) => ({
-        lessonProgress: {
-          ...state.lessonProgress,
-          [lessonId]: progress,
-        },
-      }))
-      return progress
-    } catch (err) {
-      set({ error: err.message })
-    }
-  },
-
-  updateProgress: async (studentId, lessonId, updates) => {
-    try {
-      const progress = await lessonService.updateProgress(studentId, lessonId, updates)
-      set((state) => ({
-        lessonProgress: {
-          ...state.lessonProgress,
-          [lessonId]: progress,
-        },
-      }))
-      return progress
-    } catch (err) {
-      set({ error: err.message })
-      throw err
-    }
-  },
-
-  // ─── Classroom Assignments ─────────────────────────────
+  // ─── Teacher: Classroom Assignment ─────────────────────
 
   fetchClassroomAssignments: async (classroomId) => {
     set({ loading: true, error: null })
@@ -128,10 +105,100 @@ export const useLessonStore = create((set) => ({
     }
   },
 
+  // kept for backwards compat
+  fetchClassroomLessons: async (classroomId) => {
+    set({ loading: true, error: null })
+    try {
+      const assignments = await lessonService.getClassroomAssignments(classroomId)
+      set({ lessons: assignments, loading: false })
+    } catch (err) {
+      set({ error: err.message, loading: false })
+    }
+  },
+
   assignToClassroom: async (payload) => {
     try {
-      const assignment = await lessonService.assignToClassroom(payload)
-      return assignment
+      return await lessonService.assignToClassroom(payload)
+    } catch (err) {
+      set({ error: err.message })
+      throw err
+    }
+  },
+
+  // ─── Student: Classroom Detail ─────────────────────────
+
+  fetchClassroomLessonsForStudent: async (classroomId, studentId) => {
+    set({ loading: true, error: null })
+    try {
+      const assignments = await lessonService.getClassroomLessonsForStudent(classroomId, studentId)
+      set({ classroomAssignments: assignments, loading: false })
+    } catch (err) {
+      set({ error: err.message, loading: false })
+    }
+  },
+
+  fetchClassroomMembers: async (classroomId) => {
+    try {
+      const members = await lessonService.getClassroomMembers(classroomId)
+      set({ classroomMembers: members })
+    } catch (err) {
+      set({ error: err.message })
+    }
+  },
+
+  fetchClassroomBadges: async (classroomId) => {
+    try {
+      const badges = await lessonService.getClassroomBadges(classroomId)
+      set({ classroomBadges: badges })
+    } catch (err) {
+      set({ error: err.message })
+    }
+  },
+
+  // ─── Student: Assignments Tab (cross-classroom) ────────
+
+  fetchStudentLessonAssignments: async (studentId) => {
+    set({ loading: true, error: null })
+    try {
+      const assignments = await lessonService.getStudentLessonAssignments(studentId)
+      set({ lessonAssignments: assignments, loading: false })
+    } catch (err) {
+      set({ error: err.message, loading: false })
+    }
+  },
+
+  // ─── Student: Achievements ─────────────────────────────
+
+  fetchStudentAchievements: async (studentId) => {
+    try {
+      const achievements = await lessonService.getStudentAchievements(studentId)
+      set({ achievements })
+    } catch (err) {
+      set({ error: err.message })
+    }
+  },
+
+  // ─── Student: Progress Tracking ────────────────────────
+
+  fetchProgress: async (studentId, lessonId) => {
+    try {
+      const progress = await lessonService.getStudentProgress(studentId, lessonId)
+      set((state) => ({
+        lessonProgress: { ...state.lessonProgress, [lessonId]: progress },
+      }))
+      return progress
+    } catch (err) {
+      set({ error: err.message })
+    }
+  },
+
+  updateProgress: async (studentId, lessonId, updates) => {
+    try {
+      const progress = await lessonService.updateProgress(studentId, lessonId, updates)
+      set((state) => ({
+        lessonProgress: { ...state.lessonProgress, [lessonId]: progress },
+      }))
+      return progress
     } catch (err) {
       set({ error: err.message })
       throw err

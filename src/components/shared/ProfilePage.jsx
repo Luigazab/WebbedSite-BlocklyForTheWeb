@@ -1,10 +1,15 @@
-import { useState } from 'react'
+// src/components/shared/ProfilePage.jsx
+import { useState, useEffect, useCallback } from 'react'
+import { useParams } from 'react-router'
 import { useAuthStore } from '../../store/authStore'
+import { profileService } from '../../services/profile.service'
+import { projectService } from '../../services/project.service'
+import ProjectDetailsModal from './ProjectDetailsModal'
 import DeleteModal from '../ui/DeleteModal'
+import { useLikes } from '../../hooks/useLikes'
 import {
-  MoreVertical, Eye, EyeOff, Pencil, Trash2,
-  Calendar, ThumbsUp, MessageSquare, Trophy,
-  Loader2
+  Trophy, Loader2, FoldersIcon,
+  Image as ImageIcon, ThumbsUp, MessageSquare,
 } from 'lucide-react'
 import { format } from 'date-fns'
 
@@ -14,76 +19,142 @@ const ROLE_CONFIG = {
   admin:   { label: 'Admin',   class: 'bg-rose-100   text-rose-700'   },
 }
 
-// Mock project data — replace with actual fetch later
-const MOCK_PROJECTS = [
-  {
-    id: '1',
-    title: 'Project Title',
-    description: 'Project description',
-    thumbnail: null,
-    likes: 0,
-    comments: 0,
-    isPublic: true,
-  },
-  {
-    id: '2',
-    title: 'Another Project',
-    description: 'Another project description',
-    thumbnail: null,
-    likes: 5,
-    comments: 2,
-    isPublic: false,
-  },
-]
-
 export default function ProfilePage() {
-  const profile = useAuthStore((s) => s.profile)
-  const [activeTab, setActiveTab] = useState('Projects')
-  const [showMenu, setShowMenu] = useState(null) // Track which project menu is open
+  const { userId } = useParams()                        // present when viewing someone else
+  const loggedIn   = useAuthStore((s) => s.profile)    // always the current user
+
+  // The profile being displayed — could be own or someone else's
+  const [viewedProfile, setViewedProfile] = useState(null)
+  const [profileLoading, setProfileLoading] = useState(true)
+  const [profileError,   setProfileError]   = useState(null)
+
+  const isOwnProfile = !userId || userId === loggedIn?.id
+
+  // ── Load the profile ──────────────────────────────────────
+  useEffect(() => {
+    if (isOwnProfile) {
+      setViewedProfile(loggedIn)
+      setProfileLoading(false)
+      return
+    }
+    setProfileLoading(true)
+    profileService.getProfile(userId)
+      .then((data) => { setViewedProfile(data); setProfileLoading(false) })
+      .catch((err) => { setProfileError(err.message); setProfileLoading(false) })
+  }, [userId, loggedIn, isOwnProfile])
+
+  // ── Projects state ────────────────────────────────────────
+  const [projects,        setProjects]        = useState([])
+  const [projectsLoading, setProjectsLoading] = useState(true)
+  const [projectsError,   setProjectsError]   = useState(null)
+  const [selectedProject, setSelectedProject] = useState(null)
   const [showDeleteModal, setShowDeleteModal] = useState(null)
-  const [deleting, setDeleting] = useState(false)
+  const [deleting,        setDeleting]        = useState(false)
 
-  if (!profile) return null
+  const [activeTab, setActiveTab] = useState('Projects')
 
-  const roleConfig = ROLE_CONFIG[profile.role] ?? ROLE_CONFIG.student
-  const isOwnProfile = true // For now — later check if viewing own profile
+  // ── Fetch projects ────────────────────────────────────────
+  const fetchProjects = useCallback(async () => {
+    if (!viewedProfile?.id) return
+    setProjectsLoading(true)
+    setProjectsError(null)
+    try {
+      let data
+      if (isOwnProfile) {
+        // All own projects
+        data = await projectService.getUserProjects({ filter: 'All', sortBy: 'Recent' })
+      } else {
+        // Only public projects for other users
+        data = await projectService.getPublicProjectsByUser(viewedProfile.id)
+      }
+      setProjects(data)
+    } catch (err) {
+      setProjectsError(err.message)
+    } finally {
+      setProjectsLoading(false)
+    }
+  }, [viewedProfile?.id, isOwnProfile])
 
+  useEffect(() => { fetchProjects() }, [fetchProjects])
+
+  // ── Handlers ──────────────────────────────────────────────
   const handleDeleteProject = async () => {
+    if (!showDeleteModal) return
     setDeleting(true)
-    // TODO: Call delete service
-    setTimeout(() => {
+    try {
+      await projectService.deleteProject(showDeleteModal)
+      setProjects((prev) => prev.filter((p) => p.id !== showDeleteModal))
+      if (selectedProject?.id === showDeleteModal) setSelectedProject(null)
+    } catch (err) {
+      console.error('Delete failed:', err.message)
+    } finally {
       setDeleting(false)
       setShowDeleteModal(null)
-      setShowMenu(null)
-    }, 1000)
+    }
   }
 
-  const handleToggleVisibility = (projectId) => {
-    // TODO: Toggle project visibility
-    console.log('Toggle visibility for', projectId)
-    setShowMenu(null)
+  const handleToggleVisibility = async (project) => {
+    try {
+      const updated = await projectService.toggleVisibility(project.id, !project.is_public)
+      setProjects((prev) => prev.map((p) => (p.id === updated.id ? updated : p)))
+      setSelectedProject(updated)
+    } catch (err) {
+      console.error('Visibility toggle failed:', err.message)
+    }
   }
 
-  const handleEditProject = (projectId) => {
-    // TODO: Navigate to edit
-    console.log('Edit project', projectId)
-    setShowMenu(null)
+  const handleLikeToggled = (projectId, newCount) => {
+    setProjects((prev) =>
+      prev.map((p) => (p.id === projectId ? { ...p, likes_count: newCount } : p))
+    )
   }
+
+  const handleCommentsCountChanged = (projectId, delta) => {
+    setProjects((prev) =>
+      prev.map((p) =>
+        p.id === projectId
+          ? { ...p, comments_count: (p.comments_count || 0) + delta }
+          : p
+      )
+    )
+  }
+
+  // ── Render guards ─────────────────────────────────────────
+  if (profileLoading) {
+    return (
+      <div className="flex h-full items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-blockly-purple" />
+      </div>
+    )
+  }
+
+  if (profileError || !viewedProfile) {
+    return (
+      <div className="flex h-full items-center justify-center">
+        <p className="text-red-500">{profileError ?? 'Profile not found.'}</p>
+      </div>
+    )
+  }
+
+  const roleConfig = ROLE_CONFIG[viewedProfile.role] ?? ROLE_CONFIG.student
 
   return (
     <div className="flex h-full overflow-hidden">
-      {/* Left sidebar - Profile info */}
+
+      {/* ── Left sidebar ─────────────────────────────────────── */}
       <aside className="w-80 bg-white border-r border-gray-100 p-6 flex flex-col gap-6 overflow-y-auto shrink-0">
         {/* Avatar */}
         <div className="flex flex-col items-center gap-3">
           <img
-            src={profile.avatar_url || '/default-avatar.png'}
+            src={viewedProfile.avatar_url || '/default-avatar.png'}
             alt="avatar"
             className="w-32 h-32 rounded-full object-cover border-4 border-gray-100"
           />
           <div className="text-center">
-            <h2 className="text-xl font-black text-gray-800">{profile.username}</h2>
-            <p className="text-sm text-gray-400 mt-1">{profile.email}</p>
+            <h2 className="text-xl font-black text-gray-800">{viewedProfile.username}</h2>
+            {isOwnProfile && (
+              <p className="text-sm text-gray-400 mt-1">{viewedProfile.email}</p>
+            )}
             <span className={`inline-block text-xs font-bold px-3 py-1 rounded-full mt-2 ${roleConfig.class}`}>
               {roleConfig.label}
             </span>
@@ -91,35 +162,40 @@ export default function ProfilePage() {
         </div>
 
         {/* Bio */}
-        {profile.bio && (
+        {viewedProfile.bio && (
           <div className="flex flex-col gap-2">
             <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Bio</h3>
-            <p className="text-sm text-gray-600 leading-relaxed">{profile.bio}</p>
+            <p className="text-sm text-gray-600 leading-relaxed">{viewedProfile.bio}</p>
           </div>
         )}
 
         {/* Member info */}
         <div className="flex flex-col gap-3 pt-4 border-t border-gray-100">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-gray-500">Member since:</span>
+            <span className="text-xs font-semibold text-gray-500">Member since</span>
             <span className="text-sm font-bold text-gray-700">
-              {format(new Date(profile.created_at), 'MMM dd, yyyy')}
+              {format(new Date(viewedProfile.created_at), 'MMM dd, yyyy')}
             </span>
           </div>
-          {profile.last_login && (
+          {isOwnProfile && viewedProfile.last_login && (
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-gray-500">Last Seen:</span>
+              <span className="text-xs font-semibold text-gray-500">Last Seen</span>
               <span className="text-sm font-bold text-gray-700">
-                {format(new Date(profile.last_login), 'MMM dd, yyyy')}
+                {format(new Date(viewedProfile.last_login), 'MMM dd, yyyy')}
               </span>
             </div>
           )}
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold text-gray-500">Projects</span>
+            <span className="text-sm font-bold text-gray-700">{projects.length}</span>
+          </div>
         </div>
       </aside>
 
-      {/* Right content - Projects/Achievements */}
+      {/* ── Right content ─────────────────────────────────────── */}
       <main className="flex-1 flex flex-col overflow-hidden bg-gray-50">
 
+        {/* Tab bar */}
         <div className="px-8 py-4 bg-white border-b border-gray-100">
           <div className="flex gap-2">
             {['Projects', 'Achievements'].map((tab) => (
@@ -138,26 +214,48 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* Content */}
+        {/* Content area */}
         <div className="flex-1 overflow-y-auto p-8">
+
           {activeTab === 'Projects' && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-              {MOCK_PROJECTS.map((project) => (
-                <ProjectCard
-                  key={project.id}
-                  project={project}
-                  isOwnProfile={isOwnProfile}
-                  showMenu={showMenu === project.id}
-                  onToggleMenu={() => setShowMenu(showMenu === project.id ? null : project.id)}
-                  onToggleVisibility={() => handleToggleVisibility(project.id)}
-                  onEdit={() => handleEditProject(project.id)}
-                  onDelete={() => {
-                    setShowDeleteModal(project.id)
-                    setShowMenu(null)
-                  }}
-                />
-              ))}
-            </div>
+            <>
+              {projectsLoading ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                  {[1, 2, 3, 4, 5, 6].map((i) => (
+                    <div key={i} className="h-48 bg-white rounded-2xl border border-slate-200 animate-pulse" />
+                  ))}
+                </div>
+              ) : projectsError ? (
+                <div className="flex flex-col bg-slate-200 rounded-3xl items-center justify-center py-12 gap-4 text-center">
+                  <p className="text-red-500 font-semibold">Failed to load projects</p>
+                  <p className="text-sm text-slate-400">{projectsError}</p>
+                  <button onClick={fetchProjects} className="btn btn-primary text-sm">Try Again</button>
+                </div>
+              ) : projects.length === 0 ? (
+                <div className="flex flex-col bg-slate-200 rounded-3xl items-center justify-center py-12 gap-4">
+                  <div className="text-blockly-light bg-blockly-purple p-4 rounded-xl">
+                    <FoldersIcon size={48} />
+                  </div>
+                  <p className="text-lg font-bold text-slate-700">
+                    {isOwnProfile ? 'No saved projects yet' : 'No public projects yet'}
+                  </p>
+                  <p className="text-sm text-slate-700">
+                    {isOwnProfile ? 'Create one to get started!' : 'This user has no public projects.'}
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                  {projects.map((project) => (
+                    <ProfileProjectCard
+                      key={project.id}
+                      project={project}
+                      isOwnProfile={isOwnProfile}
+                      onClick={() => setSelectedProject(project)}
+                    />
+                  ))}
+                </div>
+              )}
+            </>
           )}
 
           {activeTab === 'Achievements' && (
@@ -171,13 +269,27 @@ export default function ProfilePage() {
         </div>
       </main>
 
-      {/* Delete modal */}
+      {/* ── Modals ───────────────────────────────────────────────── */}
+      {selectedProject && (
+        <ProjectDetailsModal
+          project={selectedProject}
+          onClose={() => setSelectedProject(null)}
+          onDelete={() => {
+            setShowDeleteModal(selectedProject.id)
+            setSelectedProject(null)
+          }}
+          onToggleVisibility={() => handleToggleVisibility(selectedProject)}
+          onLikeToggled={handleLikeToggled}
+          onCommentsCountChanged={handleCommentsCountChanged}
+        />
+      )}
+
       <DeleteModal
         isOpen={!!showDeleteModal}
         onClose={() => setShowDeleteModal(null)}
         onConfirm={handleDeleteProject}
         title="Delete Project"
-        message="Deleting this project will remove any data of it forever."
+        message="Deleting this project will remove all of its data forever."
         confirmText="Confirm"
         loading={deleting}
       />
@@ -185,100 +297,96 @@ export default function ProfilePage() {
   )
 }
 
-// ──────────────────────────────────────────────────────────
-// Project Card Component
-// ──────────────────────────────────────────────────────────
-function ProjectCard({ 
-  project, 
-  isOwnProfile, 
-  showMenu, 
-  onToggleMenu, 
-  onToggleVisibility, 
-  onEdit, 
-  onDelete 
-}) {
+// ─────────────────────────────────────────────────────────────
+// Project Card  (same pattern as ProjectsPage's ProjectCard)
+// ─────────────────────────────────────────────────────────────
+function ProfileProjectCard({ project, isOwnProfile, onClick }) {
+  const [showPreview, setShowPreview] = useState(false)
+  const [likesCount, setLikesCount] = useState(project.likes_count || 0)
+  const { isLiked, toggleLike } = useLikes([project.id])
+
+  const handleLike = async (e) => {
+    e.stopPropagation()
+    try {
+      const nowLiked = await toggleLike(project.id)
+      setLikesCount((prev) => (nowLiked ? prev + 1 : prev - 1))
+    } catch (err) {
+      console.error('Like error:', err)
+    }
+  }
+
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+    <button
+      onClick={onClick}
+      onMouseEnter={() => setShowPreview(true)}
+      onMouseLeave={() => setShowPreview(false)}
+      className="bg-white rounded-2xl shadow border border-slate-200 overflow-hidden hover:border-blockly-purple hover:shadow-xl transition-all! text-left group"
+    >
       {/* Thumbnail */}
-      <div className="relative aspect-video bg-gray-200">
-        {project.thumbnail ? (
-          <img
-            src={project.thumbnail}
-            alt={project.title}
-            className="w-full h-full object-cover"
-          />
+      <div className="aspect-video bg-linear-to-b from-green-50 to-amber-50 flex items-center justify-center overflow-hidden relative">
+        {project.thumbnail_url ? (
+          <>
+            <img
+              src={project.thumbnail_url}
+              alt={project.title}
+              className={`w-full h-full object-contain group-hover:scale-105 transition-all! duration-300! ${
+                showPreview ? 'opacity-0' : 'opacity-100'
+              }`}
+            />
+            {showPreview && project.generated_html && (
+              <iframe
+                srcDoc={project.generated_html}
+                className="absolute inset-0 w-full h-full border-0 pointer-events-none"
+                sandbox="allow-scripts"
+                title={`Preview of ${project.title}`}
+              />
+            )}
+          </>
         ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <span className="text-gray-400 text-sm">No preview</span>
-          </div>
-        )}
-        
-        {/* Three-dot menu */}
-        {isOwnProfile && (
-          <div className="absolute top-3 right-3">
-            <div className="relative">
-              <button
-                onClick={onToggleMenu}
-                className="w-8 h-8 bg-white rounded-lg shadow-md flex items-center justify-center hover:bg-gray-50 transition-colors"
-              >
-                <MoreVertical className="w-4 h-4 text-gray-600" />
-              </button>
-              
-              {/* Dropdown menu */}
-              {showMenu && (
-                <div className="absolute right-0 top-full mt-1 w-40 bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden z-10">
-                  <button
-                    onClick={onToggleVisibility}
-                    className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors text-left"
-                  >
-                    {project.isPublic ? (
-                      <><EyeOff className="w-4 h-4" />Hide</>
-                    ) : (
-                      <><Eye className="w-4 h-4" />Show</>
-                    )}
-                  </button>
-                  <button
-                    onClick={onEdit}
-                    className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors text-left"
-                  >
-                    <Pencil className="w-4 h-4" />
-                    Edit
-                  </button>
-                  <button
-                    onClick={onDelete}
-                    className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors text-left"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                    Delete
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
+          <ImageIcon className="w-12 h-12 text-slate-400" />
         )}
       </div>
 
       {/* Content */}
-      <div className="p-4 flex flex-col gap-3">
+      <div className="p-4 flex flex-col gap-2">
         <div className="flex items-start justify-between gap-2">
-          <div className="flex-1 min-w-0">
-            <h3 className="font-bold text-gray-800 text-sm truncate">{project.title}</h3>
-            <p className="text-xs text-gray-400 mt-0.5 line-clamp-2">{project.description}</p>
-          </div>
+          <h3 className="font-bold text-gray-800 text-sm truncate flex-1">{project.title}</h3>
+          {isOwnProfile && (
+            <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full shrink-0 ${
+              project.is_public
+                ? 'bg-green-100 text-green-700'
+                : 'bg-gray-100 text-gray-500'
+            }`}>
+              {project.is_public ? 'Public' : 'Private'}
+            </span>
+          )}
         </div>
 
-        {/* Stats */}
-        <div className="flex items-center gap-4 pt-2 border-t border-gray-50">
-          <div className="flex items-center gap-1.5 text-xs text-gray-400">
+        {project.description && (
+          <p className="text-xs text-slate-400 line-clamp-2">{project.description}</p>
+        )}
+
+        <div className="flex items-center gap-4 text-xs text-slate-400 mt-1">
+          <button
+            onClick={handleLike}
+            className={`flex items-center gap-1.5 transition-colors ${
+              isLiked(project.id) ? 'text-blue-500' : 'hover:text-blue-400'
+            }`}
+          >
             <ThumbsUp className="w-3.5 h-3.5" />
-            <span>{project.likes} likes</span>
-          </div>
-          <div className="flex items-center gap-1.5 text-xs text-gray-400">
+            <span>{likesCount}</span>
+          </button>
+          <div className="flex items-center gap-1.5">
             <MessageSquare className="w-3.5 h-3.5" />
-            <span>{project.comments} comments</span>
+            <span>{project.comments_count ?? 0}</span>
           </div>
+          {project.updated_at && (
+            <span className="ml-auto text-[10px] text-slate-500">
+              {new Date(project.updated_at).toLocaleDateString()}
+            </span>
+          )}
         </div>
       </div>
-    </div>
+    </button>
   )
 }

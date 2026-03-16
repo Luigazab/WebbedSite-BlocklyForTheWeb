@@ -322,29 +322,37 @@ export function selectionWithinConvertibleTypes(editor, types = []) {
  * @param abortSignal Optional AbortSignal for cancelling the upload
  * @returns Promise resolving to the URL of the uploaded image
  */
+import { supabase } from "../supabaseClient";
 export const handleImageUpload = async (file, onProgress, abortSignal) => {
-  // Validate file
-  if (!file) {
-    throw new Error("No file provided")
-  }
-
+  if (!file) throw new Error("No file provided")
   if (file.size > MAX_FILE_SIZE) {
-    throw new Error(`File size exceeds maximum allowed (${MAX_FILE_SIZE / (1024 * 1024)}MB)`)
+    throw new Error(`File size exceeds ${MAX_FILE_SIZE / (1024 * 1024)}MB`)
   }
 
-  // For demo/testing: Simulate upload progress. In production, replace the following code
-  // with your own upload implementation.
-  for (let progress = 0; progress <= 100; progress += 10) {
-    if (abortSignal?.aborted) {
-      throw new Error("Upload cancelled")
-    }
-    await new Promise((resolve) => setTimeout(resolve, 500))
-    onProgress?.({ progress })
-  }
+  const ext = file.name.split('.').pop()
+  const fileName = `${crypto.randomUUID()}.${ext}`
+  const filePath = `lesson-images/${fileName}`
 
-  return "/images/tiptap-ui-placeholder-image.jpg"
+  onProgress?.({ progress: 30 })
+
+  const { error } = await supabase.storage
+    .from('content-images')
+    .upload(filePath, file, {
+      contentType: file.type,
+      upsert: false,
+    })
+
+  if (abortSignal?.aborted) throw new Error("Upload cancelled")
+  if (error) throw new Error(error.message)
+
+  onProgress?.({ progress: 100 })
+
+  const { data } = supabase.storage
+    .from('content-images')
+    .getPublicUrl(filePath)
+
+  return data.publicUrl
 }
-
 const ATTR_WHITESPACE =
   // eslint-disable-next-line no-control-regex
   /[\u0000-\u0020\u00A0\u1680\u180E\u2000-\u2029\u205F\u3000]/g

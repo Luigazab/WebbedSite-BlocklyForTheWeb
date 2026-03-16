@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate, useParams } from 'react-router'
 import {
   createLesson,
@@ -16,12 +16,14 @@ import MediaAttachments from '../components/MediaAttachments'
 import AttachQuizModal from '../components/AttachQuizModal'
 import { ArrowLeft, Check, Edit, FileEdit, Paperclip, Save } from 'lucide-react'
 import { SimpleEditor } from '@/components/tiptap-templates/simple/simple-editor'
+import { supabase } from '../../../supabaseClient'
 
 export default function CreateLessonPage() {
   const { user } = useAuth()
   const navigate = useNavigate()
   const { id } = useParams()
   const isEdit = Boolean(id)
+  const pendingImageDeletes = useRef(new Set())
 
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')           // HTML from TipTap
@@ -36,6 +38,17 @@ export default function CreateLessonPage() {
   const [savedId, setSavedId] = useState(id || null)
   const [saveMsg, setSaveMsg] = useState('')
   const [errors, setErrors] = useState({})
+
+  const handleImageRemoved = useCallback((url) => {
+    // Only track Supabase URLs, not external ones
+    if (url?.includes('supabase.co')) {
+      pendingImageDeletes.current.add(url)
+    }
+  }, [])
+
+  const handleImageRestored = useCallback((url) => {
+    pendingImageDeletes.current.delete(url)
+  }, [])
 
   // ─── Load existing lesson for editing ──────────────────────────────────────
   useEffect(() => {
@@ -133,6 +146,24 @@ export default function CreateLessonPage() {
       }
 
       if (publish) setIsPublished(true)
+      if (pendingImageDeletes.current.size > 0) {
+        const urlsToDelete = [...pendingImageDeletes.current]
+        
+        const pathsToDelete = urlsToDelete.map(url => {
+          const parts = url.split('/content-images/')
+          return parts[1] // → "lesson-images/uuid.png"
+        }).filter(Boolean)
+
+        if (pathsToDelete.length > 0) {
+          const { error } = await supabase.storage
+            .from('content-images')
+            .remove(pathsToDelete)
+
+          if (!error) {
+            pendingImageDeletes.current.clear()
+          }
+        }
+      }
       setSaveMsg(publish ? 'Published!' : 'Saved!')
       setTimeout(() => setSaveMsg(''), 3000)
     } catch (err) {
@@ -265,8 +296,12 @@ export default function CreateLessonPage() {
             <label className="text-md font-bold text-slate-700 mb-2">
               Lesson Content <span className="text-red-500">*</span>
             </label>
-            <SimpleEditor value={content} onChange={(v) => { setContent(v); setErrors((p) => ({ ...p, content: '' })) }} />
-            {errors.content && <p className="text-xs text-red-500 mt-1">{errors.content}</p>}
+            <SimpleEditor
+              value={content}
+              onChange={(v) => { setContent(v); setErrors((p) => ({ ...p, content: '' })) }}
+              onImageRemoved={handleImageRemoved}
+              onImageRestored={handleImageRestored}
+            />
           </div>
 
           {/* ── Attachments ─────────────────────────────────────────────── */}

@@ -1,383 +1,503 @@
-import { useEffect, useState, useRef } from 'react'
-import { useParams, useNavigate } from 'react-router'
+import { useEffect, useState, useRef, useCallback } from 'react'
+import { useParams, useNavigate, useLocation } from 'react-router'
 import { useAuthStore } from '../../../store/authStore'
 import { useLessonStore } from '../../../store/lessonStore'
 import { useLesson } from '../../../hooks/useLesson'
-import ReactMarkdown from 'react-markdown'
-import {
-  ArrowLeft, Clock, CheckCircle, Loader2, FileText,
-  Paperclip, Download, ExternalLink, Award,
-  User, Calendar
-} from 'lucide-react'
-import { format } from 'date-fns'
+import LessonContent from '../../../components/shared/LessonContent'
 import QuizSection from '../components/QuizSection'
+import {
+  ArrowLeft, Clock, CheckCircle2, Loader2,
+  Paperclip, Download, ExternalLink, Award,
+  Calendar, AlertTriangle, FileText, HelpCircle,
+  BookmarkCheck, AlertCircle,
+} from 'lucide-react'
+import { format, differenceInDays, isPast } from 'date-fns'
 
-export default function LessonViewer() {
-  const { lessonId } = useParams()
-  const navigate = useNavigate()
-  const profile = useAuthStore((s) => s.profile)
-  const { currentLesson, lessonProgress, loading, fetchLesson, fetchProgress } = useLessonStore()
-  const { handleUpdateProgress } = useLesson()
+// ─────────────────────────────────────────────────────────────────────────────
+// Sub-components
+// ─────────────────────────────────────────────────────────────────────────────
 
-  const contentRef = useRef(null)
-  const [scrollProgress, setScrollProgress] = useState(0)
-  const [hasQuiz, setHasQuiz] = useState(false)
-  const [quizCompleted, setQuizCompleted] = useState(false)
-  const [timeSpent, setTimeSpent] = useState(0)
-  const progressUpdateTimer = useRef(null)
-  const timeTracker = useRef(null)
-
-  useEffect(() => {
-    if (lessonId && profile?.id) {
-      fetchLesson(lessonId)
-      fetchProgress(profile.id, lessonId)
-    }
-  }, [lessonId, profile?.id])
-
-  useEffect(() => {
-    if (currentLesson) {
-      setHasQuiz(currentLesson.quizzes && currentLesson.quizzes.length > 0)
-      
-      // Restore scroll position
-      const savedProgress = lessonProgress[lessonId]
-      if (savedProgress?.scroll_position && contentRef.current) {
-        setTimeout(() => {
-          contentRef.current.scrollTo(0, savedProgress.scroll_position)
-        }, 100)
-      }
-    }
-  }, [currentLesson, lessonId])
-
-  // Track time spent
-  useEffect(() => {
-    timeTracker.current = setInterval(() => {
-      setTimeSpent((prev) => prev + 1)
-    }, 1000)
-
-    return () => {
-      if (timeTracker.current) clearInterval(timeTracker.current)
-    }
-  }, [])
-
-  // Handle scroll progress
-  const handleScroll = () => {
-    if (!contentRef.current) return
-
-    const element = contentRef.current
-    const scrollTop = element.scrollTop
-    const scrollHeight = element.scrollHeight - element.clientHeight
-
-    if (scrollHeight === 0) {
-      setScrollProgress(100)
-      return
-    }
-
-    const progress = Math.round((scrollTop / scrollHeight) * 100)
-    setScrollProgress(Math.min(100, Math.max(0, progress)))
-
-    // Debounce progress updates
-    if (progressUpdateTimer.current) {
-      clearTimeout(progressUpdateTimer.current)
-    }
-
-    progressUpdateTimer.current = setTimeout(() => {
-      saveProgress(progress, scrollTop)
-    }, 2000) // Save every 2 seconds after user stops scrolling
-  }
-
-  const saveProgress = async (progressPercentage, scrollPosition) => {
-    if (!profile?.id || !lessonId) return
-
-    // If quiz exists and is completed, progress is 100%
-    const finalProgress = hasQuiz && quizCompleted ? 100 : progressPercentage
-
-    await handleUpdateProgress(lessonId, {
-      progress_percentage: finalProgress,
-      scroll_position: scrollPosition,
-      time_spent: timeSpent,
-    })
-  }
-
-  // Save progress before leaving
-  useEffect(() => {
-    return () => {
-      if (progressUpdateTimer.current) {
-        clearTimeout(progressUpdateTimer.current)
-      }
-      if (contentRef.current && profile?.id && lessonId) {
-        const scrollTop = contentRef.current.scrollTop
-        handleUpdateProgress(lessonId, {
-          progress_percentage: hasQuiz && quizCompleted ? 100 : scrollProgress,
-          scroll_position: scrollTop,
-          time_spent: timeSpent,
-        })
-      }
-    }
-  }, [scrollProgress, timeSpent, hasQuiz, quizCompleted])
-
-  const handleQuizComplete = (passed) => {
-    if (passed) {
-      setQuizCompleted(true)
-      // Auto-set progress to 100% when quiz is passed
-      handleUpdateProgress(lessonId, {
-        progress_percentage: 100,
-        scroll_position: contentRef.current?.scrollTop || 0,
-        time_spent: timeSpent,
-      })
-    }
-  }
-
-  const currentProgress = lessonProgress[lessonId]?.progress_percentage || scrollProgress
-  const isCompleted = currentProgress >= 100
-
-  if (loading && !currentLesson) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-blockly-purple" />
-      </div>
-    )
-  }
-
-  if (!currentLesson) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-4">
-        <p className="text-gray-500">Lesson not found</p>
-        <button
-          onClick={() => navigate(-1)}
-          className="btn px-4 py-2 bg-blockly-purple text-white rounded-lg text-sm font-semibold"
-        >
-          Go Back
-        </button>
-      </div>
-    )
-  }
-
-  return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Fixed Header */}
-      <div className="sticky top-0 z-20 bg-white border-b border-gray-200 shadow-sm">
-        <div className="max-w-5xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            {/* Back button + Title */}
-            <div className="flex items-center gap-4 flex-1 min-w-0">
-              <button
-                onClick={() => navigate(-1)}
-                className="btn p-2 rounded-lg hover:bg-gray-100 transition-colors shrink-0"
-              >
-                <ArrowLeft className="w-5 h-5 text-gray-600" />
-              </button>
-              <div className="min-w-0 flex-1">
-                <h1 className="text-lg font-bold text-gray-900 truncate">
-                  {currentLesson.title}
-                </h1>
-                <div className="flex items-center gap-3 text-xs text-gray-400 mt-0.5">
-                  {currentLesson.teacher && (
-                    <div className="flex items-center gap-1">
-                      <User className="w-3 h-3" />
-                      {currentLesson.teacher.username}
-                    </div>
-                  )}
-                  {currentLesson.estimated_duration && (
-                    <div className="flex items-center gap-1">
-                      <Clock className="w-3 h-3" />
-                      {currentLesson.estimated_duration} min
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Progress indicator */}
-            <div className="flex items-center gap-3 shrink-0">
-              <div className="text-right">
-                <p className="text-xs text-gray-500">Progress</p>
-                <p className="text-sm font-bold text-blockly-purple">
-                  {currentProgress}%
-                </p>
-              </div>
-              <div className="w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-blockly-purple transition-all duration-300"
-                  style={{ width: `${currentProgress}%` }}
-                />
-              </div>
-              {isCompleted && (
-                <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
-                  <CheckCircle className="w-5 h-5 text-green-600" />
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="max-w-5xl mx-auto p-6">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Lesson Content */}
-          <div className="lg:col-span-2">
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-              {/* Content area with scroll tracking */}
-              <div
-                ref={contentRef}
-                onScroll={handleScroll}
-                className="prose prose-sm max-w-none p-8 max-h-[70vh] overflow-y-auto"
-              >
-                <ReactMarkdown>{currentLesson.content_markdown}</ReactMarkdown>
-
-                {/* Scroll indicator at bottom */}
-                {scrollProgress < 95 && (
-                  <div className="mt-12 p-4 bg-blue-50 border border-blue-100 rounded-lg text-center">
-                    <p className="text-sm text-blue-800">
-                      Keep scrolling to track your progress! 📚
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              {/* Quiz Section */}
-              {hasQuiz && currentLesson.quizzes && (
-                <div className="border-t border-gray-100">
-                  {currentLesson.quizzes.map((lessonQuiz) => (
-                    <QuizSection
-                      key={lessonQuiz.quiz.id}
-                      quiz={lessonQuiz.quiz}
-                      onComplete={handleQuizComplete}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Sidebar */}
-          <div className="lg:col-span-1 flex flex-col gap-4">
-            {/* Lesson Info */}
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex flex-col gap-4">
-              <h3 className="font-bold text-gray-900">Lesson Info</h3>
-
-              {currentLesson.teacher && (
-                <div className="flex items-center gap-3">
-                  <img
-                    src={currentLesson.teacher.avatar_url || '/default-avatar.png'}
-                    alt={currentLesson.teacher.username}
-                    className="w-10 h-10 rounded-full object-cover border border-gray-200"
-                  />
-                  <div>
-                    <p className="text-sm font-semibold text-gray-800">
-                      {currentLesson.teacher.username}
-                    </p>
-                    <p className="text-xs text-gray-400">Teacher</p>
-                  </div>
-                </div>
-              )}
-
-              <div className="flex flex-col gap-2 pt-2 border-t border-gray-100">
-                {currentLesson.estimated_duration && (
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-500">Duration</span>
-                    <span className="font-semibold text-gray-700">
-                      {currentLesson.estimated_duration} minutes
-                    </span>
-                  </div>
-                )}
-
-                {currentProgress > 0 && (
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-500">Your Progress</span>
-                    <span className="font-semibold text-blockly-purple">
-                      {currentProgress}%
-                    </span>
-                  </div>
-                )}
-
-                {timeSpent > 0 && (
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-500">Time Spent</span>
-                    <span className="font-semibold text-gray-700">
-                      {Math.floor(timeSpent / 60)}m {timeSpent % 60}s
-                    </span>
-                  </div>
-                )}
-              </div>
-
-              {hasQuiz && (
-                <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-100 rounded-lg">
-                  <Award className="w-4 h-4 text-green-600 shrink-0" />
-                  <p className="text-xs text-green-700">
-                    Complete the quiz to finish this lesson
-                  </p>
-                </div>
-              )}
-            </div>
-
-            {/* Attachments */}
-            {currentLesson.attachments && currentLesson.attachments.length > 0 && (
-              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex flex-col gap-4">
-                <h3 className="font-bold text-gray-900 flex items-center gap-2">
-                  <Paperclip className="w-4 h-4" />
-                  Attachments
-                </h3>
-
-                <div className="flex flex-col gap-2">
-                  {currentLesson.attachments.map((attachment) => (
-                    <AttachmentItem key={attachment.id} attachment={attachment} />
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// ──────────────────────────────────────────────────────────
-// Attachment Item Component
-// ──────────────────────────────────────────────────────────
 function AttachmentItem({ attachment }) {
-  const getIcon = () => {
-    switch (attachment.file_type) {
-      case 'pdf':
-        return FileText
-      case 'link':
-        return ExternalLink
-      default:
-        return Download
-    }
-  }
-
-  const Icon = getIcon()
+  const isLink = attachment.file_type === 'link'
+  const sizeLabel = attachment.file_size
+    ? attachment.file_size > 1_000_000
+      ? `${(attachment.file_size / 1_000_000).toFixed(1)} MB`
+      : `${Math.round(attachment.file_size / 1000)} KB`
+    : null
 
   return (
     <a
       href={attachment.file_url}
       target="_blank"
       rel="noopener noreferrer"
-      className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:border-blockly-purple hover:bg-blockly-purple/5 transition-all group"
+      className="flex items-center gap-3 px-4 py-3 bg-gray-50 rounded-xl border border-gray-100
+                 hover:bg-gray-100 hover:border-gray-200 transition-all group"
     >
-      <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center shrink-0 group-hover:bg-blockly-purple/10 transition-colors">
-        <Icon className="w-4 h-4 text-gray-600 group-hover:text-blockly-purple transition-colors" />
+      <div className="w-8 h-8 bg-white rounded-lg border border-gray-200 flex items-center justify-center shrink-0">
+        {isLink
+          ? <ExternalLink className="w-4 h-4 text-gray-400" />
+          : <FileText     className="w-4 h-4 text-gray-400" />}
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-gray-800 truncate group-hover:text-blockly-purple transition-colors">
-          {attachment.file_name}
-        </p>
-        {attachment.file_size && (
-          <p className="text-xs text-gray-400">
-            {formatFileSize(attachment.file_size)}
-          </p>
-        )}
+        <p className="text-sm font-medium text-gray-700 truncate">{attachment.file_name}</p>
+        {sizeLabel && <p className="text-xs text-gray-400">{sizeLabel}</p>}
       </div>
+      {isLink
+        ? <ExternalLink className="w-3.5 h-3.5 text-gray-300 shrink-0" />
+        : <Download className="w-3.5 h-3.5 text-gray-300 group-hover:text-blockly-purple shrink-0 transition-colors" />}
     </a>
   )
 }
 
-function formatFileSize(bytes) {
-  if (!bytes) return '0 B'
-  const k = 1024
-  const sizes = ['B', 'KB', 'MB', 'GB']
-  const i = Math.floor(Math.log(bytes) / Math.log(k))
-  return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i]
+function DueDateBanner({ dueDate }) {
+  if (!dueDate) return null
+  const due  = new Date(dueDate)
+  const days = differenceInDays(due, new Date())
+  const past = isPast(due)
+
+  const cfg = past
+    ? { bg: 'bg-red-50 border-red-200',       text: 'text-red-700',    label: `Overdue by ${Math.abs(days)} day${Math.abs(days) !== 1 ? 's' : ''}` }
+    : days === 0
+    ? { bg: 'bg-orange-50 border-orange-200', text: 'text-orange-700', label: 'Due today' }
+    : days === 1
+    ? { bg: 'bg-orange-50 border-orange-200', text: 'text-orange-700', label: 'Due tomorrow' }
+    : days <= 3
+    ? { bg: 'bg-yellow-50 border-yellow-200', text: 'text-yellow-700', label: `Due in ${days} days` }
+    : { bg: 'bg-blue-50 border-blue-200',     text: 'text-blue-700',   label: `Due in ${days} days` }
+
+  return (
+    <div className={`flex items-center gap-3 px-4 py-3 rounded-xl border ${cfg.bg}`}>
+      <AlertTriangle className={`w-4 h-4 shrink-0 ${cfg.text}`} />
+      <div>
+        <p className={`text-sm font-bold ${cfg.text}`}>{cfg.label}</p>
+        <p className={`text-xs ${cfg.text} opacity-75`}>
+          {format(due, 'EEEE, MMMM d, yyyy · h:mm a')}
+        </p>
+      </div>
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Main component
+// ─────────────────────────────────────────────────────────────────────────────
+
+export default function LessonViewer() {
+  const { lessonId, classroomId: paramClassroomId } = useParams()
+  const navigate = useNavigate()
+  const location = useLocation()
+  const profile  = useAuthStore((s) => s.profile)
+
+  const dueDate     = location.state?.dueDate     ?? null
+  const classroomId = paramClassroomId ?? location.state?.classroomId ?? null
+
+  const { currentLesson, lessonProgress, loading, fetchLesson, fetchProgress } = useLessonStore()
+  const { handleUpdateProgress } = useLesson()
+
+  const [scrollProgress, setScrollProgress] = useState(0)
+  const [quizCompleted,  setQuizCompleted]   = useState(false)
+  const [saving,         setSaving]          = useState(false)
+  const [finishing,      setFinishing]       = useState(false)
+  const [locked,         setLocked]          = useState(false)
+  const [timeSpent,      setTimeSpent]       = useState(0)
+
+  const progressTimer = useRef(null)
+  const timeTimer     = useRef(null)
+  const lastSaved     = useRef(0)
+  const mainElRef     = useRef(null)
+
+
+  useEffect(() => {
+    if (lessonId && profile?.id) {
+      fetchLesson(lessonId)
+      fetchProgress(profile.id, lessonId)
+    }
+    mainElRef.current =
+      document.querySelector('main.wrapper') ??
+      document.querySelector('main') ??
+      window
+
+    return () => {
+      clearInterval(timeTimer.current)
+      clearTimeout(progressTimer.current)
+    }
+  }, [lessonId, profile?.id])
+
+  // Restore saved scroll + lock if already completed
+  useEffect(() => {
+    const saved = lessonProgress[lessonId]
+    if (!saved) return
+
+    if ((saved.progress_percentage ?? 0) >= 100) {
+      setLocked(true)
+    } else if (saved.scroll_position && mainElRef.current) {
+      setTimeout(() => {
+        mainElRef.current?.scrollTo({ top: saved.scroll_position, behavior: 'instant' })
+      }, 150)
+    }
+  }, [currentLesson])
+
+  // ── Time tracker ─────────────────────────────────────────────────────────────
+
+  useEffect(() => {
+    timeTimer.current = setInterval(() => setTimeSpent((t) => t + 1), 1000)
+    return () => clearInterval(timeTimer.current)
+  }, [])
+
+  // ── Scroll tracker ───────────────────────────────────────────────────────────
+
+  const handleScroll = useCallback(() => {
+    if (locked) return
+
+    const el = mainElRef.current
+    if (!el) return
+
+    const scrollTop    = el.scrollTop    ?? el.pageYOffset ?? 0
+    const scrollHeight = el.scrollHeight ?? document.body.scrollHeight
+    const clientHeight = el.clientHeight ?? window.innerHeight
+    const maxScroll    = scrollHeight - clientHeight
+
+    if (maxScroll <= 0) { setScrollProgress(100); return }
+
+    const pct = Math.min(100, Math.round((scrollTop / maxScroll) * 100))
+    setScrollProgress(pct)
+
+    clearTimeout(progressTimer.current)
+    progressTimer.current = setTimeout(() => {
+      if (Math.abs(pct - lastSaved.current) >= 5 || pct >= 95) {
+        lastSaved.current = pct
+        handleUpdateProgress(lessonId, {
+          progress_percentage: pct,
+          scroll_position: scrollTop,
+          time_spent: timeSpent,
+        })
+      }
+    }, 1500)
+  }, [locked, lessonId, timeSpent, handleUpdateProgress])
+
+  useEffect(() => {
+    const el = mainElRef.current
+    if (!el) return
+    el.addEventListener('scroll', handleScroll, { passive: true })
+    return () => el.removeEventListener('scroll', handleScroll)
+  }, [handleScroll])
+
+  // Save on unmount
+  useEffect(() => {
+    return () => {
+      if (locked) return   // already at 100, don't overwrite
+      const el = mainElRef.current
+      if (el && profile?.id && lessonId) {
+        handleUpdateProgress(lessonId, {
+          progress_percentage: scrollProgress,
+          scroll_position: el.scrollTop ?? 0,
+          time_spent: timeSpent,
+        })
+      }
+    }
+  }, [locked, scrollProgress, timeSpent])
+
+
+  // Save progress without completing (user scrolled through, reminds about quiz)
+  const handleSaveProgress = async () => {
+    setSaving(true)
+    try {
+      await handleUpdateProgress(lessonId, {
+        progress_percentage: scrollProgress,
+        scroll_position: mainElRef.current?.scrollTop ?? 0,
+        time_spent: timeSpent,
+      })
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  // Complete lesson — marks 100%, locks progress bar
+  const handleFinish = async () => {
+    setFinishing(true)
+    try {
+      await handleUpdateProgress(lessonId, {
+        progress_percentage: 100,
+        scroll_position: mainElRef.current?.scrollTop ?? 0,
+        time_spent: timeSpent,
+        completed_at: new Date().toISOString(),
+      })
+      setLocked(true)   // ← lock here so scroll handler can never reduce it
+    } finally {
+      setFinishing(false)
+    }
+  }
+
+  const handleQuizComplete = (passed) => {
+    if (passed) {
+      setQuizCompleted(true)
+      handleUpdateProgress(lessonId, {
+        progress_percentage: 100,
+        scroll_position: mainElRef.current?.scrollTop ?? 0,
+        time_spent: timeSpent,
+        completed_at: new Date().toISOString(),
+      })
+      setLocked(true)   // ← lock here too
+    }
+  }
+
+  const goBack = () =>
+    classroomId ? navigate(`/student/classrooms/${classroomId}`) : navigate(-1)
+
+
+  const savedProgress   = lessonProgress[lessonId]
+  // currentProgress: if locked → always 100, else use scroll tracking
+  const currentProgress = locked
+    ? 100
+    : savedProgress?.progress_percentage ?? scrollProgress
+
+  const isCompleted = locked
+  const attachments = currentLesson?.attachments ?? []
+  const quizzes     = currentLesson?.quizzes     ?? []
+  const hasQuiz     = quizzes.length > 0
+  const quiz        = quizzes[0]?.quiz ?? null
+  const badge       = quiz?.badges?.[0] ?? null
+  const teacher     = currentLesson?.teacher
+
+  // ── Loading ──────────────────────────────────────────────────────────────────
+
+  if (loading && !currentLesson) {
+    return (
+      <div className="flex items-center justify-center py-40">
+        <Loader2 className="w-8 h-8 animate-spin text-blockly-purple" />
+      </div>
+    )
+  }
+
+  if (!currentLesson && !loading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-32 gap-4">
+        <p className="text-gray-500">Lesson not found</p>
+        <button onClick={goBack} className="text-sm text-blockly-purple hover:underline">Go back</button>
+      </div>
+    )
+  }
+
+
+  return (
+    <div className="relative">
+
+      {/* Full-width scroll progress bar — fixed at very top, 1px, z above everything */}
+      <div className="fixed top-0 left-0 right-0 h-1 z-[9999] bg-gray-200 pointer-events-none">
+        <div
+          className="h-full bg-blockly-purple transition-all duration-300 ease-out"
+          style={{ width: `${currentProgress}%` }}
+        />
+      </div>
+
+      {/* Sticky reader mini-bar */}
+      <div className="sticky top-0 z-30 bg-white/95 backdrop-blur-sm border-b border-gray-100 shadow-sm -mx-6 px-6 mb-6">
+        <div className="max-w-4xl mx-auto py-2.5 flex items-center justify-between gap-4">
+          <button
+            onClick={goBack}
+            className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-700 transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            {classroomId ? 'Back to classroom' : 'Back'}
+          </button>
+
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-1.5 text-xs text-gray-400">
+              <Clock className="w-3.5 h-3.5" />
+              <span>{Math.floor(timeSpent / 60)}m {timeSpent % 60}s</span>
+            </div>
+
+            {isCompleted ? (
+              <span className="flex items-center gap-1.5 text-xs font-semibold text-green-600 bg-green-50 px-3 py-1 rounded-full">
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                Completed
+              </span>
+            ) : (
+              <span className="text-xs text-gray-400 font-medium tabular-nums">
+                {currentProgress}%
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* ── Page body ────────────────────────────────────────────────────────── */}
+      <div className="max-w-4xl mx-auto flex flex-col gap-8 pb-24">
+
+        {/* Lesson header */}
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-8 py-7 flex flex-col gap-5">
+          <h1 className="text-2xl font-bold text-gray-900 leading-tight">
+            {currentLesson.title}
+          </h1>
+
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-gray-500">
+            {teacher && (
+              <div className="flex items-center gap-2">
+                <img
+                  src={teacher.avatar_url || '/default-avatar.png'}
+                  alt={teacher.username}
+                  className="w-6 h-6 rounded-full object-cover border border-gray-200"
+                />
+                <span className="font-semibold text-gray-700">{teacher.username}</span>
+              </div>
+            )}
+            {currentLesson.created_at && (
+              <div className="flex items-center gap-1.5">
+                <Calendar className="w-4 h-4" />
+                <span>Posted {format(new Date(currentLesson.created_at), 'MMM d, yyyy')}</span>
+              </div>
+            )}
+            {currentLesson.estimated_duration && (
+              <div className="flex items-center gap-1.5">
+                <Clock className="w-4 h-4" />
+                <span>{currentLesson.estimated_duration} min read</span>
+              </div>
+            )}
+          </div>
+
+          {dueDate && <DueDateBanner dueDate={dueDate} />}
+
+          {badge && (
+            <div className="flex items-center gap-3 px-4 py-3 bg-yellow-50 rounded-xl border border-yellow-200">
+              {badge.icon_url
+                ? <img src={badge.icon_url} alt={badge.title} className="w-8 h-8 object-contain" />
+                : <Award className="w-7 h-7 text-yellow-500" />}
+              <div>
+                <p className="text-xs font-semibold text-yellow-700">Badge you can earn</p>
+                <p className="text-sm font-bold text-yellow-800">{badge.title}</p>
+                {badge.description && (
+                  <p className="text-xs text-yellow-600 mt-0.5">{badge.description}</p>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Lesson content */}
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-8 py-8 min-h-[200px]">
+          <LessonContent
+            content={currentLesson.content ?? currentLesson.content_markdown}
+          />
+        </div>
+
+        {/* Attachments */}
+        {attachments.length > 0 && (
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <Paperclip className="w-4 h-4 text-gray-500" />
+              <h3 className="font-bold text-gray-800">
+                Attachments
+                <span className="ml-2 text-sm font-normal text-gray-400">({attachments.length})</span>
+              </h3>
+            </div>
+            <div className="flex flex-col gap-2">
+              {attachments.map((att) => (
+                <AttachmentItem key={att.id} attachment={att} />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Quiz */}
+        {hasQuiz && quiz && (
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            <div className="flex items-center gap-2 px-6 py-4 border-b border-gray-50">
+              <HelpCircle className="w-4 h-4 text-blockly-purple" />
+              <h3 className="font-bold text-gray-800">{quiz.title}</h3>
+              {quiz.questions?.length > 0 && (
+                <span className="text-xs text-gray-400">
+                  · {quiz.questions.length} question{quiz.questions.length !== 1 ? 's' : ''}
+                </span>
+              )}
+              {quiz.passing_score != null && (
+                <span className="text-xs text-gray-400">
+                  · {quiz.passing_score}/{quiz.questions?.length} to pass
+                </span>
+              )}
+            </div>
+
+            {isCompleted && quizCompleted ? (
+              <div className="flex items-center gap-3 px-6 py-5">
+                <CheckCircle2 className="w-5 h-5 text-green-500 shrink-0" />
+                <div>
+                  <p className="text-sm font-semibold text-green-700">Quiz completed!</p>
+                  {badge && (
+                    <p className="text-xs text-gray-400 mt-0.5">
+                      You earned the "{badge.title}" badge.
+                    </p>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <QuizSection quiz={quiz} onComplete={handleQuizComplete} />
+            )}
+          </div>
+        )}
+
+        {/* ── Bottom CTA ──────────────────────────────────────────────────── */}
+        <div className="flex flex-col items-center gap-4 py-4">
+
+          {isCompleted ? (
+            /* Completed state — static, no height change causes bounce */
+            <div className="flex flex-col items-center gap-3 text-center">
+              <div className="w-14 h-14 rounded-full bg-green-100 flex items-center justify-center">
+                <CheckCircle2 className="w-7 h-7 text-green-500" />
+              </div>
+              <p className="text-sm font-semibold text-green-700">Lesson completed!</p>
+              <button
+                onClick={goBack}
+                className="text-sm text-blockly-purple hover:underline font-medium"
+              >
+                ← Back to classroom
+              </button>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center gap-3 w-full max-w-sm">
+
+              {/* Quiz reminder chip — shown when quiz exists but not yet passed */}
+              {hasQuiz && !quizCompleted && (
+                <div className="flex items-center gap-2 px-4 py-2.5 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-700 w-full justify-center">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <span>Complete the quiz above to finish this lesson</span>
+                </div>
+              )}
+
+              <div className="flex gap-3 w-full">
+                {/* Save Progress — always available at the bottom */}
+                <button
+                  onClick={handleSaveProgress}
+                  disabled={saving || finishing}
+                  className="flex-1 flex items-center justify-center gap-2 px-5 py-3
+                             border-2 border-gray-200 text-gray-600 font-semibold text-sm rounded-xl
+                             hover:border-gray-300 hover:bg-gray-50 transition-colors disabled:opacity-50"
+                >
+                  {saving
+                    ? <Loader2 className="w-4 h-4 animate-spin" />
+                    : <BookmarkCheck className="w-4 h-4" />}
+                  Save Progress
+                </button>
+
+                {/* Finish Lesson — only active when no quiz OR quiz is done */}
+                <button
+                  onClick={handleFinish}
+                  disabled={finishing || saving || (hasQuiz && !quizCompleted)}
+                  className="flex-1 flex items-center justify-center gap-2 px-5 py-3
+                             bg-blockly-purple text-white font-semibold text-sm rounded-xl
+                             hover:bg-blockly-purple/90 transition-colors disabled:opacity-40
+                             shadow-md shadow-blockly-purple/20"
+                >
+                  {finishing
+                    ? <Loader2 className="w-4 h-4 animate-spin" />
+                    : <CheckCircle2 className="w-4 h-4" />}
+                  Finish Lesson
+                </button>
+              </div>
+            </div>
+          )}
+
+        </div>
+
+      </div>
+    </div>
+  )
 }

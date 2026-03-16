@@ -6,14 +6,14 @@ import PageWrapper from '../../../components/layout/PageWrapper'
 import StudentClassroomCard from '../components/StudentClassroomCard'
 import JoinClassroomModal from '../components/JoinClassroomModal'
 import AssignmentsTab from '../components/AssignmentsTab'
-import { Plus, Loader2, BookOpen } from 'lucide-react'
+import { Plus, Loader2, BookOpen, Archive } from 'lucide-react'
 
-const TABS = ['Class', 'Assignments', 'Completed Classes']
+const TABS = ['Active Class', 'Assignments', 'Archived']
 
 export default function StudentClassrooms() {
-  const [activeTab, setActiveTab] = useState('Class')
+  const [activeTab, setActiveTab] = useState('Active Class')
   const [showJoin, setShowJoin] = useState(false)
-  
+
   const profile = useAuthStore((state) => state.profile)
   const { classrooms, loading, fetchStudentClassrooms } = useClassroomStore()
   const { handleJoinClassroom, handleLeaveClassroom } = useClassroom()
@@ -27,8 +27,9 @@ export default function StudentClassrooms() {
     setShowJoin(false)
   }
 
-  const activeClassrooms = classrooms.filter((c) => c.status === 'active' || !c.status)
-  const archivedClassrooms = classrooms.filter((c) => c.status === 'archived')
+  // is_active comes from classroom row — split here
+  const activeClassrooms = classrooms.filter((c) => c.is_active !== false)
+  const archivedClassrooms = classrooms.filter((c) => c.is_active === false)
 
   return (
     <PageWrapper
@@ -52,10 +53,7 @@ export default function StudentClassrooms() {
               key={tab}
               onClick={() => setActiveTab(tab)}
               className={`px-4 py-2 text-sm font-semibold transition-colors relative
-                ${activeTab === tab
-                  ? 'text-blockly-purple'
-                  : 'text-gray-500 hover:text-gray-700'
-                }`}
+                ${activeTab === tab ? 'text-blockly-purple' : 'text-gray-500 hover:text-gray-700'}`}
             >
               {tab}
               {activeTab === tab && (
@@ -72,58 +70,55 @@ export default function StudentClassrooms() {
           </div>
         ) : (
           <>
-            {activeTab === 'Class' && (
-              <>
-                {activeClassrooms.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-20 gap-4 text-center bg-gray-200 rounded-3xl">
-                    <div className="w-16 h-16 rounded-2xl bg-blockly-purple/10 flex items-center justify-center">
-                      <BookOpen className="w-8 h-8 text-blockly-purple" />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-gray-800">No classrooms yet</p>
-                      <p className="text-sm text-gray-400 mt-1">Ask your teacher for a class code to join</p>
-                    </div>
-                    <button
-                      onClick={() => setShowJoin(true)}
-                      className="btn px-4 py-2 bg-blockly-purple text-white text-sm font-semibold rounded-lg hover:bg-blockly-purple/90"
-                    >
-                      Join a Classroom
-                    </button>
+            {activeTab === 'Active Class' && (
+              activeClassrooms.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-20 gap-4 text-center bg-gray-100 rounded-3xl">
+                  <div className="w-16 h-16 rounded-2xl bg-blockly-purple/10 flex items-center justify-center">
+                    <BookOpen className="w-8 h-8 text-blockly-purple" />
                   </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-                    {activeClassrooms.map((classroom) => (
-                      <StudentClassroomCard
-                        key={classroom.id}
-                        classroom={classroom}
-                        onLeave={() => handleLeaveClassroom(classroom.id, classroom.name)}
-                      />
-                    ))}
+                  <div>
+                    <p className="font-semibold text-gray-800">No classrooms yet</p>
+                    <p className="text-sm text-gray-400 mt-1">Ask your teacher for a class code to join</p>
                   </div>
-                )}
-              </>
+                  <button
+                    onClick={() => setShowJoin(true)}
+                    className="btn px-4 py-2 bg-blockly-purple text-white text-sm font-semibold rounded-lg hover:bg-blockly-purple/90"
+                  >
+                    Join a Classroom
+                  </button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+                  {activeClassrooms.map((classroom) => (
+                    <StudentClassroomCard
+                      key={classroom.id}
+                      classroom={classroom}
+                      onLeave={() => handleLeaveClassroom(classroom.id, classroom.name)}
+                    />
+                  ))}
+                </div>
+              )
             )}
 
             {activeTab === 'Assignments' && <AssignmentsTab />}
 
-            {activeTab === 'Completed Classes' && (
-              <>
-                {archivedClassrooms.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-20 gap-4 text-center">
-                    <p className="text-sm text-gray-400">No completed classes yet</p>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-                    {archivedClassrooms.map((classroom) => (
-                      <StudentClassroomCard
-                        key={classroom.id}
-                        classroom={classroom}
-                        isArchived
-                      />
-                    ))}
-                  </div>
-                )}
-              </>
+            {activeTab === 'Archived' && (
+              archivedClassrooms.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-20 gap-3 text-center">
+                  <Archive className="w-8 h-8 text-gray-300" />
+                  <p className="text-sm text-gray-400">No archived classrooms</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+                  {archivedClassrooms.map((classroom) => (
+                    <StudentClassroomCard
+                      key={classroom.id}
+                      classroom={classroom}
+                      isArchived
+                    />
+                  ))}
+                </div>
+              )
             )}
           </>
         )}

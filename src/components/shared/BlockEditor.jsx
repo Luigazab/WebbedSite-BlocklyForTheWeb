@@ -441,6 +441,12 @@ const BlockEditor = () => {
     return file?.filename || ''
   }
   useAutoStartEditorTour
+  useEffect(() => {
+    const hasSeenTour = localStorage.getItem('tour_editor_completed')
+    if (!hasSeenTour) {
+      setTimeout(() => startTour('editor'), 500)
+    }
+  }, [])
 
   return (
     <div className="flex flex-col h-screen">

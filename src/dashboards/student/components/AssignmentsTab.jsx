@@ -1,207 +1,168 @@
-import { useState, useEffect } from 'react'
+import { useEffect } from 'react'
+import { useNavigate } from 'react-router'
 import { useAuthStore } from '../../../store/authStore'
-import { useAssignmentStore } from '../../../store/assignmentStore'
-import { ChevronDown, FlaskConical, FileText, ArrowRight, Loader2 } from 'lucide-react'
-import { format } from 'date-fns'
+import { useLessonStore } from '../../../store/lessonStore'
+import {
+  Loader2, BookOpen, ClipboardList, ArrowRight,
+  Clock, CheckCircle2, AlertCircle,
+} from 'lucide-react'
+import { format, differenceInDays, isPast } from 'date-fns'
 
-const STATUS_COLORS = {
-  assigned: 'text-blue-600',
-  missing: 'text-red-600',
-  completed: 'text-green-600',
+const STATUS_CONFIG = {
+  completed: {
+    label: 'Completed',
+    textClass: 'text-green-600',
+    bgClass: 'bg-green-50',
+    icon: CheckCircle2,
+  },
+  missing: {
+    label: 'Missing',
+    textClass: 'text-red-600',
+    bgClass: 'bg-red-50',
+    icon: AlertCircle,
+  },
+  assigned: {
+    label: 'Assigned',
+    textClass: 'text-blue-600',
+    bgClass: 'bg-blue-50',
+    icon: ClipboardList,
+  },
 }
 
-const CLASS_COLORS = [
-  'border-l-orange-500',
-  'border-l-blue-500',
-  'border-l-green-500',
-  'border-l-purple-500',
-  'border-l-pink-500',
-  'border-l-yellow-500',
+const ACCENT_COLORS = [
+  'border-l-orange-400',
+  'border-l-blue-400',
+  'border-l-green-400',
+  'border-l-purple-400',
+  'border-l-pink-400',
+  'border-l-yellow-400',
 ]
 
+function DaysLeft({ dueDate }) {
+  const days = differenceInDays(new Date(dueDate), new Date())
+  if (isPast(new Date(dueDate))) {
+    return <span className="text-xs text-red-500 font-semibold">Overdue</span>
+  }
+  if (days === 0) return <span className="text-xs text-orange-500 font-semibold">Due today</span>
+  if (days === 1) return <span className="text-xs text-orange-400 font-semibold">Due tomorrow</span>
+  return <span className="text-xs text-gray-400">{days} days left</span>
+}
+
 export default function AssignmentsTab() {
-  const [statusFilter, setStatusFilter] = useState('All')
-  const [showFilterMenu, setShowFilterMenu] = useState(false)
-  
+  const navigate = useNavigate()
   const profile = useAuthStore((s) => s.profile)
-  const { assignments, loading, fetchStudentAssignments } = useAssignmentStore()
+  const { lessonAssignments, loading, fetchStudentLessonAssignments } = useLessonStore()
 
   useEffect(() => {
-    if (profile?.id) {
-      fetchStudentAssignments(profile.id)
-    }
+    if (profile?.id) fetchStudentLessonAssignments(profile.id)
   }, [profile?.id])
 
-  // Group assignments by classroom
-  const groupedAssignments = assignments.reduce((acc, assignment) => {
-    const classroomId = assignment.classroom?.id
-    if (!classroomId) return acc
-    
-    if (!acc[classroomId]) {
-      acc[classroomId] = {
-        classroom: assignment.classroom,
-        assignments: [],
-      }
-    }
-    acc[classroomId].assignments.push(assignment)
+  // Group by classroom
+  const grouped = lessonAssignments.reduce((acc, la) => {
+    const cid = la.classroom?.id
+    if (!cid) return acc
+    if (!acc[cid]) acc[cid] = { classroom: la.classroom, items: [] }
+    acc[cid].items.push(la)
     return acc
   }, {})
 
-  // Filter assignments
-  const filteredGroups = Object.entries(groupedAssignments)
-    .map(([classroomId, group]) => ({
-      ...group,
-      assignments: group.assignments.filter((assignment) => {
-        if (statusFilter === 'All') return true
-        if (assignment.type === 'lab') {
-          const status = assignment.submission?.[0]?.status || 'assigned'
-          return status.toLowerCase() === statusFilter.toLowerCase()
-        }
-        return true
-      }),
-    }))
-    .filter((group) => group.assignments.length > 0)
+  const groups = Object.values(grouped)
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+      <div className="flex justify-center py-20">
+        <Loader2 className="w-5 h-5 animate-spin text-gray-300" />
+      </div>
+    )
+  }
+
+  if (!groups.length) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 gap-3 text-center">
+        <ClipboardList className="w-8 h-8 text-gray-300" />
+        <p className="text-sm text-gray-400">No assignments with due dates yet</p>
       </div>
     )
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      {/* Filter dropdown */}
-      <div className="flex justify-end">
-        <div className="relative">
-          <button
-            onClick={() => setShowFilterMenu(!showFilterMenu)}
-            className="btn flex items-center gap-2 bg-white border-2 border-gray-900 text-gray-900 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-gray-50 transition-colors"
-          >
-            {statusFilter}
-            <ChevronDown className="w-4 h-4" />
-          </button>
-          {showFilterMenu && (
-            <div className="absolute top-full right-0 mt-1 w-40 bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden z-10">
-              {['All', 'Assigned', 'Missing', 'Completed'].map((status) => (
-                <button
-                  key={status}
-                  onClick={() => {
-                    setStatusFilter(status)
-                    setShowFilterMenu(false)
-                  }}
-                  className={`w-full px-4 py-2.5 text-sm text-left transition-colors
-                    ${statusFilter === status
-                      ? 'bg-blockly-purple/10 text-blockly-purple font-semibold'
-                      : 'text-gray-700 hover:bg-gray-50'
-                    }`}
-                >
-                  {status}
-                </button>
-              ))}
+    <div className="flex flex-col gap-8">
+      {groups.map(({ classroom, items }, gIdx) => {
+        const accentClass = ACCENT_COLORS[gIdx % ACCENT_COLORS.length]
+
+        return (
+          <div key={classroom.id} className="flex flex-col gap-3">
+            {/* Classroom header */}
+            <div className="flex items-center gap-2">
+              <div className={`w-3 h-3 rounded-full border-2 ${accentClass.replace('border-l-', 'border-')}`} />
+              <h3 className="text-sm font-bold text-gray-700">{classroom.name}</h3>
+              <span className="text-xs text-gray-400">({items.length} assignment{items.length !== 1 ? 's' : ''})</span>
+              {classroom.is_active === false && (
+                <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">Archived</span>
+              )}
             </div>
-          )}
-        </div>
-      </div>
 
-      {/* Assignments grouped by classroom */}
-      {filteredGroups.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 gap-3">
-          <FileText className="w-12 h-12 text-gray-300" />
-          <p className="text-sm text-gray-400">No assignments found</p>
-        </div>
-      ) : (
-        <div className="flex flex-col gap-8">
-          {filteredGroups.map((group, groupIndex) => (
-            <div key={group.classroom.id}>
-              {/* Classroom header */}
-              <h2 className="text-xl font-bold text-gray-900 mb-4">
-                {group.classroom.name}
-              </h2>
+            {/* Assignment cards */}
+            <div className="flex flex-col gap-2">
+              {items.map((la) => {
+                const st = STATUS_CONFIG[la.status] ?? STATUS_CONFIG.assigned
+                const StatusIcon = st.icon
+                const isDimmed = la.status === 'missing' || la.status === 'completed'
+                const hasQuiz = (la.lesson?.lesson_quizzes?.length ?? 0) > 0
 
-              {/* Assignments list */}
-              <div className="flex flex-col gap-4">
-                {group.assignments.map((assignment) => {
-                  const submission = assignment.submission?.[0]
-                  const status = submission?.status || 'assigned'
-                  const progress = submission?.progress || 0
-                  const colorClass = CLASS_COLORS[groupIndex % CLASS_COLORS.length]
+                return (
+                  <button
+                    key={la.id}
+                    onClick={() =>
+                      navigate(`${classroom.id}/lessons/${la.lesson_id}`, {
+                        state: { dueDate: la.due_date, classroomId: classroom.id },
+                      })
+                    }
+                    className={`
+                      w-full text-left flex items-center gap-4 px-5 py-4
+                      bg-white rounded-xl border border-gray-100 shadow-sm
+                      border-l-4 ${accentClass}
+                      hover:shadow-md transition-all duration-150
+                      ${isDimmed ? 'opacity-60' : ''}
+                    `}
+                  >
+                    <div className="w-9 h-9 rounded-lg bg-gray-50 flex items-center justify-center shrink-0">
+                      <BookOpen className="w-4 h-4 text-gray-400" />
+                    </div>
 
-                  return (
-                    <div
-                      key={assignment.id}
-                      className={`bg-white rounded-2xl border-l-4 ${colorClass} shadow-sm overflow-hidden`}
-                    >
-                      <div className="p-6 flex items-center gap-4">
-                        {/* Icon */}
-                        <div className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0
-                          ${assignment.type === 'lab' ? 'bg-orange-100' : 'bg-green-100'}`}
-                        >
-                          {assignment.type === 'lab' ? (
-                            <FlaskConical className="w-6 h-6 text-orange-600" />
-                          ) : (
-                            <FileText className="w-6 h-6 text-green-600" />
-                          )}
-                        </div>
-
-                        {/* Content */}
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-bold text-gray-900 mb-1">{assignment.title}</h3>
-
-                          {assignment.type === 'lab' ? (
-                            <div className="flex items-center gap-3 text-sm">
-                              <span className={`font-semibold capitalize ${STATUS_COLORS.assigned}`}>
-                                Assigned
-                              </span>
-                              <span className="text-gray-400">·</span>
-                              <span className={`font-semibold capitalize ${STATUS_COLORS.missing}`}>
-                                Missing
-                              </span>
-                              <span className="text-gray-400">·</span>
-                              <span className={`font-semibold capitalize ${STATUS_COLORS.completed}`}>
-                                Completed
-                              </span>
-                            </div>
-                          ) : (
-                            <div className="flex items-center gap-3">
-                              <span className="text-sm text-gray-500 font-medium">Progress:</span>
-                              <div className="flex-1 max-w-xs h-2 bg-gray-200 rounded-full overflow-hidden">
-                                <div
-                                  className="h-full bg-blue-500 transition-all duration-300"
-                                  style={{ width: `${progress}%` }}
-                                />
-                              </div>
-                              <span className="text-sm font-bold text-gray-700">{progress}%</span>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Due date + Start button */}
-                        <div className="flex items-center gap-6 shrink-0">
-                          <div className="text-right">
-                            <p className="text-sm text-gray-500">Due Date</p>
-                            {assignment.due_date && (
-                              <p className="text-sm font-semibold text-gray-700">
-                                {format(new Date(assignment.due_date), 'MMM dd, yyyy')}
-                              </p>
-                            )}
-                          </div>
-
-                          <button className="btn flex items-center gap-2 px-6 py-2.5 bg-gray-900 text-white rounded-lg text-sm font-semibold hover:bg-gray-800 transition-colors">
-                            Start
-                            <ArrowRight className="w-4 h-4" />
-                          </button>
-                        </div>
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-sm font-semibold truncate ${isDimmed ? 'text-gray-500' : 'text-gray-800'}`}>
+                        {la.lesson?.title ?? la.title}
+                      </p>
+                      <div className="flex items-center gap-3 mt-0.5">
+                        {la.due_date && <DaysLeft dueDate={la.due_date} />}
+                        {la.due_date && (
+                          <span className="text-xs text-gray-400">
+                            {format(new Date(la.due_date), 'MMM d')}
+                          </span>
+                        )}
+                        {hasQuiz && (
+                          <span className="text-xs bg-purple-50 text-purple-600 px-2 py-0.5 rounded-full font-medium">
+                            Quiz
+                          </span>
+                        )}
                       </div>
                     </div>
-                  )
-                })}
-              </div>
+
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className={`flex items-center gap-1 text-xs font-semibold ${st.textClass}`}>
+                        <StatusIcon className="w-3.5 h-3.5" />
+                        {st.label}
+                      </span>
+                      <ArrowRight className="w-4 h-4 text-gray-300" />
+                    </div>
+                  </button>
+                )
+              })}
             </div>
-          ))}
-        </div>
-      )}
+          </div>
+        )
+      })}
     </div>
   )
 }

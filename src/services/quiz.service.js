@@ -1,8 +1,6 @@
 import { supabase } from '../supabaseClient'
 
 export const quizService = {
-  // ─── CRUD Operations ────────────────────────────────────
-  
   async createQuiz(payload) {
     const { data, error } = await supabase
       .from('quizzes')
@@ -11,7 +9,7 @@ export const quizService = {
         title: payload.title,
         description: payload.description,
         time_limit: payload.time_limit,
-        passing_score: payload.passing_score || 70,
+        passing_score: payload.passing_score || null,
       })
       .select()
       .single()
@@ -31,10 +29,7 @@ export const quizService = {
   },
 
   async deleteQuiz(quizId) {
-    const { error } = await supabase
-      .from('quizzes')
-      .delete()
-      .eq('id', quizId)
+    const { error } = await supabase.from('quizzes').delete().eq('id', quizId)
     if (error) throw error
   },
 
@@ -44,9 +39,7 @@ export const quizService = {
       .select(`
         *,
         questions:quiz_questions(id),
-        lessons:lesson_quizzes(
-          lesson:lessons(id, title)
-        )
+        lessons:lesson_quizzes(lesson:lessons(id, title))
       `)
       .eq('teacher_id', teacherId)
       .order('created_at', { ascending: false })
@@ -68,14 +61,10 @@ export const quizService = {
     return data
   },
 
-  // Questions remain the same...
   async addQuestion(quizId, question) {
     const { data, error } = await supabase
       .from('quiz_questions')
-      .insert({
-        quiz_id: quizId,
-        ...question,
-      })
+      .insert({ quiz_id: quizId, ...question })
       .select()
       .single()
     if (error) throw error
@@ -94,32 +83,86 @@ export const quizService = {
   },
 
   async deleteQuestion(questionId) {
-    const { error } = await supabase
-      .from('quiz_questions')
-      .delete()
-      .eq('id', questionId)
+    const { error } = await supabase.from('quiz_questions').delete().eq('id', questionId)
     if (error) throw error
   },
 
-  // Attempts remain similar...
   async submitAttempt(quizId, studentId, answers, questions) {
+    // answers = { [questionId]: optionIndex (integer) }
+    // correct_answer is stored as the option TEXT string
     let correct = 0
     questions.forEach((q) => {
-      if (answers[q.id] === q.correct_answer) correct++
+      const selectedIndex = answers[q.id]
+      const selectedText  = Array.isArray(q.options) ? q.options[selectedIndex] : undefined
+      if (selectedText !== undefined && selectedText === q.correct_answer) correct++
     })
-    const score = Math.round((correct / questions.length) * 100)
 
-    const { data, error } = await supabase
+    const score = questions.length > 0
+      ? Math.round((correct / questions.length) * 100)
+      : 0
+
+    // passing_score is a raw count — compare correct count directly
+    const passingCount = questions.length > 0 && quizService._passingScore !== undefined
+      ? quizService._passingScore
+      : null // will be resolved below
+
+    const { data: attempt, error } = await supabase
       .from('quiz_attempts')
       .insert({
-        quiz_id: quizId,
-        student_id: studentId,
+        quiz_id:     quizId,
+        student_id:  studentId,
         score,
         total_items: questions.length,
         answers,
       })
       .select()
       .single()
+    if (error) throw error
+
+    const { data: quizRow } = await supabase
+      .from('quizzes')
+      .select('passing_score, badges(id, title, description, icon_url)')
+      .eq('id', quizId)
+      .single()
+
+    const ps    = quizRow?.passing_score ?? null 
+    const badge = quizRow?.badges?.[0] ?? null
+    const passed = ps === null ? true : correct >= ps
+
+    let earnedBadge = null
+    if (passed && badge) {
+      const { data: existing } = await supabase
+        .from('achievements')
+        .select('id')
+        .eq('user_id', studentId)
+        .eq('badge_earned', badge.id)
+        .maybeSingle()
+
+      if (!existing) {
+        await supabase
+          .from('achievements')
+          .insert({ user_id: studentId, badge_earned: badge.id })
+      }
+      earnedBadge = badge
+    }
+
+    return {
+      ...attempt,
+      correct,       
+      passed,
+      earnedBadge,   
+    }
+  },
+
+  async getBestAttempt(studentId, quizId) {
+    const { data, error } = await supabase
+      .from('quiz_attempts')
+      .select('*')
+      .eq('student_id', studentId)
+      .eq('quiz_id', quizId)
+      .order('score', { ascending: false })
+      .limit(1)
+      .maybeSingle()
     if (error) throw error
     return data
   },

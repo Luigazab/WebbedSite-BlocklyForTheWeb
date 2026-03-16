@@ -5,7 +5,8 @@ import { EditorContent, EditorContext, useEditor } from "@tiptap/react"
 
 // --- Tiptap Core Extensions ---
 import { StarterKit } from "@tiptap/starter-kit"
-import { Image } from "@tiptap/extension-image"
+import Image from "@tiptap/extension-image"
+import { ResizableImage } from "../../tiptap-node/resizable-image-node/resizable-image-extension"
 import { TaskItem, TaskList } from "@tiptap/extension-list"
 import { TextAlign } from "@tiptap/extension-text-align"
 import { Typography } from "@tiptap/extension-typography"
@@ -72,11 +73,32 @@ import { useCursorVisibility } from "@/hooks/use-cursor-visibility"
 // --- Components ---
 import { ThemeToggle } from "@/components/tiptap-templates/simple/theme-toggle"
 
+import { TableIcon } from "lucide-react"
+import { useCurrentEditor } from "@tiptap/react"
+
 // --- Lib ---
 import { handleImageUpload, MAX_FILE_SIZE } from "@/lib/tiptap-utils"
 
 // --- Styles ---
 import "@/components/tiptap-templates/simple/simple-editor.scss"
+
+function TableButton() {
+  const { editor } = useCurrentEditor()
+  if (!editor) return null
+  return (
+    <button
+      type="button"
+      onMouseDown={(e) => {
+        e.preventDefault()
+        editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()
+      }}
+      title="Insert Table"
+      className="tiptap-button"
+    >
+      <TableIcon size={15} />
+    </button>
+  )
+}
 
 
 const MainToolbarContent = ({
@@ -126,6 +148,10 @@ const MainToolbarContent = ({
       </ToolbarGroup>
       <ToolbarSeparator />
       <ToolbarGroup>
+        <TableButton />
+      </ToolbarGroup>
+      <ToolbarSeparator />
+      <ToolbarGroup>
         <ImageUploadButton text="Add" />
       </ToolbarGroup>
       <Spacer />
@@ -160,7 +186,7 @@ const MobileToolbarContent = ({
   </>
 )
 
-export function SimpleEditor({ value, onChange, placeholder = 'Start writing your lesson...' }) {
+export function SimpleEditor({ value, onChange, placeholder, onImageRemoved, onImageRestored }) {
   const isMobile = useIsBreakpoint()
   const { height } = useWindowSize()
   const [mobileView, setMobileView] = useState("main")
@@ -194,7 +220,7 @@ export function SimpleEditor({ value, onChange, placeholder = 'Start writing you
       TaskList,
       TaskItem.configure({ nested: true }),
       Highlight.configure({ multicolor: true }),
-      Image,
+      ResizableImage,
       Typography,
       Superscript,
       Subscript,
@@ -213,6 +239,40 @@ export function SimpleEditor({ value, onChange, placeholder = 'Start writing you
       TableCell,
     ],
   })
+
+  const currentImages = useRef(new Set())
+
+  const extractImageUrls = (html) => {
+    const div = document.createElement('div')
+    div.innerHTML = html
+    return new Set([...div.querySelectorAll('img')].map(img => img.src))
+  }
+
+  useEffect(() => {
+    if (!editor) return
+
+    const handleUpdate = () => {
+      const html = editor.getHTML()
+      const newImages = extractImageUrls(html)
+
+      currentImages.current.forEach(url => {
+        if (!newImages.has(url)) {
+          onImageRemoved?.(url)
+        }
+      })
+
+      newImages.forEach(url => {
+        if (!currentImages.current.has(url)) {
+          onImageRestored?.(url)
+        }
+      })
+
+      currentImages.current = newImages
+    }
+
+    editor.on('update', handleUpdate)
+    return () => editor.off('update', handleUpdate)
+  }, [editor, onImageRemoved, onImageRestored])
 
   useEffect(() => {
     if (!editor) return

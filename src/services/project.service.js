@@ -55,6 +55,21 @@ export const projectService = {
     if (error) throw error
     return data
   },
+  async getPublicProjectsByUser(userId) {
+    const { data, error } = await supabase
+      .from('projects')
+      .select('*, comments_count:comments(count)')
+      .eq('user_id', userId)
+      .eq('is_public', true)
+      .order('updated_at', { ascending: false })
+    if (error) throw error
+  
+    // Flatten the count aggregate Supabase returns
+    return data.map((p) => ({
+      ...p,
+      comments_count: p.comments_count?.[0]?.count ?? 0,
+    }))
+  },
 
   async toggleVisibility(projectId, isPublic) {
     const { data, error } = await supabase

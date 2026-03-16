@@ -31,6 +31,7 @@ export default function StudentSidebar() {
     if (path.includes('/projects')) return 'projects'
     if (path.includes('/classrooms')) return 'classrooms'
     if (path.includes('/learn')) return 'learn'
+    if (path.includes('/docs')) return 'docs'
     if (path.includes('/tutorials')) return 'tutorials'
     if (path.includes('/editor')) return 'editor'
     if (path.includes('/profile')) return 'profile'

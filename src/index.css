@@ -460,3 +460,125 @@ body {
   -ms-overflow-style: none;
   scrollbar-width: none; 
 }
+/* TIPTAP CSS */
+/* ─── TipTap lesson content renderer ─────────────────────────────────────────
+   Add these rules to your index.css (or App.css).
+   They scope all TipTap HTML output under the .tiptap-content class.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+.tiptap-content {
+  color: #374151;           /* gray-700 */
+  line-height: 1.75;
+  font-size: 0.9375rem;     /* ~15px */
+}
+
+/* Headings */
+.tiptap-content h1 { font-size: 1.75rem; font-weight: 800; color: #111827; margin: 1.5rem 0 0.75rem; }
+.tiptap-content h2 { font-size: 1.375rem; font-weight: 700; color: #111827; margin: 1.25rem 0 0.625rem; }
+.tiptap-content h3 { font-size: 1.125rem; font-weight: 700; color: #1f2937; margin: 1rem 0 0.5rem; }
+.tiptap-content h4 { font-size: 1rem; font-weight: 700; color: #1f2937; margin: 0.875rem 0 0.5rem; }
+
+/* Paragraph */
+.tiptap-content p { margin: 0.75rem 0; }
+.tiptap-content p:first-child { margin-top: 0; }
+.tiptap-content p:last-child  { margin-bottom: 0; }
+
+/* Links */
+.tiptap-content a {
+  color: #7c3aed;           /* blockly-purple equivalent */
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.tiptap-content a:hover { opacity: 0.8; }
+
+/* Lists */
+.tiptap-content ul { list-style: disc; padding-left: 1.5rem; margin: 0.75rem 0; }
+.tiptap-content ol { list-style: decimal; padding-left: 1.5rem; margin: 0.75rem 0; }
+.tiptap-content li { margin: 0.25rem 0; }
+.tiptap-content li p { margin: 0; }
+
+/* Blockquote */
+.tiptap-content blockquote {
+  border-left: 3px solid #e5e7eb;
+  padding-left: 1rem;
+  color: #6b7280;
+  font-style: italic;
+  margin: 1rem 0;
+}
+
+/* Code inline */
+.tiptap-content code {
+  background: #f3f4f6;
+  color: #6d28d9;
+  padding: 0.1em 0.4em;
+  border-radius: 4px;
+  font-size: 0.875em;
+  font-family: ui-monospace, 'Cascadia Code', 'Fira Code', monospace;
+}
+
+/* Code block */
+.tiptap-content pre {
+  background: #1e1e2e;
+  color: #cdd6f4;
+  padding: 1rem 1.25rem;
+  border-radius: 0.75rem;
+  overflow-x: auto;
+  margin: 1rem 0;
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+.tiptap-content pre code {
+  background: transparent;
+  color: inherit;
+  padding: 0;
+  font-size: inherit;
+}
+
+/* Horizontal rule */
+.tiptap-content hr {
+  border: none;
+  border-top: 1px solid #e5e7eb;
+  margin: 1.5rem 0;
+}
+
+/* Images */
+.tiptap-content img {
+  max-width: 100%;
+  border-radius: 0.5rem;
+  margin: 0.75rem 0;
+}
+
+/* Tables */
+.tiptap-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+  font-size: 0.875rem;
+}
+.tiptap-content th, .tiptap-content td {
+  border: 1px solid #e5e7eb;
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+}
+.tiptap-content th {
+  background: #f9fafb;
+  font-weight: 600;
+  color: #111827;
+}
+.tiptap-content tr:nth-child(even) td { background: #f9fafb; }
+
+/* Bold / italic / strike */
+.tiptap-content strong { font-weight: 700; color: #111827; }
+.tiptap-content em     { font-style: italic; }
+.tiptap-content s      { text-decoration: line-through; color: #9ca3af; }
+
+/* Task list (TipTap extension) */
+.tiptap-content ul[data-type="taskList"] { list-style: none; padding-left: 0; }
+.tiptap-content ul[data-type="taskList"] li { display: flex; align-items: flex-start; gap: 0.5rem; }
+.tiptap-content ul[data-type="taskList"] li input[type="checkbox"] {
+  margin-top: 3px;
+  accent-color: #7c3aed;
+  width: 1rem;
+  height: 1rem;
+  shrink: 0;
+}

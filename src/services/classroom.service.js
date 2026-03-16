@@ -4,7 +4,6 @@ export const classroomService = {
   // ─── Teacher ───────────────────────────────────────────
 
   async createClassroom(payload) {
-    // payload: { teacher_id, name, description }
     const class_code = await classroomService._generateUniqueCode()
     const { data, error } = await supabase
       .from('classrooms')
@@ -18,10 +17,7 @@ export const classroomService = {
   async getClassroomsByTeacher(teacherId) {
     const { data, error } = await supabase
       .from('classrooms')
-      .select(`
-        *,
-        classroom_enrollments(count)
-      `)
+      .select(`*, classroom_enrollments(count)`)
       .eq('teacher_id', teacherId)
       .eq('is_active', true)
       .order('created_at', { ascending: false })
@@ -34,6 +30,7 @@ export const classroomService = {
       .from('classrooms')
       .select(`
         *,
+        teacher:profiles!classrooms_teacher_id_fkey(id, username, avatar_url),
         classroom_enrollments(
           id,
           enrolled_at,
@@ -92,7 +89,6 @@ export const classroomService = {
   // ─── Student ───────────────────────────────────────────
 
   async joinClassroom(studentId, classCode) {
-    // 1. Find classroom by code
     const { data: classroom, error: findError } = await supabase
       .from('classrooms')
       .select('id, name, is_active')
@@ -102,7 +98,6 @@ export const classroomService = {
     if (findError || !classroom) throw new Error('Classroom not found. Check your code and try again.')
     if (!classroom.is_active) throw new Error('This classroom is no longer active.')
 
-    // 2. Check if already enrolled
     const { data: existing } = await supabase
       .from('classroom_enrollments')
       .select('id, status')
@@ -112,7 +107,6 @@ export const classroomService = {
 
     if (existing) {
       if (existing.status === 'active') throw new Error('You are already enrolled in this classroom.')
-      // Re-activate if previously removed
       const { error: reactivateError } = await supabase
         .from('classroom_enrollments')
         .update({ status: 'active' })
@@ -121,7 +115,6 @@ export const classroomService = {
       return classroom
     }
 
-    // 3. Enroll
     const { error: enrollError } = await supabase
       .from('classroom_enrollments')
       .insert({ classroom_id: classroom.id, student_id: studentId })
@@ -130,6 +123,7 @@ export const classroomService = {
     return classroom
   },
 
+  // ── Returns BOTH active and archived classrooms so Classrooms.jsx can split them ──
   async getClassroomsForStudent(studentId) {
     const { data, error } = await supabase
       .from('classroom_enrollments')
@@ -143,14 +137,19 @@ export const classroomService = {
           description,
           class_code,
           created_at,
-          teacher:profiles!classrooms_teacher_id_fkey(username, avatar_url)
+          is_active,
+          teacher:profiles!classrooms_teacher_id_fkey(id, username, avatar_url)
         )
       `)
       .eq('student_id', studentId)
-      .eq('status', 'active')
+      .eq('status', 'active')           // student is still enrolled (not removed)
       .order('enrolled_at', { ascending: false })
     if (error) throw error
-    return data.map((e) => ({ enrollmentId: e.id, enrolledAt: e.enrolled_at, ...e.classroom }))
+    return data.map((e) => ({
+      enrollmentId: e.id,
+      enrolledAt: e.enrolled_at,
+      ...e.classroom,
+    }))
   },
 
   async leaveClassroom(studentId, classroomId) {

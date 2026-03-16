@@ -96,6 +96,12 @@ export default function ProjectsPage() {
       )
     )
   }
+  useEffect(() => {
+    const hasSeenTour = localStorage.getItem('tour_projects_completed')
+    if (!hasSeenTour) {
+      setTimeout(() => startTour('projects'), 500)
+    }
+  }, [])
 
   return (
     <PageWrapper title="Projects" subtitle="View all projects you have">
