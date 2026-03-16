@@ -77,7 +77,6 @@ export const classroomService = {
     return data
   },
 
-  // Hard delete — removes all classroom data (assignments, enrollments cascade)
   async deleteClassroom(classroomId) {
     const { error } = await supabase
       .from('classrooms')
@@ -106,13 +105,9 @@ export const classroomService = {
     return data
   },
 
-  // ─── Teacher: Performance Data ──────────────────────────
-  //
-  // Returns per-student performance data for a single classroom:
-  // { student, lessonStats: { total, completed, missing }, avgQuizScore, badgeCount, onTimeCount }
+  // ─── Teacher: Performance ───────────────────────────────
 
   async getClassroomPerformanceData(classroomId) {
-    // 1. Get enrollments with student profiles
     const { data: enrollments, error: eErr } = await supabase
       .from('classroom_enrollments')
       .select(`id, enrolled_at, student:profiles(id, username, avatar_url, email)`)
@@ -123,56 +118,42 @@ export const classroomService = {
 
     const studentIds = enrollments.map((e) => e.student?.id).filter(Boolean)
 
-    // 2. Get all lesson_assignments for this classroom
     const { data: assignments, error: aErr } = await supabase
       .from('lesson_assignments')
-      .select(`
-        id, lesson_id, due_date,
-        lesson:lessons(
-          id, title,
-          lesson_quizzes(quiz_id, quiz:quizzes(id, passing_score, quiz_questions(id)))
-        )
-      `)
+      .select(`id, lesson_id, due_date, lesson:lessons(lesson_quizzes(quiz_id, quiz:quizzes(id, passing_score, quiz_questions(id))))`)
       .eq('classroom_id', classroomId)
     if (aErr) throw aErr
 
     const lessonIds = assignments.map((a) => a.lesson_id).filter(Boolean)
-    const quizIds   = assignments.flatMap((a) =>
-      (a.lesson?.lesson_quizzes ?? []).map((lq) => lq.quiz_id)
-    ).filter(Boolean)
+    const quizIds   = assignments.flatMap((a) => (a.lesson?.lesson_quizzes ?? []).map((lq) => lq.quiz_id)).filter(Boolean)
 
-    // 3. Bulk-fetch all lesson_progress for all students in this classroom
     const { data: allProgress } = await supabase
       .from('lesson_progress')
       .select('student_id, lesson_id, progress_percentage, completed_at')
       .in('student_id', studentIds)
-      .in('lesson_id', lessonIds)
+      .in('lesson_id', lessonIds.length ? lessonIds : ['00000000-0000-0000-0000-000000000000'])
 
-    // 4. Bulk-fetch all quiz_attempts for all students
     const { data: allAttempts } = await supabase
       .from('quiz_attempts')
       .select('student_id, quiz_id, score, completed_at')
       .in('student_id', studentIds)
-      .in('quiz_id', quizIds)
+      .in('quiz_id', quizIds.length ? quizIds : ['00000000-0000-0000-0000-000000000000'])
       .order('score', { ascending: false })
 
-    // 5. Bulk-fetch achievements for all students
     const { data: allAchievements } = await supabase
       .from('achievements')
-      .select('user_id, badge_earned, earned_at')
+      .select('user_id, badge_earned')
       .in('user_id', studentIds)
 
-    // Index everything
-    const progressByStudent = {}   // studentId → { lessonId: row }
+    const progressByStudent = {}
     allProgress?.forEach((p) => {
       if (!progressByStudent[p.student_id]) progressByStudent[p.student_id] = {}
       progressByStudent[p.student_id][p.lesson_id] = p
     })
 
-    const attemptsByStudent = {}   // studentId → { quizId: bestRow }
+    const attemptsByStudent = {}
     allAttempts?.forEach((a) => {
       if (!attemptsByStudent[a.student_id]) attemptsByStudent[a.student_id] = {}
-      // keep best score per quiz
       const cur = attemptsByStudent[a.student_id][a.quiz_id]
       if (!cur || a.score > cur.score) attemptsByStudent[a.student_id][a.quiz_id] = a
     })
@@ -191,9 +172,7 @@ export const classroomService = {
       const attempts = attemptsByStudent[sid] ?? {}
       const achs     = achievementsByStudent[sid] ?? []
 
-      let completed   = 0
-      let missing     = 0
-      let onTime      = 0
+      let completed = 0, missing = 0, onTime = 0
       const quizScores = []
 
       assignments.forEach((la) => {
@@ -203,28 +182,22 @@ export const classroomService = {
 
         if (done) {
           completed++
-          // On-time: completed before or on due date
           if (due && new Date(prog.completed_at) <= due) onTime++
         } else if (due && due < now) {
           missing++
         }
 
-        // Quiz scores
         const quizId = la.lesson?.lesson_quizzes?.[0]?.quiz_id
-        if (quizId && attempts[quizId]) {
-          quizScores.push(attempts[quizId].score)
-        }
+        if (quizId && attempts[quizId]) quizScores.push(attempts[quizId].score)
       })
-
-      const avgQuizScore = quizScores.length
-        ? Math.round(quizScores.reduce((s, v) => s + v, 0) / quizScores.length)
-        : null
 
       return {
         enrollment,
         student:     enrollment.student,
         lessonStats: { total: assignments.length, completed, missing },
-        avgQuizScore,
+        avgQuizScore: quizScores.length
+          ? Math.round(quizScores.reduce((s, v) => s + v, 0) / quizScores.length)
+          : null,
         badgeCount:  achs.length,
         onTimeCount: onTime,
         quizScores,
@@ -232,13 +205,14 @@ export const classroomService = {
     })
   },
 
-  // Aggregate performance across ALL classrooms for a teacher
   async getTeacherAggregatePerformance(teacherId) {
     const { data: classrooms, error } = await supabase
       .from('classrooms')
       .select(`
         id, name,
         classroom_enrollments(
+          id,
+          status,
           student_id,
           student:profiles(id, username, avatar_url)
         )
@@ -246,56 +220,51 @@ export const classroomService = {
       .eq('teacher_id', teacherId)
       .eq('is_active', true)
     if (error) throw error
-    if (!classrooms?.length) return { classrooms: [], byClassroom: {} }
+    if (!classrooms?.length) return { classrooms: [], byClassroom: {}, totalStudents: 0, totalBadges: 0, overallAvgScore: null, overallCompletion: 0 }
 
-    const classroomIds  = classrooms.map((c) => c.id)
-    const studentIds    = [...new Set(
-      classrooms.flatMap((c) => c.classroom_enrollments.map((e) => e.student_id))
+    // Only active enrollments
+    const classroomsWithActive = classrooms.map((c) => ({
+      ...c,
+      classroom_enrollments: (c.classroom_enrollments ?? []).filter((e) => e.status === 'active'),
+    }))
+
+    const classroomIds = classrooms.map((c) => c.id)
+    const studentIds   = [...new Set(
+      classroomsWithActive.flatMap((c) => c.classroom_enrollments.map((e) => e.student_id))
     )]
 
-    // All assignments across all classrooms
     const { data: assignments } = await supabase
       .from('lesson_assignments')
-      .select(`id, lesson_id, classroom_id, due_date,
-               lesson:lessons(lesson_quizzes(quiz_id))`)
+      .select(`id, lesson_id, classroom_id, due_date, lesson:lessons(lesson_quizzes(quiz_id))`)
       .in('classroom_id', classroomIds)
 
     const lessonIds = assignments?.map((a) => a.lesson_id).filter(Boolean) ?? []
-    const quizIds   = assignments?.flatMap((a) =>
-      (a.lesson?.lesson_quizzes ?? []).map((lq) => lq.quiz_id)
-    ).filter(Boolean) ?? []
+    const quizIds   = assignments?.flatMap((a) => (a.lesson?.lesson_quizzes ?? []).map((lq) => lq.quiz_id)).filter(Boolean) ?? []
 
-    const { data: allProgress } = await supabase
-      .from('lesson_progress')
-      .select('student_id, lesson_id, completed_at')
-      .in('student_id', studentIds)
-      .in('lesson_id', lessonIds)
+    const { data: allProgress } = studentIds.length && lessonIds.length
+      ? await supabase.from('lesson_progress').select('student_id, lesson_id, completed_at').in('student_id', studentIds).in('lesson_id', lessonIds)
+      : { data: [] }
 
-    const { data: allAttempts } = await supabase
-      .from('quiz_attempts')
-      .select('student_id, quiz_id, score, completed_at')
-      .in('student_id', studentIds)
-      .in('quiz_id', quizIds)
+    const { data: allAttempts } = studentIds.length && quizIds.length
+      ? await supabase.from('quiz_attempts').select('student_id, quiz_id, score').in('student_id', studentIds).in('quiz_id', quizIds)
+      : { data: [] }
 
-    const { data: allBadges } = await supabase
-      .from('achievements')
-      .select('user_id, badge_earned')
-      .in('user_id', studentIds)
+    const { data: allBadges } = studentIds.length
+      ? await supabase.from('achievements').select('user_id').in('user_id', studentIds)
+      : { data: [] }
 
-    // Index
     const completedSet = new Set(
       (allProgress ?? []).filter((p) => p.completed_at).map((p) => `${p.student_id}:${p.lesson_id}`)
     )
-    const quizMap = {}   // studentId:quizId → score
+    const quizMap = {}
     ;(allAttempts ?? []).forEach((a) => {
       const key = `${a.student_id}:${a.quiz_id}`
       if (!quizMap[key] || a.score > quizMap[key]) quizMap[key] = a.score
     })
-    const badgeCount = (allBadges ?? []).length
+    const totalBadges = (allBadges ?? []).length
 
-    // Per-classroom stats for bar chart
     const byClassroom = {}
-    classrooms.forEach((c) => {
+    classroomsWithActive.forEach((c) => {
       const cAssignments = assignments?.filter((a) => a.classroom_id === c.id) ?? []
       const cStudentIds  = c.classroom_enrollments.map((e) => e.student_id)
       let cCompleted = 0, cTotal = 0, cQuizScores = []
@@ -310,10 +279,10 @@ export const classroomService = {
       })
 
       byClassroom[c.id] = {
-        name:       c.name,
-        students:   cStudentIds.length,
-        total:      cTotal,
-        completed:  cCompleted,
+        name:           c.name,
+        students:       cStudentIds.length,
+        total:          cTotal,
+        completed:      cCompleted,
         completionRate: cTotal ? Math.round((cCompleted / cTotal) * 100) : 0,
         avgQuizScore:   cQuizScores.length
           ? Math.round(cQuizScores.reduce((s, v) => s + v, 0) / cQuizScores.length)
@@ -323,14 +292,12 @@ export const classroomService = {
 
     const allScores = Object.values(quizMap)
     return {
-      classrooms,
+      classrooms: classroomsWithActive,   // ← includes status-filtered enrollments with student profiles
       byClassroom,
-      totalStudents:  studentIds.length,
-      totalBadges:    badgeCount,
-      overallAvgScore: allScores.length
-        ? Math.round(allScores.reduce((s, v) => s + v, 0) / allScores.length)
-        : null,
-      overallCompletion: lessonIds.length && studentIds.length
+      totalStudents:      studentIds.length,
+      totalBadges,
+      overallAvgScore:    allScores.length ? Math.round(allScores.reduce((s, v) => s + v, 0) / allScores.length) : null,
+      overallCompletion:  lessonIds.length && studentIds.length
         ? Math.round((completedSet.size / (lessonIds.length * studentIds.length)) * 100)
         : 0,
     }
@@ -396,8 +363,6 @@ export const classroomService = {
       .eq('classroom_id', classroomId)
     if (error) throw error
   },
-
-  // ─── Helpers ───────────────────────────────────────────
 
   async _generateUniqueCode() {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
