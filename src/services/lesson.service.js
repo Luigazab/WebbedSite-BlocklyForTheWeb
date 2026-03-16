@@ -7,11 +7,7 @@ export const lessonService = {
   async getLessonsByTeacher(teacherId) {
     const { data, error } = await supabase
       .from('lessons')
-      .select(`
-        *,
-        lesson_attachments(id),
-        lesson_quizzes(id, quiz:quizzes(id, title))
-      `)
+      .select(`*, lesson_attachments(id), lesson_quizzes(id, quiz:quizzes(id, title))`)
       .eq('teacher_id', teacherId)
       .order('created_at', { ascending: false })
     if (error) throw error
@@ -38,30 +34,16 @@ export const lessonService = {
       .single()
     if (error) throw error
 
-    // Normalise so every consumer gets consistent shape:
-    //   lesson.attachments  → lesson_attachments rows
-    //   lesson.quizzes      → lesson_quizzes rows
-    //   quiz.questions      → quiz_questions rows  (QuizSection expects .questions)
     const quizzes = (data.lesson_quizzes ?? []).map((lq) => ({
       ...lq,
-      quiz: lq.quiz
-        ? { ...lq.quiz, questions: lq.quiz.quiz_questions ?? [] }
-        : null,
+      quiz: lq.quiz ? { ...lq.quiz, questions: lq.quiz.quiz_questions ?? [] } : null,
     }))
 
-    return {
-      ...data,
-      attachments: data.lesson_attachments ?? [],
-      quizzes,
-    }
+    return { ...data, attachments: data.lesson_attachments ?? [], quizzes }
   },
 
   async createLesson(payload) {
-    const { data, error } = await supabase
-      .from('lessons')
-      .insert(payload)
-      .select()
-      .single()
+    const { data, error } = await supabase.from('lessons').insert(payload).select().single()
     if (error) throw error
     return data
   },
@@ -101,14 +83,9 @@ export const lessonService = {
 
   async uploadAttachmentFile(lessonId, file) {
     const ext = file.name.split('.').pop()
-    const fileName = `${Date.now()}.${ext}`
-    const path = `lessons/${lessonId}/${fileName}`
-
-    const { error: uploadError } = await supabase.storage
-      .from('lesson-files')
-      .upload(path, file)
+    const path = `lessons/${lessonId}/${Date.now()}.${ext}`
+    const { error: uploadError } = await supabase.storage.from('lesson-files').upload(path, file)
     if (uploadError) throw uploadError
-
     const { data } = supabase.storage.from('lesson-files').getPublicUrl(path)
     return { file_url: data.publicUrl, file_name: file.name }
   },
@@ -134,14 +111,10 @@ export const lessonService = {
     if (error) throw error
   },
 
-  // ─── Classroom Assignment (teacher hands out) ───────────
+  // ─── Classroom Assignment (teacher) ────────────────────
 
   async assignToClassroom(payload) {
-    const { data, error } = await supabase
-      .from('lesson_assignments')
-      .insert(payload)
-      .select()
-      .single()
+    const { data, error } = await supabase.from('lesson_assignments').insert(payload).select().single()
     if (error) throw error
     return data
   },
@@ -149,24 +122,14 @@ export const lessonService = {
   async getClassroomAssignments(classroomId) {
     const { data, error } = await supabase
       .from('lesson_assignments')
-      .select(`
-        *,
-        lesson:lessons(*),
-        classroom:classrooms(id, name)
-      `)
+      .select(`*, lesson:lessons(*), classroom:classrooms(id, name)`)
       .eq('classroom_id', classroomId)
       .order('assigned_at', { ascending: false })
     if (error) throw error
     return data
   },
 
-  // ─── Student: Classroom Lessons with full context ──────
-  //
-  // Returns lesson_assignments enriched with:
-  //   - lesson (title, content, attachments, quizzes+badge, teacher)
-  //   - student's lesson_progress for each lesson
-  //   - student's latest quiz_attempt for each quiz
-  //   - tutorial (activity) linked via tutorials table (classroom_id + lesson_id combo)
+  // ─── Student: Classroom Lessons (enriched) ─────────────
 
   async getClassroomLessonsForStudent(classroomId, studentId) {
     const { data, error } = await supabase
@@ -174,24 +137,13 @@ export const lessonService = {
       .select(`
         *,
         lesson:lessons(
-          id,
-          title,
-          content,
-          thumbnail_url,
-          estimated_duration,
-          created_at,
-          updated_at,
-          is_published,
+          id, title, content, thumbnail_url, estimated_duration, created_at, updated_at, is_published,
           teacher:profiles!lessons_teacher_id_fkey(id, username, avatar_url),
           lesson_attachments(id, file_name, file_url, file_type, file_size),
           lesson_quizzes(
             id,
             quiz:quizzes(
-              id,
-              title,
-              description,
-              passing_score,
-              time_limit,
+              id, title, description, passing_score, time_limit,
               quiz_questions(id),
               badges(id, title, description, icon_url)
             )
@@ -202,69 +154,60 @@ export const lessonService = {
       .order('assigned_at', { ascending: false })
 
     if (error) throw error
-    if (!data || data.length === 0) return []
+    if (!data?.length) return []
 
     const lessonIds = data.map((la) => la.lesson_id).filter(Boolean)
     const quizIds = data.flatMap((la) =>
       (la.lesson?.lesson_quizzes ?? []).map((lq) => lq.quiz?.id).filter(Boolean)
     )
 
-    // Fetch student progress for all lessons in one query
     const progressMap = {}
     if (lessonIds.length) {
-      const { data: progData } = await supabase
+      const { data: pData } = await supabase
         .from('lesson_progress')
         .select('*')
         .eq('student_id', studentId)
         .in('lesson_id', lessonIds)
-      progData?.forEach((p) => { progressMap[p.lesson_id] = p })
+      pData?.forEach((p) => { progressMap[p.lesson_id] = p })
     }
 
-    // Fetch latest quiz attempt per quiz
     const quizAttemptMap = {}
     if (quizIds.length) {
-      const { data: attData } = await supabase
+      const { data: aData } = await supabase
         .from('quiz_attempts')
         .select('*')
         .eq('student_id', studentId)
         .in('quiz_id', quizIds)
         .order('completed_at', { ascending: false })
-      attData?.forEach((a) => {
-        if (!quizAttemptMap[a.quiz_id]) quizAttemptMap[a.quiz_id] = a
-      })
+      aData?.forEach((a) => { if (!quizAttemptMap[a.quiz_id]) quizAttemptMap[a.quiz_id] = a })
     }
 
     return data.map((la) => {
       const lesson = la.lesson
       if (!lesson) return la
 
-      // Normalise quiz shape (quiz_questions → questions)
       const quizzes = (lesson.lesson_quizzes ?? []).map((lq) => ({
         ...lq,
         quiz: lq.quiz ? { ...lq.quiz, questions: lq.quiz.quiz_questions ?? [] } : null,
       }))
 
-      const quiz = quizzes[0]?.quiz ?? null
+      const quiz       = quizzes[0]?.quiz ?? null
       const quizAttempt = quiz ? (quizAttemptMap[quiz.id] ?? null) : null
-      const progress = progressMap[lesson.id] ?? null
+      const progress    = progressMap[lesson.id] ?? null
 
-      return {
-        ...la,
-        lesson: {
-          ...lesson,
-          attachments: lesson.lesson_attachments ?? [],
-          quizzes,
-          progress,
-          quizAttempt,
-        },
-      }
+      const now = new Date()
+      const due = la.due_date ? new Date(la.due_date) : null
+      let status = 'assigned'
+      if (progress?.completed_at || quizAttempt) status = 'completed'
+      else if (due && due < now) status = 'missing'
+
+      return { ...la, status, lesson: { ...lesson, attachments: lesson.lesson_attachments ?? [], quizzes, progress, quizAttempt } }
     })
   },
 
-  // ─── Student: All lesson_assignments across classrooms (Assignments Tab) ──
+  // ─── Student: Assignments Tab (cross-classroom) ─────────
 
   async getStudentLessonAssignments(studentId) {
-    // Get the classrooms this student is enrolled in
     const { data: enrollments, error: eErr } = await supabase
       .from('classroom_enrollments')
       .select('classroom_id')
@@ -280,21 +223,15 @@ export const lessonService = {
       .select(`
         *,
         classroom:classrooms(id, name, is_active),
-        lesson:lessons(
-          id,
-          title,
-          content,
-          estimated_duration,
+        lesson:lessons(id, title, estimated_duration,
           lesson_quizzes(id, quiz:quizzes(id, title)),
-          lesson_attachments(id)
-        )
+          lesson_attachments(id))
       `)
       .in('classroom_id', classroomIds)
       .not('due_date', 'is', null)
       .order('due_date', { ascending: true })
-
     if (error) throw error
-    if (!data || !data.length) return []
+    if (!data?.length) return []
 
     const lessonIds = data.map((la) => la.lesson_id).filter(Boolean)
     const progressMap = {}
@@ -307,9 +244,7 @@ export const lessonService = {
       pData?.forEach((p) => { progressMap[p.lesson_id] = p })
     }
 
-    const quizIds = data
-      .flatMap((la) => (la.lesson?.lesson_quizzes ?? []).map((lq) => lq.quiz?.id))
-      .filter(Boolean)
+    const quizIds = data.flatMap((la) => (la.lesson?.lesson_quizzes ?? []).map((lq) => lq.quiz?.id)).filter(Boolean)
     const quizAttemptMap = {}
     if (quizIds.length) {
       const { data: aData } = await supabase
@@ -326,18 +261,68 @@ export const lessonService = {
       const quiz = lesson?.lesson_quizzes?.[0]?.quiz ?? null
       const progress = lesson ? progressMap[lesson.id] : null
       const quizAttempt = quiz ? quizAttemptMap[quiz.id] ?? null : null
-
       const now = new Date()
       const due = la.due_date ? new Date(la.due_date) : null
       let status = 'assigned'
-      if (progress?.completed_at || quizAttempt) {
-        status = 'completed'
-      } else if (due && due < now) {
-        status = 'missing'
-      }
-
+      if (progress?.completed_at || quizAttempt) status = 'completed'
+      else if (due && due < now) status = 'missing'
       return { ...la, progress, quizAttempt, status }
     })
+  },
+
+  // ─── Student: ALL quiz attempts for a classroom (for progress tab) ──────────
+
+  async getStudentQuizAttemptsForClassroom(studentId, classroomId) {
+    // Get all quiz IDs linked to lessons in this classroom
+    const { data: assignments, error: aErr } = await supabase
+      .from('lesson_assignments')
+      .select(`lesson:lessons(lesson_quizzes(quiz_id, quiz:quizzes(id, title, passing_score, quiz_questions(id), badges(id,title,icon_url))))`)
+      .eq('classroom_id', classroomId)
+    if (aErr) throw aErr
+
+    const quizMeta = {}  // quizId → { title, passing_score, questionCount, badge }
+    assignments?.forEach((la) => {
+      la.lesson?.lesson_quizzes?.forEach((lq) => {
+        if (lq.quiz) {
+          quizMeta[lq.quiz.id] = {
+            title:         lq.quiz.title,
+            passing_score: lq.quiz.passing_score,
+            questionCount: lq.quiz.quiz_questions?.length ?? 0,
+            badge:         lq.quiz.badges?.[0] ?? null,
+          }
+        }
+      })
+    })
+
+    const quizIds = Object.keys(quizMeta)
+    if (!quizIds.length) return []
+
+    const { data: attempts, error: attErr } = await supabase
+      .from('quiz_attempts')
+      .select('*')
+      .eq('student_id', studentId)
+      .in('quiz_id', quizIds)
+      .order('completed_at', { ascending: false })
+    if (attErr) throw attErr
+
+    // Group by quiz_id
+    const grouped = {}
+    attempts?.forEach((a) => {
+      if (!grouped[a.quiz_id]) grouped[a.quiz_id] = []
+      grouped[a.quiz_id].push(a)
+    })
+
+    return quizIds
+      .filter((qid) => quizMeta[qid])
+      .map((qid) => ({
+        quizId:       qid,
+        ...quizMeta[qid],
+        attempts:     grouped[qid] ?? [],
+        bestScore:    grouped[qid]?.length
+                        ? Math.max(...grouped[qid].map((a) => a.score))
+                        : null,
+        attemptCount: grouped[qid]?.length ?? 0,
+      }))
   },
 
   // ─── Student: Progress Tracking ────────────────────────
@@ -346,12 +331,7 @@ export const lessonService = {
     const { data, error } = await supabase
       .from('lesson_progress')
       .upsert(
-        {
-          student_id: studentId,
-          lesson_id: lessonId,
-          ...updates,
-          last_accessed: new Date().toISOString(),
-        },
+        { student_id: studentId, lesson_id: lessonId, ...updates, last_accessed: new Date().toISOString() },
         { onConflict: 'student_id, lesson_id' }
       )
       .select()
@@ -374,53 +354,24 @@ export const lessonService = {
     return data
   },
 
-  // Bulk-fetch progress for a whole classroom (for detail page overview)
-  async getAllProgressForClassroom(studentId, lessonIds) {
-    if (!lessonIds.length) return {}
-    const { data, error } = await supabase
-      .from('lesson_progress')
-      .select('*')
-      .eq('student_id', studentId)
-      .in('lesson_id', lessonIds)
-    if (error) throw error
-    const map = {}
-    data?.forEach((p) => { map[p.lesson_id] = p })
-    return map
-  },
-
-  // ─── Student: Achievements / Badges ────────────────────
+  // ─── Student: Achievements ─────────────────────────────
 
   async getStudentAchievements(studentId) {
     const { data, error } = await supabase
       .from('achievements')
-      .select(`
-        id,
-        earned_at,
-        badge:badges(id, title, description, icon_url)
-      `)
+      .select(`id, earned_at, badge:badges(id, title, description, icon_url)`)
       .eq('user_id', studentId)
       .order('earned_at', { ascending: false })
     if (error) throw error
     return data ?? []
   },
 
-  // Fetch all badges relevant to quizzes in this classroom (for greyed-out display)
   async getClassroomBadges(classroomId) {
-    // Find quizzes linked to lessons assigned to this classroom
     const { data, error } = await supabase
       .from('lesson_assignments')
-      .select(`
-        lesson:lessons(
-          lesson_quizzes(
-            quiz:quizzes(
-              badges(id, title, description, icon_url, quiz_id)
-            )
-          )
-        )
-      `)
+      .select(`lesson:lessons(lesson_quizzes(quiz:quizzes(badges(id, title, description, icon_url, quiz_id))))`)
       .eq('classroom_id', classroomId)
     if (error) throw error
-
     const badges = []
     data?.forEach((la) => {
       la.lesson?.lesson_quizzes?.forEach((lq) => {
@@ -430,33 +381,16 @@ export const lessonService = {
     return badges
   },
 
-  // ─── Student: Classroom Members ────────────────────────
+  // ─── Student: Members ──────────────────────────────────
 
   async getClassroomMembers(classroomId) {
     const { data, error } = await supabase
       .from('classroom_enrollments')
-      .select(`
-        id,
-        enrolled_at,
-        status,
-        student:profiles(id, username, avatar_url, email)
-      `)
+      .select(`id, enrolled_at, status, student:profiles(id, username, avatar_url, email)`)
       .eq('classroom_id', classroomId)
       .eq('status', 'active')
       .order('enrolled_at', { ascending: true })
     if (error) throw error
     return data ?? []
-  },
-
-  // ─── Quiz Attempt (student submit) ────────────────────
-
-  async submitQuizAttempt(payload) {
-    const { data, error } = await supabase
-      .from('quiz_attempts')
-      .insert(payload)
-      .select()
-      .single()
-    if (error) throw error
-    return data
   },
 }
