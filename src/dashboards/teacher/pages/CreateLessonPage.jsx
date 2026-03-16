@@ -11,7 +11,6 @@ import {
   unlinkQuizFromLesson,
 } from '../../../services/lessonService'
 import { useAuth } from '../../../hooks/useAuth'
-import LessonEditor from '../components/LessonEditor'
 import MediaAttachments from '../components/MediaAttachments'
 import AttachQuizModal from '../components/AttachQuizModal'
 import { ArrowLeft, Check, Edit, FileEdit, Paperclip, Save } from 'lucide-react'

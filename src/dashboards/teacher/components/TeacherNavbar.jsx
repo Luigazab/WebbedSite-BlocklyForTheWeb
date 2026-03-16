@@ -15,7 +15,6 @@ export default function TeacherNavbar() {
     if (path.includes('/teacher') && path === '/teacher') return 'home'
     if (path.includes('/projects')) return 'projects'
     if (path.includes('/classrooms')) return 'classrooms'
-    if (path.includes('/performance')) return 'performance'
     if (path.includes('/lessons')) return 'lessons'
     if (path.includes('/tutorials')) return 'tutorials'
     if (path.includes('/editor')) return 'editor'

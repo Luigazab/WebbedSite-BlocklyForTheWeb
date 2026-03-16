@@ -17,11 +17,10 @@ const links = [
   { to: '/teacher',                   label: 'Home',            icon: Home            },
   { to: '/teacher/projects',          label: 'Projects',        icon: FolderOpen      },
   { to: '/teacher/lessons',           label: 'Class Materials', icon: ClipboardMinus  },
-  { to: '/teacher/quizzes',           label: 'Quizzes',         icon: FileQuestion  },
+  { to: '/teacher/quizzes',           label: 'Quizzes',         icon: FileQuestion    },
+  { to: '/teacher/tutorials',         label: 'Tutorials',       icon: PlayCircle      },
   { to: '/teacher/classrooms',        label: 'Classrooms',      icon: University      },
-  { to: '/teacher/performance',       label: 'Performance',     icon: BarChart2       },
   { to: '/teacher/learn',             label: 'Learn',           icon: BookOpen        },
-  { to: '/teacher/tutorials/create',  label: 'Tutorials',       icon: PlayCircle      },
   { to: '/teacher/profile',           label: 'Profile',         icon: UserSquare2     },
   { to: '/teacher/settings',          label: 'Settings',        icon: Settings        },
 ]
@@ -37,7 +36,6 @@ export default function TeacherSidebar() {
     if (path === '/teacher') return 'home'
     if (path.includes('/projects')) return 'projects'
     if (path.includes('/classrooms')) return 'classrooms'
-    if (path.includes('/performance')) return 'performance'
     if (path.includes('/lessons')) return 'lessons'
     if (path.includes('/tutorials')) return 'tutorials'
     if (path.includes('/editor')) return 'editor'
