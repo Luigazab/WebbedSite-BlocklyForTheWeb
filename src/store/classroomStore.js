@@ -2,10 +2,13 @@ import { create } from 'zustand'
 import { classroomService } from '../services/classroom.service'
 
 export const useClassroomStore = create((set, get) => ({
-  classrooms: [],
-  currentClassroom: null,
-  loading: false,
-  error: null,
+  classrooms:          [],   // teacher's active classrooms
+  archivedClassrooms:  [],   // teacher's archived classrooms
+  currentClassroom:    null,
+  performanceData:     [],   // per-student data for currentClassroom
+  aggregatePerformance: null, // cross-classroom aggregate for Performance tab
+  loading:             false,
+  error:               null,
 
   // ─── Teacher ─────────────────────────────────────────
 
@@ -19,6 +22,15 @@ export const useClassroomStore = create((set, get) => ({
     }
   },
 
+  fetchArchivedClassrooms: async (teacherId) => {
+    try {
+      const archivedClassrooms = await classroomService.getArchivedClassroomsByTeacher(teacherId)
+      set({ archivedClassrooms })
+    } catch (err) {
+      set({ error: err.message })
+    }
+  },
+
   fetchClassroomDetail: async (classroomId) => {
     set({ loading: true, error: null })
     try {
@@ -26,6 +38,24 @@ export const useClassroomStore = create((set, get) => ({
       set({ currentClassroom: classroom, loading: false })
     } catch (err) {
       set({ error: err.message, loading: false })
+    }
+  },
+
+  fetchClassroomPerformance: async (classroomId) => {
+    try {
+      const performanceData = await classroomService.getClassroomPerformanceData(classroomId)
+      set({ performanceData })
+    } catch (err) {
+      set({ error: err.message })
+    }
+  },
+
+  fetchAggregatePerformance: async (teacherId) => {
+    try {
+      const aggregatePerformance = await classroomService.getTeacherAggregatePerformance(teacherId)
+      set({ aggregatePerformance })
+    } catch (err) {
+      set({ error: err.message })
     }
   },
 
@@ -51,10 +81,20 @@ export const useClassroomStore = create((set, get) => ({
     }))
   },
 
+  deleteClassroom: async (classroomId) => {
+    await classroomService.deleteClassroom(classroomId)
+    set((state) => ({
+      classrooms: state.classrooms.filter((c) => c.id !== classroomId),
+      archivedClassrooms: state.archivedClassrooms.filter((c) => c.id !== classroomId),
+    }))
+  },
+
   regenerateCode: async (classroomId) => {
     const updated = await classroomService.regenerateCode(classroomId)
     set((state) => ({
-      classrooms: state.classrooms.map((c) => (c.id === classroomId ? { ...c, class_code: updated.class_code } : c)),
+      classrooms: state.classrooms.map((c) =>
+        c.id === classroomId ? { ...c, class_code: updated.class_code } : c
+      ),
       currentClassroom: state.currentClassroom?.id === classroomId
         ? { ...state.currentClassroom, class_code: updated.class_code }
         : state.currentClassroom,
@@ -73,6 +113,9 @@ export const useClassroomStore = create((set, get) => ({
             ),
           }
         : null,
+      performanceData: state.performanceData.filter(
+        (p) => p.enrollment?.id !== enrollmentId
+      ),
     }))
   },
 
@@ -90,7 +133,6 @@ export const useClassroomStore = create((set, get) => ({
 
   joinClassroom: async (studentId, classCode) => {
     const classroom = await classroomService.joinClassroom(studentId, classCode)
-    // Refetch to get full classroom data with teacher info
     await get().fetchStudentClassrooms(studentId)
     return classroom
   },

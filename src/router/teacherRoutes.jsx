@@ -1,20 +1,17 @@
 import TeacherLayout from '../dashboards/teacher/TeacherLayout'
 import TeacherHome from '../dashboards/teacher/pages/TeacherHome'
-import CreateLesson from '../dashboards/teacher/pages/CreateLesson'
 import CreateTutorial from '../dashboards/teacher/pages/CreateTutorial'
-import Classrooms from '../dashboards/teacher/pages/Classrooms'
+import TeacherClassrooms from '../dashboards/teacher/pages/Classrooms'
+import TeacherClassroomDetail from '../dashboards/teacher/pages/TeacherClassroomDetail'
+import TeacherStudentProfile from '../dashboards/teacher/pages/TeacherStudentProfile'
 import StudentPerformance from '../dashboards/teacher/pages/StudentPerformance'
 import FeedbackPage from '../dashboards/teacher/pages/FeedbackPage'
-import ClassroomDetail from '../dashboards/teacher/pages/ClassroomDetail'
-import Lessons from '../dashboards/teacher/pages/Lessons'
 import ProjectsPage from '../components/shared/ProjectsPage'
 import LearnPage from '../components/shared/LearnPage'
 import SettingsPage from '../components/shared/SettingsPage'
 import ProfilePage from '../dashboards/teacher/pages/TeacherProfile'
 import EditorLayout from '../components/layout/EditorLayout'
 import BlockEditor from '../components/shared/BlockEditor'
-import EditQuiz from '../dashboards/teacher/pages/EditQuiz'
-import QuizManagement from '../dashboards/teacher/pages/QuizManagement'
 import LessonsPage from '../dashboards/teacher/pages/LessonsPage'
 import CreateLessonPage from '../dashboards/teacher/pages/CreateLessonPage'
 import QuizzesPage from '../dashboards/teacher/pages/QuizzesPage'
@@ -24,30 +21,40 @@ export const teacherRoutes = [
   {
     element: <TeacherLayout />,
     children: [
-      { index: true, element: <TeacherHome /> },
-      { path: 'projects', element: <ProjectsPage /> },
-      { path: 'learn', element: <LearnPage /> },
-      { path: 'lessons', element: <LessonsPage /> },
-      { path: 'lessons/create', element: <CreateLessonPage /> },
-      { path: 'lessons/:id/edit', element: <CreateLessonPage /> }, 
-      { path: 'quizzes', element: <QuizzesPage /> }, 
-      { path: 'quizzes/create', element: <CreateQuizPage /> }, 
-      { path: 'quizzes/:id/edit', element: <CreateQuizPage /> }, 
-      { path: 'tutorials/create', element: <CreateTutorial /> },
-      { path: 'tutorials/:tutorialId/edit', element: <CreateTutorial /> },
-      { path: 'classrooms', element: <Classrooms /> },
-      { path: 'classrooms/:classroomId', element: <ClassroomDetail /> },
-      { path: 'classrooms/:classroomId/performance', element: <StudentPerformance /> },
-      { path: 'performance', element: <StudentPerformance /> },
-      { path: 'feedback', element: <FeedbackPage /> },
-      { path: 'profile', element: <ProfilePage /> },
-      { path: 'settings', element: <SettingsPage /> },
+      { index: true,                                       element: <TeacherHome /> },
+      { path: 'projects',                                  element: <ProjectsPage /> },
+      { path: 'learn',                                     element: <LearnPage /> },
+
+      // Lessons
+      { path: 'lessons',                                   element: <LessonsPage /> },
+      { path: 'lessons/create',                            element: <CreateLessonPage /> },
+      { path: 'lessons/:id/edit',                          element: <CreateLessonPage /> },
+
+      // Quizzes
+      { path: 'quizzes',                                   element: <QuizzesPage /> },
+      { path: 'quizzes/create',                            element: <CreateQuizPage /> },
+      { path: 'quizzes/:id/edit',                          element: <CreateQuizPage /> },
+
+      // Tutorials
+      { path: 'tutorials/create',                          element: <CreateTutorial /> },
+      { path: 'tutorials/:tutorialId/edit',                element: <CreateTutorial /> },
+
+      // Classrooms
+      { path: 'classrooms',                                element: <TeacherClassrooms /> },
+      { path: 'classrooms/:classroomId',                   element: <TeacherClassroomDetail /> },
+      { path: 'classrooms/:classroomId/student/:studentId',element: <TeacherStudentProfile /> },
+
+      // Misc
+      { path: 'performance',                               element: <StudentPerformance /> },
+      { path: 'feedback',                                  element: <FeedbackPage /> },
+      { path: 'profile',                                   element: <ProfilePage /> },
+      { path: 'settings',                                  element: <SettingsPage /> },
     ]
   },
   {
     element: <EditorLayout />,
     children: [
-      { path: 'editor', element: <BlockEditor /> },
+      { path: 'editor',     element: <BlockEditor /> },
       { path: 'editor/:id', element: <BlockEditor /> },
     ]
   }
