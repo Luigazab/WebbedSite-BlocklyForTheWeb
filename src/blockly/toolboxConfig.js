@@ -203,6 +203,91 @@ export const toolboxConfig = {
         },
         {
           kind: 'category',
+          name: 'Positioning',
+          colour: '#34A853',
+          contents: [
+            { kind: 'label', text: 'Positioning properties' },
+            { kind: 'block', type: 'external_position' },
+            { kind: 'block', type: 'external_top' },
+            { kind: 'block', type: 'external_right' },
+            { kind: 'block', type: 'external_bottom' },
+            { kind: 'block', type: 'external_left' },
+            { kind: 'block', type: 'external_z_index' },
+          ]
+        },
+        // NEW: Flexbox subcategory
+        {
+          kind: 'category',
+          name: 'Flexbox',
+          colour: '#34A853',
+          contents: [
+            { kind: 'label', text: 'Flexbox container & item properties' },
+            { kind: 'block', type: 'external_flex_direction' },
+            { kind: 'block', type: 'external_flex_wrap' },
+            { kind: 'block', type: 'external_justify_content' },
+            { kind: 'block', type: 'external_align_items' },
+            { kind: 'block', type: 'external_align_content' },
+            { kind: 'block', type: 'external_order' },
+            { kind: 'block', type: 'external_flex_grow' },
+            { kind: 'block', type: 'external_flex_shrink' },
+            { kind: 'block', type: 'external_flex_basis' },
+            { kind: 'block', type: 'external_align_self' },
+          ]
+        },
+        // NEW: Grid subcategory
+        {
+          kind: 'category',
+          name: 'Grid',
+          colour: '#34A853',
+          contents: [
+            { kind: 'label', text: 'Grid container & item properties' },
+            { kind: 'block', type: 'external_grid_template_columns' },
+            { kind: 'block', type: 'external_grid_template_rows' },
+            { kind: 'block', type: 'external_gap' },
+            { kind: 'block', type: 'external_grid_column' },
+            { kind: 'block', type: 'external_grid_row' },
+          ]
+        },
+        // NEW: Box Model (additional)
+        {
+          kind: 'category',
+          name: 'Box Model',
+          colour: '#34A853',
+          contents: [
+            { kind: 'label', text: 'Box sizing, outline, opacity' },
+            { kind: 'block', type: 'external_box_sizing' },
+            { kind: 'block', type: 'external_outline' },
+            { kind: 'block', type: 'external_opacity' },
+          ]
+        },
+        // NEW: Transitions & Transforms
+        {
+          kind: 'category',
+          name: 'Transitions',
+          colour: '#34A853',
+          contents: [
+            { kind: 'label', text: 'Transition and transform properties' },
+            { kind: 'block', type: 'external_transition_property' },
+            { kind: 'block', type: 'external_transition_duration' },
+            { kind: 'block', type: 'external_transition_timing' },
+            { kind: 'block', type: 'external_transition_delay' },
+            { kind: 'block', type: 'external_transform' },
+          ]
+        },
+        // NEW: Text & Misc (additional)
+        {
+          kind: 'category',
+          name: 'Text & Misc',
+          colour: '#34A853',
+          contents: [
+            { kind: 'label', text: 'White space, word break, etc.' },
+            { kind: 'block', type: 'external_white_space' },
+            { kind: 'block', type: 'external_word_break' },
+            { kind: 'block', type: 'external_overflow_wrap' },
+          ]
+        },
+        {
+          kind: 'category',
           name: 'Other',
           colour: '#34A853',
           contents: [
@@ -286,6 +371,86 @@ export const toolboxConfig = {
             { kind: 'block', type: 'internal_border_specific' },
             { kind: 'block', type: 'internal_border_radius' },
             { kind: 'block', type: 'internal_border_radius_specific' },
+          ]
+        },
+        {
+          kind: 'category',
+          name: 'Positioning',
+          colour: '#4285F4',
+          contents: [
+            { kind: 'label', text: 'Positioning properties' },
+            { kind: 'block', type: 'internal_position' },
+            { kind: 'block', type: 'internal_top' },
+            { kind: 'block', type: 'internal_right' },
+            { kind: 'block', type: 'internal_bottom' },
+            { kind: 'block', type: 'internal_left' },
+            { kind: 'block', type: 'internal_z_index' },
+          ]
+        },
+        {
+          kind: 'category',
+          name: 'Flexbox',
+          colour: '#4285F4',
+          contents: [
+            { kind: 'label', text: 'Flexbox properties' },
+            { kind: 'block', type: 'internal_flex_direction' },
+            { kind: 'block', type: 'internal_flex_wrap' },
+            { kind: 'block', type: 'internal_justify_content' },
+            { kind: 'block', type: 'internal_align_items' },
+            { kind: 'block', type: 'internal_align_content' },
+            { kind: 'block', type: 'internal_order' },
+            { kind: 'block', type: 'internal_flex_grow' },
+            { kind: 'block', type: 'internal_flex_shrink' },
+            { kind: 'block', type: 'internal_flex_basis' },
+            { kind: 'block', type: 'internal_align_self' },
+          ]
+        },
+        {
+          kind: 'category',
+          name: 'Grid',
+          colour: '#4285F4',
+          contents: [
+            { kind: 'label', text: 'Grid properties' },
+            { kind: 'block', type: 'internal_grid_template_columns' },
+            { kind: 'block', type: 'internal_grid_template_rows' },
+            { kind: 'block', type: 'internal_gap' },
+            { kind: 'block', type: 'internal_grid_column' },
+            { kind: 'block', type: 'internal_grid_row' },
+          ]
+        },
+        {
+          kind: 'category',
+          name: 'Box Model',
+          colour: '#4285F4',
+          contents: [
+            { kind: 'label', text: 'Box sizing, outline, opacity' },
+            { kind: 'block', type: 'internal_box_sizing' },
+            { kind: 'block', type: 'internal_outline' },
+            { kind: 'block', type: 'internal_opacity' },
+          ]
+        },
+        {
+          kind: 'category',
+          name: 'Transitions',
+          colour: '#4285F4',
+          contents: [
+            { kind: 'label', text: 'Transition & transform' },
+            { kind: 'block', type: 'internal_transition_property' },
+            { kind: 'block', type: 'internal_transition_duration' },
+            { kind: 'block', type: 'internal_transition_timing' },
+            { kind: 'block', type: 'internal_transition_delay' },
+            { kind: 'block', type: 'internal_transform' },
+          ]
+        },
+        {
+          kind: 'category',
+          name: 'Text & Misc',
+          colour: '#4285F4',
+          contents: [
+            { kind: 'label', text: 'White space, word break, etc.' },
+            { kind: 'block', type: 'internal_white_space' },
+            { kind: 'block', type: 'internal_word_break' },
+            { kind: 'block', type: 'internal_overflow_wrap' },
           ]
         },
         {

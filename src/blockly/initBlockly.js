@@ -2,6 +2,8 @@ import * as Blockly from 'blockly/core'
 import { FieldColour } from '@blockly/field-colour'
 import { defineBlocks } from './defineBlocks'
 import { defineGenerators } from './defineGenerators'
+import { defineCSSBlocks } from './defineCSSBlocks'
+import { defineCSSGenerators } from './defineCSSGenerators'
 import { registerToolboxLabel } from './toolboxLabel'
 import { registerCustomCategory } from './customCategory'
 
@@ -14,6 +16,8 @@ export function initBlockly() {
   Blockly.fieldRegistry.register('field_colour', FieldColour)
   defineBlocks()
   defineGenerators()
+  defineCSSBlocks()
+  defineCSSGenerators()
   registerToolboxLabel()
   registerCustomCategory()
 }

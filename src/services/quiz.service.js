@@ -5,10 +5,10 @@ export const quizService = {
     const { data, error } = await supabase
       .from('quizzes')
       .insert({
-        teacher_id: payload.teacher_id,
-        title: payload.title,
-        description: payload.description,
-        time_limit: payload.time_limit,
+        teacher_id:    payload.teacher_id,
+        title:         payload.title,
+        description:   payload.description,
+        time_limit:    payload.time_limit,
         passing_score: payload.passing_score || null,
       })
       .select()
@@ -88,32 +88,42 @@ export const quizService = {
   },
 
   async submitAttempt(quizId, studentId, answers, questions) {
-    // answers = { [questionId]: optionIndex (integer) }
-    // correct_answer is stored as the option TEXT string
     let correct = 0
+    const resolvedAnswers = {}  // { [questionId]: selectedText }
+
     questions.forEach((q) => {
-      const selectedIndex = answers[q.id]
-      const selectedText  = Array.isArray(q.options) ? q.options[selectedIndex] : undefined
-      if (selectedText !== undefined && selectedText === q.correct_answer) correct++
+      const opts = Array.isArray(q.options)
+        ? q.options
+        : Object.values(q.options ?? {})
+
+      const raw = answers[q.id]
+
+      let selectedText = null
+      if (typeof raw === 'number' && Number.isInteger(raw)) {
+        selectedText = opts[raw] ?? null
+      } else if (typeof raw === 'string') {
+        selectedText = raw
+      }
+
+      resolvedAnswers[q.id] = selectedText
+
+      if (selectedText !== null && selectedText === q.correct_answer) {
+        correct++
+      }
     })
 
     const score = questions.length > 0
       ? Math.round((correct / questions.length) * 100)
       : 0
 
-    // passing_score is a raw count — compare correct count directly
-    const passingCount = questions.length > 0 && quizService._passingScore !== undefined
-      ? quizService._passingScore
-      : null // will be resolved below
-
     const { data: attempt, error } = await supabase
       .from('quiz_attempts')
       .insert({
         quiz_id:     quizId,
         student_id:  studentId,
-        score,
+        score,                      // percentage
         total_items: questions.length,
-        answers,
+        answers:     resolvedAnswers, // text strings, not indices
       })
       .select()
       .single()
@@ -125,9 +135,9 @@ export const quizService = {
       .eq('id', quizId)
       .single()
 
-    const ps    = quizRow?.passing_score ?? null 
-    const badge = quizRow?.badges?.[0] ?? null
-    const passed = ps === null ? true : correct >= ps
+    const passingScore = quizRow?.passing_score ?? null
+    const badge        = quizRow?.badges?.[0]   ?? null
+    const passed       = passingScore === null ? true : correct >= passingScore
 
     let earnedBadge = null
     if (passed && badge) {
@@ -148,9 +158,9 @@ export const quizService = {
 
     return {
       ...attempt,
-      correct,       
+      correct,      // raw number of correct answers
       passed,
-      earnedBadge,   
+      earnedBadge,
     }
   },
 
@@ -160,7 +170,7 @@ export const quizService = {
       .select('*')
       .eq('student_id', studentId)
       .eq('quiz_id', quizId)
-      .order('score', { ascending: false })
+      .order('score', { ascending: false }) // score is %, higher = better
       .limit(1)
       .maybeSingle()
     if (error) throw error
