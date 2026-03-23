@@ -1,5 +1,9 @@
 import { javascriptGenerator } from 'blockly/javascript';
 
+const I  = '  '   // one level of indent
+const II = '    ' // two levels
+ 
+
 export const defineGenerators = () => {
   const INDENT = '  ';
 
@@ -277,360 +281,261 @@ export const defineGenerators = () => {
     return block.getFieldValue('effect');
   };
 
-  // =============================================================================
-  // EXTERNAL STYLE BLOCKS (used inside <style>)
-  // Each returns a CSS declaration followed by a newline.
-  // =============================================================================
-
-  javascriptGenerator.forBlock['external_text_color'] = function(block) {
-    return `color: ${block.getFieldValue('COLOR')};\n`;
-  };
-
-  javascriptGenerator.forBlock['external_font_family'] = function(block) {
-    return `font-family: ${block.getFieldValue('FONT')};\n`;
-  };
-
-  javascriptGenerator.forBlock['external_font_size'] = function(block) {
-    const size = block.getFieldValue('SIZE');
-    const unit = block.getFieldValue('UNIT');
-    return `font-size: ${size}${unit};\n`;
-  };
-
-  javascriptGenerator.forBlock['external_font_size_descriptive'] = function(block) {
-    return `font-size: ${block.getFieldValue('SIZE')};\n`;
-  };
-
-  javascriptGenerator.forBlock['external_text_align'] = function(block) {
-    return `text-align: ${block.getFieldValue('ALIGN')};\n`;
-  };
-
-  javascriptGenerator.forBlock['external_text_transform'] = function(block) {
-    return `text-transform: ${block.getFieldValue('TRANSFORM')};\n`;
-  };
-
-  javascriptGenerator.forBlock['external_text_decoration'] = function(block) {
-    const dec = block.getFieldValue('DECORATION');
-    const style = block.getFieldValue('DECORATION_STYLE');
-    return `text-decoration: ${dec} ${style};\n`;
-  };
-
-  javascriptGenerator.forBlock['external_text_shadow'] = function(block) {
-    const h = block.getFieldValue('H-SHADOW');
-    const v = block.getFieldValue('V-SHADOW');
-    const r = block.getFieldValue('RADIUS');
-    const c = block.getFieldValue('COLOR');
-    return `text-shadow: ${h} ${v} ${r} ${c};\n`;
-  };
-
-  javascriptGenerator.forBlock['external_display'] = function(block) {
-    return `display: ${block.getFieldValue('DISPLAY')};\n`;
-  };
-
-  javascriptGenerator.forBlock['external_overflow'] = function(block) {
-    const axis = block.getFieldValue('AXIS');
-    const overflow = block.getFieldValue('OVERFLOW');
-    return `overflow-${axis}: ${overflow};\n`;
-  };
-
-  javascriptGenerator.forBlock['external_float'] = function(block) {
-    return `float: ${block.getFieldValue('FLOAT')};\n`;
-  };
-
-  javascriptGenerator.forBlock['external_height'] = function(block) {
-    const size = block.getFieldValue('SIZE');
-    const unit = block.getFieldValue('UNIT');
-    return `height: ${size}${unit};\n`;
-  };
-
-  javascriptGenerator.forBlock['external_width'] = function(block) {
-    const size = block.getFieldValue('SIZE');
-    const unit = block.getFieldValue('UNIT');
-    return `width: ${size}${unit};\n`;
-  };
-
-  javascriptGenerator.forBlock['external_margin'] = function(block) {
-    const size = block.getFieldValue('SIZE');
-    const unit = block.getFieldValue('UNIT');
-    return `margin: ${size}${unit};\n`;
-  };
-
-  javascriptGenerator.forBlock['external_margin_specific'] = function(block) {
-    const dir = block.getFieldValue('DIRECTION');
-    const size = block.getFieldValue('SIZE');
-    const unit = block.getFieldValue('UNIT');
-    return `margin-${dir}: ${size}${unit};\n`;
-  };
-
-  javascriptGenerator.forBlock['external_padding'] = function(block) {
-    const size = block.getFieldValue('SIZE');
-    const unit = block.getFieldValue('UNIT');
-    return `padding: ${size}${unit};\n`;
-  };
-
-  javascriptGenerator.forBlock['external_padding_specific'] = function(block) {
-    const dir = block.getFieldValue('DIRECTION');
-    const size = block.getFieldValue('SIZE');
-    const unit = block.getFieldValue('UNIT');
-    return `padding-${dir}: ${size}${unit};\n`;
-  };
-
-  javascriptGenerator.forBlock['external_background_color'] = function(block) {
-    return `background-color: ${block.getFieldValue('COLOR')};\n`;
-  };
-
-  javascriptGenerator.forBlock['external_background_image'] = function(block) {
-    return `background-image: url("${block.getFieldValue('URL')}");\n`;
-  };
-
-  javascriptGenerator.forBlock['external_background_repeat'] = function(block) {
-    return `background-repeat: ${block.getFieldValue('REPEAT')};\n`;
-  };
-
-  javascriptGenerator.forBlock['external_background_position'] = function(block) {
-    return `background-position: ${block.getFieldValue('POSITION')};\n`;
-  };
-
-  javascriptGenerator.forBlock['external_background_size'] = function(block) {
-    return `background-size: ${block.getFieldValue('SIZE')};\n`;
-  };
-
-  javascriptGenerator.forBlock['external_background_clip'] = function(block) {
-    return `background-clip: ${block.getFieldValue('CLIP')};\n`;
-  };
-
-  javascriptGenerator.forBlock['external_border'] = function(block) {
-    const size = block.getFieldValue('SIZE');
-    const unit = block.getFieldValue('UNIT');
-    const style = block.getFieldValue('BORDER_STYLE');
-    const color = block.getFieldValue('COLOR');
-    return `border: ${size}${unit} ${style} ${color};\n`;
-  };
-
-  javascriptGenerator.forBlock['external_border_specific'] = function(block) {
-    const side = block.getFieldValue('SIDE');
-    const size = block.getFieldValue('SIZE');
-    const unit = block.getFieldValue('UNIT');
-    const style = block.getFieldValue('BORDER_STYLE');
-    const color = block.getFieldValue('COLOR');
-    return `border-${side}: ${size}${unit} ${style} ${color};\n`;
-  };
-
-  javascriptGenerator.forBlock['external_border_radius'] = function(block) {
-    const size = block.getFieldValue('SIZE');
-    const unit = block.getFieldValue('UNIT');
-    return `border-radius: ${size}${unit};\n`;
-  };
-
-  javascriptGenerator.forBlock['external_border_radius_specific'] = function(block) {
-    const side = block.getFieldValue('SIDE');
-    const size = block.getFieldValue('SIZE');
-    const unit = block.getFieldValue('UNIT');
-    return `border-${side}-radius: ${size}${unit};\n`;
-  };
-
-  javascriptGenerator.forBlock['external_cursor'] = function(block) {
-    return `cursor: ${block.getFieldValue('TYPE')};\n`;
-  };
-
-  javascriptGenerator.forBlock['external_box_shadow'] = function(block) {
-    const h = block.getFieldValue('H-SHADOW');
-    const v = block.getFieldValue('V-SHADOW');
-    const r = block.getFieldValue('RADIUS');
-    const c = block.getFieldValue('COLOR');
-    return `box-shadow: ${h} ${v} ${r} ${c};\n`;
-  };
-
-  // =============================================================================
-  // INTERNAL STYLE BLOCKS (used in inline style="...")
-  // Each returns a CSS declaration without a newline (for concatenation).
-  // =============================================================================
-
-  javascriptGenerator.forBlock['internal_text_color'] = function(block) {
-    const code = `color: ${block.getFieldValue('COLOR')};`;
-    return [code, javascriptGenerator.ORDER_ATOMIC];
-  };
-  javascriptGenerator.forBlock['internal_font_family'] = function(block) {
-    const code = `font-family: ${block.getFieldValue('FONT')};`;
-    return [code, javascriptGenerator.ORDER_ATOMIC];
-  };
-
-  javascriptGenerator.forBlock['internal_font_size'] = function(block) {
-    const size = block.getFieldValue('SIZE');
-    const unit = block.getFieldValue('UNIT');
-    const code = `font-size: ${size}${unit};`;
-    return [code, javascriptGenerator.ORDER_ATOMIC];
-  };
-
-  javascriptGenerator.forBlock['internal_font_size_descriptive'] = function(block) {
-    const code = `font-size: ${block.getFieldValue('SIZE')};`;
-    return [code, javascriptGenerator.ORDER_ATOMIC];
-  };
-
-  javascriptGenerator.forBlock['internal_text_align'] = function(block) {
-    const code = `text-align: ${block.getFieldValue('ALIGN')};`;
-    return [code, javascriptGenerator.ORDER_ATOMIC];
-  };
-
-  javascriptGenerator.forBlock['internal_text_transform'] = function(block) {
-    const code = `text-transform: ${block.getFieldValue('TRANSFORM')};`;
-    return [code, javascriptGenerator.ORDER_ATOMIC];
-  };
-
-  javascriptGenerator.forBlock['internal_text_decoration'] = function(block) {
-    const dec = block.getFieldValue('DECORATION');
-    const style = block.getFieldValue('DECORATION_STYLE');
-    const code = `text-decoration: ${dec} ${style};`;
-    return [code, javascriptGenerator.ORDER_ATOMIC];
-  };
-
-  javascriptGenerator.forBlock['internal_text_shadow'] = function(block) {
-    const h = block.getFieldValue('H-SHADOW');
-    const v = block.getFieldValue('V-SHADOW');
-    const r = block.getFieldValue('RADIUS');
-    const c = block.getFieldValue('COLOR');
-    const code = `text-shadow: ${h} ${v} ${r} ${c};`;
-    return [code, javascriptGenerator.ORDER_ATOMIC];
-  };
-
-  javascriptGenerator.forBlock['internal_display'] = function(block) {
-    const code = `display: ${block.getFieldValue('DISPLAY')};`;
-    return [code, javascriptGenerator.ORDER_ATOMIC];
-  };
-
-  javascriptGenerator.forBlock['internal_overflow'] = function(block) {
-    const axis = block.getFieldValue('AXIS');
-    const overflow = block.getFieldValue('OVERFLOW');
-    const code = `overflow-${axis}: ${overflow};`;
-    return [code, javascriptGenerator.ORDER_ATOMIC];
-  };
-
-  javascriptGenerator.forBlock['internal_float'] = function(block) {
-    const code = `float: ${block.getFieldValue('FLOAT')};`;
-    return [code, javascriptGenerator.ORDER_ATOMIC];
-  };
-
-  javascriptGenerator.forBlock['internal_height'] = function(block) {
-    const size = block.getFieldValue('SIZE');
-    const unit = block.getFieldValue('UNIT');
-    const code = `height: ${size}${unit};`;
-    return [code, javascriptGenerator.ORDER_ATOMIC];
-  };
-
-  javascriptGenerator.forBlock['internal_width'] = function(block) {
-    const size = block.getFieldValue('SIZE');
-    const unit = block.getFieldValue('UNIT');
-    const code = `width: ${size}${unit};`;
-    return [code, javascriptGenerator.ORDER_ATOMIC];
-  };
-
-  javascriptGenerator.forBlock['internal_margin'] = function(block) {
-    const size = block.getFieldValue('SIZE');
-    const unit = block.getFieldValue('UNIT');
-    const code = `margin: ${size}${unit};`;
-    return [code, javascriptGenerator.ORDER_ATOMIC];
-  };
-
-  javascriptGenerator.forBlock['internal_margin_specific'] = function(block) {
-    const dir = block.getFieldValue('DIRECTION');
-    const size = block.getFieldValue('SIZE');
-    const unit = block.getFieldValue('UNIT');
-    const code = `margin-${dir}: ${size}${unit};`;
-    return [code, javascriptGenerator.ORDER_ATOMIC];
-  };
-
-  javascriptGenerator.forBlock['internal_padding'] = function(block) {
-    const size = block.getFieldValue('SIZE');
-    const unit = block.getFieldValue('UNIT');
-    const code = `padding: ${size}${unit};`;
-    return [code, javascriptGenerator.ORDER_ATOMIC];
-  };
-
-  javascriptGenerator.forBlock['internal_padding_specific'] = function(block) {
-    const dir = block.getFieldValue('DIRECTION');
-    const size = block.getFieldValue('SIZE');
-    const unit = block.getFieldValue('UNIT');
-    const code = `padding-${dir}: ${size}${unit};`;
-    return [code, javascriptGenerator.ORDER_ATOMIC];
-  };
-
-  javascriptGenerator.forBlock['internal_background_color'] = function(block) {
-    const code = `background-color: ${block.getFieldValue('COLOR')};`;
-    return [code, javascriptGenerator.ORDER_ATOMIC];
-  };
-
-  javascriptGenerator.forBlock['internal_background_image'] = function(block) {
-    const code = `background-image: url("${block.getFieldValue('URL')}");`;
-    return [code, javascriptGenerator.ORDER_ATOMIC];
-  };
-
-  javascriptGenerator.forBlock['internal_background_repeat'] = function(block) {
-    const code = `background-repeat: ${block.getFieldValue('REPEAT')};`;
-    return [code, javascriptGenerator.ORDER_ATOMIC];
-  };
-
-  javascriptGenerator.forBlock['internal_background_position'] = function(block) {
-    const code = `background-position: ${block.getFieldValue('POSITION')};`;
-    return [code, javascriptGenerator.ORDER_ATOMIC];
-  };
-
-  javascriptGenerator.forBlock['internal_background_size'] = function(block) {
-    const code = `background-size: ${block.getFieldValue('SIZE')};`;
-    return [code, javascriptGenerator.ORDER_ATOMIC];
-  };
-
-  javascriptGenerator.forBlock['internal_background_clip'] = function(block) {
-    const code = `background-clip: ${block.getFieldValue('CLIP')};`;
-    return [code, javascriptGenerator.ORDER_ATOMIC];
-  };
-
-  javascriptGenerator.forBlock['internal_border'] = function(block) {
-    const size = block.getFieldValue('SIZE');
-    const unit = block.getFieldValue('UNIT');
-    const style = block.getFieldValue('BORDER_STYLE');
-    const color = block.getFieldValue('COLOR');
-    const code = `border: ${size}${unit} ${style} ${color};`;
-    return [code, javascriptGenerator.ORDER_ATOMIC];
-  };
-
-  javascriptGenerator.forBlock['internal_border_specific'] = function(block) {
-    const side = block.getFieldValue('SIDE');
-    const size = block.getFieldValue('SIZE');
-    const unit = block.getFieldValue('UNIT');
-    const style = block.getFieldValue('BORDER_STYLE');
-    const color = block.getFieldValue('COLOR');
-    const code = `border-${side}: ${size}${unit} ${style} ${color};`;
-    return [code, javascriptGenerator.ORDER_ATOMIC];
-  };
-
-  javascriptGenerator.forBlock['internal_border_radius'] = function(block) {
-    const size = block.getFieldValue('SIZE');
-    const unit = block.getFieldValue('UNIT');
-    const code = `border-radius: ${size}${unit};`;
-    return [code, javascriptGenerator.ORDER_ATOMIC];
-  };
-
-  javascriptGenerator.forBlock['internal_border_radius_specific'] = function(block) {
-    const side = block.getFieldValue('SIDE');
-    const size = block.getFieldValue('SIZE');
-    const unit = block.getFieldValue('UNIT');
-    const code = `border-${side}-radius: ${size}${unit};`;
-    return [code, javascriptGenerator.ORDER_ATOMIC];
-  };
-
-  javascriptGenerator.forBlock['internal_cursor'] = function(block) {
-    const code = `cursor: ${block.getFieldValue('TYPE')};`;
-    return [code, javascriptGenerator.ORDER_ATOMIC];
-  };
-
-  javascriptGenerator.forBlock['internal_box_shadow'] = function(block) {
-    const h = block.getFieldValue('H-SHADOW');
-    const v = block.getFieldValue('V-SHADOW');
-    const r = block.getFieldValue('RADIUS');
-    const c = block.getFieldValue('COLOR');
-    const code = `box-shadow: ${h} ${v} ${r} ${c};`;
-    return [code, javascriptGenerator.ORDER_ATOMIC];
-  };
-
+  javascriptGenerator.forBlock['html_meta_charset'] = (block) =>
+    `${I}<meta charset="${block.getFieldValue('CHARSET')}">\n`
+ 
+  javascriptGenerator.forBlock['html_meta_viewport'] = (block) =>
+    `${I}<meta name="viewport" content="${block.getFieldValue('CONTENT')}">\n`
+ 
+  javascriptGenerator.forBlock['html_meta_named'] = (block) =>
+    `${I}<meta name="${block.getFieldValue('NAME')}" content="${block.getFieldValue('CONTENT')}">\n`
+ 
+  javascriptGenerator.forBlock['html_meta_http_equiv'] = (block) =>
+    `${I}<meta http-equiv="${block.getFieldValue('HTTP_EQUIV')}" content="${block.getFieldValue('CONTENT')}">\n`
+ 
+  // ── SCRIPT ───────────────────────────────────────────────────────────────
+ 
+  javascriptGenerator.forBlock['html_script_inline'] = (block) => {
+    const content = javascriptGenerator.statementToCode(block, 'CONTENT')
+    return `${I}<script>\n${content}${I}</script>\n`
+  }
+ 
+  // ── INLINE TEXT ──────────────────────────────────────────────────────────
+ 
+  javascriptGenerator.forBlock['html_b'] = (block) => {
+    const attrs = javascriptGenerator.valueToCode(block, 'attributes', 0) || ''
+    return `${I}<b${attrs}>${block.getFieldValue('TEXT')}</b>\n`
+  }
+ 
+  javascriptGenerator.forBlock['html_i'] = (block) => {
+    const attrs = javascriptGenerator.valueToCode(block, 'attributes', 0) || ''
+    return `${I}<i${attrs}>${block.getFieldValue('TEXT')}</i>\n`
+  }
+ 
+  javascriptGenerator.forBlock['html_mark'] = (block) => {
+    const attrs = javascriptGenerator.valueToCode(block, 'attributes', 0) || ''
+    return `${I}<mark${attrs}>${block.getFieldValue('TEXT')}</mark>\n`
+  }
+ 
+  javascriptGenerator.forBlock['html_small'] = (block) => {
+    const attrs = javascriptGenerator.valueToCode(block, 'attributes', 0) || ''
+    return `${I}<small${attrs}>${block.getFieldValue('TEXT')}</small>\n`
+  }
+ 
+  javascriptGenerator.forBlock['html_del'] = (block) => {
+    const attrs = javascriptGenerator.valueToCode(block, 'attributes', 0) || ''
+    return `${I}<del${attrs}>${block.getFieldValue('TEXT')}</del>\n`
+  }
+ 
+  javascriptGenerator.forBlock['html_ins'] = (block) => {
+    const attrs = javascriptGenerator.valueToCode(block, 'attributes', 0) || ''
+    return `${I}<ins${attrs}>${block.getFieldValue('TEXT')}</ins>\n`
+  }
+ 
+  javascriptGenerator.forBlock['html_sub'] = (block) => {
+    const attrs = javascriptGenerator.valueToCode(block, 'attributes', 0) || ''
+    return `${I}<sub${attrs}>${block.getFieldValue('TEXT')}</sub>\n`
+  }
+ 
+  javascriptGenerator.forBlock['html_sup'] = (block) => {
+    const attrs = javascriptGenerator.valueToCode(block, 'attributes', 0) || ''
+    return `${I}<sup${attrs}>${block.getFieldValue('TEXT')}</sup>\n`
+  }
+ 
+  // ── SECTIONING ───────────────────────────────────────────────────────────
+ 
+  javascriptGenerator.forBlock['html_aside'] = (block) => {
+    const attrs    = javascriptGenerator.valueToCode(block, 'attributes', 0) || ''
+    const content  = javascriptGenerator.statementToCode(block, 'CONTENT')
+    return `${I}<aside${attrs}>\n${content}${I}</aside>\n`
+  }
+ 
+  javascriptGenerator.forBlock['html_address'] = (block) => {
+    const attrs   = javascriptGenerator.valueToCode(block, 'attributes', 0) || ''
+    const content = javascriptGenerator.statementToCode(block, 'CONTENT')
+    return `${I}<address${attrs}>\n${content}${I}</address>\n`
+  }
+ 
+  // ── DESCRIPTION LISTS ─────────────────────────────────────────────────
+ 
+  javascriptGenerator.forBlock['html_dl'] = (block) => {
+    const attrs   = javascriptGenerator.valueToCode(block, 'attributes', 0) || ''
+    const content = javascriptGenerator.statementToCode(block, 'CONTENT')
+    return `${I}<dl${attrs}>\n${content}${I}</dl>\n`
+  }
+ 
+  javascriptGenerator.forBlock['html_dt'] = (block) => {
+    const attrs = javascriptGenerator.valueToCode(block, 'attributes', 0) || ''
+    return `${II}<dt${attrs}>${block.getFieldValue('TEXT')}</dt>\n`
+  }
+ 
+  javascriptGenerator.forBlock['html_dd'] = (block) => {
+    const attrs = javascriptGenerator.valueToCode(block, 'attributes', 0) || ''
+    return `${II}<dd${attrs}>${block.getFieldValue('TEXT')}</dd>\n`
+  }
+ 
+  // ── TABLE ADDITIONS ──────────────────────────────────────────────────────
+ 
+  javascriptGenerator.forBlock['html_caption'] = (block) => {
+    const attrs = javascriptGenerator.valueToCode(block, 'attributes', 0) || ''
+    return `${II}<caption${attrs}>${block.getFieldValue('TEXT')}</caption>\n`
+  }
+ 
+  javascriptGenerator.forBlock['html_colgroup'] = (block) => {
+    const attrs   = javascriptGenerator.valueToCode(block, 'attributes', 0) || ''
+    const content = javascriptGenerator.statementToCode(block, 'CONTENT')
+    return `${II}<colgroup${attrs}>\n${content}${II}</colgroup>\n`
+  }
+ 
+  javascriptGenerator.forBlock['html_col'] = (block) => {
+    const attrs = javascriptGenerator.valueToCode(block, 'attributes', 0) || ''
+    const span  = block.getFieldValue('SPAN')
+    return `${II}${I}<col span="${span}"${attrs}>\n`
+  }
+ 
+  javascriptGenerator.forBlock['html_thead'] = (block) => {
+    const attrs   = javascriptGenerator.valueToCode(block, 'attributes', 0) || ''
+    const content = javascriptGenerator.statementToCode(block, 'CONTENT')
+    return `${II}<thead${attrs}>\n${content}${II}</thead>\n`
+  }
+ 
+  javascriptGenerator.forBlock['html_tbody'] = (block) => {
+    const attrs   = javascriptGenerator.valueToCode(block, 'attributes', 0) || ''
+    const content = javascriptGenerator.statementToCode(block, 'CONTENT')
+    return `${II}<tbody${attrs}>\n${content}${II}</tbody>\n`
+  }
+ 
+  javascriptGenerator.forBlock['html_tfoot'] = (block) => {
+    const attrs   = javascriptGenerator.valueToCode(block, 'attributes', 0) || ''
+    const content = javascriptGenerator.statementToCode(block, 'CONTENT')
+    return `${II}<tfoot${attrs}>\n${content}${II}</tfoot>\n`
+  }
+ 
+  // ── FORM ADDITIONS ───────────────────────────────────────────────────────
+ 
+  javascriptGenerator.forBlock['html_fieldset'] = (block) => {
+    const attrs   = javascriptGenerator.valueToCode(block, 'attributes', 0) || ''
+    const content = javascriptGenerator.statementToCode(block, 'CONTENT')
+    return `${I}<fieldset${attrs}>\n${content}${I}</fieldset>\n`
+  }
+ 
+  javascriptGenerator.forBlock['html_legend'] = (block) => {
+    const attrs = javascriptGenerator.valueToCode(block, 'attributes', 0) || ''
+    return `${II}<legend${attrs}>${block.getFieldValue('TEXT')}</legend>\n`
+  }
+ 
+  javascriptGenerator.forBlock['html_datalist'] = (block) => {
+    const id      = block.getFieldValue('ID')
+    const content = javascriptGenerator.statementToCode(block, 'CONTENT')
+    return `${I}<datalist id="${id}">\n${content}${I}</datalist>\n`
+  }
+ 
+  javascriptGenerator.forBlock['html_optgroup'] = (block) => {
+    const label   = block.getFieldValue('LABEL')
+    const content = javascriptGenerator.statementToCode(block, 'CONTENT')
+    return `${II}<optgroup label="${label}">\n${content}${II}</optgroup>\n`
+  }
+ 
+  javascriptGenerator.forBlock['html_progress'] = (block) => {
+    const attrs = javascriptGenerator.valueToCode(block, 'attributes', 0) || ''
+    const value = block.getFieldValue('VALUE')
+    const max   = block.getFieldValue('MAX')
+    return `${I}<progress value="${value}" max="${max}"${attrs}></progress>\n`
+  }
+ 
+  javascriptGenerator.forBlock['html_meter'] = (block) => {
+    const value = block.getFieldValue('VALUE')
+    const min   = block.getFieldValue('MIN')
+    const max   = block.getFieldValue('MAX')
+    const low   = block.getFieldValue('LOW')
+    const high  = block.getFieldValue('HIGH')
+    return `${I}<meter value="${value}" min="${min}" max="${max}" low="${low}" high="${high}"></meter>\n`
+  }
+ 
+  // ── INTERACTIVE ──────────────────────────────────────────────────────────
+ 
+  javascriptGenerator.forBlock['html_details'] = (block) => {
+    const attrs   = javascriptGenerator.valueToCode(block, 'attributes', 0) || ''
+    const content = javascriptGenerator.statementToCode(block, 'CONTENT')
+    return `${I}<details${attrs}>\n${content}${I}</details>\n`
+  }
+ 
+  javascriptGenerator.forBlock['html_summary'] = (block) => {
+    const attrs = javascriptGenerator.valueToCode(block, 'attributes', 0) || ''
+    return `${II}<summary${attrs}>${block.getFieldValue('TEXT')}</summary>\n`
+  }
+ 
+  javascriptGenerator.forBlock['html_dialog'] = (block) => {
+    const id      = block.getFieldValue('ID')
+    const open    = block.getFieldValue('OPEN') === 'TRUE' ? ' open' : ''
+    const content = javascriptGenerator.statementToCode(block, 'CONTENT')
+    return `${I}<dialog id="${id}"${open}>\n${content}${I}</dialog>\n`
+  }
+ 
+  // ── EMBEDDED CONTENT ─────────────────────────────────────────────────────
+ 
+  javascriptGenerator.forBlock['html_iframe'] = (block) => {
+    const src    = block.getFieldValue('SRC')
+    const width  = block.getFieldValue('WIDTH')
+    const height = block.getFieldValue('HEIGHT')
+    const title  = block.getFieldValue('TITLE')
+    return `${I}<iframe src="${src}" width="${width}" height="${height}" title="${title}"></iframe>\n`
+  }
+ 
+  javascriptGenerator.forBlock['html_embed'] = (block) => {
+    const src    = block.getFieldValue('SRC')
+    const type   = block.getFieldValue('TYPE')
+    const width  = block.getFieldValue('WIDTH')
+    const height = block.getFieldValue('HEIGHT')
+    return `${I}<embed src="${src}" type="${type}" width="${width}" height="${height}">\n`
+  }
+ 
+  javascriptGenerator.forBlock['html_object'] = (block) => {
+    const data    = block.getFieldValue('DATA')
+    const type    = block.getFieldValue('TYPE')
+    const width   = block.getFieldValue('WIDTH')
+    const height  = block.getFieldValue('HEIGHT')
+    const content = javascriptGenerator.statementToCode(block, 'CONTENT')
+    return `${I}<object data="${data}" type="${type}" width="${width}" height="${height}">\n${content}${I}</object>\n`
+  }
+ 
+  javascriptGenerator.forBlock['html_picture'] = (block) => {
+    const content = javascriptGenerator.statementToCode(block, 'CONTENT')
+    return `${I}<picture>\n${content}${I}</picture>\n`
+  }
+ 
+  javascriptGenerator.forBlock['html_source'] = (block) => {
+    const attrType = block.getFieldValue('ATTR_TYPE')
+    const src      = block.getFieldValue('SRC')
+    const mime     = block.getFieldValue('MIME')
+    const media    = block.getFieldValue('MEDIA')
+    return `${II}<source ${attrType}="${src}" type="${mime}" media="${media}">\n`
+  }
+ 
+  javascriptGenerator.forBlock['html_track'] = (block) => {
+    const src     = block.getFieldValue('SRC')
+    const kind    = block.getFieldValue('KIND')
+    const srclang = block.getFieldValue('SRCLANG')
+    const label   = block.getFieldValue('LABEL')
+    return `${II}<track src="${src}" kind="${kind}" srclang="${srclang}" label="${label}">\n`
+  }
+ 
+  // ── GRAPHICS ─────────────────────────────────────────────────────────────
+ 
+  javascriptGenerator.forBlock['html_svg'] = (block) => {
+    const width   = block.getFieldValue('WIDTH')
+    const height  = block.getFieldValue('HEIGHT')
+    const viewBox = block.getFieldValue('VIEWBOX')
+    const content = javascriptGenerator.statementToCode(block, 'CONTENT')
+    return `${I}<svg width="${width}" height="${height}" viewBox="${viewBox}" xmlns="http://www.w3.org/2000/svg">\n${content}${I}</svg>\n`
+  }
+ 
+  javascriptGenerator.forBlock['html_canvas'] = (block) => {
+    const id     = block.getFieldValue('ID')
+    const width  = block.getFieldValue('WIDTH')
+    const height = block.getFieldValue('HEIGHT')
+    return `${I}<canvas id="${id}" width="${width}" height="${height}"></canvas>\n`
+  }
   // =============================================================================
   // ATTRIBUTE BLOCKS (value blocks – return tuple)
   // =============================================================================

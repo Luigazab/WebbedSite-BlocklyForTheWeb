@@ -726,1224 +726,698 @@ export const defineBlocks = () => {
       this.setTooltip("CSS effects");
     }
   };
-  // =============================================================================
-  // EXTERNAL: CSS STYLES
-  // =============================================================================
-  //EXTERNAL TEXT STYLINGS
-  Blockly.Blocks['external_text_color'] = {
-    init: function() {
-      this.appendEndRowInput('external_style')
-        .appendField('color:')
-        .appendField(new Blockly.FieldTextInput('#00ff66'), 'COLOR')
-        .appendField(';');
-      this.setPreviousStatement(true, 'external_style');
-      this.setNextStatement(true, 'external_style');
-      this.setTooltip('Color for texts');
-      this.setHelpUrl('');
-      this.setColour('#4285F4');
-    }
-  };
-  Blockly.Blocks['external_font_family'] = {
-    init: function() {
-      this.appendEndRowInput('external_style')
-        .appendField('font-family:')
-        .appendField(new Blockly.FieldTextInput('serif'), 'FONT')
-        .appendField(';');
-      this.setPreviousStatement(true, 'external_style');
-      this.setNextStatement(true, 'external_style');
-      this.setTooltip('Set a font style for texts');
-      this.setHelpUrl('');
-      this.setColour('#4285F4');
-    }
-  };   
-  Blockly.Blocks['external_font_size'] = {
-    init: function() {
-      this.appendEndRowInput('external_style')
-        .appendField('font-size:')
-        .appendField(new Blockly.FieldTextInput('0'), 'SIZE')
-        .appendField(new Blockly.FieldDropdown([
-          ['px', 'px'],
-          ['em', 'em'],
-          ['rem', 'rem'],
-          ['%', '%']
-        ]), 'UNIT')
-        .appendField(';');
-      this.setPreviousStatement(true, 'external_style');
-      this.setNextStatement(true, 'external_style');
-      this.setTooltip('');
-      this.setHelpUrl('');
-      this.setColour('#4285F4');
-    }
-  };   
-  Blockly.Blocks['external_font_size_descriptive'] = {
-    init: function() {
-      this.appendEndRowInput('external_style')
-        .appendField('font-size:')
-        .appendField(new Blockly.FieldDropdown([
-          ['initial', 'initial '],
-          ['inherit', 'inherit'],
-          ['xx-small', 'xx-small'],
-          ['x-small', 'x-small'],
-          ['small', 'small'],
-          ['large', 'large'],
-          ['x-large', 'x-large'],
-          ['xx-large', 'xx-large'],
-          ['smaller', 'smaller'],
-          ['larger', 'larger'],
-        ]), 'SIZE')
-        .appendField(';');
-      this.setPreviousStatement(true, 'external_style');
-      this.setNextStatement(true, 'external_style');
-      this.setTooltip('');
-      this.setHelpUrl('');
-      this.setColour('#4285F4');
-    }
-  };   
-  Blockly.Blocks['external_text_align'] = {
-    init: function() {
-      this.appendEndRowInput('external_style')
-        .appendField('text-align:')
-        .appendField(new Blockly.FieldDropdown([
-          ['left', 'left '],
-          ['right', 'right'],
-          ['center', 'center'],
-          ['justify', 'justify'],
-        ]), 'ALIGN')
-        .appendField(';');
-      this.setPreviousStatement(true, 'external_style');
-      this.setNextStatement(true, 'external_style');
-      this.setTooltip('');
-      this.setHelpUrl('');
-      this.setColour('#4285F4');
-    }
-  };
-  Blockly.Blocks['external_text_transform'] = {
-    init: function() {
-      this.appendEndRowInput('external_style')
-        .appendField('text-transform:')
-        .appendField(new Blockly.FieldDropdown([
-          ['none', 'none '],
-          ['capitalize', 'capitalize'],
-          ['uppercase', 'uppercase'],
-          ['lowercase', 'lowercase'],
-          ['initial', 'initial'],
-          ['inherit', 'inherit'],
-        ]), 'TRANSFORM')
-        .appendField(';');
-      this.setPreviousStatement(true, 'external_style');
-      this.setNextStatement(true, 'external_style');
-      this.setTooltip('');
-      this.setHelpUrl('');
-      this.setColour('#4285F4');
-    }
-  };   
-  Blockly.Blocks['external_text_decoration'] = {
-    init: function() {
-      this.appendEndRowInput('external_style')
-        .appendField('text-decoration:')
-        .appendField(new Blockly.FieldDropdown([
-          ['underline', 'underline'],
-          ['overline', 'overline'],
-          ['line-through', 'line-through'],
-          ['initial', 'initial'],
-          ['inherit', 'inherit'],
-          ['none', 'none '],
-        ]), 'DECORATION')
-        .appendField(new Blockly.FieldDropdown([
-          ['solid', 'solid'],
-          ['double', 'double'],
-          ['dotted', 'dotted'],
-          ['dashed', 'dashed'],
-          ['wavy', 'wavy'],
-          ['initial', 'initial'],
-          ['inherit', 'inherit'],
-        ]), 'DECORATION_STYLE')
-        .appendField(';');
-      this.setPreviousStatement(true, 'external_style');
-      this.setNextStatement(true, 'external_style');
-      this.setTooltip('');
-      this.setHelpUrl('');
-      this.setColour('#4285F4');
-    }
-  };
-  Blockly.Blocks['external_text_shadow'] = {
-    init: function() {
-      this.appendEndRowInput('external_style')
-        .appendField('text-shadow:')
-        .appendField(new Blockly.FieldTextInput('h-shadow'), 'H-SHADOW')
-        .appendField(new Blockly.FieldTextInput('v-shadow'), 'V-SHADOW')
-        .appendField(new Blockly.FieldTextInput('radius'), 'RADIUS')
-        .appendField(new Blockly.FieldTextInput('#00ff66'), 'COLOR')
-        .appendField(';');
-      this.setPreviousStatement(true, 'external_style');
-      this.setNextStatement(true, 'external_style');
-      this.setTooltip('Color for texts');
-      this.setHelpUrl('');
-      this.setColour('#4285F4');
-    }
-  };
-
-  //EXTERNAL DISPLAY STYLING
-  Blockly.Blocks['external_display'] = {
-    init: function() {
-      this.appendEndRowInput('external_style')
-        .appendField('display:')
-        .appendField(new Blockly.FieldDropdown([
-          ['block', 'block'],
-          ['none', 'none'],
-          ['flex', 'flex'],
-          ['inline', 'inline'],
-          ['inline-block', 'inline-block'],
-          ['inline-flex', 'inline-flex'],
-          ['inline-table', 'inline-table'],
-          ['table', 'table'],
-          ['inherit', 'inherit'],
-          ['initial', 'initial'],
-        ]), 'DISPLAY')
-        .appendField(';');
-      this.setPreviousStatement(true, 'external_style');
-      this.setNextStatement(true, 'external_style');
-      this.setTooltip('');
-      this.setHelpUrl('');
-      this.setColour('#4285F4');
-    }
-  };
-  Blockly.Blocks['external_overflow'] = {
-    init: function() {
-      this.appendEndRowInput('external_style')
-        .appendField('overflow-')
-        .appendField(new Blockly.FieldDropdown([
-          ['x', 'x'],
-          ['y', 'y'],
-        ]), 'AXIS')
-        .appendField(':')
-        .appendField(new Blockly.FieldDropdown([
-          ['scroll', 'scroll'],
-          ['auto', 'auto'],
-          ['hidden', 'hidden'],
-          ['visible', 'visible'],
-          ['initial', 'initial'],
-          ['inherit', 'inherit'],
-        ]), 'OVERFLOW')
-        .appendField(';');
-      this.setPreviousStatement(true, 'external_style');
-      this.setNextStatement(true, 'external_style');
-      this.setTooltip('');
-      this.setHelpUrl('');
-      this.setColour('#4285F4');
-    }
-  };
-  Blockly.Blocks['external_float'] = {
-    init: function() {
-      this.appendEndRowInput('external_style')
-        .appendField('float:')
-        .appendField(new Blockly.FieldDropdown([
-          ['left', 'left'],
-          ['right', 'right'],
-        ]), 'FLOAT')
-        .appendField(';');
-      this.setPreviousStatement(true, 'external_style');
-      this.setNextStatement(true, 'external_style');
-      this.setTooltip('');
-      this.setHelpUrl('');
-      this.setColour('#4285F4');
-    }
-  };
-  Blockly.Blocks['external_height'] = {
-    init: function() {
-      this.appendEndRowInput('external_style')
-        .appendField('height:')
-        .appendField(new Blockly.FieldTextInput('0'), 'SIZE')
-        .appendField(new Blockly.FieldDropdown([
-          ['px', 'px'],
-          ['em', 'em'],
-          ['rem', 'rem'],
-          ['%', '%']
-        ]), 'UNIT')
-        .appendField(';');
-      this.setPreviousStatement(true, 'external_style');
-      this.setNextStatement(true, 'external_style');
-      this.setTooltip('');
-      this.setHelpUrl('');
-      this.setColour('#4285F4');
-    }
-  };  
-  Blockly.Blocks['external_width'] = {
-    init: function() {
-      this.appendEndRowInput('external_style')
-        .appendField('width:')
-        .appendField(new Blockly.FieldTextInput('0'), 'SIZE')
-        .appendField(new Blockly.FieldDropdown([
-          ['px', 'px'],
-          ['em', 'em'],
-          ['rem', 'rem'],
-          ['%', '%']
-        ]), 'UNIT')
-        .appendField(';');
-      this.setPreviousStatement(true, 'external_style');
-      this.setNextStatement(true, 'external_style');
-      this.setTooltip('');
-      this.setHelpUrl('');
-      this.setColour('#4285F4');
-    }
-  };
-  //EXTERNAL SPACING STYLING
-  Blockly.Blocks['external_margin'] = {
-    init: function() {
-      this.appendEndRowInput('external_style')
-        .appendField('margin:')
-        .appendField(new Blockly.FieldTextInput('0'), 'SIZE')
-        .appendField(new Blockly.FieldDropdown([
-          ['px', 'px'],
-          ['em', 'em'],
-          ['rem', 'rem'],
-          ['%', '%']
-        ]), 'UNIT')
-        .appendField(';');
-      this.setPreviousStatement(true, 'external_style');
-      this.setNextStatement(true, 'external_style');
-      this.setTooltip('');
-      this.setHelpUrl('');
-      this.setColour('#4285F4');
-    }
-  };
-  Blockly.Blocks['external_margin_specific'] = {
-    init: function() {
-      this.appendEndRowInput('external_style')
-        .appendField('margin:')
-        .appendField(new Blockly.FieldDropdown([
-          ['top', 'top'],
-          ['bottom', 'bottom'],
-          ['left', 'left'],
-          ['right', 'right'],
-        ]), 'DIRECTION')
-        .appendField(new Blockly.FieldTextInput('0'), 'SIZE')
-        .appendField(new Blockly.FieldDropdown([
-          ['px', 'px'],
-          ['em', 'em'],
-          ['rem', 'rem'],
-          ['%', '%']
-        ]), 'UNIT')
-        .appendField(';');
-      this.setPreviousStatement(true, 'external_style');
-      this.setNextStatement(true, 'external_style');
-      this.setTooltip('');
-      this.setHelpUrl('');
-      this.setColour('#4285F4');
-    }
-  };
-  Blockly.Blocks['external_padding'] = {
-    init: function() {
-      this.appendEndRowInput('external_style')
-        .appendField('padding:')
-        .appendField(new Blockly.FieldTextInput('0'), 'SIZE')
-        .appendField(new Blockly.FieldDropdown([
-          ['px', 'px'],
-          ['em', 'em'],
-          ['rem', 'rem'],
-          ['%', '%']
-        ]), 'UNIT')
-        .appendField(';');
-      this.setPreviousStatement(true, 'external_style');
-      this.setNextStatement(true, 'external_style');
-      this.setTooltip('');
-      this.setHelpUrl('');
-      this.setColour('#4285F4');
-    }
-  };
-  Blockly.Blocks['external_padding_specific'] = {
-    init: function() {
-      this.appendEndRowInput('external_style')
-        .appendField('padding:')
-        .appendField(new Blockly.FieldDropdown([
-          ['top', 'top'],
-          ['bottom', 'bottom'],
-          ['left', 'left'],
-          ['right', 'right'],
-        ]), 'DIRECTION')
-        .appendField(new Blockly.FieldTextInput('0'), 'SIZE')
-        .appendField(new Blockly.FieldDropdown([
-          ['px', 'px'],
-          ['em', 'em'],
-          ['rem', 'rem'],
-          ['%', '%']
-        ]), 'UNIT')
-        .appendField(';');
-      this.setPreviousStatement(true, 'external_style');
-      this.setNextStatement(true, 'external_style');
-      this.setTooltip('');
-      this.setHelpUrl('');
-      this.setColour('#4285F4');
-    }
-  };
-  //EXTERNAL BACKGROUND STYLING
-  Blockly.Blocks['external_background_color'] = {
-    init: function() {
-      this.appendEndRowInput('external_style')
-        .appendField('background-color:')
-        .appendField(new Blockly.FieldTextInput('#00ff66'), 'COLOR')
-        .appendField(';');
-      this.setPreviousStatement(true, 'external_style');
-      this.setNextStatement(true, 'external_style');
-      this.setTooltip('Colors the background of an element');
-      this.setHelpUrl('');
-      this.setColour('#4285F4');
-    }
-  };
-  Blockly.Blocks['external_background_image'] = {
-    init: function() {
-      this.appendEndRowInput('external_style')
-        .appendField('background-image: url( " ')
-        .appendField(new Blockly.FieldTextInput('/url'), 'URL')
-        .appendField(' " );');
-      this.setPreviousStatement(true, 'external_style');
-      this.setNextStatement(true, 'external_style');
-      this.setTooltip('Makes an image the background of an element');
-      this.setHelpUrl('');
-      this.setColour('#4285F4');
-    }
-  };
-  Blockly.Blocks['external_background_repeat'] = {
-    init: function() {
-      this.appendEndRowInput('external_style')
-        .appendField('background-repeat:')
-        .appendField(new Blockly.FieldDropdown([
-          ['repeat', 'repeat'],
-          ['no-repeat', 'no-repeat'],
-          ['repeat-x', 'repeat-x'],
-          ['repeat-y', 'repeat--y'],
-          ['round', 'round'],
-          ['space', 'space'],
-        ]), 'REPEAT')
-        .appendField(';');
-      this.setPreviousStatement(true, 'external_style');
-      this.setNextStatement(true, 'external_style');
-      this.setTooltip('');
-      this.setHelpUrl('');
-      this.setColour('#4285F4');
-    }
-  };
-  Blockly.Blocks['external_background_position'] = {
-    init: function() {
-      this.appendEndRowInput('external_style')
-        .appendField('background-position:')
-        .appendField(new Blockly.FieldDropdown([
-          ['bottom', 'bottom'],
-          ['center', 'center'],
-          ['left', 'left'],
-          ['left bottom', 'left bottom'],
-          ['left top', 'left top'],
-          ['right', 'right'],
-          ['right bottom', 'right bottom'],
-          ['right top', 'right top'],
-          ['top', 'top'],
-        ]), 'POSITION')
-        .appendField(';');
-      this.setPreviousStatement(true, 'external_style');
-      this.setNextStatement(true, 'external_style');
-      this.setTooltip('');
-      this.setHelpUrl('');
-      this.setColour('#4285F4');
-    }
-  };
-  Blockly.Blocks['external_background_size'] = {
-    init: function() {
-      this.appendEndRowInput('external_style')
-        .appendField('background-size:')
-        .appendField(new Blockly.FieldDropdown([
-          ['auto', 'auto'],
-          ['cover', 'cover'],
-          ['contain', 'contain'],
-        ]), 'SIZE')
-        .appendField(';');
-      this.setPreviousStatement(true, 'external_style');
-      this.setNextStatement(true, 'external_style');
-      this.setTooltip('');
-      this.setHelpUrl('');
-      this.setColour('#4285F4');
-    }
-  };
-  Blockly.Blocks['external_background_clip'] = {
-    init: function() {
-      this.appendEndRowInput('external_style')
-        .appendField('background-clip:')
-        .appendField(new Blockly.FieldDropdown([
-          ['border-box', 'border-box'],
-          ['padding-box', 'padding-box'],
-          ['content-box', 'content-box'],
-          ['text', 'text'],
-        ]), 'CLIP')
-        .appendField(';');
-      this.setPreviousStatement(true, 'external_style');
-      this.setNextStatement(true, 'external_style');
-      this.setTooltip('');
-      this.setHelpUrl('');
-      this.setColour('#4285F4');
-    }
-  };
-  // EXTERNAL BORDER STYLING
-  Blockly.Blocks['external_border'] = {
-    init: function() {
-      this.appendEndRowInput('external_style')
-        .appendField('border:')
-        .appendField(new Blockly.FieldTextInput('0'), 'SIZE')
-        .appendField(new Blockly.FieldDropdown([
-          ['px', 'px'],
-          ['em', 'em'],
-          ['rem', 'rem'],
-          ['%', '%']
-        ]), 'UNIT')
-        .appendField(new Blockly.FieldDropdown([
-          ['solid', 'solid'],
-          ['dotted', 'dotted'],
-          ['dashed', 'dashed'],
-          ['double', 'double'],
-          ['groove', 'groove'],
-          ['ridge', 'ridge'],
-          ['inset', 'inset'],
-          ['outset', 'outset'],
-          ['none', 'none'],
-        ]), 'BORDER_STYLE')
-        .appendField(new Blockly.FieldTextInput('#00ff66'), 'COLOR')
-        .appendField(';');
-      this.setPreviousStatement(true, 'external_style');
-      this.setNextStatement(true, 'external_style');
-      this.setTooltip('');
-      this.setHelpUrl('');
-      this.setColour('#4285F4');
-    }
-  };
-  Blockly.Blocks['external_border_specific'] = {
-    init: function() {
-      this.appendEndRowInput('external_style')
-        .appendField('border-')
-        .appendField(new Blockly.FieldDropdown([
-          ['top', 'top'],
-          ['right', 'right'],
-          ['bottom', 'bottom'],
-          ['left', 'left'],
-        ]), 'SIDE')
-        .appendField(':')
-        .appendField(new Blockly.FieldTextInput('0'), 'SIZE')
-        .appendField(new Blockly.FieldDropdown([
-          ['px', 'px'],
-          ['em', 'em'],
-          ['rem', 'rem'],
-          ['%', '%']
-        ]), 'UNIT')
-        .appendField(new Blockly.FieldDropdown([
-          ['solid', 'solid'],
-          ['dotted', 'dotted'],
-          ['dashed', 'dashed'],
-          ['double', 'double'],
-          ['groove', 'groove'],
-          ['ridge', 'ridge'],
-          ['inset', 'inset'],
-          ['outset', 'outset'],
-          ['none', 'none'],
-        ]), 'BORDER_STYLE')
-        .appendField(new Blockly.FieldTextInput('#00ff66'), 'COLOR')
-        .appendField(';');
-      this.setPreviousStatement(true, 'external_style');
-      this.setNextStatement(true, 'external_style');
-      this.setTooltip('');
-      this.setHelpUrl('');
-      this.setColour('#4285F4');
-    }
-  };
-  Blockly.Blocks['external_border_radius'] = {
-    init: function() {
-      this.appendEndRowInput('external_style')
-        .appendField('border-radius:')
-        .appendField(new Blockly.FieldTextInput('0'), 'SIZE')
-        .appendField(new Blockly.FieldDropdown([
-          ['px', 'px'],
-          ['em', 'em'],
-          ['rem', 'rem'],
-          ['%', '%']
-        ]), 'UNIT')
-        .appendField(';');
-      this.setPreviousStatement(true, 'external_style');
-      this.setNextStatement(true, 'external_style');
-      this.setTooltip('');
-      this.setHelpUrl('');
-      this.setColour('#4285F4');
-    }
-  };
-  Blockly.Blocks['external_border_radius_specific'] = {
-    init: function() {
-      this.appendEndRowInput('external_style')
-        .appendField('border-')
-        .appendField(new Blockly.FieldDropdown([
-          ['top-left', 'top-left'],
-          ['top-right', 'top-right'],
-          ['bottom-left', 'bottom-left'],
-          ['bottom-right', 'bottom-right'],
-        ]), 'SIDE')
-        .appendField(':')
-        .appendField(new Blockly.FieldTextInput('0'), 'SIZE')
-        .appendField(new Blockly.FieldDropdown([
-          ['px', 'px'],
-          ['em', 'em'],
-          ['rem', 'rem'],
-          ['%', '%']
-        ]), 'UNIT')
-        .appendField(';');
-      this.setPreviousStatement(true, 'external_style');
-      this.setNextStatement(true, 'external_style');
-      this.setTooltip('');
-      this.setHelpUrl('');
-      this.setColour('#4285F4');
-    }
-  };
-  //EXTERNAL MORE STYLING
-  Blockly.Blocks['external_cursor'] = {
-    init: function() {
-      this.appendEndRowInput('external_style')
-        .appendField('cursor:')
-        .appendField(new Blockly.FieldDropdown([
-          ['auto', 'auto'],
-          ['default', 'default'],
-          ['pointer', 'pointer'],
-          ['wait', 'wait'],
-          ['text', 'text'],
-          ['move', 'move'],
-          ['help', 'help'],
-          ['not-allowed', 'not-allowed'],
-        ]), 'TYPE')
-        .appendField(';');
-      this.setPreviousStatement(true, 'external_style');
-      this.setNextStatement(true, 'external_style');
-      this.setTooltip('Sets the cursor style.');
-      this.setHelpUrl('');
-      this.setColour('#4285F4');
-    }
-  };
-  Blockly.Blocks['external_box_shadow'] = {
-    init: function() {
-      this.appendEndRowInput('external_style')
-        .appendField('box-shadow:')
-        .appendField(new Blockly.FieldTextInput('h-shadow'), 'H-SHADOW')
-        .appendField(new Blockly.FieldTextInput('v-shadow'), 'V-SHADOW')
-        .appendField(new Blockly.FieldTextInput('radius'), 'RADIUS')
-        .appendField(new Blockly.FieldTextInput('#00ff66'), 'COLOR')
-        .appendField(';');
-      this.setPreviousStatement(true, 'external_style');
-      this.setNextStatement(true, 'external_style');
-      this.setTooltip('Set a shadow to the element.');
-      this.setHelpUrl('');
-      this.setColour('#4285F4');
-    }
-  };
-  // =============================================================================
-  // Inline: STYLING
-  // =============================================================================
+  // ════════════════════════════════════════════════════════════════════════
+  // META TAGS
+  // ════════════════════════════════════════════════════════════════════════
+ 
+  Blockly.Blocks['html_meta_charset'] = {
+    init: function () {
+      this.appendDummyInput()
+          .appendField('<meta charset="')
+          .appendField(new Blockly.FieldDropdown([
+            ['UTF-8', 'UTF-8'],
+            ['ISO-8859-1', 'ISO-8859-1'],
+            ['ASCII', 'ASCII'],
+          ]), 'CHARSET')
+          .appendField('">')
+      this.setPreviousStatement(true, 'head_element')
+      this.setNextStatement(true, 'head_element')
+      this.setColour('#FF8500')
+      this.setTooltip('Sets the character encoding for the HTML document')
+    },
+  }
+ 
+  Blockly.Blocks['html_meta_viewport'] = {
+    init: function () {
+      this.appendDummyInput()
+          .appendField('<meta name="viewport" content="')
+          .appendField(new Blockly.FieldDropdown([
+            ['width=device-width, initial-scale=1.0', 'width=device-width, initial-scale=1.0'],
+            ['width=device-width, initial-scale=1.0, maximum-scale=1.0', 'width=device-width, initial-scale=1.0, maximum-scale=1.0'],
+            ['width=device-width, initial-scale=1.0, user-scalable=no', 'width=device-width, initial-scale=1.0, user-scalable=no'],
+          ]), 'CONTENT')
+          .appendField('">')
+      this.setPreviousStatement(true, 'head_element')
+      this.setNextStatement(true, 'head_element')
+      this.setColour('#FF8500')
+      this.setTooltip('Viewport meta tag — essential for responsive design')
+    },
+  }
+ 
+  Blockly.Blocks['html_meta_named'] = {
+    init: function () {
+      this.appendDummyInput()
+          .appendField('<meta name="')
+          .appendField(new Blockly.FieldDropdown([
+            ['description', 'description'],
+            ['keywords', 'keywords'],
+            ['author', 'author'],
+            ['robots', 'robots'],
+            ['theme-color', 'theme-color'],
+            ['application-name', 'application-name'],
+            ['generator', 'generator'],
+          ]), 'NAME')
+          .appendField('" content="')
+          .appendField(new Blockly.FieldTextInput('value here'), 'CONTENT')
+          .appendField('">')
+      this.setPreviousStatement(true, 'head_element')
+      this.setNextStatement(true, 'head_element')
+      this.setColour('#FF8500')
+      this.setTooltip('Named meta tag (description, keywords, author, etc.)')
+    },
+  }
+ 
+  Blockly.Blocks['html_meta_http_equiv'] = {
+    init: function () {
+      this.appendDummyInput()
+          .appendField('<meta http-equiv="')
+          .appendField(new Blockly.FieldDropdown([
+            ['X-UA-Compatible', 'X-UA-Compatible'],
+            ['content-type', 'content-type'],
+            ['refresh', 'refresh'],
+            ['content-security-policy', 'content-security-policy'],
+            ['default-style', 'default-style'],
+          ]), 'HTTP_EQUIV')
+          .appendField('" content="')
+          .appendField(new Blockly.FieldTextInput('IE=edge'), 'CONTENT')
+          .appendField('">')
+      this.setPreviousStatement(true, 'head_element')
+      this.setNextStatement(true, 'head_element')
+      this.setColour('#FF8500')
+      this.setTooltip('HTTP-equiv meta tag (simulates HTTP response headers)')
+    },
+  }
+ 
+  // ════════════════════════════════════════════════════════════════════════
+  // SCRIPT (INLINE)
+  // ════════════════════════════════════════════════════════════════════════
+ 
+  Blockly.Blocks['html_script_inline'] = {
+    init: function () {
+      this.appendDummyInput()
+          .appendField('<script>')
+      this.appendStatementInput('CONTENT')
+          .setCheck(null)
+      this.appendDummyInput()
+          .appendField('</script>')
+      this.setPreviousStatement(true, ['head_element', 'body_element'])
+      this.setNextStatement(true, ['head_element', 'body_element'])
+      this.setColour('#F7DF1E')
+      this.setTooltip('Inline <script> tag — place JS blocks inside')
+    },
+  }
+ 
+  // ════════════════════════════════════════════════════════════════════════
+  // INLINE TEXT SEMANTICS
+  // ════════════════════════════════════════════════════════════════════════
+ 
+  Blockly.Blocks['html_b'] = {
+    init: function () {
+      this.appendValueInput('attributes').appendField('<b').setCheck('attributes')
+      this.appendDummyInput()
+          .appendField('>')
+          .appendField(new Blockly.FieldTextInput('bold text'), 'TEXT')
+          .appendField('</b>')
+      this.setPreviousStatement(true, 'body_element')
+      this.setNextStatement(true, 'body_element')
+      this.setColour('#4A90E2')
+      this.setTooltip('Bold text (stylistic — no semantic meaning)')
+    },
+  }
+ 
+  Blockly.Blocks['html_i'] = {
+    init: function () {
+      this.appendValueInput('attributes').appendField('<i').setCheck('attributes')
+      this.appendDummyInput()
+          .appendField('>')
+          .appendField(new Blockly.FieldTextInput('italic text'), 'TEXT')
+          .appendField('</i>')
+      this.setPreviousStatement(true, 'body_element')
+      this.setNextStatement(true, 'body_element')
+      this.setColour('#4A90E2')
+      this.setTooltip('Italic text (stylistic — use <em> for semantic emphasis)')
+    },
+  }
+ 
+  Blockly.Blocks['html_mark'] = {
+    init: function () {
+      this.appendValueInput('attributes').appendField('<mark').setCheck('attributes')
+      this.appendDummyInput()
+          .appendField('>')
+          .appendField(new Blockly.FieldTextInput('highlighted text'), 'TEXT')
+          .appendField('</mark>')
+      this.setPreviousStatement(true, 'body_element')
+      this.setNextStatement(true, 'body_element')
+      this.setColour('#4A90E2')
+      this.setTooltip('Highlighted / marked text')
+    },
+  }
+ 
+  Blockly.Blocks['html_small'] = {
+    init: function () {
+      this.appendValueInput('attributes').appendField('<small').setCheck('attributes')
+      this.appendDummyInput()
+          .appendField('>')
+          .appendField(new Blockly.FieldTextInput('fine print'), 'TEXT')
+          .appendField('</small>')
+      this.setPreviousStatement(true, 'body_element')
+      this.setNextStatement(true, 'body_element')
+      this.setColour('#4A90E2')
+      this.setTooltip('Smaller / side-note text')
+    },
+  }
+ 
+  Blockly.Blocks['html_del'] = {
+    init: function () {
+      this.appendValueInput('attributes').appendField('<del').setCheck('attributes')
+      this.appendDummyInput()
+          .appendField('>')
+          .appendField(new Blockly.FieldTextInput('deleted text'), 'TEXT')
+          .appendField('</del>')
+      this.setPreviousStatement(true, 'body_element')
+      this.setNextStatement(true, 'body_element')
+      this.setColour('#4A90E2')
+      this.setTooltip('Strikethrough — marks deleted content')
+    },
+  }
+ 
+  Blockly.Blocks['html_ins'] = {
+    init: function () {
+      this.appendValueInput('attributes').appendField('<ins').setCheck('attributes')
+      this.appendDummyInput()
+          .appendField('>')
+          .appendField(new Blockly.FieldTextInput('inserted text'), 'TEXT')
+          .appendField('</ins>')
+      this.setPreviousStatement(true, 'body_element')
+      this.setNextStatement(true, 'body_element')
+      this.setColour('#4A90E2')
+      this.setTooltip('Underline — marks inserted content')
+    },
+  }
+ 
+  Blockly.Blocks['html_sub'] = {
+    init: function () {
+      this.appendValueInput('attributes').appendField('<sub').setCheck('attributes')
+      this.appendDummyInput()
+          .appendField('>')
+          .appendField(new Blockly.FieldTextInput('2'), 'TEXT')
+          .appendField('</sub>')
+      this.setPreviousStatement(true, 'body_element')
+      this.setNextStatement(true, 'body_element')
+      this.setColour('#4A90E2')
+      this.setTooltip('Subscript text (H₂O)')
+    },
+  }
+ 
+  Blockly.Blocks['html_sup'] = {
+    init: function () {
+      this.appendValueInput('attributes').appendField('<sup').setCheck('attributes')
+      this.appendDummyInput()
+          .appendField('>')
+          .appendField(new Blockly.FieldTextInput('2'), 'TEXT')
+          .appendField('</sup>')
+      this.setPreviousStatement(true, 'body_element')
+      this.setNextStatement(true, 'body_element')
+      this.setColour('#4A90E2')
+      this.setTooltip('Superscript text (x²)')
+    },
+  }
+ 
+  // ════════════════════════════════════════════════════════════════════════
+  // SECTIONING
+  // ════════════════════════════════════════════════════════════════════════
+ 
+  Blockly.Blocks['html_aside'] = {
+    init: function () {
+      this.appendValueInput('attributes').appendField('<aside').setCheck('attributes')
+      this.appendDummyInput().appendField('>')
+      this.appendStatementInput('CONTENT').setCheck('body_element')
+      this.appendDummyInput().appendField('</aside>')
+      this.setPreviousStatement(true, 'body_element')
+      this.setNextStatement(true, 'body_element')
+      this.setColour('#7B68EE')
+      this.setTooltip('Sidebar / tangentially related content')
+    },
+  }
+ 
+  Blockly.Blocks['html_address'] = {
+    init: function () {
+      this.appendValueInput('attributes').appendField('<address').setCheck('attributes')
+      this.appendDummyInput().appendField('>')
+      this.appendStatementInput('CONTENT').setCheck('body_element')
+      this.appendDummyInput().appendField('</address>')
+      this.setPreviousStatement(true, 'body_element')
+      this.setNextStatement(true, 'body_element')
+      this.setColour('#7B68EE')
+      this.setTooltip('Contact information block')
+    },
+  }
+ 
+  // ════════════════════════════════════════════════════════════════════════
+  // DESCRIPTION LISTS
+  // ════════════════════════════════════════════════════════════════════════
+ 
+  Blockly.Blocks['html_dl'] = {
+    init: function () {
+      this.appendValueInput('attributes').appendField('<dl').setCheck('attributes')
+      this.appendDummyInput().appendField('>')
+      this.appendStatementInput('CONTENT').setCheck('body_element')
+      this.appendDummyInput().appendField('</dl>')
+      this.setPreviousStatement(true, 'body_element')
+      this.setNextStatement(true, 'body_element')
+      this.setColour('#FF6B6B')
+      this.setTooltip('Description list container')
+    },
+  }
+ 
+  Blockly.Blocks['html_dt'] = {
+    init: function () {
+      this.appendValueInput('attributes').appendField('<dt').setCheck('attributes')
+      this.appendDummyInput()
+          .appendField('>')
+          .appendField(new Blockly.FieldTextInput('Term'), 'TEXT')
+          .appendField('</dt>')
+      this.setPreviousStatement(true, 'body_element')
+      this.setNextStatement(true, 'body_element')
+      this.setColour('#FF6B6B')
+      this.setTooltip('Description list term (the name)')
+    },
+  }
+ 
+  Blockly.Blocks['html_dd'] = {
+    init: function () {
+      this.appendValueInput('attributes').appendField('<dd').setCheck('attributes')
+      this.appendDummyInput()
+          .appendField('>')
+          .appendField(new Blockly.FieldTextInput('Definition goes here'), 'TEXT')
+          .appendField('</dd>')
+      this.setPreviousStatement(true, 'body_element')
+      this.setNextStatement(true, 'body_element')
+      this.setColour('#FF6B6B')
+      this.setTooltip('Description list definition (the value)')
+    },
+  }
+ 
+  // ════════════════════════════════════════════════════════════════════════
+  // TABLE ADDITIONS
+  // ════════════════════════════════════════════════════════════════════════
+ 
+  Blockly.Blocks['html_caption'] = {
+    init: function () {
+      this.appendValueInput('attributes').appendField('<caption').setCheck('attributes')
+      this.appendDummyInput()
+          .appendField('>')
+          .appendField(new Blockly.FieldTextInput('Table Caption'), 'TEXT')
+          .appendField('</caption>')
+      this.setPreviousStatement(true, 'body_element')
+      this.setNextStatement(true, 'body_element')
+      this.setColour('#9B59B6')
+      this.setTooltip('Table caption — must be the first child of <table>')
+    },
+  }
+ 
+  Blockly.Blocks['html_colgroup'] = {
+    init: function () {
+      this.appendValueInput('attributes').appendField('<colgroup').setCheck('attributes')
+      this.appendDummyInput().appendField('>')
+      this.appendStatementInput('CONTENT').setCheck('body_element')
+      this.appendDummyInput().appendField('</colgroup>')
+      this.setPreviousStatement(true, 'body_element')
+      this.setNextStatement(true, 'body_element')
+      this.setColour('#9B59B6')
+      this.setTooltip('Groups table columns for shared styling')
+    },
+  }
+ 
+  Blockly.Blocks['html_col'] = {
+    init: function () {
+      this.appendValueInput('attributes')
+          .appendField('<col span="')
+          .appendField(new Blockly.FieldNumber(1, 1), 'SPAN')
+          .appendField('"')
+          .setCheck('attributes')
+      this.appendDummyInput().appendField('>')
+      this.setPreviousStatement(true, 'body_element')
+      this.setNextStatement(true, 'body_element')
+      this.setColour('#9B59B6')
+      this.setTooltip('Defines properties for one or more table columns')
+    },
+  }
+ 
+  Blockly.Blocks['html_thead'] = {
+    init: function () {
+      this.appendValueInput('attributes').appendField('<thead').setCheck('attributes')
+      this.appendDummyInput().appendField('>')
+      this.appendStatementInput('CONTENT').setCheck('body_element')
+      this.appendDummyInput().appendField('</thead>')
+      this.setPreviousStatement(true, 'body_element')
+      this.setNextStatement(true, 'body_element')
+      this.setColour('#9B59B6')
+      this.setTooltip('Table header group (rows that form the column headings)')
+    },
+  }
+ 
+  Blockly.Blocks['html_tbody'] = {
+    init: function () {
+      this.appendValueInput('attributes').appendField('<tbody').setCheck('attributes')
+      this.appendDummyInput().appendField('>')
+      this.appendStatementInput('CONTENT').setCheck('body_element')
+      this.appendDummyInput().appendField('</tbody>')
+      this.setPreviousStatement(true, 'body_element')
+      this.setNextStatement(true, 'body_element')
+      this.setColour('#9B59B6')
+      this.setTooltip('Table body group (the main data rows)')
+    },
+  }
+ 
+  Blockly.Blocks['html_tfoot'] = {
+    init: function () {
+      this.appendValueInput('attributes').appendField('<tfoot').setCheck('attributes')
+      this.appendDummyInput().appendField('>')
+      this.appendStatementInput('CONTENT').setCheck('body_element')
+      this.appendDummyInput().appendField('</tfoot>')
+      this.setPreviousStatement(true, 'body_element')
+      this.setNextStatement(true, 'body_element')
+      this.setColour('#9B59B6')
+      this.setTooltip('Table footer group (summary rows)')
+    },
+  }
+ 
+  // ════════════════════════════════════════════════════════════════════════
+  // FORM ADDITIONS
+  // ════════════════════════════════════════════════════════════════════════
+ 
+  Blockly.Blocks['html_fieldset'] = {
+    init: function () {
+      this.appendValueInput('attributes').appendField('<fieldset').setCheck('attributes')
+      this.appendDummyInput().appendField('>')
+      this.appendStatementInput('CONTENT').setCheck('body_element')
+      this.appendDummyInput().appendField('</fieldset>')
+      this.setPreviousStatement(true, 'body_element')
+      this.setNextStatement(true, 'body_element')
+      this.setColour('#20B2AA')
+      this.setTooltip('Groups related form controls with a box')
+    },
+  }
+ 
+  Blockly.Blocks['html_legend'] = {
+    init: function () {
+      this.appendValueInput('attributes').appendField('<legend').setCheck('attributes')
+      this.appendDummyInput()
+          .appendField('>')
+          .appendField(new Blockly.FieldTextInput('Group Label'), 'TEXT')
+          .appendField('</legend>')
+      this.setPreviousStatement(true, 'body_element')
+      this.setNextStatement(true, 'body_element')
+      this.setColour('#20B2AA')
+      this.setTooltip('Caption / title for a <fieldset>')
+    },
+  }
+ 
+  Blockly.Blocks['html_datalist'] = {
+    init: function () {
+      this.appendDummyInput()
+          .appendField('<datalist id="')
+          .appendField(new Blockly.FieldTextInput('my-suggestions'), 'ID')
+          .appendField('">')
+      this.appendStatementInput('CONTENT').setCheck('body_element')
+      this.appendDummyInput().appendField('</datalist>')
+      this.setPreviousStatement(true, 'body_element')
+      this.setNextStatement(true, 'body_element')
+      this.setColour('#20B2AA')
+      this.setTooltip('Pre-defined autocomplete options for an <input list="..."> element')
+    },
+  }
+ 
+  Blockly.Blocks['html_optgroup'] = {
+    init: function () {
+      this.appendDummyInput()
+          .appendField('<optgroup label="')
+          .appendField(new Blockly.FieldTextInput('Group Name'), 'LABEL')
+          .appendField('">')
+      this.appendStatementInput('CONTENT').setCheck('body_element')
+      this.appendDummyInput().appendField('</optgroup>')
+      this.setPreviousStatement(true, 'body_element')
+      this.setNextStatement(true, 'body_element')
+      this.setColour('#20B2AA')
+      this.setTooltip('Groups <option> elements inside a <select>')
+    },
+  }
+ 
+  Blockly.Blocks['html_progress'] = {
+    init: function () {
+      this.appendValueInput('attributes')
+          .appendField('<progress value="')
+          .appendField(new Blockly.FieldNumber(50, 0), 'VALUE')
+          .appendField('" max="')
+          .appendField(new Blockly.FieldNumber(100, 0), 'MAX')
+          .appendField('"')
+          .setCheck('attributes')
+      this.appendDummyInput().appendField('></progress>')
+      this.setPreviousStatement(true, 'body_element')
+      this.setNextStatement(true, 'body_element')
+      this.setColour('#20B2AA')
+      this.setTooltip('Progress bar indicator (e.g. file upload, task completion)')
+    },
+  }
+ 
+  Blockly.Blocks['html_meter'] = {
+    init: function () {
+      this.appendDummyInput()
+          .appendField('<meter value="')
+          .appendField(new Blockly.FieldNumber(6, 0), 'VALUE')
+          .appendField('" min="')
+          .appendField(new Blockly.FieldNumber(0), 'MIN')
+          .appendField('" max="')
+          .appendField(new Blockly.FieldNumber(10), 'MAX')
+          .appendField('" low="')
+          .appendField(new Blockly.FieldNumber(3), 'LOW')
+          .appendField('" high="')
+          .appendField(new Blockly.FieldNumber(8), 'HIGH')
+          .appendField('"></meter>')
+      this.setPreviousStatement(true, 'body_element')
+      this.setNextStatement(true, 'body_element')
+      this.setColour('#20B2AA')
+      this.setTooltip('Scalar gauge within a known range (e.g. disk usage, vote score)')
+    },
+  }
+ 
+  // ════════════════════════════════════════════════════════════════════════
+  // INTERACTIVE ELEMENTS
+  // ════════════════════════════════════════════════════════════════════════
+ 
+  Blockly.Blocks['html_details'] = {
+    init: function () {
+      this.appendValueInput('attributes').appendField('<details').setCheck('attributes')
+      this.appendDummyInput().appendField('>')
+      this.appendStatementInput('CONTENT').setCheck('body_element')
+      this.appendDummyInput().appendField('</details>')
+      this.setPreviousStatement(true, 'body_element')
+      this.setNextStatement(true, 'body_element')
+      this.setColour('#E67E22')
+      this.setTooltip('Collapsible disclosure widget — add <summary> as first child')
+    },
+  }
+ 
+  Blockly.Blocks['html_summary'] = {
+    init: function () {
+      this.appendValueInput('attributes').appendField('<summary').setCheck('attributes')
+      this.appendDummyInput()
+          .appendField('>')
+          .appendField(new Blockly.FieldTextInput('Click to expand'), 'TEXT')
+          .appendField('</summary>')
+      this.setPreviousStatement(true, 'body_element')
+      this.setNextStatement(true, 'body_element')
+      this.setColour('#E67E22')
+      this.setTooltip('Visible heading for a <details> element')
+    },
+  }
+ 
+  Blockly.Blocks['html_dialog'] = {
+    init: function () {
+      this.appendDummyInput()
+          .appendField('<dialog id="')
+          .appendField(new Blockly.FieldTextInput('my-dialog'), 'ID')
+          .appendField('"')
+          .appendField(new Blockly.FieldCheckbox(false), 'OPEN')
+          .appendField('open>')
+      this.appendStatementInput('CONTENT').setCheck('body_element')
+      this.appendDummyInput().appendField('</dialog>')
+      this.setPreviousStatement(true, 'body_element')
+      this.setNextStatement(true, 'body_element')
+      this.setColour('#E67E22')
+      this.setTooltip('Native modal / non-modal dialog box. Check "open" to show on load.')
+    },
+  }
+ 
+  // ════════════════════════════════════════════════════════════════════════
+  // EMBEDDED CONTENT
+  // ════════════════════════════════════════════════════════════════════════
+ 
+  Blockly.Blocks['html_iframe'] = {
+    init: function () {
+      this.appendDummyInput()
+          .appendField('<iframe src="')
+          .appendField(new Blockly.FieldTextInput('https://example.com'), 'SRC')
+          .appendField('" width="')
+          .appendField(new Blockly.FieldTextInput('600'), 'WIDTH')
+          .appendField('" height="')
+          .appendField(new Blockly.FieldTextInput('400'), 'HEIGHT')
+          .appendField('" title="')
+          .appendField(new Blockly.FieldTextInput('Embedded content'), 'TITLE')
+          .appendField('"></iframe>')
+      this.setPreviousStatement(true, 'body_element')
+      this.setNextStatement(true, 'body_element')
+      this.setColour('#E74C3C')
+      this.setTooltip('Inline frame — embeds another HTML page inside this one')
+    },
+  }
+ 
+  Blockly.Blocks['html_embed'] = {
+    init: function () {
+      this.appendDummyInput()
+          .appendField('<embed src="')
+          .appendField(new Blockly.FieldTextInput('file.pdf'), 'SRC')
+          .appendField('" type="')
+          .appendField(new Blockly.FieldDropdown([
+            ['application/pdf', 'application/pdf'],
+            ['video/mp4', 'video/mp4'],
+            ['audio/mpeg', 'audio/mpeg'],
+            ['image/svg+xml', 'image/svg+xml'],
+            ['application/x-shockwave-flash', 'application/x-shockwave-flash'],
+          ]), 'TYPE')
+          .appendField('" width="')
+          .appendField(new Blockly.FieldTextInput('300'), 'WIDTH')
+          .appendField('" height="')
+          .appendField(new Blockly.FieldTextInput('200'), 'HEIGHT')
+          .appendField('">')
+      this.setPreviousStatement(true, 'body_element')
+      this.setNextStatement(true, 'body_element')
+      this.setColour('#E74C3C')
+      this.setTooltip('Embeds external content (PDF, plugin, etc.) — no fallback slot')
+    },
+  }
+ 
+  Blockly.Blocks['html_object'] = {
+    init: function () {
+      this.appendDummyInput()
+          .appendField('<object data="')
+          .appendField(new Blockly.FieldTextInput('file.pdf'), 'DATA')
+          .appendField('" type="')
+          .appendField(new Blockly.FieldTextInput('application/pdf'), 'TYPE')
+          .appendField('" width="')
+          .appendField(new Blockly.FieldTextInput('300'), 'WIDTH')
+          .appendField('" height="')
+          .appendField(new Blockly.FieldTextInput('200'), 'HEIGHT')
+          .appendField('">')
+      this.appendStatementInput('CONTENT').setCheck('body_element')
+      this.appendDummyInput().appendField('</object>')
+      this.setPreviousStatement(true, 'body_element')
+      this.setNextStatement(true, 'body_element')
+      this.setColour('#E74C3C')
+      this.setTooltip('Embeds external resource with fallback content inside')
+    },
+  }
+ 
+  Blockly.Blocks['html_picture'] = {
+    init: function () {
+      this.appendDummyInput().appendField('<picture>')
+      this.appendStatementInput('CONTENT').setCheck('body_element')
+      this.appendDummyInput().appendField('</picture>')
+      this.setPreviousStatement(true, 'body_element')
+      this.setNextStatement(true, 'body_element')
+      this.setColour('#E74C3C')
+      this.setTooltip('Responsive image container — add <source> blocks then end with <img>')
+    },
+  }
+ 
+  Blockly.Blocks['html_source'] = {
+    init: function () {
+      this.appendDummyInput()
+          .appendField('<source ')
+          .appendField(new Blockly.FieldDropdown([
+            ['srcset', 'srcset'],
+            ['src', 'src'],
+          ]), 'ATTR_TYPE')
+          .appendField('="')
+          .appendField(new Blockly.FieldTextInput('image.webp'), 'SRC')
+          .appendField('" type="')
+          .appendField(new Blockly.FieldTextInput('image/webp'), 'MIME')
+          .appendField('" media="')
+          .appendField(new Blockly.FieldTextInput('(min-width: 800px)'), 'MEDIA')
+          .appendField('">')
+      this.setPreviousStatement(true, 'body_element')
+      this.setNextStatement(true, 'body_element')
+      this.setColour('#E74C3C')
+      this.setTooltip('Alternative media source for <picture>, <video>, or <audio>')
+    },
+  }
+ 
+  Blockly.Blocks['html_track'] = {
+    init: function () {
+      this.appendDummyInput()
+          .appendField('<track src="')
+          .appendField(new Blockly.FieldTextInput('subtitles.vtt'), 'SRC')
+          .appendField('" kind="')
+          .appendField(new Blockly.FieldDropdown([
+            ['subtitles', 'subtitles'],
+            ['captions', 'captions'],
+            ['descriptions', 'descriptions'],
+            ['chapters', 'chapters'],
+            ['metadata', 'metadata'],
+          ]), 'KIND')
+          .appendField('" srclang="')
+          .appendField(new Blockly.FieldTextInput('en'), 'SRCLANG')
+          .appendField('" label="')
+          .appendField(new Blockly.FieldTextInput('English'), 'LABEL')
+          .appendField('">')
+      this.setPreviousStatement(true, 'body_element')
+      this.setNextStatement(true, 'body_element')
+      this.setColour('#E74C3C')
+      this.setTooltip('Text track for <video>/<audio> (subtitles, captions, chapters)')
+    },
+  }
+ 
+  // ════════════════════════════════════════════════════════════════════════
+  // GRAPHICS
+  // ════════════════════════════════════════════════════════════════════════
+ 
+  Blockly.Blocks['html_svg'] = {
+    init: function () {
+      this.appendDummyInput()
+          .appendField('<svg width="')
+          .appendField(new Blockly.FieldTextInput('200'), 'WIDTH')
+          .appendField('" height="')
+          .appendField(new Blockly.FieldTextInput('200'), 'HEIGHT')
+          .appendField('" viewBox="')
+          .appendField(new Blockly.FieldTextInput('0 0 200 200'), 'VIEWBOX')
+          .appendField('">')
+      this.appendStatementInput('CONTENT').setCheck('body_element')
+      this.appendDummyInput().appendField('</svg>')
+      this.setPreviousStatement(true, 'body_element')
+      this.setNextStatement(true, 'body_element')
+      this.setColour('#27AE60')
+      this.setTooltip('SVG vector graphics container')
+    },
+  }
+ 
+  Blockly.Blocks['html_canvas'] = {
+    init: function () {
+      this.appendDummyInput()
+          .appendField('<canvas id="')
+          .appendField(new Blockly.FieldTextInput('myCanvas'), 'ID')
+          .appendField('" width="')
+          .appendField(new Blockly.FieldTextInput('400'), 'WIDTH')
+          .appendField('" height="')
+          .appendField(new Blockly.FieldTextInput('300'), 'HEIGHT')
+          .appendField('"></canvas>')
+      this.setPreviousStatement(true, 'body_element')
+      this.setNextStatement(true, 'body_element')
+      this.setColour('#27AE60')
+      this.setTooltip('Canvas element — draw on it with JavaScript (getContext)')
+    },
+  }
   
-  Blockly.Blocks['internal_text_color'] = {
-    init: function() {
-      this.appendEndRowInput('internal_style')
-        .appendField('color:')
-        .appendField(new Blockly.FieldTextInput('#00ff66'), 'COLOR')
-        .appendField(';');
-      this.setInputsInline(true);
-      this.setOutput(true, 'internal_style');
-      this.setTooltip('Color for texts');
-      this.setHelpUrl('');
-      this.setColour('#34A853');
-    }
-  };
-  Blockly.Blocks['internal_font_family'] = {
-    init: function() {
-      this.appendEndRowInput('internal_style')
-        .appendField('font-family:')
-        .appendField(new Blockly.FieldTextInput('serif'), 'FONT')
-        .appendField(';');
-      this.setInputsInline(true);
-      this.setOutput(true, 'internal_style');
-      this.setTooltip('Set a font style for texts');
-      this.setHelpUrl('');
-      this.setColour('#34A853');
-    }
-  };   
-  Blockly.Blocks['internal_font_size'] = {
-    init: function() {
-      this.appendEndRowInput('internal_style')
-        .appendField('font-size:')
-        .appendField(new Blockly.FieldTextInput('0'), 'SIZE')
-        .appendField(new Blockly.FieldDropdown([
-          ['px', 'px'],
-          ['em', 'em'],
-          ['rem', 'rem'],
-          ['%', '%']
-        ]), 'UNIT')
-        .appendField(';');
-      this.setInputsInline(true);
-      this.setOutput(true, 'internal_style');
-      this.setTooltip('');
-      this.setHelpUrl('');
-      this.setColour('#34A853');
-    }
-  };   
-  Blockly.Blocks['internal_font_size_descriptive'] = {
-    init: function() {
-      this.appendEndRowInput('internal_style')
-        .appendField('font-size:')
-        .appendField(new Blockly.FieldDropdown([
-          ['initial', 'initial '],
-          ['inherit', 'inherit'],
-          ['xx-small', 'xx-small'],
-          ['x-small', 'x-small'],
-          ['small', 'small'],
-          ['large', 'large'],
-          ['x-large', 'x-large'],
-          ['xx-large', 'xx-large'],
-          ['smaller', 'smaller'],
-          ['larger', 'larger'],
-        ]), 'SIZE')
-        .appendField(';');
-      this.setInputsInline(true);
-      this.setOutput(true, 'internal_style');
-      this.setTooltip('');
-      this.setHelpUrl('');
-      this.setColour('#34A853');
-    }
-  };   
-  Blockly.Blocks['internal_text_align'] = {
-    init: function() {
-      this.appendEndRowInput('internal_style')
-        .appendField('text-align:')
-        .appendField(new Blockly.FieldDropdown([
-          ['left', 'left '],
-          ['right', 'right'],
-          ['center', 'center'],
-          ['justify', 'justify'],
-        ]), 'ALIGN')
-        .appendField(';');
-      this.setInputsInline(true);
-      this.setOutput(true, 'internal_style');
-      this.setTooltip('');
-      this.setHelpUrl('');
-      this.setColour('#34A853');
-    }
-  };
-  Blockly.Blocks['internal_text_transform'] = {
-    init: function() {
-      this.appendEndRowInput('internal_style')
-        .appendField('text-transform:')
-        .appendField(new Blockly.FieldDropdown([
-          ['none', 'none '],
-          ['capitalize', 'capitalize'],
-          ['uppercase', 'uppercase'],
-          ['lowercase', 'lowercase'],
-          ['initial', 'initial'],
-          ['inherit', 'inherit'],
-        ]), 'TRANSFORM')
-        .appendField(';');
-      this.setInputsInline(true);
-      this.setOutput(true, 'internal_style');
-      this.setTooltip('');
-      this.setHelpUrl('');
-      this.setColour('#34A853');
-    }
-  };   
-  Blockly.Blocks['internal_text_decoration'] = {
-    init: function() {
-      this.appendEndRowInput('internal_style')
-        .appendField('text-decoration:')
-        .appendField(new Blockly.FieldDropdown([
-          ['underline', 'underline'],
-          ['overline', 'overline'],
-          ['line-through', 'line-through'],
-          ['initial', 'initial'],
-          ['inherit', 'inherit'],
-          ['none', 'none '],
-        ]), 'DECORATION')
-        .appendField(new Blockly.FieldDropdown([
-          ['solid', 'solid'],
-          ['double', 'double'],
-          ['dotted', 'dotted'],
-          ['dashed', 'dashed'],
-          ['wavy', 'wavy'],
-          ['initial', 'initial'],
-          ['inherit', 'inherit'],
-        ]), 'DECORATION_STYLE')
-        .appendField(';');
-      this.setInputsInline(true);
-      this.setOutput(true, 'internal_style');
-      this.setTooltip('');
-      this.setHelpUrl('');
-      this.setColour('#34A853');
-    }
-  };
-  Blockly.Blocks['internal_text_shadow'] = {
-    init: function() {
-      this.appendEndRowInput('internal_style')
-        .appendField('text-shadow:')
-        .appendField(new Blockly.FieldTextInput('h-shadow'), 'H-SHADOW')
-        .appendField(new Blockly.FieldTextInput('v-shadow'), 'V-SHADOW')
-        .appendField(new Blockly.FieldTextInput('radius'), 'RADIUS')
-        .appendField(new Blockly.FieldTextInput('#00ff66'), 'COLOR')
-        .appendField(';');
-      this.setInputsInline(true);
-      this.setOutput(true, 'internal_style');
-      this.setTooltip('Color for texts');
-      this.setHelpUrl('');
-      this.setColour('#34A853');
-    }
-  };
-
-  //internal DISPLAY STYLING
-  Blockly.Blocks['internal_display'] = {
-    init: function() {
-      this.appendEndRowInput('internal_style')
-        .appendField('display:')
-        .appendField(new Blockly.FieldDropdown([
-          ['block', 'block'],
-          ['none', 'none'],
-          ['flex', 'flex'],
-          ['inline', 'inline'],
-          ['inline-block', 'inline-block'],
-          ['inline-flex', 'inline-flex'],
-          ['inline-table', 'inline-table'],
-          ['table', 'table'],
-          ['inherit', 'inherit'],
-          ['initial', 'initial'],
-        ]), 'DISPLAY')
-        .appendField(';');
-      this.setInputsInline(true);
-      this.setOutput(true, 'internal_style');
-      this.setTooltip('');
-      this.setHelpUrl('');
-      this.setColour('#34A853');
-    }
-  };
-  Blockly.Blocks['internal_overflow'] = {
-    init: function() {
-      this.appendEndRowInput('internal_style')
-        .appendField('overflow-')
-        .appendField(new Blockly.FieldDropdown([
-          ['x', 'x'],
-          ['y', 'y'],
-        ]), 'AXIS')
-        .appendField(':')
-        .appendField(new Blockly.FieldDropdown([
-          ['scroll', 'scroll'],
-          ['auto', 'auto'],
-          ['hidden', 'hidden'],
-          ['visible', 'visible'],
-          ['initial', 'initial'],
-          ['inherit', 'inherit'],
-        ]), 'OVERFLOW')
-        .appendField(';');
-      this.setInputsInline(true);
-      this.setOutput(true, 'internal_style');
-      this.setTooltip('');
-      this.setHelpUrl('');
-      this.setColour('#34A853');
-    }
-  };
-  Blockly.Blocks['internal_float'] = {
-    init: function() {
-      this.appendEndRowInput('internal_style')
-        .appendField('float:')
-        .appendField(new Blockly.FieldDropdown([
-          ['left', 'left'],
-          ['right', 'right'],
-        ]), 'FLOAT')
-        .appendField(';');
-      this.setInputsInline(true);
-      this.setOutput(true, 'internal_style');
-      this.setTooltip('');
-      this.setHelpUrl('');
-      this.setColour('#34A853');
-    }
-  };
-  Blockly.Blocks['internal_height'] = {
-    init: function() {
-      this.appendEndRowInput('internal_style')
-        .appendField('height:')
-        .appendField(new Blockly.FieldTextInput('0'), 'SIZE')
-        .appendField(new Blockly.FieldDropdown([
-          ['px', 'px'],
-          ['em', 'em'],
-          ['rem', 'rem'],
-          ['%', '%']
-        ]), 'UNIT')
-        .appendField(';');
-      this.setInputsInline(true);
-      this.setOutput(true, 'internal_style');
-      this.setTooltip('');
-      this.setHelpUrl('');
-      this.setColour('#34A853');
-    }
-  };  
-  Blockly.Blocks['internal_width'] = {
-    init: function() {
-      this.appendEndRowInput('internal_style')
-        .appendField('width:')
-        .appendField(new Blockly.FieldTextInput('0'), 'SIZE')
-        .appendField(new Blockly.FieldDropdown([
-          ['px', 'px'],
-          ['em', 'em'],
-          ['rem', 'rem'],
-          ['%', '%']
-        ]), 'UNIT')
-        .appendField(';');
-      this.setInputsInline(true);
-      this.setOutput(true, 'internal_style');
-      this.setTooltip('');
-      this.setHelpUrl('');
-      this.setColour('#34A853');
-    }
-  };
-  //internal SPACING STYLING
-  Blockly.Blocks['internal_margin'] = {
-    init: function() {
-      this.appendEndRowInput('internal_style')
-        .appendField('margin:')
-        .appendField(new Blockly.FieldTextInput('0'), 'SIZE')
-        .appendField(new Blockly.FieldDropdown([
-          ['px', 'px'],
-          ['em', 'em'],
-          ['rem', 'rem'],
-          ['%', '%']
-        ]), 'UNIT')
-        .appendField(';');
-      this.setInputsInline(true);
-      this.setOutput(true, 'internal_style');
-      this.setTooltip('');
-      this.setHelpUrl('');
-      this.setColour('#34A853');
-    }
-  };
-  Blockly.Blocks['internal_margin_specific'] = {
-    init: function() {
-      this.appendEndRowInput('internal_style')
-        .appendField('margin:')
-        .appendField(new Blockly.FieldDropdown([
-          ['top', 'top'],
-          ['bottom', 'bottom'],
-          ['left', 'left'],
-          ['right', 'right'],
-        ]), 'DIRECTION')
-        .appendField(new Blockly.FieldTextInput('0'), 'SIZE')
-        .appendField(new Blockly.FieldDropdown([
-          ['px', 'px'],
-          ['em', 'em'],
-          ['rem', 'rem'],
-          ['%', '%']
-        ]), 'UNIT')
-        .appendField(';');
-      this.setInputsInline(true);
-      this.setOutput(true, 'internal_style');
-      this.setTooltip('');
-      this.setHelpUrl('');
-      this.setColour('#34A853');
-    }
-  };
-  Blockly.Blocks['internal_padding'] = {
-    init: function() {
-      this.appendEndRowInput('internal_style')
-        .appendField('padding:')
-        .appendField(new Blockly.FieldTextInput('0'), 'SIZE')
-        .appendField(new Blockly.FieldDropdown([
-          ['px', 'px'],
-          ['em', 'em'],
-          ['rem', 'rem'],
-          ['%', '%']
-        ]), 'UNIT')
-        .appendField(';');
-      this.setInputsInline(true);
-      this.setOutput(true, 'internal_style');
-      this.setTooltip('');
-      this.setHelpUrl('');
-      this.setColour('#34A853');
-    }
-  };
-  Blockly.Blocks['internal_padding_specific'] = {
-    init: function() {
-      this.appendEndRowInput('internal_style')
-        .appendField('padding:')
-        .appendField(new Blockly.FieldDropdown([
-          ['top', 'top'],
-          ['bottom', 'bottom'],
-          ['left', 'left'],
-          ['right', 'right'],
-        ]), 'DIRECTION')
-        .appendField(new Blockly.FieldTextInput('0'), 'SIZE')
-        .appendField(new Blockly.FieldDropdown([
-          ['px', 'px'],
-          ['em', 'em'],
-          ['rem', 'rem'],
-          ['%', '%']
-        ]), 'UNIT')
-        .appendField(';');
-      this.setInputsInline(true);
-      this.setOutput(true, 'internal_style');
-      this.setTooltip('');
-      this.setHelpUrl('');
-      this.setColour('#34A853');
-    }
-  };
-  //internal BACKGROUND STYLING
-  Blockly.Blocks['internal_background_color'] = {
-    init: function() {
-      this.appendEndRowInput('internal_style')
-        .appendField('background-color:')
-        .appendField(new Blockly.FieldTextInput('#00ff66'), 'COLOR')
-        .appendField(';');
-      this.setInputsInline(true);
-      this.setOutput(true, 'internal_style');
-      this.setTooltip('Colors the background of an element');
-      this.setHelpUrl('');
-      this.setColour('#34A853');
-    }
-  };
-  Blockly.Blocks['internal_background_image'] = {
-    init: function() {
-      this.appendEndRowInput('internal_style')
-        .appendField('background-image: url( " ')
-        .appendField(new Blockly.FieldTextInput('/url'), 'URL')
-        .appendField(' " );');
-      this.setInputsInline(true);
-      this.setOutput(true, 'internal_style');
-      this.setTooltip('Makes an image the background of an element');
-      this.setHelpUrl('');
-      this.setColour('#34A853');
-    }
-  };
-  Blockly.Blocks['internal_background_repeat'] = {
-    init: function() {
-      this.appendEndRowInput('internal_style')
-        .appendField('background-repeat:')
-        .appendField(new Blockly.FieldDropdown([
-          ['repeat', 'repeat'],
-          ['no-repeat', 'no-repeat'],
-          ['repeat-x', 'repeat-x'],
-          ['repeat-y', 'repeat--y'],
-          ['round', 'round'],
-          ['space', 'space'],
-        ]), 'REPEAT')
-        .appendField(';');
-      this.setInputsInline(true);
-      this.setOutput(true, 'internal_style');
-      this.setTooltip('');
-      this.setHelpUrl('');
-      this.setColour('#34A853');
-    }
-  };
-  Blockly.Blocks['internal_background_position'] = {
-    init: function() {
-      this.appendEndRowInput('internal_style')
-        .appendField('background-position:')
-        .appendField(new Blockly.FieldDropdown([
-          ['bottom', 'bottom'],
-          ['center', 'center'],
-          ['left', 'left'],
-          ['left bottom', 'left bottom'],
-          ['left top', 'left top'],
-          ['right', 'right'],
-          ['right bottom', 'right bottom'],
-          ['right top', 'right top'],
-          ['top', 'top'],
-        ]), 'POSITION')
-        .appendField(';');
-      this.setInputsInline(true);
-      this.setOutput(true, 'internal_style');
-      this.setTooltip('');
-      this.setHelpUrl('');
-      this.setColour('#34A853');
-    }
-  };
-  Blockly.Blocks['internal_background_size'] = {
-    init: function() {
-      this.appendEndRowInput('internal_style')
-        .appendField('background-size:')
-        .appendField(new Blockly.FieldDropdown([
-          ['auto', 'auto'],
-          ['cover', 'cover'],
-          ['contain', 'contain'],
-        ]), 'SIZE')
-        .appendField(';');
-      this.setInputsInline(true);
-      this.setOutput(true, 'internal_style');
-      this.setTooltip('');
-      this.setHelpUrl('');
-      this.setColour('#34A853');
-    }
-  };
-  Blockly.Blocks['internal_background_clip'] = {
-    init: function() {
-      this.appendEndRowInput('internal_style')
-        .appendField('background-clip:')
-        .appendField(new Blockly.FieldDropdown([
-          ['border-box', 'border-box'],
-          ['padding-box', 'padding-box'],
-          ['content-box', 'content-box'],
-          ['text', 'text'],
-        ]), 'CLIP')
-        .appendField(';');
-      this.setInputsInline(true);
-      this.setOutput(true, 'internal_style');
-      this.setTooltip('');
-      this.setHelpUrl('');
-      this.setColour('#34A853');
-    }
-  };
-  // internal BORDER STYLING
-  Blockly.Blocks['internal_border'] = {
-    init: function() {
-      this.appendEndRowInput('internal_style')
-        .appendField('border:')
-        .appendField(new Blockly.FieldTextInput('0'), 'SIZE')
-        .appendField(new Blockly.FieldDropdown([
-          ['px', 'px'],
-          ['em', 'em'],
-          ['rem', 'rem'],
-          ['%', '%']
-        ]), 'UNIT')
-        .appendField(new Blockly.FieldDropdown([
-          ['solid', 'solid'],
-          ['dotted', 'dotted'],
-          ['dashed', 'dashed'],
-          ['double', 'double'],
-          ['groove', 'groove'],
-          ['ridge', 'ridge'],
-          ['inset', 'inset'],
-          ['outset', 'outset'],
-          ['none', 'none'],
-        ]), 'BORDER_STYLE')
-        .appendField(new Blockly.FieldTextInput('#00ff66'), 'COLOR')
-        .appendField(';');
-      this.setInputsInline(true);
-      this.setOutput(true, 'internal_style');
-      this.setTooltip('');
-      this.setHelpUrl('');
-      this.setColour('#34A853');
-    }
-  };
-  Blockly.Blocks['internal_border_specific'] = {
-    init: function() {
-      this.appendEndRowInput('internal_style')
-        .appendField('border-')
-        .appendField(new Blockly.FieldDropdown([
-          ['top', 'top'],
-          ['right', 'right'],
-          ['bottom', 'bottom'],
-          ['left', 'left'],
-        ]), 'SIDE')
-        .appendField(':')
-        .appendField(new Blockly.FieldTextInput('0'), 'SIZE')
-        .appendField(new Blockly.FieldDropdown([
-          ['px', 'px'],
-          ['em', 'em'],
-          ['rem', 'rem'],
-          ['%', '%']
-        ]), 'UNIT')
-        .appendField(new Blockly.FieldDropdown([
-          ['solid', 'solid'],
-          ['dotted', 'dotted'],
-          ['dashed', 'dashed'],
-          ['double', 'double'],
-          ['groove', 'groove'],
-          ['ridge', 'ridge'],
-          ['inset', 'inset'],
-          ['outset', 'outset'],
-          ['none', 'none'],
-        ]), 'BORDER_STYLE')
-        .appendField(new Blockly.FieldTextInput('#00ff66'), 'COLOR')
-        .appendField(';');
-      this.setInputsInline(true);
-      this.setOutput(true, 'internal_style');
-      this.setTooltip('');
-      this.setHelpUrl('');
-      this.setColour('#34A853');
-    }
-  };
-  Blockly.Blocks['internal_border_radius'] = {
-    init: function() {
-      this.appendEndRowInput('internal_style')
-        .appendField('border-radius:')
-        .appendField(new Blockly.FieldTextInput('0'), 'SIZE')
-        .appendField(new Blockly.FieldDropdown([
-          ['px', 'px'],
-          ['em', 'em'],
-          ['rem', 'rem'],
-          ['%', '%']
-        ]), 'UNIT')
-        .appendField(';');
-      this.setInputsInline(true);
-      this.setOutput(true, 'internal_style');
-      this.setTooltip('');
-      this.setHelpUrl('');
-      this.setColour('#34A853');
-    }
-  };
-  Blockly.Blocks['internal_border_radius_specific'] = {
-    init: function() {
-      this.appendEndRowInput('internal_style')
-        .appendField('border-')
-        .appendField(new Blockly.FieldDropdown([
-          ['top-left', 'top-left'],
-          ['top-right', 'top-right'],
-          ['bottom-left', 'bottom-left'],
-          ['bottom-right', 'bottom-right'],
-        ]), 'SIDE')
-        .appendField(':')
-        .appendField(new Blockly.FieldTextInput('0'), 'SIZE')
-        .appendField(new Blockly.FieldDropdown([
-          ['px', 'px'],
-          ['em', 'em'],
-          ['rem', 'rem'],
-          ['%', '%']
-        ]), 'UNIT')
-        .appendField(';');
-      this.setInputsInline(true);
-      this.setOutput(true, 'internal_style');
-      this.setTooltip('');
-      this.setHelpUrl('');
-      this.setColour('#34A853');
-    }
-  };
-  //internal MORE STYLING
-  Blockly.Blocks['internal_cursor'] = {
-    init: function() {
-      this.appendEndRowInput('internal_style')
-        .appendField('cursor:')
-        .appendField(new Blockly.FieldDropdown([
-          ['auto', 'auto'],
-          ['default', 'default'],
-          ['pointer', 'pointer'],
-          ['wait', 'wait'],
-          ['text', 'text'],
-          ['move', 'move'],
-          ['help', 'help'],
-          ['not-allowed', 'not-allowed'],
-        ]), 'TYPE')
-        .appendField(';');
-      this.setInputsInline(true);
-      this.setOutput(true, 'internal_style');
-      this.setTooltip('Sets the cursor style.');
-      this.setHelpUrl('');
-      this.setColour('#34A853');
-    }
-  };
-  Blockly.Blocks['internal_box_shadow'] = {
-    init: function() {
-      this.appendEndRowInput('internal_style')
-        .appendField('box-shadow:')
-        .appendField(new Blockly.FieldTextInput('h-shadow'), 'H-SHADOW')
-        .appendField(new Blockly.FieldTextInput('v-shadow'), 'V-SHADOW')
-        .appendField(new Blockly.FieldTextInput('radius'), 'RADIUS')
-        .appendField(new Blockly.FieldTextInput('#00ff66'), 'COLOR')
-        .appendField(';');
-      this.setInputsInline(true);
-      this.setOutput(true, 'internal_style');
-      this.setTooltip('Set a shadow to the element.');
-      this.setHelpUrl('');
-      this.setColour('#34A853');
-    }
-  };
   // =============================================================================
   // CATEGORY: ATTRIBUTES
   // =============================================================================
@@ -1995,9 +1469,5 @@ export const defineBlocks = () => {
       this.setTooltip("Id attribute for html elements");
     }
   };
-
-   // =============================================================================
-  // JavaScript Blocks
-  // =============================================================================
 
 };

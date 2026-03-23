@@ -4,6 +4,8 @@ import { defineBlocks } from './defineBlocks'
 import { defineGenerators } from './defineGenerators'
 import { defineCSSBlocks } from './defineCSSBlocks'
 import { defineCSSGenerators } from './defineCSSGenerators'
+import { defineJSBlocks } from './defineJSBlocks'
+import { defineJSGenerators } from './defineJSGenerators'
 import { registerToolboxLabel } from './toolboxLabel'
 import { registerCustomCategory } from './customCategory'
 
@@ -18,6 +20,9 @@ export function initBlockly() {
   defineGenerators()
   defineCSSBlocks()
   defineCSSGenerators()
+
+  defineJSBlocks()
+  defineJSGenerators()
   registerToolboxLabel()
   registerCustomCategory()
 }

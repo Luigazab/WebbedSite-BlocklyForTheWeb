@@ -19,8 +19,8 @@ const StudentHome = () => {
 
   const projectTypes = [
     { icon: CodeXml, title: 'Create', color: 'bg-blockly-blue/90', to: 'editor', tourId: 'create-button' },
-    { icon: BookOpenText, title: 'Learn', color: 'bg-blockly-red/90', to: 'lessons', tourId: 'learn-button' },
-    { icon: LandPlot, title: 'Explore', color: 'bg-blockly-green/90', to: 'tutorials', tourId: 'explore-button' },
+    { icon: BookOpenText, title: 'Learn', color: 'bg-blockly-red/90', to: 'learn', tourId: 'learn-button' },
+    { icon: LandPlot, title: 'Explore', color: 'bg-blockly-green/90', to: 'docs', tourId: 'explore-button' },
     { icon: EarthLockIcon, title: 'Join', color: 'bg-blockly-purple/90', to: 'classrooms', tourId: 'join-button' },
   ]
 
@@ -72,7 +72,7 @@ const StudentHome = () => {
               Kickstart your web development journey with fun, interactive building blocks! 
               Learn the essentials of HTML, CSS, and JavaScript in a playful, hands-on way that makes coding click.
             </p>
-            <button className="btn btn-accent w-full sm:w-auto px-8">
+            <button onClick={() => navigate('learn')} className="btn btn-accent w-full sm:w-auto px-8">
               Get Started
             </button>
           </div>

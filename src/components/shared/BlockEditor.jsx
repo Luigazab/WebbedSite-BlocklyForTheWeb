@@ -25,6 +25,7 @@ const BlockEditor = () => {
   const addToast = useUIStore((s) => s.addToast)
   const location = useLocation()
   const fileInputRef = useRef(null)
+  const [isMobilePreviewOpen, setIsMobilePreviewOpen] = useState(false);
 
   const [projectTitle, setProjectTitle] = useState(location.state?.projectTitle ?? 'Untitled')
   const [generatedCode, setGeneratedCode] = useState('')

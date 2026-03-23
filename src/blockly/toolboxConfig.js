@@ -23,6 +23,10 @@ export const toolboxConfig = {
         { kind: 'block', type: 'head' },
         { kind: 'block', type: 'body' },
         { kind: 'block', type: 'title' },
+        { kind: 'block', type: 'html_meta_charset' },
+        { kind: 'block', type: 'html_meta_viewport' },
+        { kind: 'block', type: 'html_meta_named' },
+        { kind: 'block', type: 'html_meta_http_equiv' },
       ]
     },
     {
@@ -38,6 +42,8 @@ export const toolboxConfig = {
         { kind: 'block', type: 'footer' },
         { kind: 'block', type: 'section' },
         { kind: 'block', type: 'article' },
+        { kind: 'block', type: 'html_aside' },
+        { kind: 'block', type: 'html_address' },
         { kind: 'block', type: 'br' },
         { kind: 'block', type: 'hr' },
       ]
@@ -53,6 +59,14 @@ export const toolboxConfig = {
         { kind: 'block', type: 'a_tag' },
         { kind: 'block', type: 'strong' },
         { kind: 'block', type: 'em' },
+        { kind: 'block', type: 'html_b' },
+        { kind: 'block', type: 'html_i' },
+        { kind: 'block', type: 'html_mark' },
+        { kind: 'block', type: 'html_small' },
+        { kind: 'block', type: 'html_del' },
+        { kind: 'block', type: 'html_ins' },
+        { kind: 'block', type: 'html_sub' },
+        { kind: 'block', type: 'html_sup' },
       ]
     },
     {
@@ -74,6 +88,12 @@ export const toolboxConfig = {
         { kind: 'block', type: 'img' },
         { kind: 'block', type: 'audio' },
         { kind: 'block', type: 'video' },
+        { kind: 'block', type: 'html_iframe' },
+        { kind: 'block', type: 'html_embed' },
+        { kind: 'block', type: 'html_object' },
+        { kind: 'block', type: 'html_picture' },
+        { kind: 'block', type: 'html_source' },
+        { kind: 'block', type: 'html_track' },
       ]
     },
     {
@@ -86,6 +106,12 @@ export const toolboxConfig = {
         { kind: 'block', type: 'input' },
         { kind: 'block', type: 'textarea' },
         { kind: 'block', type: 'button' },
+        { kind: 'block', type: 'html_fieldset' },
+        { kind: 'block', type: 'html_legend' },
+        { kind: 'block', type: 'html_datalist' },
+        { kind: 'block', type: 'html_optgroup' },
+        { kind: 'block', type: 'html_progress' },
+        { kind: 'block', type: 'html_meter' },
       ]
     },
     {
@@ -97,6 +123,12 @@ export const toolboxConfig = {
         { kind: 'block', type: 'th' },
         { kind: 'block', type: 'tr' },
         { kind: 'block', type: 'td' },
+        { kind: 'block', type: 'html_caption' },
+        { kind: 'block', type: 'html_colgroup' },
+        { kind: 'block', type: 'html_col' },
+        { kind: 'block', type: 'html_thead' },
+        { kind: 'block', type: 'html_tbody' },
+        { kind: 'block', type: 'html_tfoot' },
       ]
     },
     {
@@ -109,7 +141,30 @@ export const toolboxConfig = {
         { kind: 'block', type: 'ol' },
         { kind: 'block', type: 'select' },
         { kind: 'block', type: 'option' },
+        { kind: 'block', type: 'html_dl' },
+        { kind: 'block', type: 'html_dt' },
+        { kind: 'block', type: 'html_dd' },
       ]
+    },
+    {
+      kind: 'category',
+      name: 'Interactive',
+      colour: '#E67E22',
+      contents: [
+        { kind: 'block', type: 'html_details' },
+        { kind: 'block', type: 'html_summary' },
+        { kind: 'block', type: 'html_dialog' },
+        { kind: 'block', type: 'html_script_inline' },
+      ],
+    },
+    {
+      kind: 'category',
+      name: 'Graphics',
+      colour: '#27AE60',
+      contents: [
+        { kind: 'block', type: 'html_svg' },
+        { kind: 'block', type: 'html_canvas' },
+      ],
     },
     {
       kind: 'sep'
@@ -134,6 +189,10 @@ export const toolboxConfig = {
         {kind: 'block', type: 'head_link'},
         {kind: 'block', type: 'style_target'},
         {kind: 'block', type: 'style_effect'},
+        { kind: 'block', type: 'css_pseudo_class' },
+        { kind: 'block', type: 'css_nth_child' },
+        { kind: 'block', type: 'css_pseudo_element' },
+        { kind: 'block', type: 'css_not_pseudo' },
         {
           kind: 'category',
           name: 'Text',
@@ -148,6 +207,12 @@ export const toolboxConfig = {
             { kind: 'block', type: 'external_text_transform' },
             { kind: 'block', type: 'external_text_decoration' },
             { kind: 'block', type: 'external_text_shadow' },
+            { kind: 'block', type: 'external_font_weight' },
+            { kind: 'block', type: 'external_font_style' },
+            { kind: 'block', type: 'external_font_variant' },
+            { kind: 'block', type: 'external_line_height' },
+            { kind: 'block', type: 'external_letter_spacing' },
+            { kind: 'block', type: 'external_word_spacing' },
           ]
         },
         {
@@ -274,6 +339,56 @@ export const toolboxConfig = {
             { kind: 'block', type: 'external_transform' },
           ]
         },
+        {
+          kind: 'category',
+          name: 'Lists',
+          colour: '#34A853',
+          contents: [
+            { kind: 'block', type: 'external_list_style_type' },
+            { kind: 'block', type: 'external_list_style_position' },
+            { kind: 'block', type: 'external_list_style_image' },
+          ],
+        },
+        {
+          kind: 'category',
+          name: 'Tables',
+          colour: '#34A853',
+          contents: [
+            { kind: 'block', type: 'external_border_collapse' },
+            { kind: 'block', type: 'external_border_spacing' },
+            { kind: 'block', type: 'external_caption_side' },
+            { kind: 'block', type: 'external_empty_cells' },
+            { kind: 'block', type: 'external_table_layout' },
+          ],
+        },
+        {
+          kind: 'category',
+          name: 'Columns',
+          colour: '#34A853',
+          contents: [
+            { kind: 'block', type: 'external_column_count' },
+            { kind: 'block', type: 'external_column_gap' },
+            { kind: 'block', type: 'external_column_rule' },
+            { kind: 'block', type: 'external_column_width' },
+            { kind: 'block', type: 'external_column_span' },
+          ],
+        },
+        {
+          kind: 'category',
+          name: 'Animation',
+          colour: '#34A853',
+          contents: [
+            { kind: 'block', type: 'css_keyframes' },
+            { kind: 'block', type: 'external_animation_name' },
+            { kind: 'block', type: 'external_animation_duration' },
+            { kind: 'block', type: 'external_animation_timing' },
+            { kind: 'block', type: 'external_animation_delay' },
+            { kind: 'block', type: 'external_animation_iteration' },
+            { kind: 'block', type: 'external_animation_direction' },
+            { kind: 'block', type: 'external_animation_fill_mode' },
+            { kind: 'block', type: 'external_animation_play_state' },
+          ],
+        },
         // NEW: Text & Misc (additional)
         {
           kind: 'category',
@@ -294,6 +409,11 @@ export const toolboxConfig = {
             { kind: 'label', text: 'Other stylings for style tag' },
             { kind: 'block', type: 'external_cursor' },
             { kind: 'block', type: 'external_box_shadow' },
+            { kind: 'block', type: 'external_transform_scale' },
+            { kind: 'block', type: 'external_transform_translate' },
+            { kind: 'block', type: 'external_transform_rotate' },
+            { kind: 'block', type: 'external_transform_skew' },
+            { kind: 'block', type: 'external_filter' },
           ]
         },
       ]
@@ -320,6 +440,12 @@ export const toolboxConfig = {
             { kind: 'block', type: 'internal_text_transform' },
             { kind: 'block', type: 'internal_text_decoration' },
             { kind: 'block', type: 'internal_text_shadow' },
+            { kind: 'block', type: 'internal_font_weight' },
+            { kind: 'block', type: 'internal_font_style' },
+            { kind: 'block', type: 'internal_font_variant' },
+            { kind: 'block', type: 'internal_line_height' },
+            { kind: 'block', type: 'internal_letter_spacing' },
+            { kind: 'block', type: 'internal_word_spacing' },
           ]
         },
         {
@@ -444,6 +570,29 @@ export const toolboxConfig = {
         },
         {
           kind: 'category',
+          name: 'Lists',
+          colour: '#34A853',
+          contents: [
+            { kind: 'block', type: 'internal_list_style_type' },
+            { kind: 'block', type: 'internal_list_style_position' },
+            { kind: 'block', type: 'internal_list_style_image' },
+          ],
+        },
+      
+        {
+          kind: 'category',
+          name: 'Tables',
+          colour: '#34A853',
+          contents: [
+            { kind: 'block', type: 'internal_border_collapse' },
+            { kind: 'block', type: 'internal_border_spacing' },
+            { kind: 'block', type: 'internal_caption_side' },
+            { kind: 'block', type: 'internal_empty_cells' },
+            { kind: 'block', type: 'internal_table_layout' },
+          ],
+        },
+        {
+          kind: 'category',
           name: 'Text & Misc',
           colour: '#4285F4',
           contents: [
@@ -461,43 +610,357 @@ export const toolboxConfig = {
             { kind: 'label', text: 'Other stylings for style tag' },
             { kind: 'block', type: 'internal_cursor' },
             { kind: 'block', type: 'internal_box_shadow' },
+            { kind: 'block', type: 'internal_transform_scale' },
+            { kind: 'block', type: 'internal_transform_translate' },
+            { kind: 'block', type: 'internal_transform_rotate' },
+            { kind: 'block', type: 'internal_transform_skew' },
+            { kind: 'block', type: 'internal_filter' },
           ]
         },
       ]
     },
-    {
-      kind: 'sep'
-    },
+    { kind: 'sep' },
     {
       kind: 'toolboxlabel',
       name: 'JavaScript',
       colour: '#000000',
-      cssconfig: {
-        label: 'customLabel'
-      }
+      cssconfig: { label: 'customLabel' },
     },
+    { kind: 'sep' },
+ 
+    // ── Script wrappers ──────────────────────────────────────────────────
     {
-      kind: 'sep'
+      kind: 'category',
+      name: 'Script',
+      colour: '#F7DF1E',
+      contents: [
+        { kind: 'block', type: 'js_script_body' },
+        { kind: 'block', type: 'js_script_head' },
+        { kind: 'block', type: 'js_dom_content_loaded' },
+      ],
     },
+ 
+    // ── Variables & Constants ────────────────────────────────────────────
+    {
+      kind: 'category',
+      name: 'Variables',
+      colour: '#E6A817',
+      contents: [
+        { kind: 'block', type: 'variables_set' },
+        { kind: 'block', type: 'variables_get' },
+        { kind: 'label', text: 'Declare' },
+        { kind: 'block', type: 'js_let' },
+        { kind: 'block', type: 'js_const' },
+        { kind: 'block', type: 'js_var_decl' },
+        { kind: 'block', type: 'js_global_var' },
+        { kind: 'label', text: 'Assign' },
+        { kind: 'block', type: 'js_get_var' },
+        { kind: 'block', type: 'js_set_var' },
+        { kind: 'block', type: 'js_compound_assign' },
+        { kind: 'block', type: 'js_increment' },
+      ],
+    },
+ 
+    // ── Data Types ───────────────────────────────────────────────────────
+    {
+      kind: 'category',
+      name: 'Data Types',
+      colour: '#E8760A',
+      contents: [
+        { kind: 'block', type: 'js_string_val' },
+        { kind: 'block', type: 'js_number_val' },
+        { kind: 'block', type: 'js_boolean_val' },
+        { kind: 'block', type: 'js_null' },
+        { kind: 'block', type: 'js_undefined' },
+        { kind: 'block', type: 'js_template_literal' },
+        { kind: 'label', text: 'Arrays' },
+        { kind: 'block', type: 'js_empty_array' },
+        { kind: 'block', type: 'js_array_create' },
+        { kind: 'label', text: 'Objects' },
+        { kind: 'block', type: 'js_object_literal' },
+        { kind: 'block', type: 'js_property_get' },
+        { kind: 'block', type: 'js_property_set' },
+        { kind: 'block', type: 'js_bracket_get' },
+        { kind: 'block', type: 'js_bracket_set' },
+        { kind: 'block', type: 'js_new_instance' },
+      ],
+    },
+ 
+    // ── Operators ────────────────────────────────────────────────────────
+    {
+      kind: 'category',
+      name: 'Operators',
+      colour: '#4285F4',
+      contents: [
+        { kind: 'block', type: 'js_arithmetic' },
+        { kind: 'block', type: 'js_compare' },
+        { kind: 'block', type: 'js_logic_op' },
+        { kind: 'block', type: 'js_not' },
+        { kind: 'block', type: 'js_ternary' },
+        { kind: 'block', type: 'js_typeof' },
+        { kind: 'block', type: 'js_instanceof' },
+        { kind: 'block', type: 'js_spread' },
+      ],
+    },
+ 
+    // ── Control Flow ─────────────────────────────────────────────────────
+    {
+      kind: 'category',
+      name: 'Control Flow',
+      colour: '#C0392B',
+      contents: [
+        { kind: 'block', type: 'controls_if' },
+        { kind: 'label', text: 'Custom if / else' },
+        { kind: 'block', type: 'js_if' },
+        { kind: 'block', type: 'js_if_else' },
+        { kind: 'block', type: 'js_if_else_if' },
+        { kind: 'label', text: 'Loops' },
+        { kind: 'block', type: 'js_while' },
+        { kind: 'block', type: 'js_do_while' },
+        { kind: 'block', type: 'js_for_count' },
+        { kind: 'block', type: 'js_for_range' },
+        { kind: 'block', type: 'js_for_of' },
+        { kind: 'block', type: 'js_for_in' },
+        { kind: 'block', type: 'js_break' },
+        { kind: 'block', type: 'js_continue' },
+        { kind: 'label', text: 'Advanced' },
+        { kind: 'block', type: 'js_switch' },
+        { kind: 'block', type: 'js_try_catch' },
+        { kind: 'block', type: 'js_try_catch_finally' },
+        { kind: 'block', type: 'js_throw' },
+      ],
+    },
+ 
+    // ── Functions ────────────────────────────────────────────────────────
+    {
+      kind: 'category',
+      name: 'Functions',
+      colour: '#8E44AD',
+      contents: [
+        { kind: 'block', type: 'procedures_defnoreturn' },
+        { kind: 'block', type: 'procedures_defreturn' },
+        { kind: 'block', type: 'procedures_callnoreturn' },
+        { kind: 'block', type: 'procedures_callreturn' },
+        { kind: 'label', text: 'Custom functions' },
+        { kind: 'block', type: 'js_function_def' },
+        { kind: 'block', type: 'js_function_call_stmt' },
+        { kind: 'block', type: 'js_function_call_expr' },
+        { kind: 'block', type: 'js_arrow_function' },
+        { kind: 'block', type: 'js_async_function' },
+        { kind: 'block', type: 'js_return' },
+        { kind: 'block', type: 'js_return_void' },
+        { kind: 'block', type: 'js_await' },
+      ],
+    },
+ 
+    // ── Console & Dialog ─────────────────────────────────────────────────
+    {
+      kind: 'category',
+      name: 'Console',
+      colour: '#27AE60',
+      contents: [
+        { kind: 'block', type: 'js_console_log' },
+        { kind: 'block', type: 'js_console_error' },
+        { kind: 'block', type: 'js_console_warn' },
+        { kind: 'block', type: 'js_alert' },
+        { kind: 'block', type: 'js_confirm' },
+        { kind: 'block', type: 'js_prompt' },
+      ],
+    },
+ 
+    // ── Math ─────────────────────────────────────────────────────────────
+    {
+      kind: 'category',
+      name: 'Math',
+      colour: '#2980B9',
+      contents: [
+        { kind: 'block', type: 'js_arithmetic' },
+        { kind: 'block', type: 'js_math_random' },
+        { kind: 'block', type: 'js_math_random_int' },
+        { kind: 'block', type: 'js_math_method' },
+        { kind: 'block', type: 'js_math_pow' },
+        { kind: 'block', type: 'js_math_min_max' },
+        { kind: 'block', type: 'js_parse_number' },
+        { kind: 'block', type: 'js_to_string' },
+        { kind: 'block', type: 'js_date_now' },
+        { kind: 'block', type: 'js_new_date' },
+      ],
+    },
+ 
+    // ── Strings ──────────────────────────────────────────────────────────
+    {
+      kind: 'category',
+      name: 'Strings',
+      colour: '#E67E22',
+      contents: [
+        { kind: 'block', type: 'js_string_concat' },
+        { kind: 'block', type: 'js_template_literal' },
+        { kind: 'block', type: 'js_string_length' },
+        { kind: 'block', type: 'js_string_case' },
+        { kind: 'block', type: 'js_string_includes' },
+        { kind: 'block', type: 'js_string_starts_ends' },
+        { kind: 'block', type: 'js_string_index_of' },
+        { kind: 'block', type: 'js_string_slice' },
+        { kind: 'block', type: 'js_string_replace' },
+        { kind: 'block', type: 'js_string_split' },
+        { kind: 'block', type: 'js_string_repeat' },
+        { kind: 'block', type: 'js_string_char_at' },
+      ],
+    },
+ 
+    // ── Arrays ───────────────────────────────────────────────────────────
+    {
+      kind: 'category',
+      name: 'Arrays',
+      colour: '#9B59B6',
+      contents: [
+        { kind: 'block', type: 'js_empty_array' },
+        { kind: 'block', type: 'js_array_create' },
+        { kind: 'block', type: 'js_array_length' },
+        { kind: 'block', type: 'js_array_get' },
+        { kind: 'block', type: 'js_array_set' },
+        { kind: 'label', text: 'Add / Remove' },
+        { kind: 'block', type: 'js_array_push' },
+        { kind: 'block', type: 'js_array_pop' },
+        { kind: 'block', type: 'js_array_shift' },
+        { kind: 'block', type: 'js_array_unshift' },
+        { kind: 'label', text: 'Search' },
+        { kind: 'block', type: 'js_array_includes' },
+        { kind: 'block', type: 'js_array_index_of' },
+        { kind: 'label', text: 'Transform' },
+        { kind: 'block', type: 'js_array_join' },
+        { kind: 'block', type: 'js_array_mutate' },
+        { kind: 'block', type: 'js_array_slice' },
+        { kind: 'block', type: 'js_array_splice' },
+        { kind: 'block', type: 'js_array_concat' },
+      ],
+    },
+ 
+    // ── DOM Manipulation ─────────────────────────────────────────────────
+    {
+      kind: 'category',
+      name: 'DOM',
+      colour: '#2471A3',
+      contents: [
+        { kind: 'label', text: 'Select Elements' },
+        { kind: 'block', type: 'js_get_by_id' },
+        { kind: 'block', type: 'js_query_selector' },
+        { kind: 'block', type: 'js_query_selector_all' },
+        { kind: 'block', type: 'js_document_body' },
+        { kind: 'label', text: 'Create / Remove' },
+        { kind: 'block', type: 'js_create_element' },
+        { kind: 'block', type: 'js_append_child' },
+        { kind: 'block', type: 'js_remove_element' },
+        { kind: 'label', text: 'Content' },
+        { kind: 'block', type: 'js_set_inner_html' },
+        { kind: 'block', type: 'js_get_inner_html' },
+        { kind: 'block', type: 'js_set_text_content' },
+        { kind: 'block', type: 'js_get_text_content' },
+        { kind: 'block', type: 'js_set_value' },
+        { kind: 'block', type: 'js_get_value' },
+        { kind: 'label', text: 'Attributes & Style' },
+        { kind: 'block', type: 'js_set_attribute' },
+        { kind: 'block', type: 'js_get_attribute' },
+        { kind: 'block', type: 'js_class_list' },
+        { kind: 'block', type: 'js_class_list_contains' },
+        { kind: 'block', type: 'js_set_style' },
+        { kind: 'block', type: 'js_get_style' },
+        { kind: 'block', type: 'js_document_title' },
+      ],
+    },
+ 
+    // ── Events ───────────────────────────────────────────────────────────
+    {
+      kind: 'category',
+      name: 'Events',
+      colour: '#E74C3C',
+      contents: [
+        { kind: 'block', type: 'js_add_event_listener' },
+        { kind: 'block', type: 'js_window_event' },
+        { kind: 'block', type: 'js_dom_content_loaded' },
+        { kind: 'label', text: 'Event Info' },
+        { kind: 'block', type: 'js_event_target' },
+        { kind: 'block', type: 'js_event_value' },
+        { kind: 'block', type: 'js_event_key' },
+        { kind: 'block', type: 'js_prevent_default' },
+        { kind: 'block', type: 'js_stop_propagation' },
+      ],
+    },
+ 
+    // ── Timers ───────────────────────────────────────────────────────────
+    {
+      kind: 'category',
+      name: 'Timers',
+      colour: '#1ABC9C',
+      contents: [
+        { kind: 'block', type: 'js_set_timeout' },
+        { kind: 'block', type: 'js_set_interval' },
+        { kind: 'block', type: 'js_set_timeout_var' },
+        { kind: 'block', type: 'js_set_interval_var' },
+        { kind: 'block', type: 'js_clear_timeout' },
+        { kind: 'block', type: 'js_clear_interval' },
+      ],
+    },
+ 
+    // ── Fetch & JSON ─────────────────────────────────────────────────────
+    {
+      kind: 'category',
+      name: 'Fetch & JSON',
+      colour: '#7F8C8D',
+      contents: [
+        { kind: 'block', type: 'js_fetch_get' },
+        { kind: 'block', type: 'js_fetch_post' },
+        { kind: 'block', type: 'js_json_parse' },
+        { kind: 'block', type: 'js_json_stringify' },
+      ],
+    },
+ 
+    // ── Storage ──────────────────────────────────────────────────────────
+    {
+      kind: 'category',
+      name: 'Storage',
+      colour: '#28B463',
+      contents: [
+        { kind: 'label', text: 'localStorage' },
+        { kind: 'block', type: 'js_local_storage_set' },
+        { kind: 'block', type: 'js_local_storage_get' },
+        { kind: 'block', type: 'js_local_storage_remove' },
+        { kind: 'block', type: 'js_local_storage_clear' },
+        { kind: 'label', text: 'sessionStorage' },
+        { kind: 'block', type: 'js_session_storage_set' },
+        { kind: 'block', type: 'js_session_storage_get' },
+      ],
+    },
+ 
+    // ── Misc ─────────────────────────────────────────────────────────────
+    {
+      kind: 'category',
+      name: 'Misc',
+      colour: '#95A5A6',
+      contents: [
+        { kind: 'block', type: 'js_comment' },
+        { kind: 'block', type: 'js_block_comment' },
+        { kind: 'block', type: 'js_use_strict' },
+        { kind: 'block', type: 'js_debugger' },
+        { kind: 'block', type: 'js_window_location' },
+        { kind: 'block', type: 'js_window_location_get' },
+      ],
+    },
+ 
+    // ══════════════════════════════════════════════════════════════════════
+    // FILE LINKS (multi-file project)
+    // ══════════════════════════════════════════════════════════════════════
+    { kind: 'sep' },
     {
       kind: 'category',
       name: 'File Links',
       colour: 160,
       contents: [
-        {
-          kind: 'block',
-          type: 'link_css_file'
-        },
-        {
-          kind: 'block',
-          type: 'script_js_file'
-        },
-        {
-          kind: 'block',
-          type: 'link_to_page'
-        }
-      ]
-    }
+        { kind: 'block', type: 'link_css_file' },
+        { kind: 'block', type: 'script_js_file' },
+        { kind: 'block', type: 'link_to_page' },
+      ],
+    },
   ]
 };
 
