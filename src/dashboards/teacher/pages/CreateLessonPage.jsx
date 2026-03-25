@@ -9,13 +9,17 @@ import {
   uploadLessonFile,
   linkQuizToLesson,
   unlinkQuizFromLesson,
+  linkTutorialToLesson,
+  unlinkTutorialFromLesson,
 } from '../../../services/lessonService'
 import { useAuth } from '../../../hooks/useAuth'
 import MediaAttachments from '../components/MediaAttachments'
 import AttachQuizModal from '../components/AttachQuizModal'
-import { ArrowLeft, Check, Edit, FileEdit, Paperclip, Save } from 'lucide-react'
+import { ArrowLeft, Check, Edit, FileEdit, Paperclip, Save, BookOpen as TutorialIcon } from 'lucide-react'
 import { SimpleEditor } from '@/components/tiptap-templates/simple/simple-editor'
 import { supabase } from '../../../supabaseClient'
+import AttachTutorialModal from '../components/AttachTutorialModal'
+
 
 export default function CreateLessonPage() {
   const { user } = useAuth()
@@ -38,6 +42,9 @@ export default function CreateLessonPage() {
   const [saveMsg, setSaveMsg] = useState('')
   const [errors, setErrors] = useState({})
 
+  const [linkedTutorials, setLinkedTutorials] = useState([])
+  const [showTutorialModal, setShowTutorialModal] = useState(false)
+
   const handleImageRemoved = useCallback((url) => {
     // Only track Supabase URLs, not external ones
     if (url?.includes('supabase.co')) {
@@ -59,6 +66,7 @@ export default function CreateLessonPage() {
         setTitle(lesson.title || '')
         setContent(lesson.content || '')
         setEstimatedDuration(lesson.estimated_duration?.toString() || '')
+        setLinkedTutorials(lesson.lesson_tutorials || [])
         setIsPublished(lesson.is_published || false)
         setAttachments(
           (lesson.lesson_attachments || []).map((a) => ({
@@ -207,6 +215,26 @@ export default function CreateLessonPage() {
       setLinkedQuizzes((prev) => prev.filter((lq) => lq.id !== linkId))
     } catch (err) { console.error(err) }
   }
+
+  const handleAttachTutorial = async (tutorial) => {
+    if (!savedId) await handleSave()
+    try {
+      const link = await linkTutorialToLesson(savedId, tutorial.id)
+      setLinkedTutorials((prev) => [...prev, { id: link.id, tutorial }])
+    } catch (err) {
+      console.error(err)
+    }
+  }
+  
+  const handleDetachTutorial = async (linkId) => {
+    try {
+      await unlinkTutorialFromLesson(linkId)
+      setLinkedTutorials((prev) => prev.filter((lt) => lt.id !== linkId))
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
 
   if (loading) {
     return (
@@ -365,6 +393,57 @@ export default function CreateLessonPage() {
             )}
           </div>
 
+          {/* ── Linked tutorials ───────────────────────────────────────────────── */}
+          <div className="bg-white rounded-2xl border border-slate-200 p-5">
+            <div className="flex items-center justify-between mb-1">
+              <h2 className="text-sm font-bold text-slate-800 flex items-center gap-2">
+                <TutorialIcon size={15} /> Attached Tutorials
+              </h2>
+              <button
+                type="button"
+                onClick={() => setShowTutorialModal(true)}
+                className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 px-3 py-1.5 border border-indigo-200 rounded-lg hover:bg-indigo-50 transition-colors"
+              >
+                + Attach Tutorial
+              </button>
+            </div>
+            <p className="text-xs text-slate-400 mb-4">
+              Students will open an interactive block editor to work through the tutorial step-by-step.
+            </p>
+          
+            {linkedTutorials.length === 0 ? (
+              <p className="text-xs text-slate-400 bg-slate-50 p-4 rounded-xl text-center">
+                No tutorials attached yet.
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {linkedTutorials.map((lt) => (
+                  <div key={lt.id} className="flex items-center gap-3 p-3 bg-blue-50 border border-blue-200 rounded-xl">
+                    <TutorialIcon size={16} className="text-blue-600 shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-blue-800 truncate">
+                        {lt.tutorial?.title}
+                      </p>
+                      <p className="text-xs text-blue-500 capitalize">
+                        {lt.tutorial?.difficulty_level ?? ''}
+                        {lt.tutorial?.estimated_time_minutes
+                          ? ` · ${lt.tutorial.estimated_time_minutes} min`
+                          : ''}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleDetachTutorial(lt.id)}
+                      className="text-xs text-red-500 hover:text-red-700 px-2 py-1 hover:bg-red-50 rounded"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
           {/* ── Bottom action bar ───────────────────────────────────────── */}
           <div className="flex justify-end gap-3 pt-2 pb-8">
             <button
@@ -402,6 +481,16 @@ export default function CreateLessonPage() {
           onClose={() => setShowQuizModal(false)}
         />
       )}
+
+      {showTutorialModal && (
+        <AttachTutorialModal
+          teacherId={user.id}
+          attachedTutorialIds={linkedTutorials.map((lt) => lt.tutorial?.id)}
+          onAttach={handleAttachTutorial}
+          onClose={() => setShowTutorialModal(false)}
+        />
+      )}
+      
     </div>
   )
 }

@@ -1,233 +1,270 @@
-import { useState, useEffect } from 'react'
-import { fetchTeacherClassrooms, fetchLearnCategories, handOutLesson } from '../../../services/lessonService'
-import { useAuth } from '../../../hooks/useAuth'
+import React, { useState, useEffect } from 'react'
+import { X, BookOpen, GraduationCap, ChevronDown } from 'lucide-react'
+import { handOutLesson, fetchTeacherClassrooms } from '../../../services/lessonService'
+import {
+  publishLessonAsLearnTopic,
+  fetchLearnCategories,
+  fetchAllLearnTopicsForPrereq,
+} from '../../../services/learnService'
 
-export default function HandOutModal({ lesson, onClose, onSuccess }) {
-  const { user } = useAuth()
-  const [mode, setMode] = useState('classroom') 
+const TABS = [
+  { id: 'lesson', label: 'Hand Out to Classroom', icon: BookOpen },
+  { id: 'topic',  label: 'Add as Learn Topic',    icon: GraduationCap },
+]
+
+export default function HandOutModal({ lesson, onClose, onSuccess, teacherId }) {
+  const [tab, setTab] = useState('lesson')
+
+  // ── Lesson tab ────────────────────────────────────────────────────────────
   const [classrooms, setClassrooms] = useState([])
-  const [learnCategories, setLearnCategories] = useState([])
   const [selectedClassroom, setSelectedClassroom] = useState('')
-  const [selectedCategory, setSelectedCategory] = useState('')
   const [dueDate, setDueDate] = useState('')
-  const [description, setDescription] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [fetchLoading, setFetchLoading] = useState(true)
+  const [loadingClassrooms, setLoadingClassrooms] = useState(true)
+
+  // ── Topic tab ─────────────────────────────────────────────────────────────
+  const [categories, setCategories] = useState([])
+  const [selectedCategory, setSelectedCategory] = useState('')
+  const [allTopics, setAllTopics] = useState([])   // existing topics for prereq dropdown
+  const [prerequisiteTopicId, setPrerequisiteTopicId] = useState('none')
+  const [loadingTopicData, setLoadingTopicData] = useState(false)
+
+  // ── UI ────────────────────────────────────────────────────────────────────
+  const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
 
+  // Load classrooms + categories + existing topics once
   useEffect(() => {
     const load = async () => {
-      setFetchLoading(true)
+      setLoadingClassrooms(true)
+      setLoadingTopicData(true)
       try {
-        const [rooms, cats] = await Promise.all([
-          fetchTeacherClassrooms(user.id),
+        const [cls, cats, topics] = await Promise.all([
+          fetchTeacherClassrooms(teacherId),
           fetchLearnCategories(),
+          fetchAllLearnTopicsForPrereq(),
         ])
-        setClassrooms(rooms || [])
-        setLearnCategories(cats || [])
+        setClassrooms(cls)
+        setCategories(cats)
+        setAllTopics(topics)
+        if (cats.length) setSelectedCategory(cats[0].id)
       } catch (err) {
-        console.error(err)
+        setError(err.message)
       } finally {
-        setFetchLoading(false)
+        setLoadingClassrooms(false)
+        setLoadingTopicData(false)
       }
     }
     load()
-  }, [user.id])
+  }, [teacherId])
 
   const handleSubmit = async () => {
     setError('')
-    if (mode === 'classroom' && !selectedClassroom) {
-      setError('Please select a classroom.')
-      return
-    }
-    if (mode === 'learn' && !selectedCategory) {
-      setError('Please select a learn category.')
-      return
+
+    if (tab === 'lesson') {
+      if (!selectedClassroom) { setError('Please select a classroom.'); return }
+    } else {
+      if (!selectedCategory) { setError('Please select a category.'); return }
     }
 
-    setLoading(true)
+    setSubmitting(true)
     try {
-      const assignment = {
-        lesson_id: lesson.id,
-        title: lesson.title,
-        description: description || null,
-        due_date: dueDate || null,
-        created_by: user.id,
-        assignment_type: 'lesson',
-      }
-
-      if (mode === 'classroom') {
-        assignment.classroom_id = selectedClassroom
-        assignment.learn_topic_id = null
+      if (tab === 'lesson') {
+        await handOutLesson({
+          classroom_id: selectedClassroom,
+          lesson_id: lesson.id,
+          assignment_type: 'lesson',
+          title: lesson.title,
+          due_date: dueDate || null,
+          created_by: teacherId,
+        })
       } else {
-        // For learn page, we still need a classroom_id due to FK.
-        // If there's a dedicated learn pathway, adapt accordingly.
-        // For now, assign to first classroom or create a general one.
-        // This is a UX placeholder — adapt to your learn_topics flow.
-        assignment.classroom_id = classrooms[0]?.id
-        assignment.learn_topic_id = selectedCategory
+        // Global publish — no classroom involved
+        await publishLessonAsLearnTopic({
+          lessonId: lesson.id,
+          categoryId: selectedCategory,
+          title: lesson.title,
+          description: lesson.description ?? null,
+          estimatedDuration: lesson.estimated_duration ?? null,
+          prerequisiteTopicId: prerequisiteTopicId === 'none' ? null : prerequisiteTopicId,
+        })
       }
-
-      await handOutLesson(assignment)
       onSuccess?.()
       onClose()
     } catch (err) {
-      setError(err.message || 'Failed to hand out lesson.')
+      setError(err.message || 'Something went wrong.')
     } finally {
-      setLoading(false)
+      setSubmitting(false)
     }
   }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
+
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-400">
+        <div className="flex items-start justify-between mb-5">
           <div>
-            <h2 className="text-base font-bold text-slate-800">Hand Out Lesson</h2>
+            <h2 className="text-base font-black text-slate-800">Distribute Lesson</h2>
             <p className="text-xs text-slate-400 mt-0.5 truncate max-w-xs">{lesson.title}</p>
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-700 text-xl leading-none">
-            ✕
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-700 transition-colors">
+            <X size={18} />
           </button>
         </div>
 
-        <div className="px-6 py-5 space-y-5">
-          {/* Mode tabs */}
-          <div className="flex gap-2 p-1 bg-slate-100 rounded-xl">
-            {[
-              { key: 'classroom', label: 'To Classroom' },
-              { key: 'learn', label: 'To Learn Page' },
-            ].map((tab) => (
-              <button
-                key={tab.key}
-                type="button"
-                onClick={() => setMode(tab.key)}
-                className={`flex-1 py-2 px-3 text-sm font-semibold rounded-lg transition-all ${
-                  mode === tab.key
-                    ? 'bg-white text-blockly-blue shadow-sm'
-                    : 'text-slate-500 hover:text-slate-700'
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
+        {/* Tabs */}
+        <div className="flex gap-1 p-1 bg-slate-100 rounded-xl mb-5">
+          {TABS.map(({ id, label, icon: Icon }) => (
+            <button
+              key={id}
+              onClick={() => { setTab(id); setError('') }}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-bold rounded-lg transition-all ${
+                tab === id
+                  ? 'bg-white text-slate-800 shadow-sm'
+                  : 'text-slate-500 hover:text-slate-700'
+              }`}
+            >
+              <Icon size={13} />
+              {label}
+            </button>
+          ))}
+        </div>
 
-          {fetchLoading ? (
-            <p className="text-sm text-slate-400 text-center py-4">Loading…</p>
-          ) : (
+        <div className="space-y-4">
+
+          {/* ── LESSON TAB ─────────────────────────────────────────────── */}
+          {tab === 'lesson' && (
             <>
-              {/* Classroom select */}
-              {mode === 'classroom' && (
-                <div>
-                  <label className="text-sm font-bold text-slate-700 mb-1.5">
-                    Select Classroom
-                  </label>
-                  {classrooms.length === 0 ? (
-                    <p className="text-sm text-slate-400 bg-slate-50 p-3 rounded-lg">
-                      You have no active classrooms yet.
-                    </p>
-                  ) : (
+              <p className="text-xs text-slate-500 bg-slate-50 rounded-xl p-3 border border-slate-200">
+                Hands out this lesson exclusively to a classroom. Only enrolled students can access it.
+              </p>
+
+              <div>
+                <label className="text-xs font-bold text-slate-700 mb-1.5 flex">
+                  Classroom <span className="text-red-500 ml-0.5">*</span>
+                </label>
+                {loadingClassrooms ? (
+                  <div className="h-10 bg-slate-100 rounded-xl animate-pulse" />
+                ) : classrooms.length === 0 ? (
+                  <p className="text-xs text-slate-400 p-3 bg-slate-50 rounded-xl">No active classrooms found.</p>
+                ) : (
+                  <div className="relative">
                     <select
                       value={selectedClassroom}
                       onChange={(e) => setSelectedClassroom(e.target.value)}
-                      className="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blockly-blue bg-white"
+                      className="w-full appearance-none px-3 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-300 bg-white pr-9"
                     >
-                      <option value="">— Choose a classroom —</option>
+                      <option value="">Select a classroom…</option>
                       {classrooms.map((c) => (
-                        <option key={c.id} value={c.id}>
-                          {c.name} ({c.class_code})
-                        </option>
+                        <option key={c.id} value={c.id}>{c.name} ({c.class_code})</option>
                       ))}
                     </select>
-                  )}
-                </div>
-              )}
+                    <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                  </div>
+                )}
+              </div>
 
-              {/* Learn category select */}
-              {mode === 'learn' && (
-                <div>
-                  <label className="text-sm font-bold text-slate-700 mb-1.5">
-                    Select Category
-                  </label>
-                  {learnCategories.length === 0 ? (
-                    <p className="text-sm text-slate-400 bg-slate-50 p-3 rounded-lg">
-                      No learn categories set up yet. Ask your admin to create some.
-                    </p>
-                  ) : (
-                    <div className="grid grid-cols-2 gap-2">
-                      {learnCategories.map((cat) => (
-                        <button
-                          key={cat.id}
-                          type="button"
-                          onClick={() => setSelectedCategory(cat.id)}
-                          className={`flex items-center gap-2 p-3 rounded-xl border text-left transition-all ${
-                            selectedCategory === cat.id
-                              ? 'border-indigo-400 bg-indigo-50 text-indigo-700'
-                              : 'border-slate-200 hover:border-indigo-300 hover:bg-slate-50'
-                          }`}
-                        >
-                          {cat.icon_url && (
-                            <img src={cat.icon_url} alt="" className="w-5 h-5 object-contain" />
-                          )}
-                          <span className="text-xs font-bold">{cat.title}</span>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Optional due date */}
               <div>
-                <label className="text-sm font-bold text-slate-700 mb-1.5">
-                  Due Date <span className="font-normal text-slate-400">(optional)</span>
+                <label className="text-xs font-bold text-slate-700 mb-1.5 flex">
+                  Due Date <span className="ml-1 font-normal text-slate-400">(optional)</span>
                 </label>
                 <input
                   type="datetime-local"
                   value={dueDate}
                   onChange={(e) => setDueDate(e.target.value)}
-                  className="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blockly-blue bg-white"
-                />
-              </div>
-
-              {/* Optional description / instructions */}
-              <div>
-                <label className="text-sm font-bold text-slate-700 mb-1.5">
-                  Instructions <span className="font-normal text-slate-400">(optional)</span>
-                </label>
-                <textarea
-                  rows={3}
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Add any instructions for students…"
-                  className="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blockly-blue bg-white resize-none"
+                  className="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-300 bg-white"
                 />
               </div>
             </>
           )}
 
-          {error && (
-            <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{error}</p>
-          )}
-        </div>
+          {/* ── TOPIC TAB ──────────────────────────────────────────────── */}
+          {tab === 'topic' && (
+            <>
+              <p className="text-xs text-slate-500 bg-indigo-50 rounded-xl p-3 border border-indigo-100">
+                Publishes this lesson as a <strong>Learn topic</strong> visible to <strong>all students</strong> on the Learn page. No classroom required — no deadline.
+              </p>
 
-        {/* Footer */}
-        <div className="flex gap-3 px-6 py-4 border-t border-slate-100">
-          <button
-            onClick={onClose}
-            className="flex-1 btn py-2.5 text-sm font-semibold text-slate-600 bg-slate-100 rounded-xl "
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleSubmit}
-            disabled={loading || fetchLoading}
-            className="flex-1 py-2.5 text-sm font-semibold btn-primary rounded-xl btn disabled:opacity-50 "
-          >
-            {loading ? 'Sending…' : 'Hand Out'}
-          </button>
+              {/* Category */}
+              <div>
+                <label className="text-xs font-bold text-slate-700 mb-1.5 flex">
+                  Category <span className="text-red-500 ml-0.5">*</span>
+                </label>
+                {loadingTopicData ? (
+                  <div className="h-10 bg-slate-100 rounded-xl animate-pulse" />
+                ) : (
+                  <div className="relative">
+                    <select
+                      value={selectedCategory}
+                      onChange={(e) => setSelectedCategory(e.target.value)}
+                      className="w-full appearance-none px-3 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-300 bg-white pr-9"
+                    >
+                      <option value="">Select a category…</option>
+                      {categories.map((c) => (
+                        <option key={c.id} value={c.id}>{c.title}</option>
+                      ))}
+                    </select>
+                    <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                  </div>
+                )}
+              </div>
+
+              {/* Prerequisite — picks from ALL existing learn topics */}
+              <div>
+                <label className="text-xs font-bold text-slate-700 mb-1.5 flex gap-1 flex-wrap">
+                  Prerequisite Topic
+                  <span className="font-normal text-slate-400">— students must complete this first</span>
+                </label>
+                {loadingTopicData ? (
+                  <div className="h-10 bg-slate-100 rounded-xl animate-pulse" />
+                ) : (
+                  <div className="relative">
+                    <select
+                      value={prerequisiteTopicId}
+                      onChange={(e) => setPrerequisiteTopicId(e.target.value)}
+                      className="w-full appearance-none px-3 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-300 bg-white pr-9"
+                    >
+                      <option value="none">None — always unlocked</option>
+                      {allTopics
+                        .filter((t) => t.id !== lesson.id) // exclude self
+                        .map((t) => (
+                          <option key={t.id} value={t.id}>{t.title}</option>
+                        ))}
+                    </select>
+                    <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                  </div>
+                )}
+                {allTopics.filter((t) => t.id !== lesson.id).length === 0 && !loadingTopicData && (
+                  <p className="text-xs text-slate-400 mt-1">No other topics published yet — this will be unlocked by default.</p>
+                )}
+              </div>
+            </>
+          )}
+
+          {error && (
+            <p className="text-xs text-red-500 bg-red-50 px-3 py-2 rounded-lg">{error}</p>
+          )}
+
+          {/* Actions */}
+          <div className="flex gap-3 pt-1">
+            <button
+              onClick={onClose}
+              className="flex-1 py-2.5 text-sm font-semibold text-slate-600 bg-slate-100 rounded-xl hover:bg-slate-200 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSubmit}
+              disabled={submitting}
+              className="flex-1 py-2.5 text-sm font-semibold text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+            >
+              {submitting
+                ? 'Saving…'
+                : tab === 'lesson'
+                ? 'Hand Out'
+                : 'Publish to Learn'}
+            </button>
+          </div>
         </div>
       </div>
     </div>

@@ -28,19 +28,59 @@ export const lessonService = {
             quiz_questions(*),
             badges(id, title, description, icon_url)
           )
+        ),
+        lesson_tutorials(
+          id,
+          tutorial:tutorials(
+            id, title, description, difficulty_level, estimated_time_minutes, category,
+            tutorial_steps(
+              id, instruction_text, hint, step_order, order_index,
+              tutorial_step_files(id, filename, blocks_json, order_index)
+            ),
+            badges(id, title, description, icon_url)
+          )
         )
       `)
       .eq('id', lessonId)
       .single()
     if (error) throw error
-
+  
+    // ── Process quizzes (existing) ──────────────────────────────────────────
     const quizzes = (data.lesson_quizzes ?? []).map((lq) => ({
       ...lq,
       quiz: lq.quiz ? { ...lq.quiz, questions: lq.quiz.quiz_questions ?? [] } : null,
     }))
-
-    return { ...data, attachments: data.lesson_attachments ?? [], quizzes }
+  
+    // ── Process tutorials (new) ─────────────────────────────────────────────
+    const tutorials = (data.lesson_tutorials ?? []).map((lt) => ({
+      ...lt,
+      tutorial: lt.tutorial
+        ? {
+            ...lt.tutorial,
+            steps: (lt.tutorial.tutorial_steps ?? [])
+              .sort(
+                (a, b) =>
+                  (a.order_index ?? a.step_order ?? 0) -
+                  (b.order_index ?? b.step_order ?? 0)
+              )
+              .map((s) => ({
+                ...s,
+                tutorial_step_files: (s.tutorial_step_files ?? []).sort(
+                  (a, b) => (a.order_index ?? 0) - (b.order_index ?? 0)
+                ),
+              })),
+          }
+        : null,
+    }))
+  
+    return {
+      ...data,
+      attachments: data.lesson_attachments ?? [],
+      quizzes,
+      tutorials,
+    }
   },
+  
 
   async createLesson(payload) {
     const { data, error } = await supabase.from('lessons').insert(payload).select().single()

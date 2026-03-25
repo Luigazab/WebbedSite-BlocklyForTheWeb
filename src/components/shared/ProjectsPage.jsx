@@ -227,7 +227,7 @@ export default function ProjectsPage() {
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 bg-blockly-dark/10 p-2 rounded-2xl">
             {displayed.map((project) => (
               <ProjectCard
                 key={project.id}
@@ -288,7 +288,7 @@ function ProjectCard({ project, onClick }) {
       onClick={onClick}
       onMouseEnter={() => setShowPreview(true)}
       onMouseLeave={() => setShowPreview(false)}
-      className="bg-white rounded-2xl  hover:btn shadow border border-slate-200 overflow-hidden hover:border-blockly-purple hover:border hover:shadow-5xl transition-all! text-left group"
+      className="bg-white rounded-2xl  hover:btn shadow p-2 border border-white overflow-hidden hover:border-blockly-purple hover:border hover:shadow-5xl transition-all! text-left group"
     >
       {/* Thumbnail */}
       <div className="aspect-video bg-linear-to-b from-green-50 to-amber-50 flex items-center justify-center overflow-hidden relative">

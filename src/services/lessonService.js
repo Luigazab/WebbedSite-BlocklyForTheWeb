@@ -164,3 +164,36 @@ export const fetchLearnCategories = async () => {
   if (error) throw error
   return data
 }
+
+export const linkTutorialToLesson = async (lessonId, tutorialId) => {
+  const { data, error } = await supabase
+    .from('lesson_tutorials')
+    .insert({ lesson_id: lessonId, tutorial_id: tutorialId })
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+ 
+export const unlinkTutorialFromLesson = async (id) => {
+  const { error } = await supabase.from('lesson_tutorials').delete().eq('id', id)
+  if (error) throw error
+}
+ 
+/**
+ * Search a teacher's PUBLISHED tutorials — used by AttachTutorialModal.
+ */
+export const searchTeacherTutorials = async (teacherId, query = '') => {
+  let q = supabase
+    .from('tutorials')
+    .select('id, title, description, difficulty_level, estimated_time_minutes, tutorial_steps(id)')
+    .eq('teacher_id', teacherId)
+    .eq('is_published', true)
+    .order('created_at', { ascending: false })
+ 
+  if (query.trim()) q = q.ilike('title', `%${query.trim()}%`)
+ 
+  const { data, error } = await q
+  if (error) throw error
+  return data
+}

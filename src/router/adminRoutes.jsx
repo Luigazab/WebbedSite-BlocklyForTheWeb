@@ -7,6 +7,7 @@ import AdminProfile from '../dashboards/admin/pages/AdminProfile'
 import ProfilePage from '../dashboards/admin/pages/AdminProfile'
 import SettingsPage from '../components/shared/SettingsPage'
 import ContentManagement from '../dashboards/admin/pages/ContentManagement'
+import PlatformConfig from '../dashboards/admin/pages/PlatformConfig'
 
 export const adminRoutes = [
   {
@@ -17,6 +18,7 @@ export const adminRoutes = [
       { path: 'engagement', element: <UserEngagement /> },
       { path: 'reports', element: <ReportsAndFeedback /> },
       { path: 'contents', element: <ContentManagement /> },
+      { path: 'config', element: <PlatformConfig/> },
       { path: 'profile', element: <ProfilePage /> },
       { path: 'settings', element: <SettingsPage /> },
     ]

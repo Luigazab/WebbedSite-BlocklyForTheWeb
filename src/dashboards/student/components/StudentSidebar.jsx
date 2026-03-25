@@ -49,7 +49,7 @@ export default function StudentSidebar() {
   const tourId = getTourForRoute()
 
   return (
-    <aside className={`fixed top-0 left-0 h-screen bg-white border-r border-gray-200 flex flex-col transition-all duration-300 z-30 ${sidebarOpen ? 'w-64' : 'w-16'}`}>
+    <aside className={`fixed top-0 left-0 h-screen bg-blockly-purple/90 text-white border-r border-gray-200 flex flex-col transition-all duration-300 z-30 ${sidebarOpen ? 'w-64' : 'w-16'}`}>
       <div className="flex items-center justify-between px-4 py-5 border-b border-gray-100">
         {sidebarOpen && (
           <img src="/anotherlogo.png" alt="WebbedSite"  className='h-10 text-lg font-bold text-blockly-purple'/>
@@ -68,8 +68,8 @@ export default function StudentSidebar() {
             className={({ isActive }) =>
               `flex items-center gap-3 px-3 py-2.5 rounded-lg font-bold transition-colors
               ${isActive
-                ? 'bg-blockly-blue/10 text-blockly-blue'
-                : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                ? 'bg-blockly-dark/60 text-blockly-light'
+                : 'text-white hover:bg-gray-100 hover:text-gray-900'
               }`
             }
           >
@@ -80,7 +80,7 @@ export default function StudentSidebar() {
         {tourId && (
           <button
             onClick={handleHelpClick}
-            className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors text-gray-600 hover:bg-gray-100 hover:text-blockly-purple mt-auto"
+            className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors text-white hover:bg-gray-100 hover:text-blockly-purple mt-auto"
             title="Show tour"
           >
             <HelpCircle className="w-5 h-5 shrink-0" />
@@ -92,8 +92,8 @@ export default function StudentSidebar() {
       {/* User info at bottom */}
       {sidebarOpen && profile && (
         <div className="px-4 py-4 border-t border-gray-100">
-          <p className="text-md font-bold text-gray-800 truncate">{profile.username}</p>
-          <p className="text-sm text-gray-400 capitalize">{profile.role}</p>
+          <p className="text-md font-bold text-gray-200 truncate">{profile.username}</p>
+          <p className="text-sm text-gray-300 capitalize">{profile.role}</p>
         </div>
       )}
     </aside>

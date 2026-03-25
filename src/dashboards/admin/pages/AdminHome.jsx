@@ -242,7 +242,7 @@ export default function AdminHome() {
             <h3 className="text-gray-900 text-sm font-semibold">Open Feedback</h3>
             <p className="text-gray-400 text-xs mt-0.5">Requires attention</p>
           </div>
-          <Link to="/admin/feedback" className="text-amber-600 text-xs hover:text-amber-500 flex items-center gap-0.5 font-medium">
+          <Link to="/admin/reports" className="text-amber-600 text-xs hover:text-amber-500 flex items-center gap-0.5 font-medium">
             View all <ChevronRight size={12} />
           </Link>
         </div>

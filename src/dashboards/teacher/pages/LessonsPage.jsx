@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useNavigate } from 'react-router'
 import { fetchTeacherLessons, deleteLesson } from '../../../services/lessonService'
 import { useAuth } from '../../../hooks/useAuth'
@@ -59,6 +59,7 @@ export default function LessonsPage() {
   return (
     <div>
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
+
         {/* Page header */}
         <div className="flex items-start justify-between gap-4 mb-8">
           <div>
@@ -70,7 +71,9 @@ export default function LessonsPage() {
           <button
             onClick={() => navigate('/teacher/lessons/create')}
             className="flex btn btn-primary gap-2 items-center text-lg"
-          ><PlusIcon className='w-5 h-5'/>Create Lesson
+          >
+            <PlusIcon className="w-5 h-5" />
+            Create Lesson
           </button>
         </div>
 
@@ -88,9 +91,9 @@ export default function LessonsPage() {
           </div>
           <div className="flex gap-1.5 p-1 bg-white border border-slate-200 rounded-xl shadow-sm">
             {[
-              { key: 'all', label: 'All' },
+              { key: 'all',       label: 'All' },
               { key: 'published', label: 'Published' },
-              { key: 'draft', label: 'Draft' },
+              { key: 'draft',     label: 'Draft' },
             ].map((f) => (
               <button
                 key={f.key}
@@ -115,8 +118,10 @@ export default function LessonsPage() {
             ))}
           </div>
         ) : filtered.length === 0 ? (
-          <div className="flex flex-col bg-slate-200 rounded-3xl items-center justify-center py-12 text-center">
-            <div className="text-5xl mb-4 text-blockly-light bg-blockly-blue p-4 rounded-xl"><Clipboard size={48}/></div>
+          <div className="flex flex-col bg-slate-200 rounded-3xl items-center justify-center py-12 text-center gap-3">
+            <div className="text-blockly-light bg-blockly-blue p-4 rounded-xl">
+              <Clipboard size={48} />
+            </div>
             <h2 className="text-lg font-bold text-slate-700">
               {search || filter !== 'all' ? 'No lessons match your filters' : 'No lessons yet'}
             </h2>
@@ -130,7 +135,7 @@ export default function LessonsPage() {
                 onClick={() => navigate('/teacher/lessons/create')}
                 className="flex items-center gap-2 px-5 py-2.5 btn btn-primary text-sm font-bold rounded-xl shadow-sm shadow-indigo-200"
               >
-                <span className="text-lg"><Plus size={18} /></span> Create First Lesson
+                <PlusIcon size={18} /> Create First Lesson
               </button>
             )}
           </div>
@@ -149,14 +154,13 @@ export default function LessonsPage() {
         )}
       </div>
 
-      {/* Hand Out Modal */}
+      {/* Hand Out Modal — teacherId now passed explicitly */}
       {handOutTarget && (
         <HandOutModal
           lesson={handOutTarget}
+          teacherId={user.id}
           onClose={() => setHandOutTarget(null)}
-          onSuccess={() => {
-            setHandOutTarget(null)
-          }}
+          onSuccess={() => setHandOutTarget(null)}
         />
       )}
 

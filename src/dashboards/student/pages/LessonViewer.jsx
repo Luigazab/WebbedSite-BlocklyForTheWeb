@@ -10,6 +10,8 @@ import {
   Paperclip, Download, ExternalLink, Award,
   Calendar, AlertTriangle, FileText, HelpCircle,
   BookmarkCheck, AlertCircle,
+  BookOpen as TutorialBookIcon, LayoutList, Play,
+  Medal
 } from 'lucide-react'
 import { format, differenceInDays, isPast } from 'date-fns'
 
@@ -26,7 +28,7 @@ function Confetti() {
     size: `${6 + Math.random() * 8}px`,
   }))
   return (
-    <div className="fixed inset-0 pointer-events-none z-[10001] overflow-hidden">
+    <div className="fixed inset-0 pointer-events-none z-10001 overflow-hidden">
       <style>{`
         @keyframes confettiFall {
           0%   { transform: translateY(-20px) rotate(0deg); opacity: 1; }
@@ -52,8 +54,8 @@ function BadgePopup({ badge, onClose }) {
   return (
     <>
       <Confetti />
-      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[10000]" onClick={onClose} />
-      <div className="fixed inset-0 flex items-center justify-center z-[10000] p-6 pointer-events-none">
+      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-10000" onClick={onClose} />
+      <div className="fixed inset-0 flex items-center justify-center z-10000 p-6 pointer-events-none">
         <div className="pointer-events-auto bg-white rounded-3xl shadow-2xl p-10 flex flex-col items-center gap-5 max-w-xs w-full text-center"
           style={{ animation: 'popIn 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards' }}>
           <style>{`
@@ -67,7 +69,7 @@ function BadgePopup({ badge, onClose }) {
             }
           `}</style>
 
-          <div className="w-28 h-28 rounded-full bg-gradient-to-br from-yellow-200 to-yellow-400 flex items-center justify-center shadow-lg shadow-yellow-300/50"
+          <div className="w-28 h-28 rounded-full bg-linear-to-br from-yellow-200 to-yellow-400 flex items-center justify-center shadow-lg shadow-yellow-300/50"
             style={{ animation: 'badgeFloat 2.5s ease-in-out infinite' }}>
             {badge.icon_url
               ? <img src={badge.icon_url} alt={badge.title} className="w-20 h-20 object-contain drop-shadow-md" />
@@ -296,6 +298,7 @@ export default function LessonViewer() {
   const quiz            = quizzes[0]?.quiz ?? null
   const badge           = quiz?.badges?.[0] ?? null
   const teacher         = currentLesson?.teacher
+  const tutorials       = currentLesson?.tutorials ?? []
 
   // ── Loading ───────────────────────────────────────────────────────────────
   if (loading && !currentLesson) {
@@ -322,7 +325,7 @@ export default function LessonViewer() {
       </div>
 
       {/* Sticky mini-bar */}
-      <div className="sticky top-0 z-30 bg-white/95 backdrop-blur-sm border-b border-gray-100 shadow-sm -mx-6 px-6 mb-6">
+      <div className="sticky top-0 z-30 bg-white/95 backdrop-blur-sm border-b border-gray-100 shadow-sm px-6 mb-6">
         <div className="max-w-4xl mx-auto py-2.5 flex items-center justify-between gap-4">
           <button onClick={goBack} className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-700 transition-colors">
             <ArrowLeft className="w-4 h-4" />
@@ -345,12 +348,13 @@ export default function LessonViewer() {
       </div>
 
       {/* Page body */}
-      <div className="max-w-4xl mx-auto flex flex-col gap-8 pb-24">
+      <div className="max-w-5xl mx-auto flex flex-col gap-8 pb-24">
 
         {/* Lesson header */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-8 py-7 flex flex-col gap-5">
-          <h1 className="text-2xl font-bold text-gray-900 leading-tight">{currentLesson.title}</h1>
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-gray-500">
+        <div className="px-8 py-7 flex flex-col">
+          <h1 className="text-2xl font-bold text-slate-900 leading-relaxed">{currentLesson.title}</h1>
+          <hr />
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-2 py-2 text-sm text-slate-500">
             {teacher && (
               <div className="flex items-center gap-2">
                 <img src={teacher.avatar_url || '/default-avatar.png'} alt={teacher.username} className="w-6 h-6 rounded-full object-cover border border-gray-200" />
@@ -371,20 +375,10 @@ export default function LessonViewer() {
             )}
           </div>
           {dueDate && <DueDateBanner dueDate={dueDate} />}
-          {badge && (
-            <div className="flex items-center gap-3 px-4 py-3 bg-yellow-50 rounded-xl border border-yellow-200">
-              {badge.icon_url ? <img src={badge.icon_url} alt={badge.title} className="w-8 h-8 object-contain" /> : <Award className="w-7 h-7 text-yellow-500" />}
-              <div>
-                <p className="text-xs font-semibold text-yellow-700">Badge you can earn</p>
-                <p className="text-sm font-bold text-yellow-800">{badge.title}</p>
-                {badge.description && <p className="text-xs text-yellow-600 mt-0.5">{badge.description}</p>}
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Content */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-8 py-8 min-h-[200px]">
+        <div className="rounded-2xl px-8">
           <LessonContent content={currentLesson.content ?? currentLesson.content_markdown} />
         </div>
 
@@ -400,6 +394,25 @@ export default function LessonViewer() {
             </div>
           </div>
         )}
+
+        {tutorials.length > 0 && (
+          <div className="flex flex-col gap-3 items-center">
+            {tutorials.map((lt) => {
+              const tut = lt.tutorial
+              if (!tut) return null
+              const stepCount = tut.steps?.length ?? 0
+              return (
+                <TutorialLaunchCard
+                  key={lt.id}
+                  tutorial={tut}
+                  stepCount={stepCount}
+                  dueDate={dueDate}
+                />
+              )
+            })}
+          </div>
+        )}
+        
 
         {/* Quiz */}
         {hasQuiz && quiz && (
@@ -421,6 +434,19 @@ export default function LessonViewer() {
             ) : (
               <QuizSection quiz={quiz} onComplete={handleQuizComplete} />
             )}
+          </div>
+        )}
+    
+        {badge && (
+          <div className='flex items-center justify-end'>
+            <div className="flex items-center ml-0 gap-3 px-4 py-3 bg-purple-50 rounded-xl border border-purple-200">
+              {badge.icon_url ? <img src={badge.icon_url} alt={badge.title} className="w-8 h-8 object-contain" /> : <Award className="w-7 h-7 text-purple-500" />}
+              <div>
+                <p className="text-xs font-semibold text-purple-700">Badge you can earn</p>
+                <p className="text-sm font-bold text-purple-800">{badge.title}</p>
+                {badge.description && <p className="text-xs text-purple-600 mt-0.5">{badge.description}</p>}
+              </div>
+            </div>
           </div>
         )}
 
@@ -463,6 +489,79 @@ export default function LessonViewer() {
             </div>
           )}
         </div>
+      </div>
+    </div>
+  )
+}
+function TutorialLaunchCard({ tutorial, stepCount, dueDate }) {
+  const navigate = useNavigate()
+ 
+  const DIFFICULTY_META = {
+    beginner:     { label: 'Beginner',     color: 'bg-emerald-100 text-emerald-700' },
+    intermediate: { label: 'Intermediate', color: 'bg-amber-100  text-amber-700'   },
+    advanced:     { label: 'Advanced',     color: 'bg-red-100    text-red-700'      },
+  }
+  const diff = DIFFICULTY_META[tutorial.difficulty_level] ?? DIFFICULTY_META.beginner
+ 
+  return (
+    <div className="bg-white overflow-hidden card border-l-8 rounded-l-none! border-l-blockly-blue max-w-4xl shadow-lg!">
+ 
+      <div className="flex items-center gap-4 ">
+        <div className="w-11 h-11 rounded-xl bg-blockly-blue/10 flex items-center justify-center shrink-0 mt-0.5">
+          <TutorialBookIcon className="w-5 h-5 text-blockly-blue" />
+        </div>
+ 
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap mb-1">
+            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${diff.color}`}>
+              {diff.label}
+            </span>
+            <span className="text-xs text-gray-400 flex items-center gap-1">
+              <LayoutList size={11} />
+              {stepCount} step{stepCount !== 1 ? 's' : ''}
+            </span>
+            {tutorial.estimated_time_minutes && (
+              <span className="text-xs text-gray-400 flex items-center gap-1">
+                <Clock size={11} />
+                {tutorial.estimated_time_minutes} min
+              </span>
+            )}
+          </div>
+ 
+          <h3 className="font-bold text-gray-900 text-sm">{tutorial.title}</h3>
+ 
+          {tutorial.description && (
+            <p className="text-xs text-gray-500 mt-1 line-clamp-2">{tutorial.description}</p>
+          )}
+ 
+          {/* Badge preview */}
+          {tutorial.badges?.[0] && (
+            <div className="flex items-center gap-2 mt-2">
+              {tutorial.badges[0].icon_url ? (
+                <img
+                  src={tutorial.badges[0].icon_url}
+                  alt={tutorial.badges[0].title}
+                  className="w-5 h-5 object-contain"
+                />
+              ) : 
+              <span className="text-xs text-amber-600 font-semibold">
+                <Medal/>
+              </span>
+              }
+              <span className="text-xs text-amber-600 font-semibold">
+                Earn: {tutorial.badges[0].title}
+              </span>
+            </div>
+          )}
+        </div>
+ 
+        <button
+          onClick={() => navigate(`/student/tutorials/${tutorial.id}`)}
+          className="shrink-0 flex items-center gap-2 px-4 py-2.5 btn btn-primary text-sm font-bold rounded-xl shadow-md shadow-blockly-blue/20 self-center"
+        >
+          <Play className="w-4 h-4" />
+          Start
+        </button>
       </div>
     </div>
   )
