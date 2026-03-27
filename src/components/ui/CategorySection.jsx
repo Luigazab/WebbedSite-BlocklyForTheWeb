@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import TopicNode from './TopicNode'
+import { Construction } from 'lucide-react'
 
 export default function CategorySection({ category, topics, onStart }) {
   const [activeTopicId, setActiveTopicId] = useState(null)
@@ -13,11 +14,11 @@ export default function CategorySection({ category, topics, onStart }) {
   const totalCount = topics.length
 
   return (
-    <section className="mb-12 rounded-2xl p-2"
+    <details className="mb-8 rounded-2xl p-2"
       style={{backgroundColor: `${color}15`, borderColor: `${color}40`}}
     >
-      <div 
-        className="rounded-2xl p-4 gap-4 border border-b-8 space-y-7"
+      <summary 
+        className="rounded-2xl p-4 gap-4 border border-b-8 space-y-7 list-none cursor-pointer"
         style={{ backgroundColor: `${color}50`, borderColor: `${color}80` }}>
         <div
         className="flex items-center gap-4"
@@ -51,52 +52,60 @@ export default function CategorySection({ category, topics, onStart }) {
           />
         </div>
       
-      </div>
+      </summary>
 
       <div className="relative">
         <div className="flex flex-col gap-10">
-          {topics.map((topic, idx) => {
-            const isEven = idx % 2 === 0
-            const isLast = idx === topics.length - 1
+          {topics.length === 0 ? (
+            <div className='flex flex-col items-center p-8'>
+              <span className='bg-amber-400 p-2 rounded-2xl'>
+                <Construction size={48} color='green'/>
+              </span>
+              <p className="text-center text-slate-500 font-semibold py-6">Topics still under construction. Please wait for a teacher to add one.</p>
+            </div>
+          ): (
+            topics.map((topic, idx) => {
+              const isEven = idx % 2 === 0
+              const isLast = idx === topics.length - 1
 
-            return (
-              <div key={topic.id} className="relative flex flex-col items-center mt-8">
-                
-                {!isLast && (
-                  <div
-                    className="absolute"
-                    style={{
-                      left: '40%',
-                      top: '50px',
-                      width: '200px',
-                      borderTop: `4px dashed ${color}`,
-                      transform: `translateX(${isEven ? '0' : '-100%'}) rotate(${isEven ? 35 : -35}deg)`,
-                      transformOrigin: isEven ? 'left center' : 'right center',
-                    }}
-                  />
-                )}
-                <div className="relative flex justify-center">
-                  <div
-                    style={{
-                      transform: `translateX(${isEven ? '-120px' : '120px'})`,
-                    }}
-                  >
-                    <TopicNode
-                      topic={topic}
-                      color={color}
-                      index={idx}
-                      onStart={onStart}
-                      isActive={activeTopicId === topic.id}
-                      onToggle={() => handleToggle(topic.id)}
-                      disableOffset={true}
+              return (
+                <div key={topic.id} className="relative flex flex-col items-center mt-8">
+                  
+                  {!isLast && (
+                    <div
+                      className="absolute left-[30%] sm:left-[40%]"
+                      style={{
+                        top: '50px',
+                        width: '200px',
+                        borderTop: `4px dashed ${color}`,
+                        transform: `translateX(${isEven ? '0' : '-20%'}) rotate(${isEven ? 35 : -35}deg)`,
+                        transformOrigin: isEven ? 'left center' : 'right center',
+                      }}
                     />
+                  )}
+                  <div className="relative flex justify-center">
+                    <div
+                      style={{
+                        transform: `translateX(${isEven ? '-120px' : '120px'})`,
+                      }}
+                    >
+                      <TopicNode
+                        topic={topic}
+                        color={color}
+                        index={idx}
+                        onStart={onStart}
+                        isActive={activeTopicId === topic.id}
+                        onToggle={() => handleToggle(topic.id)}
+                        disableOffset={true}
+                      />
+                    </div>
                   </div>
                 </div>
-              </div>
-            )
-          })}
+              )
+            })
+          )}
         </div>
       </div>
-    </section>
+    </details>
   )
 }
