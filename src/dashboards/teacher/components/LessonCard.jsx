@@ -1,5 +1,4 @@
-import { Book, BookCopyIcon, Clock, Paperclip, Pencil, Trash2 } from 'lucide-react'
-import { useState } from 'react'
+import { Book, BookCopyIcon, Calendar, Clock, Edit2, Paperclip, Pencil, Trash2 } from 'lucide-react'
 
 function timeAgo(dateStr) {
   const diff = Date.now() - new Date(dateStr).getTime()
@@ -13,102 +12,74 @@ function timeAgo(dateStr) {
 }
 
 export default function LessonCard({ lesson, onEdit, onDelete, onHandOut }) {
-  const [menuOpen, setMenuOpen] = useState(false)
   const attachCount = lesson.lesson_attachments?.length ?? 0
   const quizCount = lesson.lesson_quizzes?.length ?? 0
 
   return (
-    <div className="group relative bg-white rounded-2xl border border-slate-200 hover:border-indigo-300 hover:shadow-md transition-all duration-200 overflow-hidden">
+    <div className="group relative bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 overflow-hidden flex flex-col">
       {/* Published indicator strip */}
-      <div className={`h-1 w-full ${lesson.is_published ? 'bg-emerald-400' : 'bg-slate-200'}`} />
-
-      <div className="p-5">
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
-              <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
-                lesson.is_published
-                  ? 'bg-emerald-100 text-emerald-700'
-                  : 'bg-slate-100 text-slate-500'
-              }`}>
-                {lesson.is_published ? 'Published' : 'Draft'}
-              </span>
-            </div>
-            <h3 className="text-sm font-bold text-slate-800 leading-snug truncate">
-              {lesson.title}
-            </h3>
-            <p className="text-xs text-slate-400 mt-1">{timeAgo(lesson.updated_at || lesson.created_at)}</p>
-          </div>
-
-          {/* Actions menu */}
-          <div className="relative">
-            <button
-              onClick={() => setMenuOpen((v) => !v)}
-              className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
-            >
-              ⋮
-            </button>
-            {menuOpen && (
-              <>
-                <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
-                <div className="absolute right-0 top-8 z-20 bg-white rounded-xl shadow-lg border border-slate-200 w-44 py-1 text-sm">
-                  <button
-                    onClick={() => { setMenuOpen(false); onEdit(lesson) }}
-                    className="flex gap-2 w-full text-left px-4 py-2 hover:bg-slate-100 text-slate-700"
-                  >
-                    <Pencil size={16}/>Edit
-                  </button>
-                  <button
-                    onClick={() => { setMenuOpen(false); onHandOut(lesson) }}
-                    className="flex gap-2 w-full text-left px-4 py-2 hover:bg-slate-100 text-slate-700"
-                  >
-                    <BookCopyIcon size={16}/>Hand Out
-                  </button>
-                  <hr className="my-1 border-slate-100" />
-                  <button
-                    onClick={() => { setMenuOpen(false); onDelete(lesson) }}
-                    className="flex gap-2 w-full text-left px-4 py-2 hover:bg-red-50 text-red-600"
-                  >
-                    <Trash2 size={16}/>Delete
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-
-        {/* Content preview */}
-        {lesson.content_markdown && (
-          <p className="text-xs text-slate-500 mt-2 line-clamp-2 leading-relaxed">
-            {lesson.content_markdown.replace(/[#*`>_\-]/g, '').slice(0, 120)}…
-          </p>
-        )}
-
-        {/* Meta badges */}
-        <div className="flex items-center gap-2 mt-3 flex-wrap">
+      <div className={`h-1.5 w-full ${lesson.is_published ? 'bg-emerald-400' : 'bg-indigo-400'}`} />
+        
+      <div className="flex flex-col flex-1 p-5 gap-3">
+        {/* Stats row */}
+        <div className="flex items-center gap-3 flex-wrap">
+          <span className={`px-2.5 py-0.5 text-[11px] font-bold rounded-full ${
+            lesson.is_published
+              ? 'bg-green-100 text-green-700'
+              : 'bg-slate-100 text-slate-500'
+          }`}>
+            {lesson.is_published ? 'Published' : 'Draft'}
+          </span>
           {attachCount > 0 && (
-            <span className="flex items-center gap-1 text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded-full">
+            <span className="px-2.5 py-0.5 flex gap-2 items-center text-[11px] font-bold rounded-full text-slate-500 bg-slate-100">
               <Paperclip size={12} />{attachCount} file{attachCount !== 1 ? 's' : ''}
             </span>
           )}
           {quizCount > 0 && (
-            <span className="flex items-center gap-1 text-xs text-blockly-blue bg-blockly-blue/10 px-2 py-1 rounded-full">
+            <span className="px-2.5 py-0.5 flex gap-2 items-center text-[11px] font-bold rounded-full text-indigo-600 bg-indigo-50">
               <Book size={12} />{quizCount} quiz
             </span>
           )}
+        </div>
+        <h3 className="text-sm font-black text-slate-800 leading-snug line-clamp-2 truncate">
+          {lesson.title}
+        </h3>
+        {/* Content preview */}
+        {lesson.content_markdown && (
+          <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed">
+            {lesson.content_markdown.replace(/[#*`>_\-]/g, '').slice(0, 120)}…
+          </p>
+        )}
+        {/* Meta badges */}
+        <div className="flex items-center gap-4 mt-auto pt-1 text-xs text-slate-400 font-medium">
+            <p className="flex items-center gap-1"><Calendar size={12} /> {timeAgo(lesson.updated_at || lesson.created_at)}</p>
           {lesson.estimated_duration && (
-            <span className="flex items-center gap-1 text-xs text-slate-400 bg-slate-50 px-2 py-1 rounded-full">
+            <span className="flex items-center gap-1 ">
               <Clock size={12} />{lesson.estimated_duration} min
             </span>
           )}
         </div>
+      </div>
 
-        {/* Hand out button */}
+      {/* Action Bar */}
+      <div className='border-t border-slate-100 px-5 py-3 flex items-center justify-end gap-2 bg-slate-50'>
         <button
           onClick={() => onHandOut(lesson)}
-          className="mt-3 w-full py-2 text-sm font-bold text-blockly-blue bg-blockly-blue/10 hover:bg-blockly-blue/20 rounded-lg transition-colors"
+          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
         >
-          Hand Out
+          <BookCopyIcon size={13}/> Hand Out
+        </button>
+        <button
+          onClick={() => onEdit(lesson)}
+          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+        >
+          <Edit2 size={13} /> Edit
+        </button>
+        <button
+          onClick={() => onDelete(lesson)}
+          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+        >
+          <Trash2 size={13} /> Delete
         </button>
       </div>
     </div>

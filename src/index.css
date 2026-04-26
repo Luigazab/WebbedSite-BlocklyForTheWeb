@@ -158,7 +158,7 @@
     @apply border-2 border-black
   } */
   .blocklyToolbox {
-    @apply bg-gray-800! border-r border-black
+    @apply bg-white! border-r text-black border-black
   }
   .blocklyTreeSeparator{
     @apply border-3  border-blockly-blue! rounded-full
@@ -167,7 +167,6 @@
     @apply px-3! py-2 my-1 flex items-center justify-center rounded-sm btn transition-all;
 
     background: var(--cat-color) !important;
-
 
     transition:
       transform .15s ease,
@@ -188,7 +187,7 @@
   /* keep text + icon readable */
   .blocklyToolboxCategoryLabel,
   .blocklyToolboxCategory svg{
-    color:white;
+    color:black;
   }
   .htmlCategory{
     @apply  py-1 bg-[#f16529] hover:bg-[#f16529]! border-2! border-black! min-w-42.5! my-1 hover:drop-shadow-[0_3px_0_black] hover:-translate-y-1 transition-all rounded-sm
@@ -203,13 +202,13 @@
     @apply btn btn-primary! rounded-sm my-1 border-l-0! px-2! items-center flex justify-center;
   }
   .blocklySvg{
-    @apply bg-amber-50!;
+    @apply bg-gray-200!;
   }
   .blocklyToolboxCategoryGroup{
     @apply  text-center px-2 border-l-blockly-yellow border-l-2;
   }
   .customLabel{
-    @apply font-bold text-center text-white! text-xl
+    @apply font-bold text-center text-black! tracking-widest! text-xl
   }
   .blocklyFlyout{
     @apply flex p-0! bg-slate-950/60! rounded-tr-2xl rounded-br-2xl
@@ -237,8 +236,8 @@
   fill: #b370ff; /* Tailwind's orange-700 */
 }
 .blocklyDiv {
-  scrollbar-width: thin;
-  scrollbar-color: #4a90e2 #1a1a1a;
+  scrollbar-width: thin !important;
+  scrollbar-color: #4a90e2 white;
 }
 
 .blocklyDiv::-webkit-scrollbar {

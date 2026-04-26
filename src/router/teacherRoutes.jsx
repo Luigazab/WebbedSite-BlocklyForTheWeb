@@ -17,6 +17,8 @@ import CreateQuizPage from '../dashboards/teacher/pages/CreateQuizPage'
 import TutorialsPage from '../dashboards/teacher/pages/TutorialsPage'
 import TutorialBuilderPage from '../dashboards/teacher/pages/TutorialBuilderPage'
 import TutorialLayout from '../dashboards/teacher/TutorialLayout'
+import LearnManagementPage from '../dashboards/teacher/pages/LearnManagementPage'
+import TopicViewer from '../dashboards/student/pages/TopicViewer'
 
 export const teacherRoutes = [
   {
@@ -25,6 +27,8 @@ export const teacherRoutes = [
       { index: true,                                       element: <TeacherHome /> },
       { path: 'projects',                                  element: <ProjectsPage /> },
       { path: 'learn',                                     element: <LearnPage /> },
+      { path: 'learn/management',                          element: <LearnManagementPage /> },
+      { path: 'learn/:topicId', element: <TopicViewer /> },
 
       // Lessons
       { path: 'lessons',                                   element: <LessonsPage /> },

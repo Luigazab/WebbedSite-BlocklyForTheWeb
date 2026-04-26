@@ -1,19 +1,17 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
-import { useParams, useNavigate, useLocation } from 'react-router'
+import { useParams, useNavigate } from 'react-router'
 import { useAuthStore } from '../../../store/authStore'
-import { useLessonStore } from '../../../store/lessonStore'
-import { useLesson } from '../../../hooks/useLesson'
+import { useLearnStore } from '../../../store/learnStore'
+import { useLearn } from '../../../hooks/useLearn'
 import LessonContent from '../../../components/shared/LessonContent'
-import QuizSection from '../components/QuizSection'
+import QuizSection from '../../student/components/QuizSection'
 import {
-  ArrowLeft, Clock, CheckCircle2, Loader2,
-  Paperclip, Download, ExternalLink, Award,
-  Calendar, AlertTriangle, FileText, HelpCircle,
-  BookmarkCheck, AlertCircle,
-  BookOpen as TutorialBookIcon, LayoutList, Play,
-  Medal
+  ArrowLeft, Clock, CheckCircle2, Loader2, MapPin,
+  Paperclip, Download, ExternalLink, Award, FileText,
+  HelpCircle, BookmarkCheck, AlertCircle, BookOpen as TutorialIcon,
+  LayoutList, Play, Medal, Calendar,
 } from 'lucide-react'
-import { format, differenceInDays, isPast } from 'date-fns'
+import { format } from 'date-fns'
 
 // ─── Confetti ─────────────────────────────────────────────────────────────────
 const CONFETTI_COLORS = ['#7c3aed','#a78bfa','#fbbf24','#34d399','#60a5fa','#f472b6','#fb923c','#4ade80']
@@ -28,7 +26,7 @@ function Confetti() {
     size: `${6 + Math.random() * 8}px`,
   }))
   return (
-    <div className="fixed inset-0 pointer-events-none z-10001 overflow-hidden">
+    <div className="fixed inset-0 pointer-events-none z-[10001] overflow-hidden">
       <style>{`
         @keyframes confettiFall {
           0%   { transform: translateY(-20px) rotate(0deg); opacity: 1; }
@@ -48,40 +46,29 @@ function Confetti() {
   )
 }
 
-// ─── Badge popup — lives in LessonViewer so it survives QuizSection re-renders ─
-
 function BadgePopup({ badge, onClose }) {
   return (
     <>
       <Confetti />
-      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-10000" onClick={onClose} />
-      <div className="fixed inset-0 flex items-center justify-center z-10000 p-6 pointer-events-none">
+      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[10000]" onClick={onClose} />
+      <div className="fixed inset-0 flex items-center justify-center z-[10000] p-6 pointer-events-none">
         <div className="pointer-events-auto bg-white rounded-3xl shadow-2xl p-10 flex flex-col items-center gap-5 max-w-xs w-full text-center"
           style={{ animation: 'popIn 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards' }}>
           <style>{`
-            @keyframes popIn {
-              from { transform: scale(0.4); opacity: 0; }
-              to   { transform: scale(1);   opacity: 1; }
-            }
-            @keyframes badgeFloat {
-              0%,100% { transform: translateY(0) rotate(-3deg); }
-              50%     { transform: translateY(-10px) rotate(3deg); }
-            }
+            @keyframes popIn { from { transform: scale(0.4); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+            @keyframes badgeFloat { 0%,100% { transform: translateY(0) rotate(-3deg); } 50% { transform: translateY(-10px) rotate(3deg); } }
           `}</style>
-
-          <div className="w-28 h-28 rounded-full bg-linear-to-br from-yellow-200 to-yellow-400 flex items-center justify-center shadow-lg shadow-yellow-300/50"
+          <div className="w-28 h-28 rounded-full bg-gradient-to-br from-yellow-200 to-yellow-400 flex items-center justify-center shadow-lg shadow-yellow-300/50"
             style={{ animation: 'badgeFloat 2.5s ease-in-out infinite' }}>
             {badge.icon_url
               ? <img src={badge.icon_url} alt={badge.title} className="w-20 h-20 object-contain drop-shadow-md" />
               : <Award className="w-14 h-14 text-yellow-700" />}
           </div>
-
           <div className="flex flex-col items-center gap-1.5">
             <p className="text-xs font-bold text-yellow-600 uppercase tracking-widest">Badge Earned!</p>
             <h2 className="text-xl font-black text-gray-900">{badge.title}</h2>
             {badge.description && <p className="text-sm text-gray-500 leading-relaxed">{badge.description}</p>}
           </div>
-
           <button onClick={onClose}
             className="mt-1 px-8 py-2.5 bg-blockly-purple text-white text-sm font-bold rounded-xl hover:bg-blockly-purple/90 transition-colors shadow-md shadow-blockly-purple/30">
             Awesome!
@@ -92,15 +79,13 @@ function BadgePopup({ badge, onClose }) {
   )
 }
 
-// ─── Attachment ───────────────────────────────────────────────────────────────
 function AttachmentItem({ attachment }) {
-  const isLink   = attachment.file_type === 'link'
+  const isLink = attachment.file_type === 'link'
   const sizeLabel = attachment.file_size
     ? attachment.file_size > 1_000_000
       ? `${(attachment.file_size / 1_000_000).toFixed(1)} MB`
       : `${Math.round(attachment.file_size / 1000)} KB`
     : null
-
   return (
     <a href={attachment.file_url} target="_blank" rel="noopener noreferrer"
       className="flex items-center gap-3 px-4 py-3 bg-gray-50 rounded-xl border border-gray-100 hover:bg-gray-100 hover:border-gray-200 transition-all group">
@@ -118,51 +103,66 @@ function AttachmentItem({ attachment }) {
   )
 }
 
-// ─── Due date banner ──────────────────────────────────────────────────────────
-function DueDateBanner({ dueDate }) {
-  if (!dueDate) return null
-  const due  = new Date(dueDate)
-  const days = differenceInDays(due, new Date())
-  const past = isPast(due)
-  const cfg  = past
-    ? { bg: 'bg-red-50 border-red-200',       text: 'text-red-700',    label: `Overdue by ${Math.abs(days)} day${Math.abs(days) !== 1 ? 's' : ''}` }
-    : days === 0 ? { bg: 'bg-orange-50 border-orange-200', text: 'text-orange-700', label: 'Due today' }
-    : days === 1 ? { bg: 'bg-orange-50 border-orange-200', text: 'text-orange-700', label: 'Due tomorrow' }
-    : days <= 3  ? { bg: 'bg-yellow-50 border-yellow-200', text: 'text-yellow-700', label: `Due in ${days} days` }
-    :              { bg: 'bg-blue-50 border-blue-200',     text: 'text-blue-700',   label: `Due in ${days} days` }
-
+function TutorialLaunchCard({ tutorial }) {
+  const navigate = useNavigate()
+  const DIFF = {
+    beginner:     { label: 'Beginner',     color: 'bg-emerald-100 text-emerald-700' },
+    intermediate: { label: 'Intermediate', color: 'bg-amber-100 text-amber-700'    },
+    advanced:     { label: 'Advanced',     color: 'bg-red-100 text-red-700'         },
+  }
+  const diff = DIFF[tutorial.difficulty_level] ?? DIFF.beginner
+  const stepCount = tutorial.steps?.length ?? 0
   return (
-    <div className={`flex items-center gap-3 px-4 py-3 rounded-xl border ${cfg.bg}`}>
-      <AlertTriangle className={`w-4 h-4 shrink-0 ${cfg.text}`} />
-      <div>
-        <p className={`text-sm font-bold ${cfg.text}`}>{cfg.label}</p>
-        <p className={`text-xs ${cfg.text} opacity-75`}>{format(due, 'EEEE, MMMM d, yyyy · h:mm a')}</p>
+    <div className="bg-white overflow-hidden rounded-2xl border-l-8 border-l-blockly-blue shadow-lg">
+      <div className="flex items-center gap-4 p-5">
+        <div className="w-11 h-11 rounded-xl bg-blockly-blue/10 flex items-center justify-center shrink-0">
+          <TutorialIcon className="w-5 h-5 text-blockly-blue" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap mb-1">
+            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${diff.color}`}>{diff.label}</span>
+            <span className="text-xs text-gray-400 flex items-center gap-1"><LayoutList size={11} />{stepCount} step{stepCount !== 1 ? 's' : ''}</span>
+            {tutorial.estimated_time_minutes && (
+              <span className="text-xs text-gray-400 flex items-center gap-1"><Clock size={11} />{tutorial.estimated_time_minutes} min</span>
+            )}
+          </div>
+          <h3 className="font-bold text-gray-900 text-sm">{tutorial.title}</h3>
+          {tutorial.description && <p className="text-xs text-gray-500 mt-1 line-clamp-2">{tutorial.description}</p>}
+          {tutorial.badges?.[0] && (
+            <div className="flex items-center gap-2 mt-2">
+              {tutorial.badges[0].icon_url
+                ? <img src={tutorial.badges[0].icon_url} alt={tutorial.badges[0].title} className="w-5 h-5 object-contain" />
+                : <Medal className="w-4 h-4 text-amber-500" />}
+              <span className="text-xs text-amber-600 font-semibold">Earn: {tutorial.badges[0].title}</span>
+            </div>
+          )}
+        </div>
+        <button
+          onClick={() => navigate(`/student/tutorials/${tutorial.id}`)}
+          className="shrink-0 flex items-center gap-2 px-4 py-2.5 btn btn-primary text-sm font-bold rounded-xl self-center"
+        >
+          <Play className="w-4 h-4" /> Start
+        </button>
       </div>
     </div>
   )
 }
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
-export default function LessonViewer() {
-  const { lessonId, classroomId: paramClassroomId } = useParams()
+export default function TopicViewer() {
+  const { topicId } = useParams()
   const navigate = useNavigate()
-  const location = useLocation()
-  const profile  = useAuthStore((s) => s.profile)
+  const profile = useAuthStore((s) => s.profile)
 
-  const dueDate     = location.state?.dueDate     ?? null
-  const classroomId = paramClassroomId ?? location.state?.classroomId ?? null
-
-  const { currentLesson, lessonProgress, loading, fetchLesson, fetchProgress } = useLessonStore()
-  const { handleUpdateProgress } = useLesson()
+  const { currentTopic, currentTopicProgress, topicLoading, fetchTopic, clearCurrentTopic } = useLearnStore()
+  const { handleUpdateTopicProgress, handleCompleteTopicFromViewer } = useLearn()
 
   const [scrollProgress, setScrollProgress] = useState(0)
   const [quizCompleted,  setQuizCompleted]   = useState(false)
   const [saving,         setSaving]          = useState(false)
   const [finishing,      setFinishing]       = useState(false)
-  // locked: once true, never goes back — prevents progress bar bounce
   const [locked,         setLocked]          = useState(false)
   const [timeSpent,      setTimeSpent]       = useState(0)
-  // Badge popup lives HERE so it isn't destroyed by QuizSection unmounting
   const [pendingBadge,   setPendingBadge]    = useState(null)
 
   const progressTimer = useRef(null)
@@ -170,35 +170,35 @@ export default function LessonViewer() {
   const lastSaved     = useRef(0)
   const mainElRef     = useRef(null)
 
-  // ── Fetch ─────────────────────────────────────────────────────────────────
   useEffect(() => {
-    if (lessonId && profile?.id) {
-      fetchLesson(lessonId)
-      fetchProgress(profile.id, lessonId)
+    if (topicId && profile?.id) {
+      fetchTopic(topicId, profile.id)
     }
     mainElRef.current =
       document.querySelector('main.wrapper') ??
       document.querySelector('main') ??
       window
-    return () => { clearInterval(timeTimer.current); clearTimeout(progressTimer.current) }
-  }, [lessonId, profile?.id])
-
-  useEffect(() => {
-    const saved = lessonProgress[lessonId]
-    if (!saved) return
-    if ((saved.progress_percentage ?? 0) >= 100) {
-      setLocked(true)
-    } else if (saved.scroll_position && mainElRef.current) {
-      setTimeout(() => mainElRef.current?.scrollTo({ top: saved.scroll_position, behavior: 'instant' }), 150)
+    return () => {
+      clearInterval(timeTimer.current)
+      clearTimeout(progressTimer.current)
+      clearCurrentTopic()
     }
-  }, [currentLesson])
+  }, [topicId, profile?.id])
+
+  // Restore position / lock if already completed
+  useEffect(() => {
+    if (!currentTopicProgress) return
+    if ((currentTopicProgress.progress_percentage ?? 0) >= 100) {
+      setLocked(true)
+      setQuizCompleted(true)
+    }
+  }, [currentTopic])
 
   useEffect(() => {
     timeTimer.current = setInterval(() => setTimeSpent((t) => t + 1), 1000)
     return () => clearInterval(timeTimer.current)
   }, [])
 
-  // ── Scroll tracker ────────────────────────────────────────────────────────
   const handleScroll = useCallback(() => {
     if (locked) return
     const el = mainElRef.current
@@ -214,10 +214,13 @@ export default function LessonViewer() {
     progressTimer.current = setTimeout(() => {
       if (Math.abs(pct - lastSaved.current) >= 5 || pct >= 95) {
         lastSaved.current = pct
-        handleUpdateProgress(lessonId, { progress_percentage: pct, scroll_position: scrollTop, time_spent: timeSpent })
+        handleUpdateTopicProgress(topicId, {
+          progress_percentage: pct,
+          // no scroll_position column on learn_topic_progress — just percentage
+        })
       }
     }, 1500)
-  }, [locked, lessonId, timeSpent, handleUpdateProgress])
+  }, [locked, topicId, timeSpent, handleUpdateTopicProgress])
 
   useEffect(() => {
     const el = mainElRef.current
@@ -226,112 +229,92 @@ export default function LessonViewer() {
     return () => el.removeEventListener('scroll', handleScroll)
   }, [handleScroll])
 
+  // Save on unmount
   useEffect(() => {
     return () => {
-      if (locked) return
-      const el = mainElRef.current
-      if (el && profile?.id && lessonId) {
-        handleUpdateProgress(lessonId, {
-          progress_percentage: scrollProgress,
-          scroll_position: el.scrollTop ?? 0,
-          time_spent: timeSpent,
-        })
-      }
+      if (locked || !profile?.id) return
+      handleUpdateTopicProgress(topicId, { progress_percentage: scrollProgress })
     }
-  }, [locked, scrollProgress, timeSpent])
+  }, [locked, scrollProgress])
 
-  // ── Actions ───────────────────────────────────────────────────────────────
+  const doLockTopic = async () => {
+    await handleCompleteTopicFromViewer(topicId)
+    setLocked(true)
+  }
+
   const handleSaveProgress = async () => {
     setSaving(true)
     try {
-      await handleUpdateProgress(lessonId, {
-        progress_percentage: scrollProgress,
-        scroll_position: mainElRef.current?.scrollTop ?? 0,
-        time_spent: timeSpent,
-      })
+      await handleUpdateTopicProgress(topicId, { progress_percentage: scrollProgress })
     } finally { setSaving(false) }
-  }
-
-  const doLockLesson = async () => {
-    await handleUpdateProgress(lessonId, {
-      progress_percentage: 100,
-      scroll_position: mainElRef.current?.scrollTop ?? 0,
-      time_spent: timeSpent,
-      completed_at: new Date().toISOString(),
-    })
-    setLocked(true)
   }
 
   const handleFinish = async () => {
     setFinishing(true)
-    try { await doLockLesson() } finally { setFinishing(false) }
+    try { await doLockTopic() } finally { setFinishing(false) }
   }
 
-  // QuizSection calls this with (passed, earnedBadge | null)
-  // We show the badge FIRST, then lock the lesson when the user dismisses it
   const handleQuizComplete = (passed, earnedBadge) => {
     if (!passed) return
     setQuizCompleted(true)
     if (earnedBadge) {
       setPendingBadge(earnedBadge)
-      // Don't lock yet — lock when badge is dismissed
     } else {
-      doLockLesson()
+      doLockTopic()
     }
   }
 
   const handleBadgeDismiss = () => {
     setPendingBadge(null)
-    doLockLesson()
+    doLockTopic()
   }
-
-  const goBack = () =>
-    classroomId ? navigate(`/student/classrooms/${classroomId}`) : navigate(-1)
 
   // ── Derived ───────────────────────────────────────────────────────────────
-  const savedProgress   = lessonProgress[lessonId]
-  const currentProgress = locked ? 100 : savedProgress?.progress_percentage ?? scrollProgress
-  const isCompleted     = locked
-  const attachments     = currentLesson?.attachments ?? []
-  const quizzes         = currentLesson?.quizzes     ?? []
-  const hasQuiz         = quizzes.length > 0
-  const quiz            = quizzes[0]?.quiz ?? null
-  const badge           = quiz?.badges?.[0] ?? null
-  const teacher         = currentLesson?.teacher
-  const tutorials       = currentLesson?.tutorials ?? []
+  const currentProgress = locked ? 100 : (currentTopicProgress?.progress_percentage ?? scrollProgress)
+  const isCompleted = locked
+  const lesson = currentTopic?.lesson ?? null
+  const attachments  = lesson?.attachments ?? []
+  const quizzes      = lesson?.quizzes ?? []
+  const hasQuiz      = quizzes.length > 0
+  const quiz         = quizzes[0]?.quiz ?? null
+  const badge        = quiz?.badges?.[0] ?? null
+  const tutorials    = lesson?.tutorials ?? []
+  const teacher      = lesson?.teacher
 
-  // ── Loading ───────────────────────────────────────────────────────────────
-  if (loading && !currentLesson) {
+  if (topicLoading && !currentTopic) {
     return <div className="flex items-center justify-center py-40"><Loader2 className="w-8 h-8 animate-spin text-blockly-purple" /></div>
   }
-  if (!currentLesson && !loading) {
+  if (!currentTopic && !topicLoading) {
     return (
       <div className="flex flex-col items-center justify-center py-32 gap-4">
-        <p className="text-gray-500">Lesson not found</p>
-        <button onClick={goBack} className="text-sm text-blockly-purple hover:underline">Go back</button>
+        <p className="text-gray-500">Topic not found</p>
+        <button onClick={() => navigate(-1)} className="text-sm text-blockly-purple hover:underline">Go back</button>
       </div>
     )
   }
 
-  // ── Render ────────────────────────────────────────────────────────────────
   return (
     <div className="relative">
-      {/* Badge popup — mounted in LessonViewer so it survives QuizSection unmount */}
       {pendingBadge && <BadgePopup badge={pendingBadge} onClose={handleBadgeDismiss} />}
 
-      {/* Full-width scroll progress bar */}
-      <div className="fixed top-0 left-0 right-0 h-1 z-9999 bg-gray-200 pointer-events-none">
+      {/* Scroll progress bar */}
+      <div className="fixed top-0 left-0 right-0 h-1 z-[9999] bg-gray-200 pointer-events-none">
         <div className="h-full bg-blockly-purple transition-all duration-300 ease-out" style={{ width: `${currentProgress}%` }} />
       </div>
 
-      {/* Sticky mini-bar */}
+      {/* Sticky nav bar */}
       <div className="sticky top-0 z-30 bg-white/95 backdrop-blur-sm border-b border-gray-100 shadow-sm px-6 mb-6">
         <div className="max-w-4xl mx-auto py-2.5 flex items-center justify-between gap-4">
-          <button onClick={goBack} className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-700 transition-colors">
+          <button onClick={() => navigate('/student/learn')}
+            className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-700 transition-colors">
             <ArrowLeft className="w-4 h-4" />
-            {classroomId ? 'Back to classroom' : 'Back'}
+            Back to Journey
           </button>
           <div className="flex items-center gap-4">
+            <div className="flex items-center gap-1.5 text-xs text-gray-400">
+              <MapPin className="w-3.5 h-3.5 text-indigo-400" />
+              <span className="font-semibold text-slate-600">{currentTopic.title}</span>
+            </div>
             <div className="flex items-center gap-1.5 text-xs text-gray-400">
               <Clock className="w-3.5 h-3.5" />
               <span>{Math.floor(timeSpent / 60)}m {timeSpent % 60}s</span>
@@ -347,40 +330,51 @@ export default function LessonViewer() {
         </div>
       </div>
 
-      {/* Page body */}
+      {/* Body */}
       <div className="max-w-5xl mx-auto flex flex-col gap-8 pb-24">
-
-        {/* Lesson header */}
-        <div className="px-8 py-7 flex flex-col">
-          <h1 className="text-2xl font-bold text-slate-900 leading-relaxed">{currentLesson.title}</h1>
-          <hr />
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-2 py-2 text-sm text-slate-500">
-            {teacher && (
-              <div className="flex items-center gap-2">
-                <img src={teacher.avatar_url || '/default-avatar.png'} alt={teacher.username} className="w-6 h-6 rounded-full object-cover border border-gray-200" />
-                <span className="font-semibold text-gray-700">{teacher.username}</span>
-              </div>
-            )}
-            {currentLesson.created_at && (
-              <div className="flex items-center gap-1.5">
-                <Calendar className="w-4 h-4" />
-                <span>Posted {format(new Date(currentLesson.created_at), 'MMM d, yyyy')}</span>
-              </div>
-            )}
-            {currentLesson.estimated_duration && (
-              <div className="flex items-center gap-1.5">
-                <Clock className="w-4 h-4" />
-                <span>{currentLesson.estimated_duration} min read</span>
-              </div>
+        {/* Header */}
+        {lesson ? (
+          <div className="px-8 py-7 flex flex-col gap-2">
+            <h1 className="text-2xl font-bold text-slate-900 leading-relaxed">{lesson.title}</h1>
+            <hr />
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-2 py-2 text-sm text-slate-500">
+              {teacher && (
+                <div className="flex items-center gap-2">
+                  <img src={teacher.avatar_url || '/default-avatar.png'} alt={teacher.username}
+                    className="w-6 h-6 rounded-full object-cover border border-gray-200" />
+                  <span className="font-semibold text-gray-700">{teacher.username}</span>
+                </div>
+              )}
+              {lesson.created_at && (
+                <div className="flex items-center gap-1.5">
+                  <Calendar className="w-4 h-4" />
+                  <span>Posted {format(new Date(lesson.created_at), 'MMM d, yyyy')}</span>
+                </div>
+              )}
+              {lesson.estimated_duration && (
+                <div className="flex items-center gap-1.5">
+                  <Clock className="w-4 h-4" />
+                  <span>{lesson.estimated_duration} min read</span>
+                </div>
+              )}
+            </div>
+          </div>
+        ) : (
+          // Topic with no linked lesson — show description only
+          <div className="px-8 py-7">
+            <h1 className="text-2xl font-bold text-slate-900">{currentTopic.title}</h1>
+            {currentTopic.description && (
+              <p className="text-slate-500 mt-2">{currentTopic.description}</p>
             )}
           </div>
-          {dueDate && <DueDateBanner dueDate={dueDate} />}
-        </div>
+        )}
 
-        {/* Content */}
-        <div className="rounded-2xl px-8">
-          <LessonContent content={currentLesson.content ?? currentLesson.content_markdown} />
-        </div>
+        {/* Lesson content */}
+        {lesson?.content && (
+          <div className="rounded-2xl px-8">
+            <LessonContent content={lesson.content} />
+          </div>
+        )}
 
         {/* Attachments */}
         {attachments.length > 0 && (
@@ -395,24 +389,14 @@ export default function LessonViewer() {
           </div>
         )}
 
+        {/* Tutorials */}
         {tutorials.length > 0 && (
           <div className="flex flex-col gap-3 items-center">
-            {tutorials.map((lt) => {
-              const tut = lt.tutorial
-              if (!tut) return null
-              const stepCount = tut.steps?.length ?? 0
-              return (
-                <TutorialLaunchCard
-                  key={lt.id}
-                  tutorial={tut}
-                  stepCount={stepCount}
-                  dueDate={dueDate}
-                />
-              )
-            })}
+            {tutorials.map((lt) => lt.tutorial && (
+              <TutorialLaunchCard key={lt.id} tutorial={lt.tutorial} />
+            ))}
           </div>
         )}
-        
 
         {/* Quiz */}
         {hasQuiz && quiz && (
@@ -436,10 +420,10 @@ export default function LessonViewer() {
             )}
           </div>
         )}
-    
+
         {badge && (
-          <div className='flex items-center justify-end'>
-            <div className="flex items-center ml-0 gap-3 px-4 py-3 bg-purple-50 rounded-xl border border-purple-200">
+          <div className="flex items-center justify-end">
+            <div className="flex items-center gap-3 px-4 py-3 bg-purple-50 rounded-xl border border-purple-200">
               {badge.icon_url ? <img src={badge.icon_url} alt={badge.title} className="w-8 h-8 object-contain" /> : <Award className="w-7 h-7 text-purple-500" />}
               <div>
                 <p className="text-xs font-semibold text-purple-700">Badge you can earn</p>
@@ -457,15 +441,15 @@ export default function LessonViewer() {
               <div className="w-14 h-14 rounded-full bg-green-100 flex items-center justify-center">
                 <CheckCircle2 className="w-7 h-7 text-green-500" />
               </div>
-              <p className="text-sm font-semibold text-green-700">Lesson completed!</p>
-              <button onClick={goBack} className="text-sm text-blockly-purple hover:underline font-medium">← Back to classroom</button>
+              <p className="text-sm font-semibold text-green-700">Topic completed!</p>
+              <button onClick={() => navigate('/student/learn')} className="text-sm text-blockly-purple hover:underline font-medium">← Back to Learning Journey</button>
             </div>
           ) : (
             <div className="flex flex-col items-center gap-3 w-full max-w-sm">
               {hasQuiz && !quizCompleted && (
                 <div className="flex items-center gap-2 px-4 py-2.5 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-700 w-full justify-center">
                   <AlertCircle className="w-4 h-4 shrink-0" />
-                  <span>Complete the quiz above to finish this lesson</span>
+                  <span>Complete the quiz above to finish this topic</span>
                 </div>
               )}
               <div className="flex gap-3 w-full">
@@ -483,85 +467,12 @@ export default function LessonViewer() {
                   className="flex-1 flex items-center justify-center gap-2 px-5 py-3 bg-blockly-purple text-white font-semibold text-sm rounded-xl hover:bg-blockly-purple/90 transition-colors disabled:opacity-40 shadow-md shadow-blockly-purple/20"
                 >
                   {finishing ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
-                  Finish Lesson
+                  Finish Topic
                 </button>
               </div>
             </div>
           )}
         </div>
-      </div>
-    </div>
-  )
-}
-function TutorialLaunchCard({ tutorial, stepCount, dueDate }) {
-  const navigate = useNavigate()
- 
-  const DIFFICULTY_META = {
-    beginner:     { label: 'Beginner',     color: 'bg-emerald-100 text-emerald-700' },
-    intermediate: { label: 'Intermediate', color: 'bg-amber-100  text-amber-700'   },
-    advanced:     { label: 'Advanced',     color: 'bg-red-100    text-red-700'      },
-  }
-  const diff = DIFFICULTY_META[tutorial.difficulty_level] ?? DIFFICULTY_META.beginner
- 
-  return (
-    <div className="bg-white overflow-hidden card border-l-8 rounded-l-none! border-l-blockly-blue max-w-4xl shadow-lg!">
- 
-      <div className="flex items-center gap-4 ">
-        <div className="w-11 h-11 rounded-xl bg-blockly-blue/10 flex items-center justify-center shrink-0 mt-0.5">
-          <TutorialBookIcon className="w-5 h-5 text-blockly-blue" />
-        </div>
- 
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap mb-1">
-            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${diff.color}`}>
-              {diff.label}
-            </span>
-            <span className="text-xs text-gray-400 flex items-center gap-1">
-              <LayoutList size={11} />
-              {stepCount} step{stepCount !== 1 ? 's' : ''}
-            </span>
-            {tutorial.estimated_time_minutes && (
-              <span className="text-xs text-gray-400 flex items-center gap-1">
-                <Clock size={11} />
-                {tutorial.estimated_time_minutes} min
-              </span>
-            )}
-          </div>
- 
-          <h3 className="font-bold text-gray-900 text-sm">{tutorial.title}</h3>
- 
-          {tutorial.description && (
-            <p className="text-xs text-gray-500 mt-1 line-clamp-2">{tutorial.description}</p>
-          )}
- 
-          {/* Badge preview */}
-          {tutorial.badges?.[0] && (
-            <div className="flex items-center gap-2 mt-2">
-              {tutorial.badges[0].icon_url ? (
-                <img
-                  src={tutorial.badges[0].icon_url}
-                  alt={tutorial.badges[0].title}
-                  className="w-5 h-5 object-contain"
-                />
-              ) : 
-              <span className="text-xs text-amber-600 font-semibold">
-                <Medal/>
-              </span>
-              }
-              <span className="text-xs text-amber-600 font-semibold">
-                Earn: {tutorial.badges[0].title}
-              </span>
-            </div>
-          )}
-        </div>
- 
-        <button
-          onClick={() => navigate(`/student/tutorials/${tutorial.id}`)}
-          className="shrink-0 flex items-center gap-2 px-4 py-2.5 btn btn-primary text-sm font-bold rounded-xl shadow-md shadow-blockly-blue/20 self-center"
-        >
-          <Play className="w-4 h-4" />
-          Start
-        </button>
       </div>
     </div>
   )

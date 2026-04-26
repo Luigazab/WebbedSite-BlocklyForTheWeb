@@ -2,36 +2,39 @@ import { useEffect, useCallback } from 'react'
 import { useLearnStore } from '../store/learnStore'
 import { useAuthStore } from '../store/authStore'
 import { useUIStore } from '../store/uiStore'
+import { useNavigate } from 'react-router'
 
 export function useLearn() {
   const store = useLearnStore()
   const profile = useAuthStore((s) => s.profile)
   const addToast = useUIStore((s) => s.addToast)
-
+  const navigate = useNavigate()
   const isTeacher = profile?.role === 'teacher' || profile?.role === 'admin'
 
   useEffect(() => {
     store.fetchAll(profile?.id ?? null)
   }, [profile?.id])
 
-  const handleStartTopic = useCallback(
-    async (topicId) => {
+  // ─── Topic viewer progress ────────────────────────────────────────────────
+
+  const handleUpdateTopicProgress = useCallback(
+    async (topicId, updates) => {
       if (!profile?.id) return
       try {
-        await store.markTopicStarted(profile.id, topicId)
+        await store.updateCurrentTopicProgress(profile.id, topicId, updates)
       } catch (err) {
-        addToast(err.message || 'Could not start topic', 'error')
+        console.error('Failed to update topic progress:', err)
       }
     },
     [profile?.id]
   )
 
-  const handleCompleteTopic = useCallback(
+  const handleCompleteTopicFromViewer = useCallback(
     async (topicId) => {
       if (!profile?.id) return
       try {
         await store.markTopicComplete(profile.id, topicId)
-        addToast('Topic completed! 🎉', 'success')
+        addToast('Topic completed!', 'success')
       } catch (err) {
         addToast(err.message || 'Could not mark complete', 'error')
       }
@@ -39,9 +42,17 @@ export function useLearn() {
     [profile?.id]
   )
 
+  // ─── Learn page ───────────────────────────────────────────────────────────
+  const handleStartTopic = useCallback(async (topicId) => {
+    if (profile?.id) {
+      try { await store.markTopicStarted(profile.id, topicId) } catch (err) {addToast(err.message || 'Could not start topic', 'error')}
+    }
+    const basePath = isTeacher ? '/teacher/learn' : '/student/learn'
+    navigate(`${basePath}/${topicId}`)
+  }, [profile?.id, isTeacher, navigate])
   /**
    * Returns enriched topics for a category.
-   * Teachers: all unlocked.
+   * Teachers: always unlocked.
    * Students: locked if prerequisite not completed.
    */
   const getEnrichedTopics = useCallback(
@@ -61,7 +72,8 @@ export function useLearn() {
     profile,
     isTeacher,
     handleStartTopic,
-    handleCompleteTopic,
+    handleUpdateTopicProgress,
+    handleCompleteTopicFromViewer,
     getEnrichedTopics,
   }
 }

@@ -8,25 +8,9 @@ const DeviceSelector = ({
   onSelectDevice 
 }) => {
   return (
-    <div data-tour='device-selector' className='p-1 border-t-2 bg-slate-300'>
+    <div data-tour='device-selector' className='flex flex-col justify-center p-1 border-t-2 bg-slate-300 h-full'>
       <div className='flex justify-between items-center mb-2'>
         <h5 className='font-semibold'>Screen Sizes:</h5>
-        <button 
-          onClick={onToggleResponsive} 
-          className='flex items-center gap-1 text-xs font-semibold text-gray-700 hover:text-gray-900 cursor-pointer transition-colors'
-        >
-          {responsive ? (
-            <>
-              <Eye size={16} />
-              Device View
-            </>
-          ) : (
-            <>
-              <EyeOff size={16} />
-              Full View
-            </>
-          )}
-        </button>
       </div>
       <div className='grid grid-cols-4 md:grid-cols-2 lg:grid-cols-4 gap-1 m-1'>
         {Object.entries(deviceSizes).map(([key, device]) => {

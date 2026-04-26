@@ -81,7 +81,6 @@ const StudentHome = () => {
 
       {/* Create New Project */}
       <section className="mb-8">
-        <Divider />
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 my-4">
           {projectTypes.map((project) => (
             <div key={project.title} data-tour={project.tourId}>

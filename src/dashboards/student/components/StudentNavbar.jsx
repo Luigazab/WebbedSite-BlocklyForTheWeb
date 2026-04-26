@@ -33,22 +33,22 @@ export default function StudentNavbar() {
   const tourId = getTourForRoute()
 
   return (
-    <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 shrink-0 z-20">
+    <header className="h-16 flex items-center justify-between px-6 shrink-0 z-20">
       <div>
-        <p className="text-sm text-gray-500">
+        {/* <p className="text-sm text-gray-500">
           Welcome back,{' '}
           <span className="font-semibold text-gray-800">{profile?.username}</span>
-        </p>
+        </p> */}
       </div>
 
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-4">
         {tourId && (
           <button 
             onClick={handleHelpClick}
             className="p-2 rounded-full hover:bg-gray-100 transition-colors group relative"
             title="Show tour"
           >
-            <HelpCircle className="w-5 h-5 text-gray-600 group-hover:text-blockly-purple transition-colors" />
+            <HelpCircle className="w-6 h-6 text-gray-600 group-hover:text-blockly-purple transition-colors" />
             <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
               Show tour
             </span>

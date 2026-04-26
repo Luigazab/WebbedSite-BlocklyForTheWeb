@@ -9,14 +9,14 @@ import {
 } from 'lucide-react'
 
 const links = [
-  { to: '/student',             label: 'Home',        icon: Home        },
-  { to: '/student/projects',    label: 'Projects',    icon: FolderOpen  },
-  { to: '/student/classrooms',  label: 'Classrooms',  icon: University  },
-  { to: '/student/learn',       label: 'Learn',       icon: BookOpen    },
-  { to: '/student/docs',        label: 'Documentation',     icon: LibraryBigIcon    },
+  { to: '/student',             label: 'Home',        icon: (props) => <img src="/home.svg" alt="" {...props} />        },
+  { to: '/student/projects',    label: 'Projects',    icon: (props) => <img src="/folder.svg" alt="" {...props} />  },
+  { to: '/student/classrooms',  label: 'Classroom',  icon: (props) => <img src="/study.svg" alt="" {...props} />  },
+  { to: '/student/learn',       label: 'Learn',       icon: (props) => <img src="/learn.svg" alt="" {...props} />    },
+  // { to: '/student/docs',        label: 'Documentation',     icon: (props) => <img src="/library.svg" alt="" {...props} />    },
   // { to: '/student/tutorials', label: 'Tutorials', icon: PlayCircle},
-  { to: '/student/profile',     label: 'Profile',     icon: UserSquare2 },
-  { to: '/student/settings',    label: 'Settings',    icon: Settings    },
+  { to: '/student/profile',     label: 'Profile',     icon: (props) => <img src="/user_profile.png" alt="" {...props} /> },
+  // { to: '/student/settings',    label: 'Settings',    icon: (props) => <img src="/settings.svg" alt="" {...props} />    },
 ]
 
 export default function StudentSidebar() {
@@ -49,38 +49,38 @@ export default function StudentSidebar() {
   const tourId = getTourForRoute()
 
   return (
-    <aside className={`fixed top-0 left-0 h-screen bg-blockly-purple/90 text-white border-r border-gray-200 flex flex-col transition-all duration-300 z-30 ${sidebarOpen ? 'w-64' : 'w-16'}`}>
-      <div className="flex items-center justify-between px-4 py-5 border-b border-gray-100">
-        {sidebarOpen && (
-          <img src="/anotherlogo.png" alt="WebbedSite"  className='h-10 text-lg font-bold text-blockly-purple'/>
+    <aside className={`fixed top-0 left-0 h-screen bg-white border-r border-slate-200 flex flex-col transition-all! duration-300! z-30 ${sidebarOpen ? 'w-75' : 'w-16'}`}>
+      <div className="flex items-center justify-start px-4 pt-10 pb-3">
+        <img src="/anotherlogo.png" alt="WebbedSite"  className='h-14 text-lg font-bold text-blockly-purple'/>
+        {/* {sidebarOpen && (
         )}
         <button onClick={toggleSidebar} className="p-1 rounded-md hover:bg-gray-100 ml-auto">
           {sidebarOpen ? <ChevronLeft className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
-        </button>
+        </button> */}
       </div>
 
-      <nav className="flex-1 px-2 py-4 flex flex-col gap-1">
+      <nav className="flex-1 px-2 flex flex-col gap-1">
         {links.map(({ to, label, icon: Icon }) => (
           <NavLink
             key={to}
             to={to}
             end={to === '/student'}
             className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2.5 rounded-lg font-bold transition-colors
+              `flex items-center gap-5 px-5 text-lg py-3 rounded-lg font-bold transition-colors!
               ${isActive
-                ? 'bg-blockly-dark/60 text-blockly-light'
-                : 'text-white hover:bg-gray-100 hover:text-gray-900'
+                ? 'bg-slate-100 text-slate-800' : 'text-slate-500 hover:bg-slate-50'
               }`
             }
           >
-            <Icon className="w-5 h-5 shrink-0" />
+            <span className="bg-blue-200 rounded-full"><Icon className="w-8 h-8 shrink-0" /></span>
             {sidebarOpen && <span>{label}</span>}
           </NavLink>
         ))}
+
         {tourId && (
           <button
             onClick={handleHelpClick}
-            className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors text-white hover:bg-gray-100 hover:text-blockly-purple mt-auto"
+            className="flex items-center gap-3 px-3 py-2 rounded-2xl text-sm font-medium transition-colors! text-blue-950 hover:bg-gray-100 hover:text-blue-700 mt-auto"
             title="Show tour"
           >
             <HelpCircle className="w-5 h-5 shrink-0" />
@@ -88,12 +88,13 @@ export default function StudentSidebar() {
           </button>
         )}
       </nav>
+      
 
       {/* User info at bottom */}
       {sidebarOpen && profile && (
         <div className="px-4 py-4 border-t border-gray-100">
-          <p className="text-md font-bold text-gray-200 truncate">{profile.username}</p>
-          <p className="text-sm text-gray-300 capitalize">{profile.role}</p>
+          <p className="text-md font-bold text-slate-800 truncate">{profile.username}</p>
+          <p className="text-sm font-semibold text-blue-700 capitalize border-l-4 border-blue-800 pl-2">{profile.role}</p>
         </div>
       )}
     </aside>

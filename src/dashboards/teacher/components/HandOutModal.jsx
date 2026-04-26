@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react'
-import { X, BookOpen, GraduationCap, ChevronDown } from 'lucide-react'
+import { X, BookOpen, GraduationCap, ChevronDown, AlertTriangle, ArrowDownToLine } from 'lucide-react'
 import { handOutLesson, fetchTeacherClassrooms } from '../../../services/lessonService'
 import {
   publishLessonAsLearnTopic,
   fetchLearnCategories,
   fetchAllLearnTopicsForPrereq,
+  fetchLearnTopicByLessonId,
+  isLessonInClassroom,
 } from '../../../services/learnService'
 
 const TABS = [
@@ -16,36 +18,46 @@ export default function HandOutModal({ lesson, onClose, onSuccess, teacherId }) 
   const [tab, setTab] = useState('lesson')
 
   // ── Lesson tab ────────────────────────────────────────────────────────────
-  const [classrooms, setClassrooms] = useState([])
-  const [selectedClassroom, setSelectedClassroom] = useState('')
-  const [dueDate, setDueDate] = useState('')
-  const [loadingClassrooms, setLoadingClassrooms] = useState(true)
+  const [classrooms,         setClassrooms]         = useState([])
+  const [selectedClassroom,  setSelectedClassroom]  = useState('')
+  const [dueDate,            setDueDate]            = useState('')
+  const [loadingClassrooms,  setLoadingClassrooms]  = useState(true)
+  const [alreadyInClassroom, setAlreadyInClassroom] = useState(false)
+  const [checkingDuplicate,  setCheckingDuplicate]  = useState(false)
 
   // ── Topic tab ─────────────────────────────────────────────────────────────
-  const [categories, setCategories] = useState([])
-  const [selectedCategory, setSelectedCategory] = useState('')
-  const [allTopics, setAllTopics] = useState([])   // existing topics for prereq dropdown
+  const [categories,          setCategories]          = useState([])
+  const [selectedCategory,    setSelectedCategory]    = useState('')
+  const [allTopics,           setAllTopics]           = useState([])
   const [prerequisiteTopicId, setPrerequisiteTopicId] = useState('none')
-  const [loadingTopicData, setLoadingTopicData] = useState(false)
+  const [loadingTopicData,    setLoadingTopicData]    = useState(false)
+  // If lesson is already published as a learn topic
+  const [existingTopic,       setExistingTopic]       = useState(null)
+
+  // ── Lesson-in-learn-page guard ────────────────────────────────────────────
+  // If the lesson is already a learn topic, the classroom tab warns user
+  const [lessonIsLearnTopic, setLessonIsLearnTopic] = useState(false)
 
   // ── UI ────────────────────────────────────────────────────────────────────
   const [submitting, setSubmitting] = useState(false)
-  const [error, setError] = useState('')
+  const [error,      setError]      = useState('')
 
-  // Load classrooms + categories + existing topics once
   useEffect(() => {
     const load = async () => {
       setLoadingClassrooms(true)
       setLoadingTopicData(true)
       try {
-        const [cls, cats, topics] = await Promise.all([
+        const [cls, cats, topics, existingLearnTopic] = await Promise.all([
           fetchTeacherClassrooms(teacherId),
           fetchLearnCategories(),
           fetchAllLearnTopicsForPrereq(),
+          fetchLearnTopicByLessonId(lesson.id),
         ])
         setClassrooms(cls)
         setCategories(cats)
         setAllTopics(topics)
+        setExistingTopic(existingLearnTopic)
+        setLessonIsLearnTopic(!!existingLearnTopic)
         if (cats.length) setSelectedCategory(cats[0].id)
       } catch (err) {
         setError(err.message)
@@ -55,13 +67,37 @@ export default function HandOutModal({ lesson, onClose, onSuccess, teacherId }) 
       }
     }
     load()
-  }, [teacherId])
+  }, [teacherId, lesson.id])
+
+  // Check for duplicate classroom assignment when classroom changes
+  useEffect(() => {
+    if (!selectedClassroom || tab !== 'lesson') return
+    let cancelled = false
+    const check = async () => {
+      setCheckingDuplicate(true)
+      try {
+        const already = await isLessonInClassroom(lesson.id, selectedClassroom)
+        if (!cancelled) setAlreadyInClassroom(already)
+      } catch {
+        // ignore
+      } finally {
+        if (!cancelled) setCheckingDuplicate(false)
+      }
+    }
+    check()
+    return () => { cancelled = true }
+  }, [selectedClassroom, tab, lesson.id])
 
   const handleSubmit = async () => {
     setError('')
 
     if (tab === 'lesson') {
       if (!selectedClassroom) { setError('Please select a classroom.'); return }
+      if (alreadyInClassroom) { setError('This lesson is already in the selected classroom.'); return }
+      if (lessonIsLearnTopic) {
+        setError('This lesson is already published on the Learn page. It cannot also be handed out to a classroom.')
+        return
+      }
     } else {
       if (!selectedCategory) { setError('Please select a category.'); return }
     }
@@ -78,7 +114,6 @@ export default function HandOutModal({ lesson, onClose, onSuccess, teacherId }) 
           created_by: teacherId,
         })
       } else {
-        // Global publish — no classroom involved
         await publishLessonAsLearnTopic({
           lessonId: lesson.id,
           categoryId: selectedCategory,
@@ -119,9 +154,7 @@ export default function HandOutModal({ lesson, onClose, onSuccess, teacherId }) 
               key={id}
               onClick={() => { setTab(id); setError('') }}
               className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-bold rounded-lg transition-all ${
-                tab === id
-                  ? 'bg-white text-slate-800 shadow-sm'
-                  : 'text-slate-500 hover:text-slate-700'
+                tab === id ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'
               }`}
             >
               <Icon size={13} />
@@ -135,109 +168,145 @@ export default function HandOutModal({ lesson, onClose, onSuccess, teacherId }) 
           {/* ── LESSON TAB ─────────────────────────────────────────────── */}
           {tab === 'lesson' && (
             <>
-              <p className="text-xs text-slate-500 bg-slate-50 rounded-xl p-3 border border-slate-200">
-                Hands out this lesson exclusively to a classroom. Only enrolled students can access it.
-              </p>
-
-              <div>
-                <label className="text-xs font-bold text-slate-700 mb-1.5 flex">
-                  Classroom <span className="text-red-500 ml-0.5">*</span>
-                </label>
-                {loadingClassrooms ? (
-                  <div className="h-10 bg-slate-100 rounded-xl animate-pulse" />
-                ) : classrooms.length === 0 ? (
-                  <p className="text-xs text-slate-400 p-3 bg-slate-50 rounded-xl">No active classrooms found.</p>
-                ) : (
-                  <div className="relative">
-                    <select
-                      value={selectedClassroom}
-                      onChange={(e) => setSelectedClassroom(e.target.value)}
-                      className="w-full appearance-none px-3 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-300 bg-white pr-9"
-                    >
-                      <option value="">Select a classroom…</option>
-                      {classrooms.map((c) => (
-                        <option key={c.id} value={c.id}>{c.name} ({c.class_code})</option>
-                      ))}
-                    </select>
-                    <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+              {lessonIsLearnTopic ? (
+                <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex gap-3">
+                  <AlertTriangle size={16} className="text-amber-600 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-xs font-bold text-amber-800 mb-1">Already on the Learn page</p>
+                    <p className="text-xs text-amber-700">
+                      This lesson is published as a public Learn topic. It cannot also be handed out to a classroom.
+                      To use it in a classroom, first remove it from the Learn page via Learn Management.
+                    </p>
                   </div>
-                )}
-              </div>
+                </div>
+              ) : (
+                <>
+                  <p className="text-xs text-slate-500 bg-slate-50 rounded-xl p-3 border border-slate-200">
+                    Hands out this lesson exclusively to a classroom. Only enrolled students can access it.
+                  </p>
 
-              <div>
-                <label className="text-xs font-bold text-slate-700 mb-1.5 flex">
-                  Due Date <span className="ml-1 font-normal text-slate-400">(optional)</span>
-                </label>
-                <input
-                  type="datetime-local"
-                  value={dueDate}
-                  onChange={(e) => setDueDate(e.target.value)}
-                  className="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-300 bg-white"
-                />
-              </div>
+                  <div>
+                    <label className="text-xs font-bold text-slate-700 mb-1.5 flex">
+                      Classroom <span className="text-red-500 ml-0.5">*</span>
+                    </label>
+                    {loadingClassrooms ? (
+                      <div className="h-10 bg-slate-100 rounded-xl animate-pulse" />
+                    ) : classrooms.length === 0 ? (
+                      <p className="text-xs text-slate-400 p-3 bg-slate-50 rounded-xl">No active classrooms found.</p>
+                    ) : (
+                      <div className="relative">
+                        <select
+                          value={selectedClassroom}
+                          onChange={(e) => setSelectedClassroom(e.target.value)}
+                          className="w-full appearance-none px-3 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-300 bg-white pr-9"
+                        >
+                          <option value="">Select a classroom…</option>
+                          {classrooms.map((c) => (
+                            <option key={c.id} value={c.id}>{c.name} ({c.class_code})</option>
+                          ))}
+                        </select>
+                        <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                      </div>
+                    )}
+                    {alreadyInClassroom && !checkingDuplicate && (
+                      <p className="text-xs text-amber-600 mt-1 font-semibold">
+                        ⚠ This lesson is already assigned to this classroom.
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-bold text-slate-700 mb-1.5 flex">
+                      Due Date <span className="ml-1 font-normal text-slate-400">(optional)</span>
+                    </label>
+                    <input
+                      type="datetime-local"
+                      value={dueDate}
+                      onChange={(e) => setDueDate(e.target.value)}
+                      className="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-300 bg-white"
+                    />
+                  </div>
+                </>
+              )}
             </>
           )}
 
           {/* ── TOPIC TAB ──────────────────────────────────────────────── */}
           {tab === 'topic' && (
             <>
-              <p className="text-xs text-slate-500 bg-indigo-50 rounded-xl p-3 border border-indigo-100">
-                Publishes this lesson as a <strong>Learn topic</strong> visible to <strong>all students</strong> on the Learn page. No classroom required — no deadline.
-              </p>
-
-              {/* Category */}
-              <div>
-                <label className="text-xs font-bold text-slate-700 mb-1.5 flex">
-                  Category <span className="text-red-500 ml-0.5">*</span>
-                </label>
-                {loadingTopicData ? (
-                  <div className="h-10 bg-slate-100 rounded-xl animate-pulse" />
-                ) : (
-                  <div className="relative">
-                    <select
-                      value={selectedCategory}
-                      onChange={(e) => setSelectedCategory(e.target.value)}
-                      className="w-full appearance-none px-3 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-300 bg-white pr-9"
-                    >
-                      <option value="">Select a category…</option>
-                      {categories.map((c) => (
-                        <option key={c.id} value={c.id}>{c.title}</option>
-                      ))}
-                    </select>
-                    <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+              {existingTopic ? (
+                <div className="bg-green-50 border border-green-200 rounded-xl p-4 flex gap-3">
+                  <GraduationCap size={16} className="text-green-600 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-xs font-bold text-green-800 mb-1">Already on the Learn page</p>
+                    <p className="text-xs text-green-700">
+                      This lesson is already published as <strong>"{existingTopic.title}"</strong> in the Learn page.
+                      You can manage it from Learn Management.
+                    </p>
                   </div>
-                )}
-              </div>
+                </div>
+              ) : (
+                <>
+                  <p className="text-xs text-slate-500 bg-indigo-50 rounded-xl p-3 border border-indigo-100">
+                    Publishes this lesson as a <strong>Learn topic</strong> visible to <strong>all students</strong>. No classroom, no deadline.
+                    Once published here, it <strong>cannot</strong> also be handed out to classrooms.
+                  </p>
 
-              {/* Prerequisite — picks from ALL existing learn topics */}
-              <div>
-                <label className="text-xs font-bold text-slate-700 mb-1.5 flex gap-1 flex-wrap">
-                  Prerequisite Topic
-                  <span className="font-normal text-slate-400">— students must complete this first</span>
-                </label>
-                {loadingTopicData ? (
-                  <div className="h-10 bg-slate-100 rounded-xl animate-pulse" />
-                ) : (
-                  <div className="relative">
-                    <select
-                      value={prerequisiteTopicId}
-                      onChange={(e) => setPrerequisiteTopicId(e.target.value)}
-                      className="w-full appearance-none px-3 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-300 bg-white pr-9"
-                    >
-                      <option value="none">None — always unlocked</option>
-                      {allTopics
-                        .filter((t) => t.id !== lesson.id) // exclude self
-                        .map((t) => (
-                          <option key={t.id} value={t.id}>{t.title}</option>
-                        ))}
-                    </select>
-                    <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                  {/* Category */}
+                  <div>
+                    <label className="text-xs font-bold text-slate-700 mb-1.5 flex">
+                      Category <span className="text-red-500 ml-0.5">*</span>
+                    </label>
+                    {loadingTopicData ? (
+                      <div className="h-10 bg-slate-100 rounded-xl animate-pulse" />
+                    ) : (
+                      <div className="relative">
+                        <select
+                          value={selectedCategory}
+                          onChange={(e) => setSelectedCategory(e.target.value)}
+                          className="w-full appearance-none px-3 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-300 bg-white pr-9"
+                        >
+                          <option value="">Select a category…</option>
+                          {categories.map((c) => (
+                            <option key={c.id} value={c.id}>{c.title}</option>
+                          ))}
+                        </select>
+                        <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                      </div>
+                    )}
                   </div>
-                )}
-                {allTopics.filter((t) => t.id !== lesson.id).length === 0 && !loadingTopicData && (
-                  <p className="text-xs text-slate-400 mt-1">No other topics published yet — this will be unlocked by default.</p>
-                )}
-              </div>
+
+                  {/* Prerequisite */}
+                  <div>
+                    <label className="text-xs font-bold text-slate-700 mb-1.5 flex gap-1 flex-wrap">
+                      Prerequisite
+                      <span className="font-normal text-slate-400">— students must complete this first</span>
+                    </label>
+                    {loadingTopicData ? (
+                      <div className="h-10 bg-slate-100 rounded-xl animate-pulse" />
+                    ) : (
+                      <div className="relative">
+                        <select
+                          value={prerequisiteTopicId}
+                          onChange={(e) => setPrerequisiteTopicId(e.target.value)}
+                          className="w-full appearance-none px-3 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-300 bg-white pr-9"
+                        >
+                          <option value="none">None — always unlocked</option>
+                          {allTopics
+                            .filter((t) => t.id !== `lesson-${lesson.id}`)
+                            .map((t) => (
+                              <option key={t.id} value={t.id}>{t.title}</option>
+                            ))}
+                        </select>
+                        <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                      </div>
+                    )}
+                    {allTopics.filter((t) => t.id !== `lesson-${lesson.id}`).length === 0 && !loadingTopicData && (
+                      <p className="text-xs text-slate-400 mt-1">No other topics yet — this will be unlocked by default.</p>
+                    )}
+                  </div>
+                </>
+              )}
             </>
           )}
 
@@ -247,23 +316,19 @@ export default function HandOutModal({ lesson, onClose, onSuccess, teacherId }) 
 
           {/* Actions */}
           <div className="flex gap-3 pt-1">
-            <button
-              onClick={onClose}
-              className="flex-1 py-2.5 text-sm font-semibold text-slate-600 bg-slate-100 rounded-xl hover:bg-slate-200 transition-colors"
-            >
+            <button onClick={onClose} className="flex-1 py-2.5 text-sm font-semibold text-slate-600 bg-slate-100 rounded-xl hover:bg-slate-200 transition-colors">
               Cancel
             </button>
-            <button
-              onClick={handleSubmit}
-              disabled={submitting}
-              className="flex-1 py-2.5 text-sm font-semibold text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 disabled:opacity-50 transition-colors"
-            >
-              {submitting
-                ? 'Saving…'
-                : tab === 'lesson'
-                ? 'Hand Out'
-                : 'Publish to Learn'}
-            </button>
+            {/* Hide confirm button when there's nothing to do */}
+            {!(tab === 'topic' && existingTopic) && !(tab === 'lesson' && lessonIsLearnTopic) && (
+              <button
+                onClick={handleSubmit}
+                disabled={submitting || (tab === 'lesson' && alreadyInClassroom)}
+                className="flex-1 py-2.5 text-sm font-semibold text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+              >
+                {submitting ? 'Saving…' : tab === 'lesson' ? 'Hand Out' : 'Publish to Learn'}
+              </button>
+            )}
           </div>
         </div>
       </div>

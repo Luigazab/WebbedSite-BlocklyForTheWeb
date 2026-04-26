@@ -116,7 +116,7 @@ export default function ProjectsPage() {
               onClick={() => { setShowFilterMenu(!showFilterMenu); setShowSortMenu(false) }}
               className="btn flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold btn-lead"
             >
-              {filter}<ChevronDown className="w-4 h-4" />
+              {filter}<ChevronDown className="w-5 h-5" />
             </button>
             {showFilterMenu && (
               <div className="absolute top-full left-0 mt-1 w-40 bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden z-10">
@@ -227,7 +227,7 @@ export default function ProjectsPage() {
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 bg-blockly-dark/10 p-2 rounded-2xl">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 p-2 rounded-2xl">
             {displayed.map((project) => (
               <ProjectCard
                 key={project.id}

@@ -54,7 +54,6 @@ const SignIn = () => {
             <input type="checkbox" />
             <label>Remember me</label>
           </div>
-          <a href="/forgot-password" className="hover:underline">Forgot your password?</a>
         </div>
 
         <button className="btn" disabled={loading}>

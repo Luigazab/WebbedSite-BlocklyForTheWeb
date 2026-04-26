@@ -72,9 +72,9 @@ export default function NotificationPanel() {
       {/* Bell trigger */}
       <button
         onClick={() => setOpen((prev) => !prev)}
-        className="relative p-2 rounded-full hover:bg-gray-100 transition-colors"
+        className={`relative p-2 rounded-full hover:bg-gray-100 transition-colors ${open ? 'bg-slate-500 rounded-full hover:bg-slate-600' : 'text-gray-600'}`}
       >
-        <Bell className={`w-5 h-5 transition-colors ${open ? 'text-blockly-purple' : 'text-gray-600'}`} />
+        <img src='/bell.svg' className={`w-6 h-6 transition-colors `} />
         {unreadCount > 0 && (
           <span className="absolute top-1 right-1 min-w-4.5 h-4.5 px-1 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center leading-none">
             {unreadCount > 9 ? '9+' : unreadCount}

@@ -7,9 +7,9 @@ export default function StudentLayout() {
   const sidebarOpen = useUIStore((state) => state.sidebarOpen)
 
   return (
-    <div className="flex h-screen bg-blockly-light overflow-hidden">
+    <div className="flex h-screen bg-slate-50 overflow-hidden">
       <StudentSidebar />
-      <div className={`flex flex-col flex-1 transition-all duration-300 ${sidebarOpen ? 'ml-64' : 'ml-16'}`}>
+      <div className={`flex flex-col flex-1 transition-all! duration-300 ${sidebarOpen ? 'ml-64' : 'ml-16'}`}>
         <StudentNavbar />
         <main className="wrapper flex-1 overflow-y-auto">
           <Outlet />

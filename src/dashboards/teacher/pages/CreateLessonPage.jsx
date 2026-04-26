@@ -15,7 +15,8 @@ import {
 import { useAuth } from '../../../hooks/useAuth'
 import MediaAttachments from '../components/MediaAttachments'
 import AttachQuizModal from '../components/AttachQuizModal'
-import { ArrowLeft, Check, Edit, FileEdit, Paperclip, Save, BookOpen as TutorialIcon } from 'lucide-react'
+import QuizBuilderSlideOver from '../components/QuizBuilderSlideOver'
+import { ArrowLeft, Check, Edit, FileEdit, MonitorSmartphone, Paperclip, Save, BookOpen as TutorialIcon } from 'lucide-react'
 import { SimpleEditor } from '@/components/tiptap-templates/simple/simple-editor'
 import { supabase } from '../../../supabaseClient'
 import AttachTutorialModal from '../components/AttachTutorialModal'
@@ -37,7 +38,7 @@ export default function CreateLessonPage() {
 
   const [saving, setSaving] = useState(false)
   const [loading, setLoading] = useState(isEdit)
-  const [showQuizModal, setShowQuizModal] = useState(false)
+  const [showQuizPanel, setShowQuizPanel] = useState(false)
   const [savedId, setSavedId] = useState(id || null)
   const [saveMsg, setSaveMsg] = useState('')
   const [errors, setErrors] = useState({})
@@ -46,7 +47,6 @@ export default function CreateLessonPage() {
   const [showTutorialModal, setShowTutorialModal] = useState(false)
 
   const handleImageRemoved = useCallback((url) => {
-    // Only track Supabase URLs, not external ones
     if (url?.includes('supabase.co')) {
       pendingImageDeletes.current.add(url)
     }
@@ -245,84 +245,96 @@ export default function CreateLessonPage() {
   }
 
   return (
-    <div className='bg-slate-200'>
+    <div className='relative h-[93vh] w-full flex bg-slate-50 overflow-hidden'>
+      {/* Dual Gradient Overlay Background */}
+      <div
+        className="fixed inset-0 z-0"
+        style={{
+          backgroundImage: `
+            linear-gradient(to right, rgba(229,231,235,0.8) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(229,231,235,0.8) 1px, transparent 1px),
+            radial-gradient(circle 500px at 20% 80%, rgba(139,92,246,0.3), transparent),
+            radial-gradient(circle 500px at 80% 20%, rgba(59,130,246,0.3), transparent)
+          `,
+          backgroundSize: "48px 48px, 48px 48px, 100% 100%, 100% 100%",
+        }}
+      />
+    <div className='z-10 flex flex-1 overflow-y-auto'>
       <div className="max-w-sm md:max-w-2xl lg:max-w-4xl mx-auto sm:px-6 py-8">
         {/* ── Header ────────────────────────────────────────────────────── */}
-        <div className="flex flex-col md:flex-row items-start justify-center gap-4 mb-8">
-          <button
-            onClick={() => navigate('/teacher/lessons')}
-            className="text-slate-400 hover:text-slate-700 transition-colors text-sm flex items-center gap-1.5"
-          >
-            <ArrowLeft size={16} /> Back
-          </button>
-          <h1 className="flex-1 text-xl font-extrabold text-slate-900">
-            {isEdit ? 'Edit Lesson' : 'Create New Lesson'}
-          </h1>
-          <div className="flex self-end gap-3 ">
-            {saveMsg && (
-              <span className="text-sm font-semibold text-emerald-600">{saveMsg}</span>
-            )}
+        <div className="flex flex-col md:flex-row items-start justify-center gap-4 mb-8 bg-white/50 backdrop-blur-sm p-4 rounded-3xl border border-white/60 shadow-sm">
             <button
-              onClick={() => handleSave(false)}
-              disabled={saving}
-              className="px-4 py-2 flex items-center gap-2 text-xs truncate md:text-sm font-semibold btn btn-primary disabled:opacity-50"
+              onClick={() => navigate('/teacher/lessons')}
+              className="bg-white hover:bg-slate-100 p-2 rounded-xl transition-colors shadow-sm border border-slate-200"
             >
-              <Save size={15} />
-              {saving ? 'Saving…' : 'Save Draft'}
+              <ArrowLeft size={20} className="text-slate-600" />
             </button>
-            <button
-              onClick={() => handleSave(true)}
-              disabled={saving || isPublished}
-              className="px-4 py-2 flex items-center gap-2 text-xs truncate md:text-sm font-semibold btn btn-secondary disabled:opacity-50"
-            >
-              <Check size={15} />
-              {isPublished ? 'Published' : 'Save & Publish'}
-            </button>
-          </div>
-        </div>
-
-        <div className="space-y-6">
-
-          {/* ── Title ───────────────────────────────────────────────────── */}
-          <div>
-            <label className="text-md font-bold text-slate-700 mb-2">
-              Lesson Title <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              value={title}
-              onChange={(e) => { setTitle(e.target.value); setErrors((p) => ({ ...p, title: '' })) }}
-              placeholder="e.g. Introduction to Variables"
-              className={`w-full px-4 py-3 text-base font-semibold border rounded-xl focus:outline-none focus:ring-2 bg-white transition-all ${
-                errors.title ? 'border-red-400 focus:ring-red-300' : 'border-slate-200 focus:ring-indigo-300'
-              }`}
-            />
-            {errors.title && <p className="text-xs text-red-500 mt-1">{errors.title}</p>}
-          </div>
-
-          {/* ── Estimated duration ──────────────────────────────────────── */}
-          <div className="w-48">
-            <label className="text-md font-bold text-slate-700 mb-2">
-              Estimated Duration
-            </label>
-            <div className="relative">
-              <input
-                type="number"
-                min={1}
-                value={estimatedDuration}
-                onChange={(e) => setEstimatedDuration(e.target.value)}
-                placeholder="30"
-                className="w-full px-4 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-300 bg-white pr-12"
-              />
-              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-slate-400">min</span>
+            <h1 className="flex-1 text-2xl font-extrabold text-slate-800 pt-1">
+              {isEdit ? 'Edit Lesson' : 'Create New Lesson'}
+            </h1>
+            <div className="flex self-end gap-3 items-center">
+              {saveMsg && (
+                <span className="text-sm font-semibold text-emerald-600">{saveMsg}</span>
+              )}
+              <button
+                onClick={() => {/* handleSave(false) */}}
+                disabled={saving}
+                className="px-5 py-2.5 flex items-center gap-2 text-sm font-bold bg-slate-200 text-slate-700 rounded-xl hover:bg-slate-300 transition disabled:opacity-50"
+              >
+                <Save size={18} />
+                {saving ? 'Saving…' : 'Save Draft'}
+              </button>
+              <button
+                onClick={() => {/* handleSave(true) */}}
+                disabled={saving || isPublished}
+                className="px-5 py-2.5 flex items-center gap-2 text-sm font-bold bg-violet-500 text-white rounded-xl hover:bg-violet-600 shadow-md transition disabled:opacity-50"
+              >
+                <Check size={18} />
+                {isPublished ? 'Published' : 'Save & Publish'}
+              </button>
             </div>
           </div>
 
+        <div className="space-y-6">
+
+          {/* ── Title & Duration ──────────────────────────────────────── */}
+            <div className="bg-white/50 backdrop-blur-sm p-6 rounded-3xl border border-white/60 shadow-sm flex flex-col md:flex-row gap-6">
+              <div className="flex-1">
+                <label className="text-md font-bold text-slate-700 mb-2">
+                  Lesson Title <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={title}
+                  onChange={(e) => { setTitle(e.target.value); setErrors((p) => ({ ...p, title: '' })) }}
+                  placeholder="e.g. Introduction to Variables"
+                  className={`w-full px-4 py-3 text-lg font-bold border-2 rounded-xl focus:outline-none transition-all ${
+                    errors.title ? 'border-red-400 focus:border-red-500' : 'border-slate-200 focus:border-violet-400'
+                  }`}
+                />
+              </div>
+              <div className="w-full md:w-48">
+                <label className="text-md font-bold text-slate-700 mb-2">
+                  Est. Duration
+                </label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    value={estimatedDuration}
+                    onChange={(e) => setEstimatedDuration(e.target.value)}
+                    placeholder="30"
+                    className="w-full px-4 py-3 text-lg font-bold border-2 border-slate-200 rounded-xl focus:outline-none focus:border-violet-400 pr-12"
+                  />
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2 font-bold text-slate-400">min</span>
+                </div>
+              </div>
+            </div>
+
           {/* ── Content editor ──────────────────────────────────────────── */}
-          <div>
-            <label className="text-md font-bold text-slate-700 mb-2">
-              Lesson Content <span className="text-red-500">*</span>
-            </label>
+          <div className="bg-white/50 backdrop-blur-sm p-6 rounded-3xl border border-white/60 shadow-sm">
+              <label className="text-md font-bold text-slate-700 mb-4">
+                Lesson Content <span className="text-red-500">*</span>
+              </label>
             <SimpleEditor
               value={content}
               onChange={(v) => { setContent(v); setErrors((p) => ({ ...p, content: '' })) }}
@@ -332,11 +344,11 @@ export default function CreateLessonPage() {
           </div>
 
           {/* ── Attachments ─────────────────────────────────────────────── */}
-          <div className="bg-white rounded-2xl border border-slate-200 p-5">
-            <h2 className="text-sm font-bold text-slate-800 mb-1 flex items-center gap-2">
-              <Paperclip size={15} /> Attachments
+          <div className="bg-white/50 backdrop-blur-sm rounded-2xl border border-white/60 shadow-sm p-5">
+            <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+              <Paperclip size={20} className="text-violet-500"/> Attachments
             </h2>
-            <p className="text-xs text-slate-400 mb-4">
+            <p className="text-sm text-slate-500 mb-4 font-medium">
               Add images, PDFs, PowerPoint files, or external links.
             </p>
             <MediaAttachments
@@ -348,37 +360,39 @@ export default function CreateLessonPage() {
           </div>
 
           {/* ── Linked quizzes ──────────────────────────────────────────── */}
-          <div className="bg-white rounded-2xl border border-slate-200 p-5">
-            <div className="flex items-center justify-between mb-1">
-              <h2 className="text-sm font-bold text-slate-800 flex items-center gap-2">
-                <FileEdit size={15} /> Attached Quizzes
+          <div className="bg-white/50 backdrop-blur-sm rounded-3xl border border-white/60 p-6 shadow-sm">
+            <div className="flex items-center justify-between mb-2">
+              <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                <FileEdit size={20} className="text-violet-500"/> Lesson Quiz
               </h2>
               <button
                 type="button"
-                onClick={() => setShowQuizModal(true)}
-                className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 px-3 py-1.5 border border-indigo-200 rounded-lg hover:bg-indigo-50 transition-colors"
+                onClick={() => setShowQuizPanel(true)} // Opens Slide-Over
+                className="text-sm font-bold text-violet-600 px-4 py-2 border-2 border-violet-200 rounded-xl hover:bg-violet-50 transition-colors"
               >
-                + Attach Quiz
+                + Add / Edit Quiz
               </button>
             </div>
-            <p className="text-xs text-slate-400 mb-4">
-              Students will take attached quizzes after this lesson.
+            <p className="text-sm text-slate-500 mb-4 font-medium">
+              Assess your students' understanding after they complete this lesson.
             </p>
 
             {linkedQuizzes.length === 0 ? (
-              <p className="text-xs text-slate-400 bg-slate-50 p-4 rounded-xl text-center">
-                No quizzes attached yet.
-              </p>
+              <div className="bg-slate-50 border-2 border-dashed border-slate-200 p-8 rounded-2xl flex flex-col items-center justify-center text-center">
+                <FileEdit size={32} className="text-slate-300 mb-2"/>
+                <p className="text-slate-500 font-bold">No quiz attached</p>
+                <p className="text-sm text-slate-400">Click the button above to link or build a quiz.</p>
+              </div>
             ) : (
               <div className="space-y-2">
                 {linkedQuizzes.map((lq) => (
-                  <div key={lq.id} className="flex items-center gap-3 p-3 bg-indigo-50 border border-indigo-200 rounded-xl">
-                    <span className="text-lg"><Edit size={16} /></span>
+                  <div key={lq.id} className="flex items-center gap-4 p-4 bg-violet-50 border border-violet-200 rounded-2xl">
+                    <div className="bg-violet-200 p-3 rounded-full text-violet-700">
+                      <FileEdit size={20} />
+                    </div>
                     <div className="flex-1">
-                      <p className="text-sm font-semibold text-indigo-800">{lq.quiz?.title}</p>
-                      {lq.quiz?.passing_score != null && (
-                        <p className="text-xs text-indigo-500">Passing: {lq.quiz.passing_score} correct</p>
-                      )}
+                      <p className="text-lg font-bold text-violet-900">{lq.quiz?.title || 'Untitled Quiz'}</p>
+                      <p className="text-sm font-semibold text-violet-600">10 Questions • 5 Mins</p>
                     </div>
                     <button
                       type="button"
@@ -394,37 +408,41 @@ export default function CreateLessonPage() {
           </div>
 
           {/* ── Linked tutorials ───────────────────────────────────────────────── */}
-          <div className="bg-white rounded-2xl border border-slate-200 p-5">
+          <div className="bg-white/50 backdrop-blur-sm rounded-2xl border border-white/60 p-5 shadow-md">
             <div className="flex items-center justify-between mb-1">
-              <h2 className="text-sm font-bold text-slate-800 flex items-center gap-2">
-                <TutorialIcon size={15} /> Attached Tutorials
+              <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                <MonitorSmartphone size={20} className="text-violet-500"/> Attached Tutorials
               </h2>
               <button
                 type="button"
                 onClick={() => setShowTutorialModal(true)}
-                className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 px-3 py-1.5 border border-indigo-200 rounded-lg hover:bg-indigo-50 transition-colors"
+                className="text-sm font-bold text-violet-600 px-4 py-2 border-2 border-violet-200 rounded-xl hover:bg-violet-50 transition-colors"
               >
                 + Attach Tutorial
               </button>
             </div>
-            <p className="text-xs text-slate-400 mb-4">
+            <p className="text-sm text-slate-500 mb-4 font-medium">
               Students will open an interactive block editor to work through the tutorial step-by-step.
             </p>
           
             {linkedTutorials.length === 0 ? (
-              <p className="text-xs text-slate-400 bg-slate-50 p-4 rounded-xl text-center">
-                No tutorials attached yet.
-              </p>
+              <div className="bg-slate-50 border-2 border-dashed border-slate-200 p-8 rounded-2xl flex flex-col items-center justify-center text-center">
+                <MonitorSmartphone size={32} className="text-slate-300 mb-2"/>
+                <p className="text-slate-500 font-bold">No tutorial attached</p>
+                <p className="text-sm text-slate-400">Click the button above to link or build a tutorial.</p>
+              </div>
             ) : (
               <div className="space-y-2">
                 {linkedTutorials.map((lt) => (
-                  <div key={lt.id} className="flex items-center gap-3 p-3 bg-blue-50 border border-blue-200 rounded-xl">
-                    <TutorialIcon size={16} className="text-blue-600 shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-blue-800 truncate">
-                        {lt.tutorial?.title}
+                  <div key={lt.id} className="flex items-center gap-4 p-4 bg-violet-50 border border-violet-200 rounded-2xl">
+                    <div className='bg-violet-200 p-3 rounded-full text-violet-700'>
+                      <MonitorSmartphone size={20}/>
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-lg font-bold text-violet-900">
+                        {lt.tutorial?.title || 'Untitled Tutorial'}
                       </p>
-                      <p className="text-xs text-blue-500 capitalize">
+                      <p className="text-sm font-semibold text-violet-600 capitalize">
                         {lt.tutorial?.difficulty_level ?? ''}
                         {lt.tutorial?.estimated_time_minutes
                           ? ` · ${lt.tutorial.estimated_time_minutes} min`
@@ -472,14 +490,19 @@ export default function CreateLessonPage() {
 
         </div>
       </div>
-
-      {showQuizModal && (
-        <AttachQuizModal
-          teacherId={user.id}
-          attachedQuizIds={linkedQuizzes.map((lq) => lq.quiz?.id)}
-          onAttach={handleAttachQuiz}
-          onClose={() => setShowQuizModal(false)}
-        />
+      
+      {showQuizPanel && (
+        <div className="w-full md:w-[60%] lg:w-[45%] xl:w-[35%] z-10 space-y-4 bg-sky-50/90 p-6 h-full">
+          <QuizBuilderSlideOver 
+            isOpen={showQuizPanel} 
+            onClose={() => setShowQuizPanel(false)} 
+            lessonTitle={title || "Untitled Lesson"}
+            onAttach={(quizData) => {
+              console.log("Attached:", quizData);
+              setShowQuizPanel(false);
+            }}
+          />
+        </div>
       )}
 
       {showTutorialModal && (
@@ -491,6 +514,7 @@ export default function CreateLessonPage() {
         />
       )}
       
+    </div>
     </div>
   )
 }

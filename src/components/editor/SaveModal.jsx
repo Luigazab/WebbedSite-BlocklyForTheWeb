@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Save, Download, FileJson, X } from 'lucide-react'
+import { Save, Download, FileJson, X, FolderClosed } from 'lucide-react'
 
 /**
  * SaveModal with 3 options:
@@ -190,15 +190,23 @@ const SaveModal = ({
           </button>
           <button
             onClick={onExportZip}
-            className="btn btn-secondary"
+            className="shadow w-full flex items-center justify-between p-4 bg-white hover:bg-purple-100 rounded-xl transition-all group border-2 border-gray-200 hover:border-purple-300"
           >
-            Export as ZIP
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-white group-hover:bg-purple-600 border-2 border-gray-300 group-hover:border-purple-600 rounded-xl flex items-center justify-center shrink-0 transition-all">
+                <FolderClosed className="w-6 h-6 text-gray-700 group-hover:text-white transition-colors" />
+              </div>
+              <div className="text-left">
+                <h4 className="text-lg font-semibold text-gray-900">Export to ZIP file</h4>
+                <p className="text-sm text-gray-600">Includes all project files</p>
+              </div>
+            </div>
           </button>
         </div>
 
         <button
           onClick={onClose}
-          className="btn w-full mt-4 px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition font-medium"
+          className="btn w-full mt-4 px-4 py-2 bg-orange-300 text-orange-900 rounded-lg hover:bg-orange-400 transition! font-medium"
         >
           Cancel
         </button>

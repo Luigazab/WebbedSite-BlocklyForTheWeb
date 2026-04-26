@@ -56,9 +56,9 @@ export default function ProfileMenu() {
         className="flex items-center gap-2 p-1 rounded-full hover:bg-gray-100 transition-colors"
       >
         <img
-          src={profile?.avatar_url || '/default-avatar.png'}
+          src={profile?.avatar_url || '/profile.svg'}
           alt="avatar"
-          className="w-8 h-8 rounded-full object-cover border-2 border-blockly-purple/30"
+          className="w-10 h-10 rounded-full object-cover border-2 border-blockly-purple/30"
         />
         <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
       </button>
