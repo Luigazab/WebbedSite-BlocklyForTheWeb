@@ -5,17 +5,20 @@ import { useTour } from '../../../components/tour/TourProvider'
 import {
   Home, BookOpen, ChevronLeft, ChevronRight,
   University, FolderOpen, Settings, UserSquare2, HelpCircle,
-  LibraryBigIcon
+  LibraryBigIcon,
+  Plus
 } from 'lucide-react'
+import CreateProjectModal from '../../../components/shared/CreateProjectModal'
+import { useState } from 'react'
 
 const links = [
-  { to: '/student',             label: 'Home',        icon: (props) => <img src="/home.svg" alt="" {...props} />        },
-  { to: '/student/projects',    label: 'Projects',    icon: (props) => <img src="/folder.svg" alt="" {...props} />  },
-  { to: '/student/classrooms',  label: 'Classroom',  icon: (props) => <img src="/study.svg" alt="" {...props} />  },
-  { to: '/student/learn',       label: 'Learn',       icon: (props) => <img src="/learn.svg" alt="" {...props} />    },
+  { to: '/student',             label: 'Home',        icon: (props) => <img src="/svghome.svg" alt="" {...props} />        },
+  { to: '/student/projects',    label: 'Projects',    icon: (props) => <img src="/svgfolder.svg" alt="" {...props} />  },
+  { to: '/student/learn',       label: 'Learn',       icon: (props) => <img src="/svgbook.svg" alt="" {...props} />    },
+  { to: '/student/classrooms',  label: 'Classroom',  icon: (props) => <img src="/svgclass.svg" alt="" {...props} />  },
   // { to: '/student/docs',        label: 'Documentation',     icon: (props) => <img src="/library.svg" alt="" {...props} />    },
   // { to: '/student/tutorials', label: 'Tutorials', icon: PlayCircle},
-  { to: '/student/profile',     label: 'Profile',     icon: (props) => <img src="/user_profile.png" alt="" {...props} /> },
+  { to: '/student/profile',     label: 'Profile',     icon: (props) => <img src="/svgprofile.svg" alt="" {...props} /> },
   // { to: '/student/settings',    label: 'Settings',    icon: (props) => <img src="/settings.svg" alt="" {...props} />    },
 ]
 
@@ -24,6 +27,11 @@ export default function StudentSidebar() {
   const profile = useAuthStore((state) => state.profile)
   const { startTour } = useTour()
   const location = useLocation()
+  const [showCreateModal, setShowCreateModal] = useState(false)
+
+  const handleProjectCreated = () => {
+    setShowCreateModal(false)
+  }
 
   const getTourForRoute = () => {
     const path = location.pathname
@@ -66,17 +74,22 @@ export default function StudentSidebar() {
             to={to}
             end={to === '/student'}
             className={({ isActive }) =>
-              `flex items-center gap-5 px-5 text-lg py-3 rounded-lg font-bold transition-colors!
+              `flex items-center gap-5 px-5 text-lg py-2 rounded-lg font-bold transition-colors!
               ${isActive
                 ? 'bg-slate-100 text-slate-800' : 'text-slate-500 hover:bg-slate-50'
               }`
             }
           >
-            <span className="bg-blue-200 rounded-full"><Icon className="w-8 h-8 shrink-0" /></span>
+            <span className=""><Icon className="w-10 h-10 shrink-0" /></span>
             {sidebarOpen && <span>{label}</span>}
           </NavLink>
         ))}
-
+        <button
+          onClick={() => setShowCreateModal(true)}
+          className="text-center flex gap-2 mt-6 mx-2 items-center justify-center rounded-full font-bold transition-colors! btn bg-slate-700 text-white">
+            <img src="/svgcomputer.svg" alt="" className="w-6 h-6 shrink-0"/>
+            Practice
+        </button>
         {tourId && (
           <button
             onClick={handleHelpClick}
@@ -87,7 +100,15 @@ export default function StudentSidebar() {
             {sidebarOpen && <span>Help Tour</span>}
           </button>
         )}
+       
       </nav>
+
+      {showCreateModal && (
+        <CreateProjectModal
+          onClose={() => setShowCreateModal(false)}
+          onCreated={handleProjectCreated}
+        />
+      )}
       
 
       {/* User info at bottom */}

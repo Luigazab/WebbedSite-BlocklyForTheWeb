@@ -4,11 +4,11 @@ const Register = () => {
   return (
     <div className="flex flex-col items-center px-6 py-16 justify-center p-4">
       <div className="w-full max-w-7xl mx-auto mb-20 flex flex-col items-center justify-center gap-8">
-        <h1 className='font-bold text-5xl text-white'>Create your account</h1>
-        <p className='font-bold text-2xl text-gray-900'>Start creating your free account by selecting the account type that best matches you.</p>
+        <h1 className='font-bold text-5xl text-slate-900'>Create your account</h1>
+        <p className='font-bold text-2xl text-slate-600'>Start creating your free account by selecting the account type that best matches you.</p>
       </div>
       <div className='flex flex-col lg:flex-row items-center justify-evenly mx-auto w-full max-w-7xl gap-12'>
-        <div className='signup lg:w-1/2'>
+        <div className='signup border border-slate-200 lg:w-1/2'>
           <div>
             <div className='flex justify-between pr-6'>
               <div className=' w-[90%]'>
@@ -27,7 +27,7 @@ const Register = () => {
             <button className='btn mt-8'>Sign up as a student</button>
           </Link>
         </div>
-        <div className='signup lg:w-1/2'>
+        <div className='signup border border-slate-200 lg:w-1/2'>
           <div className='flex justify-between pr-6'>
             <div className=' w-[90%]'>
               <h2>I'm a Teacher</h2>

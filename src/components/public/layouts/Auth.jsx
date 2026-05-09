@@ -4,7 +4,7 @@ import Footer from "../Footer"
 
 const Auth = () => {
   return (
-    <div className="min-h-screen bg-blockly-blue/80">
+    <div className="min-h-screen bg-slate-50">
         <Header/>
         <main>
             <Outlet/>

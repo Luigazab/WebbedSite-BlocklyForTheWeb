@@ -12,6 +12,8 @@ import NotFound from '../pages/public/NotFound'
 import ErrorPage from '../pages/public/ErrorPage'
 import { PublicRoute } from '../components/layout/PublicRoute'
 import BlocklyTabs from '../components/editor/BlocklyTabs'
+import UpdatePassword from '../pages/auth/UpdatePassword'
+import ForgotPassword from '../pages/auth/ForgotPassword'
 
 const router = createBrowserRouter([
   { path: '/', element: <Navigate to="/login" replace />, errorElement: <ErrorPage/> },
@@ -22,9 +24,11 @@ const router = createBrowserRouter([
         { path: '/register', element: <Register /> },
         { path: '/register/student', element: <StudentRegister /> },
         { path: '/register/teacher', element: <TeacherRegister /> },
+        { path: '/forgot-password', element: <ForgotPassword /> },
       ]
     },
   ]},
+  { path: '/update-password', element: <Auth><UpdatePassword /></Auth>, errorElement: <ErrorPage/>},
   {
     path: '/student',
     element: <ProtectedRoute allowedRole="student" />,

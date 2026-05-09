@@ -9,7 +9,7 @@ export const authService = {
 
   async signUp(email, password, username, role) {
     // 1. Create auth user
-    const { data, error } = await supabase.auth.signUp({ email, password })
+    const { data, error } = await supabase.auth.signUp({ email, password, options: { data: { username } } })
     if (error) throw error
 
     // 2. Insert into profiles table (id comes from auth user)
@@ -57,5 +57,25 @@ export const authService = {
 
   onAuthStateChange(callback) {
     return supabase.auth.onAuthStateChange(callback)
+  },
+
+  async resendConfirmation(email) {
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
+      email,
+    });
+    if (error) throw error;
+  },
+
+  async resetPasswordRequest(email) {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/update-password`,
+    });
+    if (error) throw error;
+  },
+
+  async updatePassword(newPassword) {
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    if (error) throw error;
   }
 }

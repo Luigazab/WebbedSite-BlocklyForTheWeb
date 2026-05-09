@@ -1,199 +1,80 @@
-import { supabase } from '../supabaseClient'
+import { supabase } from '../supabaseClient';
 
-// ─── Lessons ────────────────────────────────────────────────────────────────
+const formatLessonUrl = (lesson, courseSlug) => {
+  if (!lesson) return null;
+  return `/student/learn/${courseSlug}/${lesson.slug}`;
+};
 
-export const fetchTeacherLessons = async (teacherId) => {
-  const { data, error } = await supabase
+export const getLessonDetails = async (courseSlug, lessonSlug) => {
+  const { data: course, error: courseError } = await supabase
+    .from('courses')
+    .select('id')
+    .eq('slug', courseSlug)
+    .single();
+
+  if (courseError) throw courseError;
+  if (!course) throw new Error(`Course with slug "${courseSlug}" not found.`);
+
+  const { data: lessonData, error: lessonError } = await supabase
     .from('lessons')
     .select(`
-      *,
-      lesson_attachments(id),
-      lesson_quizzes(id, quiz:quizzes(id, title))
+      id, title, created_at, slug, order, type,
+      topics!inner ( id, title, description, slug, course_id ),
+      lectures ( content, video_src, file_url ),
+      quizzes (
+        id, time_limit, passing_score,
+        questions (
+          id, text, order,
+          options ( id, text, is_correct, image_src )
+        )
+      ),
+      laboratories ( id, instruction ),
+      tutorials ( id, type ),
+      author:profiles!lessons_author_fkey ( username, avatar_url )
     `)
-    .eq('teacher_id', teacherId)
-    .order('created_at', { ascending: false })
+    .eq('slug', lessonSlug)
+    .single();
 
-  if (error) throw error
-  return data
-}
+  if (lessonError) throw lessonError;
 
-export const fetchLessonById = async (id) => {
-  const { data, error } = await supabase
+  // Manually verify the lesson belongs to the correct course
+  if (lessonData.topics.course_id !== course.id) {
+    throw new Error(`Lesson "${lessonSlug}" does not belong to course "${courseSlug}".`);
+  }
+  const courseId = lessonData.topics.course_id;
+
+  const { data: allCourseLessons, error: allLessonsError } = await supabase
     .from('lessons')
-    .select(`
-      *,
-      lesson_attachments(*),
-      lesson_quizzes(*, quiz:quizzes(*))
-    `)
-    .eq('id', id)
-    .single()
+    .select('slug, type, topics!inner(slug, course_id)')
+    .eq('topics.course_id', courseId)
+    .order('order', { foreignTable: 'topics', ascending: true })
+    .order('order', { ascending: true });
 
-  if (error) throw error
-  return data
-}
+  if (allLessonsError) throw allLessonsError;
 
-export const createLesson = async (lessonData) => {
-  const { data, error } = await supabase
-    .from('lessons')
-    .insert(lessonData)
-    .select()
-    .single()
+  const currentIndex = allCourseLessons.findIndex(l => l.slug === lessonSlug);
+  const prevLesson = currentIndex > 0 ? allCourseLessons[currentIndex - 1] : null;
+  const nextLesson = currentIndex < allCourseLessons.length - 1 ? allCourseLessons[currentIndex + 1] : null;
 
-  if (error) throw error
-  return data
-}
+  // Sort questions and their options by order
+  const quiz = lessonData.quizzes[0] || null;
+  if (quiz?.questions) {
+    quiz.questions.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+  }
 
-export const updateLesson = async (id, lessonData) => {
-  const { data, error } = await supabase
-    .from('lessons')
-    .update({ ...lessonData, updated_at: new Date().toISOString() })
-    .eq('id', id)
-    .select()
-    .single()
-
-  if (error) throw error
-  return data
-}
-
-export const deleteLesson = async (id) => {
-  const { error } = await supabase.from('lessons').delete().eq('id', id)
-  if (error) throw error
-}
-
-export const publishLesson = async (id, isPublished) => {
-  const { data, error } = await supabase
-    .from('lessons')
-    .update({ is_published: isPublished, updated_at: new Date().toISOString() })
-    .eq('id', id)
-    .select()
-    .single()
-
-  if (error) throw error
-  return data
-}
-
-// ─── Attachments ────────────────────────────────────────────────────────────
-
-export const addLessonAttachment = async (attachment) => {
-  const { data, error } = await supabase
-    .from('lesson_attachments')
-    .insert(attachment)
-    .select()
-    .single()
-
-  if (error) throw error
-  return data
-}
-
-export const removeLessonAttachment = async (id) => {
-  const { error } = await supabase.from('lesson_attachments').delete().eq('id', id)
-  if (error) throw error
-}
-
-export const uploadLessonFile = async (file, lessonId) => {
-  const ext = file.name.split('.').pop()
-  const path = `lessons/${lessonId}/${Date.now()}_${file.name.replace(/\s+/g, '_')}`
-
-  const { error: uploadError } = await supabase.storage
-    .from('lesson-attachments')
-    .upload(path, file, { upsert: false })
-
-  if (uploadError) throw uploadError
-
-  const { data: urlData } = supabase.storage
-    .from('lesson-attachments')
-    .getPublicUrl(path)
-
-  return { path, url: urlData.publicUrl }
-}
-
-export const deleteStorageFile = async (path) => {
-  const { error } = await supabase.storage.from('lesson-attachments').remove([path])
-  if (error) throw error
-}
-
-// ─── Lesson ↔ Quiz linking ───────────────────────────────────────────────────
-
-export const linkQuizToLesson = async (lessonId, quizId) => {
-  const { data, error } = await supabase
-    .from('lesson_quizzes')
-    .insert({ lesson_id: lessonId, quiz_id: quizId })
-    .select()
-    .single()
-
-  if (error) throw error
-  return data
-}
-
-export const unlinkQuizFromLesson = async (id) => {
-  const { error } = await supabase.from('lesson_quizzes').delete().eq('id', id)
-  if (error) throw error
-}
-
-// ─── Hand-out ────────────────────────────────────────────────────────────────
-
-export const handOutLesson = async (assignment) => {
-  const { data, error } = await supabase
-    .from('lesson_assignments')
-    .insert(assignment)
-    .select()
-    .single()
-
-  if (error) throw error
-  return data
-}
-
-export const fetchTeacherClassrooms = async (teacherId) => {
-  const { data, error } = await supabase
-    .from('classrooms')
-    .select('id, name, class_code')
-    .eq('teacher_id', teacherId)
-    .eq('is_active', true)
-    .order('name')
-
-  if (error) throw error
-  return data
-}
-
-export const fetchLearnCategories = async () => {
-  const { data, error } = await supabase
-    .from('learn_categories')
-    .select('*')
-    .order('order_index')
-
-  if (error) throw error
-  return data
-}
-
-export const linkTutorialToLesson = async (lessonId, tutorialId) => {
-  const { data, error } = await supabase
-    .from('lesson_tutorials')
-    .insert({ lesson_id: lessonId, tutorial_id: tutorialId })
-    .select()
-    .single()
-  if (error) throw error
-  return data
-}
- 
-export const unlinkTutorialFromLesson = async (id) => {
-  const { error } = await supabase.from('lesson_tutorials').delete().eq('id', id)
-  if (error) throw error
-}
- 
-/**
- * Search a teacher's PUBLISHED tutorials — used by AttachTutorialModal.
- */
-export const searchTeacherTutorials = async (teacherId, query = '') => {
-  let q = supabase
-    .from('tutorials')
-    .select('id, title, description, difficulty_level, estimated_time_minutes, tutorial_steps(id)')
-    .eq('teacher_id', teacherId)
-    .eq('is_published', true)
-    .order('created_at', { ascending: false })
- 
-  if (query.trim()) q = q.ilike('title', `%${query.trim()}%`)
- 
-  const { data, error } = await q
-  if (error) throw error
-  return data
-}
+  return {
+    lesson: {
+      ...lessonData,
+      lecture:    lessonData.lectures[0]     || null,
+      quiz,
+      laboratory: lessonData.laboratories[0] || null,
+      tutorial:   lessonData.tutorials[0]    || null,
+      topic:      lessonData.topics,
+      author:     lessonData.author,
+    },
+    navigation: {
+      previous: formatLessonUrl(prevLesson, courseSlug),
+      next:     formatLessonUrl(nextLesson, courseSlug),
+    },
+  };
+};
