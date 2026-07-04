@@ -11,6 +11,13 @@ import {
   saveStepFiles,
 } from '../../../services/tutorial.service'
 import { useAuth } from '../../../hooks/useAuth'
+import {
+  createLessonBase,
+  fetchTopicGroupsForAuthoring,
+  fetchTutorialEditorData,
+  linkTutorialToLesson,
+  updateLessonBase,
+} from '../../../services/contentCreationService'
 import BlocklyWorkspace from '../../../components/editor/BlocklyWorkspace'
 import PreviewPane from '../../../components/editor/PreviewPane'
 import FileTabs from '../../../components/editor/FileTabs'
@@ -61,6 +68,9 @@ const DIFFICULTY_OPTIONS = ['beginner', 'intermediate', 'advanced']
 function StepPanel({
   tutorialTitle, setTutorialTitle,
   tutorialDescription, setTutorialDescription,
+  courseTopics,
+  selectedTopicId, setSelectedTopicId,
+  loadingTopics,
   difficulty, setDifficulty,
   estimatedTime, setEstimatedTime,
   isPublished,
@@ -147,6 +157,23 @@ function StepPanel({
                   rows={2}
                   className="mt-1 w-full px-3 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blockly-blue bg-white resize-none"
                 />
+              </div>
+              <div>
+                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wide">Topic *</label>
+                <select
+                  value={selectedTopicId}
+                  onChange={(e) => setSelectedTopicId(e.target.value)}
+                  className="mt-1 w-full px-3 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blockly-blue bg-white"
+                >
+                  <option value="">{loadingTopics ? 'Loading topics...' : 'Select a topic'}</option>
+                  {courseTopics.map((group) => (
+                    <optgroup key={group.course} label={group.course}>
+                      {group.topics.map((topic) => (
+                        <option key={topic.id} value={topic.id}>{topic.title}</option>
+                      ))}
+                    </optgroup>
+                  ))}
+                </select>
               </div>
               <div className="flex gap-2">
                 <div className="flex-1">
@@ -362,9 +389,13 @@ export default function TutorialBuilderPage() {
   const addToast    = useUIStore((s) => s.addToast)
 
   // ── Tutorial meta ──────────────────────────────────────────────────────────
-  const [savedId, setSavedId]                         = useState(id || null)
+  const [savedId, setSavedId]                         = useState(null)
+  const [savedLessonId, setSavedLessonId]             = useState(id || null)
   const [tutorialTitle, setTutorialTitle]             = useState('')
   const [tutorialDescription, setTutorialDescription] = useState('')
+  const [courseTopics, setCourseTopics]               = useState([])
+  const [selectedTopicId, setSelectedTopicId]         = useState('')
+  const [loadingTopics, setLoadingTopics]             = useState(true)
   const [difficulty, setDifficulty]                   = useState('beginner')
   const [estimatedTime, setEstimatedTime]             = useState('')
   const [isPublished, setIsPublished]                 = useState(false)
@@ -398,6 +429,19 @@ export default function TutorialBuilderPage() {
   // Holds blocks_json queued during fetch; useState so the drain effect below
   // re-fires whether isInitialized or pendingFirstStep changes last.
   const [pendingFirstStep, setPendingFirstStep] = useState(null)
+
+  useEffect(() => {
+    ;(async () => {
+      setLoadingTopics(true)
+      try {
+        setCourseTopics(await fetchTopicGroupsForAuthoring())
+      } catch (err) {
+        addToast(err.message || 'Failed to load topics.', 'error')
+      } finally {
+        setLoadingTopics(false)
+      }
+    })()
+  }, [addToast])
 
   useEffect(() => { stepsRef.current = steps },                 [steps])
   useEffect(() => { currentIdxRef.current = currentStepIndex }, [currentStepIndex])
@@ -454,7 +498,15 @@ export default function TutorialBuilderPage() {
     ;(async () => {
       setLoading(true)
       try {
-        const tut = await fetchTutorialById(id)
+        const lesson = await fetchTutorialEditorData(id)
+        setSavedLessonId(lesson.id)
+        setSelectedTopicId(lesson.topics_id || '')
+        setTutorialTitle(lesson.title || '')
+        const tut = lesson.tutorial?.id ? await fetchTutorialById(lesson.tutorial.id) : null
+        if (!tut) {
+          setLoading(false)
+          return
+        }
         setTutorialTitle(tut.title || '')
         setTutorialDescription(tut.description || '')
         setDifficulty(tut.difficulty_level || 'beginner')
@@ -749,22 +801,45 @@ export default function TutorialBuilderPage() {
   const handleClearBlocks = () => setCapturedBlocks(null)
 
   // ── Ensure tutorial exists in DB ──────────────────────────────────────────
-  const ensureTutorial = async () => {
+  const ensureLesson = async () => {
+    if (savedLessonId) {
+      const lesson = await updateLessonBase({
+        lessonId: savedLessonId,
+        topicId: selectedTopicId,
+        title: tutorialTitle.trim() || 'Untitled Tutorial',
+      })
+      return lesson.id
+    }
+
+    const lesson = await createLessonBase({
+      topicId: selectedTopicId,
+      authorId: user.id,
+      title: tutorialTitle.trim() || 'Untitled Tutorial',
+      type: 'tutorial',
+    })
+    setSavedLessonId(lesson.id)
+    return lesson.id
+  }
+
+  const ensureTutorial = async (lessonId) => {
     const meta = {
       title:                   tutorialTitle.trim() || 'Untitled Tutorial',
       description:             tutorialDescription.trim(),
       difficulty_level:        difficulty,
       estimated_time_minutes:  estimatedTime ? parseInt(estimatedTime) : null,
+      lesson_id:                lessonId,
     }
     if (savedId) { await updateTutorial(savedId, meta); return savedId }
     const tut = await createTutorial({ ...meta, teacher_id: user.id, is_published: false })
     setSavedId(tut.id)
+    await linkTutorialToLesson({ tutorialId: tut.id, lessonId })
     return tut.id
   }
 
   // ── Save all steps + their files ──────────────────────────────────────────
   const handleSaveTutorial = async (silent = false) => {
     if (!tutorialTitle.trim()) { addToast('Add a tutorial title first', 'error'); return null }
+    if (!selectedTopicId) { addToast('Select a topic for this tutorial', 'error'); return null }
     setSaving(true)
     setSaveMsg('')
     try {
@@ -780,7 +855,8 @@ export default function TutorialBuilderPage() {
       const badIdx = toSave.findIndex((s) => !s.instruction.trim())
       if (badIdx !== -1) { addToast(`Step ${badIdx + 1} needs an instruction`, 'error'); setSaving(false); return null }
 
-      const tutId = await ensureTutorial()
+      const lessonId = await ensureLesson()
+      const tutId = await ensureTutorial(lessonId)
 
       // Upsert all steps + their files
       const savedSteps = await Promise.all(
@@ -810,7 +886,7 @@ export default function TutorialBuilderPage() {
 
       await reorderTutorialSteps(savedSteps.map((s) => s.id))
 
-      if (!isEdit) navigate(`/teacher/tutorials/${tutId}/edit`, { replace: true })
+      if (!isEdit) navigate(`/teacher/tutorial/edit/${lessonId}`, { replace: true })
 
       if (!silent) {
         setSaveMsg('Saved!')
@@ -889,10 +965,10 @@ export default function TutorialBuilderPage() {
       {/* Top bar */}
       <div className="shrink-0 flex items-center gap-3 px-4 py-2.5 bg-white border-b border-slate-200 shadow-sm">
         <button
-          onClick={() => navigate('/teacher/tutorials')}
+          onClick={() => navigate('/teacher/content')}
           className="flex items-center gap-1.5 text-sm font-semibold text-slate-500 hover:text-slate-800 transition-colors"
         >
-          <ArrowLeft size={16} /> Tutorials
+          <ArrowLeft size={16} /> Content
         </button>
         <span className="text-slate-300">/</span>
         <span className="text-sm font-black text-slate-700 truncate max-w-xs">
@@ -923,6 +999,9 @@ export default function TutorialBuilderPage() {
           <StepPanel
             tutorialTitle={tutorialTitle}             setTutorialTitle={setTutorialTitle}
             tutorialDescription={tutorialDescription} setTutorialDescription={setTutorialDescription}
+            courseTopics={courseTopics}
+            selectedTopicId={selectedTopicId}         setSelectedTopicId={setSelectedTopicId}
+            loadingTopics={loadingTopics}
             difficulty={difficulty}                   setDifficulty={setDifficulty}
             estimatedTime={estimatedTime}             setEstimatedTime={setEstimatedTime}
             isPublished={isPublished}

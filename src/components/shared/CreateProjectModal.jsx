@@ -130,19 +130,19 @@ export default function CreateProjectModal({ onClose, onCreated }) {
           )}
 
           {/* Actions */}
-          <div className="flex justify-end gap-3">
+          <div className="flex w-full justify-between gap-3">
             <button
               type="button"
               onClick={onClose}
               disabled={loading}
-              className="btn px-5 py-2 text-sm font-semibold text-gray-600 bg-slate-200"
+              className="flex-1 btn font-semibold text-gray-600 bg-slate-200"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading || !form.title.trim()}
-              className="btn btn-primary px-5 py-2 text-sm font-semibold flex items-center gap-2 disabled:opacity-50"
+              className="flex-1 btn btn-primary font-semibold gap-2 disabled:opacity-50"
             >
               {loading && <Loader2 className="w-4 h-4 animate-spin" />}
               {loading ? 'Creating…' : 'Create Project'}

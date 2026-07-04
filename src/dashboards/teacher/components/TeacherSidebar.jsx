@@ -11,15 +11,15 @@ import {
 import { useState } from 'react'
 
 const links = [
-  { to: '/teacher',            label: 'Home',            icon: Home           },
-  { to: '/teacher/projects',   label: 'Projects',        icon: FolderOpen     },
-  { to: '/teacher/lessons',    label: 'Class Materials', icon: ClipboardMinus },
-  { to: '/teacher/quizzes',    label: 'Quizzes',         icon: FileQuestion   },
-  { to: '/teacher/tutorials',  label: 'Tutorials',       icon: PlayCircle     },
-  { to: '/teacher/classrooms', label: 'Classrooms',      icon: University     },
+  { to: '/teacher',            label: 'Home',               icon: Home           },
+  { to: '/teacher/projects',   label: 'Projects',           icon: FolderOpen     },
+  { to: '/teacher/content',    label: 'Content Management', icon: ClipboardMinus },
+  // { to: '/teacher/quizzes',    label: 'Quizzes',            icon: FileQuestion   },
+  // { to: '/teacher/tutorials',  label: 'Tutorials',          icon: PlayCircle     },
+  { to: '/teacher/classrooms', label: 'Classrooms',         icon: University     },
   // Learn is a group — handled separately below
-  { to: '/teacher/profile',    label: 'Profile',         icon: UserSquare2    },
-  { to: '/teacher/settings',   label: 'Settings',        icon: Settings       },
+  { to: '/teacher/profile',    label: 'Profile',            icon: UserSquare2    },
+  { to: '/teacher/settings',   label: 'Settings',           icon: Settings       },
 ]
 
 const learnLinks = [

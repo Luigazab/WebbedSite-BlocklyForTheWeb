@@ -1,18 +1,13 @@
 import StudentLayout from '../dashboards/student/StudentLayout'
 import StudentHome from '../dashboards/student/pages/StudentHome'
 import FeedbackPage from '../dashboards/student/pages/FeedbackPage'
-import StudentClassrooms from '../dashboards/student/pages/Classrooms'
-import StudentClassroomDetail from '../dashboards/student/pages/StudentClassroomDetail'
 import ProjectsPage from '../components/shared/ProjectsPage'
 import SettingsPage from '../components/shared/SettingsPage'
-import ProfilePage from '../components/shared/ProfilePage'
+import ProfilePage from '../pages/profile/ProfilePage'
 import EditorLayout from '../components/layout/EditorLayout'
 import BlockEditor from '../components/shared/BlockEditor'
-import LearnPage from '../components/shared/LearnPage'
-// import LessonViewer from '../dashboards/student/pages/LessonViewer'
 import Documentation from '../components/shared/Documentation'
 import TutorialViewer from '../dashboards/student/pages/TutorialViewer'
-import TopicViewer from '../dashboards/student/pages/TopicViewer'
 import QuizAssessment from '../dashboards/student/pages/QuizAssessment'
 import QuizResult from '../dashboards/student/pages/QuizResult'
 import Loader from '../components/layout/Loader'
@@ -24,6 +19,8 @@ import LearnLayout from '../pages/app/LearnLayout'
 import TopicsPage from '../pages/app/TopicsPage'
 import LecturePage from '../pages/app/LecturePage'
 import LessonPage from '../pages/app/LessonPage'
+import StudentGuildHub from '@/dashboards/student/pages/StudentGuildHub'
+import StudentClassrooms from '@/dashboards/student/pages/StudentClassrooms'
 
 
 
@@ -34,9 +31,7 @@ export const studentRoutes = [
       { index: true,                                        element: <StudentHome />              },
       { path: 'projects',                                   element: <ProjectsPage />             },
       { path: 'classrooms',                                 element: <StudentClassrooms />        },
-      { path: 'classrooms/:classroomId',                    element: <StudentClassroomDetail />   },
-      // { path: 'classrooms/:classroomId/lessons/:lessonId',  element: <LessonViewer />             },
-      // { path: 'lessons/:lessonId',                          element: <LessonViewer />             },
+      { path: 'classrooms/:classroomId',                    element: <StudentGuildHub />   },
       { path: 'quiz',                                       element: <QuizAssessment />           },
       { path: 'quiz/result',                                element: <QuizResult />               },
       { path: 'docs',                                       element: <Documentation />            },

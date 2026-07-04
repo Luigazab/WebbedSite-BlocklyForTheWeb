@@ -127,8 +127,9 @@ function CompletionPopup({ tutorial, badge, onContinue, onBack }) {
 }
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
-export default function TutorialViewer() {
-  const { tutorialId } = useParams()
+export default function TutorialViewer({ tutorialIdOverride = null }) {
+  const { tutorialId: routeTutorialId } = useParams()
+  const tutorialId = tutorialIdOverride ?? routeTutorialId
   const navigate       = useNavigate()
   const profile        = useAuthStore((s) => s.profile)
   const addToast       = useUIStore((s) => s.addToast)
@@ -322,7 +323,17 @@ export default function TutorialViewer() {
   }
 
   // ── Step navigation ────────────────────────────────────────────────────────
+  const validateCurrentStep = () => {
+    const expected = steps[currentStep]?.expected_blocks_exact
+    if (!expected) return true
+    const current = workspace.getWorkspaceState?.()
+    const passed = JSON.stringify(current ?? {}) === JSON.stringify(expected ?? {})
+    if (!passed) addToast('This step is not complete yet. Check your blocks, then try Next again.', 'error')
+    return passed
+  }
+
   const handleNext = () => {
+    if (!validateCurrentStep()) return
     const next = currentStep + 1
     if (next >= steps.length) return
     setCurrentStep(next)
@@ -339,6 +350,7 @@ export default function TutorialViewer() {
   }
 
   const handleFinish = () => {
+    if (!validateCurrentStep()) return
     saveProgress(currentStep, true)
     setShowComplete(true)
   }

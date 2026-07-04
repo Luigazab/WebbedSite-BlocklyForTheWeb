@@ -39,17 +39,17 @@ class CustomCategory extends Blockly.ToolboxCategory {
     // Apply background color to the row
     // this.rowDiv_.style.backgroundColor = colour;
     this.rowDiv_.style.setProperty('--cat-color', colour);
-    // Style the label
-    const labelDom = this.rowDiv_.getElementsByClassName('blocklyToolboxCategoryLabel')[0];
-    if (labelDom) {
-      labelDom.style.color = 'white';
-      labelDom.style.fontWeight = '600';
-    }
+    // // Style the label
+    // const labelDom = this.rowDiv_.getElementsByClassName('blocklyToolboxCategoryLabel')[0];
+    // if (labelDom) {
+    //   labelDom.style.color = 'white';
+    //   labelDom.style.fontWeight = '600';
+    // }
     
-    // Style the icon if it exists
-    if (this.iconDom_) {
-      this.iconDom_.style.color = 'white';
-    }
+    // // Style the icon if it exists
+    // if (this.iconDom_) {
+    //   this.iconDom_.style.color = 'white';
+    // }
   }
   
   /** @override */
@@ -150,7 +150,7 @@ class CustomCategory extends Blockly.ToolboxCategory {
 
     const root = createRoot(iconContainer);
     root.render(
-      React.createElement(IconComponent, { className: 'text-white w-4 h-4' })
+      React.createElement(IconComponent, { className: 'blocklyCategoryIcon' })
     );
 
     return iconContainer;

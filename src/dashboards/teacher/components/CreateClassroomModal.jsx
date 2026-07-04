@@ -1,49 +1,50 @@
 import { useState } from 'react'
-import { X, Loader2 } from 'lucide-react'
+import { X, Loader2, GraduationCap } from 'lucide-react'
 
-export default function CreateClassroomModal({ onSubmit, onClose }) {
-  const [form, setForm] = useState({ name: '', description: '' })
-  const [loading, setLoading] = useState(false)
+export default function CreateClassroomModal({ onSubmit, onClose, loading }) {
+  const [name, setName]               = useState('')
+  const [description, setDescription] = useState('')
+  const [error, setError]             = useState('')
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    if (!form.name.trim()) return
-    setLoading(true)
-    try {
-      await onSubmit(form)
-    } finally {
-      setLoading(false)
-    }
+    if (!name.trim()) { setError('Classroom name is required.'); return }
+    setError('')
+    await onSubmit({ name: name.trim(), description: description.trim() })
   }
 
   return (
-    // Backdrop
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-          <h2 className="text-lg font-bold text-gray-800">Create Classroom</h2>
+        <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-blockly-purple/10 flex items-center justify-center">
+              <GraduationCap className="w-5 h-5 text-blockly-purple" />
+            </div>
+            <h2 className="text-base font-bold text-gray-800">New Classroom</h2>
+          </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+            className="p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
           >
-            <X className="w-5 h-5 text-gray-500" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="px-6 py-5 flex flex-col gap-5">
+        <form onSubmit={handleSubmit} className="px-6 py-5 flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">
             <label className="text-sm font-semibold text-gray-700">
-              Classroom Name <span className="text-red-400">*</span>
+              Classroom name <span className="text-red-400">*</span>
             </label>
             <input
               type="text"
-              value={form.name}
-              onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-              placeholder="e.g. Web Development - Section A"
-              className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-blockly-purple focus:ring-2 focus:ring-blockly-purple/10 transition"
-              required
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g. Intro to Python – Block A"
+              className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blockly-purple transition-colors"
+              autoFocus
             />
           </div>
 
@@ -52,26 +53,28 @@ export default function CreateClassroomModal({ onSubmit, onClose }) {
               Description <span className="text-gray-400 font-normal">(optional)</span>
             </label>
             <textarea
-              value={form.description}
-              onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
               placeholder="What will students learn in this classroom?"
               rows={3}
-              className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-blockly-purple focus:ring-2 focus:ring-blockly-purple/10 transition resize-none"
+              className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blockly-purple transition-colors resize-none"
             />
           </div>
+
+          {error && <p className="text-sm text-red-500">{error}</p>}
 
           <div className="flex gap-3 pt-1">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-2.5 border border-gray-200 text-gray-600 text-sm font-semibold rounded-lg hover:bg-gray-50 transition-colors"
+              className="flex-1 py-2.5 text-sm font-semibold text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
-              disabled={loading || !form.name.trim()}
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-blockly-purple text-white text-sm font-semibold rounded-lg hover:bg-blockly-purple/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              disabled={loading}
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-semibold text-white bg-blockly-purple rounded-xl hover:bg-blockly-purple/90 disabled:opacity-50 transition-colors"
             >
               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Create Classroom'}
             </button>

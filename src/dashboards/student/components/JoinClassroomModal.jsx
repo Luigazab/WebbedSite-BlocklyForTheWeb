@@ -1,79 +1,72 @@
 import { useState } from 'react'
 import { X, Loader2, Hash } from 'lucide-react'
 
-export default function JoinClassroomModal({ onSubmit, onClose }) {
-  const [code, setCode] = useState('')
-  const [loading, setLoading] = useState(false)
+export default function JoinClassroomModal({ onSubmit, onClose, loading }) {
+  const [code,  setCode]  = useState('')
+  const [error, setError] = useState('')
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    if (code.trim().length < 6) return
-    setLoading(true)
+    if (!code.trim()) { setError('Please enter a join code.'); return }
+    setError('')
     try {
       await onSubmit(code.trim().toUpperCase())
-    } finally {
-      setLoading(false)
+    } catch (err) {
+      setError(err.message || 'Something went wrong. Please try again.')
     }
   }
 
-  // Auto-uppercase as user types
-  const handleChange = (e) => {
-    setCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6))
-  }
-
   return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-          <h2 className="text-lg font-bold text-gray-800">Join a Classroom</h2>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors">
-            <X className="w-5 h-5 text-gray-500" />
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm">
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-blockly-purple/10 flex items-center justify-center">
+              <Hash className="w-5 h-5 text-blockly-purple" />
+            </div>
+            <h2 className="text-base font-bold text-gray-800">Join a Classroom</h2>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+          >
+            <X className="w-4 h-4" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="px-6 py-5 flex flex-col gap-5">
-          <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-semibold text-gray-700">Class Code</label>
-            <p className="text-xs text-gray-400">Ask your teacher for the 6-character class code</p>
-            <div className="relative mt-1">
-              <Hash className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <input
-                type="text"
-                value={code}
-                onChange={handleChange}
-                placeholder="ABC123"
-                maxLength={6}
-                className="w-full border border-gray-200 rounded-lg pl-9 pr-4 py-3 text-xl font-bold text-center tracking-[0.4em] text-blockly-purple placeholder:text-gray-200 placeholder:font-normal placeholder:tracking-normal focus:outline-none focus:border-blockly-purple focus:ring-2 focus:ring-blockly-purple/10 transition uppercase"
-                required
-              />
-            </div>
-            {/* Character dots */}
-            <div className="flex justify-center gap-2 mt-1">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <div
-                  key={i}
-                  className={`w-2 h-2 rounded-full transition-colors ${
-                    i < code.length ? 'bg-blockly-purple' : 'bg-gray-200'
-                  }`}
-                />
-              ))}
-            </div>
-          </div>
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="px-6 py-5 flex flex-col gap-4">
+          <p className="text-sm text-gray-500">
+            Ask your teacher for the 6-character classroom code.
+          </p>
 
-          <div className="flex gap-3">
+          <input
+            type="text"
+            value={code}
+            onChange={(e) => setCode(e.target.value.toUpperCase())}
+            placeholder="e.g. AB12CD"
+            maxLength={6}
+            autoFocus
+            className="w-full border border-gray-200 rounded-xl px-4 py-3 text-center text-2xl font-black tracking-[0.4em] text-blockly-purple uppercase focus:outline-none focus:border-blockly-purple transition-colors"
+          />
+
+          {error && <p className="text-sm text-red-500 text-center">{error}</p>}
+
+          <div className="flex gap-3 pt-1">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-2.5 border border-gray-200 text-gray-600 text-sm font-semibold rounded-lg hover:bg-gray-50 transition-colors"
+              className="flex-1 py-2.5 text-sm font-semibold text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
-              disabled={loading || code.length < 6}
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-blockly-purple text-white text-sm font-semibold rounded-lg hover:bg-blockly-purple/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              disabled={loading || code.trim().length === 0}
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-semibold text-white bg-blockly-purple rounded-xl hover:bg-blockly-purple/90 disabled:opacity-50 transition-colors"
             >
-              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Join Classroom'}
+              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Join'}
             </button>
           </div>
         </form>

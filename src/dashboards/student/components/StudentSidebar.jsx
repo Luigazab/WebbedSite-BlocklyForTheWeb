@@ -17,9 +17,7 @@ const links = [
   { to: '/student/learn',       label: 'Learn',       icon: (props) => <img src="/svgbook.svg" alt="" {...props} />    },
   { to: '/student/classrooms',  label: 'Classroom',  icon: (props) => <img src="/svgclass.svg" alt="" {...props} />  },
   // { to: '/student/docs',        label: 'Documentation',     icon: (props) => <img src="/library.svg" alt="" {...props} />    },
-  // { to: '/student/tutorials', label: 'Tutorials', icon: PlayCircle},
   { to: '/student/profile',     label: 'Profile',     icon: (props) => <img src="/svgprofile.svg" alt="" {...props} /> },
-  // { to: '/student/settings',    label: 'Settings',    icon: (props) => <img src="/settings.svg" alt="" {...props} />    },
 ]
 
 export default function StudentSidebar() {
