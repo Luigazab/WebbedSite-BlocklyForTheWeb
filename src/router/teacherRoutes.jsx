@@ -25,6 +25,9 @@ import QuizPage from '@/dashboards/teacher/pages/QuizPage'
 import TutorialBuilderPage from '../dashboards/teacher/pages/TutorialBuilderPage'
 import LaboratoryBuilderPage from '@/dashboards/teacher/pages/LaboratoryBuilderPage'
 import TeacherGuildDashboard from '@/dashboards/teacher/pages/TeacherGuildDashboard'
+import ClassroomDetail from '@/dashboards/teacher/pages/ClassroomDetail'
+import StudentsManagement from '@/dashboards/teacher/pages/StudentsManagement'
+import GradesReport from '@/dashboards/teacher/pages/GradesReport'
 
 export const teacherRoutes = [
   {
@@ -61,6 +64,9 @@ export const teacherRoutes = [
 //       // Classrooms
       { path: 'classrooms',                                element: <TeacherClassrooms /> },
       { path: 'classrooms/:classroomId',                   element: <TeacherGuildDashboard /> },
+      { path: 'classrooms/classroomdetail/see',            element: <ClassroomDetail/> },
+      { path: 'students',                                  element: <StudentsManagement/> },
+      { path: 'grades',                                    element: <GradesReport/> },
 //       { path: 'classrooms/:classroomId/student/:studentId',element: <TeacherStudentProfile /> },
 
 //       // Misc

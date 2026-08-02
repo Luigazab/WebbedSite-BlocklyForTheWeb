@@ -1,6 +1,11 @@
-import { useCallback } from 'react';
+/**
+ * Added CRUD hooks July 25, 2026
+ */
+import { useCallback, useState } from 'react';
 import { courseService } from '../services/courseService';
 import { useCourseStore } from '../store/courseStore';
+import { validateCourseData } from '@/utils/validation/courseValidation';
+import { toast } from 'sonner';
 
 export const useCourses = (userId) => {
   const {
@@ -103,3 +108,115 @@ export const useCourses = (userId) => {
     setActiveCourse // Handles switching active course if already started
   };
 };
+
+export function useCreateCourse() {
+  async function handleCreate({ title, description, color, image }) {
+    try {
+      validateCourseData({ title, description, color });
+
+      const promise = courseService.createCourse(title, description, color, image);
+
+      toast.promise(promise, {
+        loading: "Creating course...",
+        success: (data) => `Course '${data[0].title}' created successfully`,
+        error: (err) => {
+            if (err.message.includes("row-level security")) {
+              return "You are not authorized to create this course";
+            }
+            return `Failed to create course: ${err.message}`;
+          },
+      });
+
+      return promise;
+    } catch (err) {
+      toast.error(err.message);
+      throw err;
+    }
+  }
+
+  return { handleCreate };
+}
+
+export function useUpdateCourse() {
+  async function handleUpdate(courseId, updates, newImage) {
+    try{
+      validateCourseData(updates);
+
+      const promise = courseService.updateCourse(courseId, updates, newImage);
+      toast.promise(promise, {
+          loading: "Updating course...",
+          success: (data) => `Course '${data[0].title}' updated successfully`,
+          error: (err) => {
+            if (err.message.includes("row-level security")) {
+              return "You are not authorized to update this course";
+            }
+            return `Failed to update course: ${err.message}`;
+          },
+        }
+      );
+      return promise;
+    } catch (err) {
+      toast.error(err.message);
+      throw err;
+    }
+  }
+
+  return { handleUpdate };
+}
+
+export function useDeleteCourse() {
+  async function handleDelete(courseId, title) {
+    const promise = courseService.deleteCourse(courseId);
+    toast.promise(promise, {
+      loading: "Deleting course...",
+      success: `Course '${title}' deleted successfully`,
+      error: (err) => {
+        if (err.message.includes("row-level security")) {
+          return "You are not authorized to delete this course";
+        }
+        return `Failed to delete course: ${err.message}`;
+      },
+    });
+    return promise;
+  }
+
+  return { handleDelete };
+}
+
+export function useGetCourses() {
+  const [loading, setLoading] = useState(false);
+
+  async function handleGet(page = 1, pageSize = 15) {
+    try {
+      setLoading(true);
+      const data = await courseService.getCourses(page, pageSize);
+      return data;
+    } catch (err) {
+      toast.error(`Failed to fetch courses: ${err.message}`);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return { handleGet, loading };
+}
+
+export function useGetCourseById() {
+  const [loading, setLoading] = useState(false);
+
+  async function handleGetById(courseId) {
+    try {
+      setLoading(true);
+      const data = await courseService.getCourseById(courseId);
+      return data;
+    } catch (err) {
+      toast.error(`Failed to fetch course: ${err.message}`);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return { handleGetById, loading };
+}

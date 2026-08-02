@@ -1,3 +1,17 @@
+/**
+ * Service for authentication
+ * functions are:
+ *    > signIn
+ *    > signUp
+ *    > signOut
+ *    > getSession
+ *    > getProfile
+ *    > updateLastLogin
+ *    > onAuthStateChange
+ *    > resendConfirmation
+ *    > resetPasswordRequest
+ *    > updatePassword
+ */
 import { supabase } from '../supabaseClient'
 
 export const authService = {
@@ -8,11 +22,9 @@ export const authService = {
   },
 
   async signUp(email, password, username, role) {
-    // 1. Create auth user
     const { data, error } = await supabase.auth.signUp({ email, password, options: { data: { username } } })
     if (error) throw error
 
-    // 2. Insert into profiles table (id comes from auth user)
     const { error: profileError } = await supabase
       .from('profiles')
       .insert({

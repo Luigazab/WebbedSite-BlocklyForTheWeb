@@ -67,6 +67,7 @@ const DIFFICULTY_OPTIONS = ['beginner', 'intermediate', 'advanced']
 // ─── Step Panel ───────────────────────────────────────────────────────────────
 function StepPanel({
   tutorialTitle, setTutorialTitle,
+  baseXp, setBaseXp,
   tutorialDescription, setTutorialDescription,
   courseTopics,
   selectedTopicId, setSelectedTopicId,
@@ -156,6 +157,15 @@ function StepPanel({
                   placeholder="What will students learn?"
                   rows={2}
                   className="mt-1 w-full px-3 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blockly-blue bg-white resize-none"
+                />
+              </div>
+              <div>
+                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wide">Base XP *</label>
+                <input
+                  type="number" min={1} step={1}
+                  value={baseXp}
+                  onChange={(e) => setBaseXp(e.target.value)}
+                  className="mt-1 w-full px-3 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blockly-blue bg-white"
                 />
               </div>
               <div>
@@ -392,6 +402,7 @@ export default function TutorialBuilderPage() {
   const [savedId, setSavedId]                         = useState(null)
   const [savedLessonId, setSavedLessonId]             = useState(id || null)
   const [tutorialTitle, setTutorialTitle]             = useState('')
+  const [baseXp, setBaseXp]                           = useState('50')
   const [tutorialDescription, setTutorialDescription] = useState('')
   const [courseTopics, setCourseTopics]               = useState([])
   const [selectedTopicId, setSelectedTopicId]         = useState('')
@@ -502,6 +513,7 @@ export default function TutorialBuilderPage() {
         setSavedLessonId(lesson.id)
         setSelectedTopicId(lesson.topics_id || '')
         setTutorialTitle(lesson.title || '')
+        setBaseXp((lesson.base_xp ?? 50).toString())
         const tut = lesson.tutorial?.id ? await fetchTutorialById(lesson.tutorial.id) : null
         if (!tut) {
           setLoading(false)
@@ -807,6 +819,7 @@ export default function TutorialBuilderPage() {
         lessonId: savedLessonId,
         topicId: selectedTopicId,
         title: tutorialTitle.trim() || 'Untitled Tutorial',
+        baseXp: Number(baseXp),
       })
       return lesson.id
     }
@@ -816,6 +829,7 @@ export default function TutorialBuilderPage() {
       authorId: user.id,
       title: tutorialTitle.trim() || 'Untitled Tutorial',
       type: 'tutorial',
+      baseXp: Number(baseXp),
     })
     setSavedLessonId(lesson.id)
     return lesson.id
@@ -839,6 +853,7 @@ export default function TutorialBuilderPage() {
   // ── Save all steps + their files ──────────────────────────────────────────
   const handleSaveTutorial = async (silent = false) => {
     if (!tutorialTitle.trim()) { addToast('Add a tutorial title first', 'error'); return null }
+    if (!/^\d+$/.test(baseXp) || Number(baseXp) <= 0) { addToast('Base XP must be a positive whole number', 'error'); return null }
     if (!selectedTopicId) { addToast('Select a topic for this tutorial', 'error'); return null }
     setSaving(true)
     setSaveMsg('')
@@ -998,6 +1013,7 @@ export default function TutorialBuilderPage() {
         <div className="w-1/3 min-w-70 max-w-sm shrink-0 h-full overflow-hidden">
           <StepPanel
             tutorialTitle={tutorialTitle}             setTutorialTitle={setTutorialTitle}
+            baseXp={baseXp}                           setBaseXp={setBaseXp}
             tutorialDescription={tutorialDescription} setTutorialDescription={setTutorialDescription}
             courseTopics={courseTopics}
             selectedTopicId={selectedTopicId}         setSelectedTopicId={setSelectedTopicId}

@@ -10,6 +10,7 @@ import { defineFileReferenceBlocks } from '../../../blockly/fileReferenceBlocks'
 import { useAuthStore } from '../../../store/authStore'
 import { useUIStore } from '../../../store/uiStore'
 import { supabase } from '../../../supabaseClient'
+import { xpService } from '../../../services/xpService'
 import { ArrowLeft, Trophy, Loader2, AlertCircle, Clock } from 'lucide-react'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -349,9 +350,17 @@ export default function TutorialViewer({ tutorialIdOverride = null }) {
     saveProgress(prev)
   }
 
-  const handleFinish = () => {
+  const handleFinish = async () => {
     if (!validateCurrentStep()) return
-    saveProgress(currentStep, true)
+    await saveProgress(currentStep, true)
+    if (profile?.id && tutorial?.lesson_id) {
+      try {
+        await xpService.completeLesson({ userId: profile.id, lessonId: tutorial.lesson_id, score: 100 })
+      } catch (err) {
+        addToast(err.message || 'Could not award lesson XP', 'error')
+        return
+      }
+    }
     setShowComplete(true)
   }
 

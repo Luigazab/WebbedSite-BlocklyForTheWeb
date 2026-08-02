@@ -1,3 +1,7 @@
+/**
+ * Old classroom detail
+ * TODO: delete if not system breaking
+ */
 import { useEffect, useState, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router'
 import { useAuthStore } from '../../../store/authStore'

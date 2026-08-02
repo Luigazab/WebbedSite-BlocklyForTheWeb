@@ -39,7 +39,7 @@ export default function QuizSection({ quiz, onComplete }) {
       setResult(attempt)
       setSubmitted(true)
       // Pass badge UP to parent so it can show the popup without being unmounted
-      onComplete?.(attempt.passed, attempt.earnedBadge ?? null)
+      onComplete?.(attempt.passed, attempt.earnedBadge ?? null, attempt.score)
     } finally {
       setLoading(false)
     }

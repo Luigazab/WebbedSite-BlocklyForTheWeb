@@ -9,9 +9,9 @@ export default function TeacherLayout() {
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden">
       <TeacherSidebar />
-      <div className={`flex flex-col flex-1 transition-all duration-300 ${sidebarOpen ? 'ml-64' : 'ml-16'}`}>
+      <div className={`flex flex-col flex-1 min-w-0 transition-all! duration-300! ${sidebarOpen ? 'ml-75' : 'ml-16'}`}>
         <TeacherNavbar />
-        <main className="flex-1 overflow-y-auto">
+        <main className="wrapper flex-1 overflow-y-auto overflow-x-auto min-w-0">
           <Outlet />
         </main>
       </div>

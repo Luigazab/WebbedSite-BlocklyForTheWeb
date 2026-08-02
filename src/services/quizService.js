@@ -1,3 +1,7 @@
+/**
+ * Old quiz Service
+ * TODO: delete later on if not needed or change content - July 25, 2026
+ */
 import { supabase } from '../supabaseClient'
 
 // ─── Quizzes ──────────────────────────────────────────────────────────────────

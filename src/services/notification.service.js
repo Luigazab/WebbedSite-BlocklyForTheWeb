@@ -32,7 +32,6 @@ export const notificationService = {
     if (error) throw error
   },
 
-  // Realtime subscription — returns the channel so caller can remove it on cleanup
   subscribeToNotifications(userId, onNew) {
     return supabase
       .channel(`notifications:${userId}`)

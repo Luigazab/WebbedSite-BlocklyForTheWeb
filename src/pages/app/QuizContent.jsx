@@ -4,9 +4,9 @@ import { Clock, Trophy, AlertTriangle, RotateCcw } from "lucide-react";
 import { useAuthStore } from "../../store/authStore";
 import {
   submitQuizAttempt,
-  markLessonComplete,
   getAllQuizAttempts,
 } from "../../services/lessonProgressService";
+import { xpService } from "../../services/xpService";
 import QuizAssessment from "./QuizAssessment";
 import QuizResult from "./QuizResult";
 import CompleteSuccessModal from "../../components/app/CompleteSuccessModal";
@@ -254,7 +254,8 @@ const QuizContent = ({ lesson, onNext, navigation }) => {
           result.answers
         )
         if (lesson?.id) {
-          await markLessonComplete(user.id, lesson.id)
+          const percentage = total > 0 ? Math.round((result.score / total) * 100) : 0
+          await xpService.completeLesson({ userId: user.id, lessonId: lesson.id, score: percentage })
         }
         const refreshed = await getAllQuizAttempts(user.id, quiz.id)
         setAllAttempts(refreshed)

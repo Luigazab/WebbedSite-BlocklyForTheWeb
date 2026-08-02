@@ -1,7 +1,7 @@
 import { Calendar, ChevronRight } from "lucide-react";
 import { useState } from "react";
 import { useAuthStore } from "../../store/authStore";
-import { markLessonComplete } from "../../services/lessonProgressService";
+import { xpService } from "../../services/xpService";
 import CompleteSuccessModal from "../../components/app/CompleteSuccessModal";
 
 const LectureContent = ({ lesson, onNext, onPrevious, navigation }) => {
@@ -16,7 +16,7 @@ const LectureContent = ({ lesson, onNext, onPrevious, navigation }) => {
     }
     setSaving(true);
     try {
-      await markLessonComplete(user.id, lesson.id);
+      await xpService.completeLesson({ userId: user.id, lessonId: lesson.id, score: 100 });
     } catch (err) {
       console.error("Failed to save lesson progress:", err);
     } finally {

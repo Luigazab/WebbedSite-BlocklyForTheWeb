@@ -1,3 +1,6 @@
+/**
+ * TODO: Delete?
+ */
 import React from 'react'
 
 const CreateTutorial = () => {

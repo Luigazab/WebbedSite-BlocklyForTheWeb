@@ -6,11 +6,16 @@ import {
   MessageSquare, Bug, BookOpen, User, HelpCircle,
   Filter, Trash2, CheckCircle2, Clock, Eye,
   ChevronDown, Loader2, Search, X,
+  FilterIcon,
 } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
+import { AppBreadcrumb } from '#components/common/breadcrumb'
+import AdminStat from '../components/AdminStat'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '#components/ui/dropdown-menu'
 
 const CATEGORIES = [
-  { value: 'general',  label: 'General',       icon: MessageSquare },
+  { value: 'all',      label: 'All Category',   icon: Filter },
+  { value: 'general',  label: 'General',        icon: MessageSquare },
   { value: 'bug',      label: 'Bug',            icon: Bug           },
   { value: 'lesson',   label: 'Lesson',         icon: BookOpen      },
   { value: 'account',  label: 'Account',        icon: User          },
@@ -68,40 +73,38 @@ export default function ReportsAndFeedback() {
   }
 
   return (
-    <PageWrapper
-      title="Reports & Feedback"
-      subtitle="All feedback submitted by students and teachers"
-    >
+    <div className='p-6 space-y-6'>
+      <AppBreadcrumb
+        items={[
+          { label: 'Home', href: '/admin/' },
+          { label: 'Reports and Feedback', href: '/admin/reports' },
+        ]}
+      />
+      <div>
+        <h2 className="font-display text-2xl font-semibold">Reports & Feedback</h2>
+        <p className="mt-1 text-sm text-muted-foreground">All feedback submitted by students and teachers</p>
+      </div>
       {/* Stat cards */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid md:grid-cols-3 gap-4">
         {STATUSES.map(({ value, label, icon: Icon, class: cls }) => (
-          <button
-            key={value}
+          <button key={value}
             onClick={() => setFilterStatus(filterStatus === value ? 'all' : value)}
-            className={`rounded-xl border px-4 py-3 text-left transition-all
-              ${filterStatus === value
-                ? `${cls} border-current shadow-sm`
-                : 'bg-white border-slate-200 hover:border-gray-100'
-              }`}
+            className={`rounded-xl border text-left transition-all!`}
           >
-            <div className="flex items-center gap-2">
-              <Icon className="w-4 h-4" />
-              <p className="text-2xl font-black">{counts[value]}</p>
-            </div>
-            <p className="text-xs font-medium mt-0.5 opacity-70">{label}</p>
+            {filterStatus === value ? <AdminStat label={label} value={counts[value]} icon={Icon} accent/> : <AdminStat label={label} value={counts[value]} icon={Icon}/>}
           </button>
         ))}
       </div>
 
       {/* Search + category filter */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+      <div className="flex flex-col md:flex-row gap-3">
+        <div className="relative flex items-center gap-2 bg-card border border-border rounded-lg px-3 py-2.5 flex-1 min-w-48 shadow focus-within:border-sky-500/30 transition-colors!">
+          <Search className="shrink-0" />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search by title, sender, or message..."
-            className="w-full pl-9 pr-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blockly-purple focus:ring-2 focus:ring-blockly-purple/10 transition"
+            className="bg-transparent text-sm  outline-none flex-1"
           />
           {search && (
             <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
@@ -109,32 +112,39 @@ export default function ReportsAndFeedback() {
             </button>
           )}
         </div>
-
-        {/* Category pills */}
-        <div className="flex items-center gap-2 flex-wrap">
-          <Filter className="w-4 h-4 text-gray-400 shrink-0" />
-          <button
-            onClick={() => setFilterCategory('all')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors
-              ${filterCategory === 'all' ? 'bg-blockly-purple text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
-          >
-            All
-          </button>
-          {CATEGORIES.map(({ value, label }) => (
-            <button
-              key={value}
-              onClick={() => setFilterCategory(filterCategory === value ? 'all' : value)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors
-                ${filterCategory === value ? 'bg-blockly-purple text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
-            >
-              {label}
-            </button>
-          ))}
+        <div className="flex items-center gap-2 self-end">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild className="min-w-40 justify-between">
+              <button className="flex shadow items-center gap-2 px-3 py-2.5 bg-white border border-border rounded-lg hover:bg-slate-50 transition-colors">
+                <Filter className="w-4 h-4 text-slate-400 shrink-0" />
+                <span className="capitalize">
+                  {filterCategory === "all" ? "All Category" : filterCategory}
+                </span>
+                <ChevronDown size={14} className="text-slate-500" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="center" className="min-w-40">
+              {CATEGORIES.map(({ value, label, icon: Icon }) => (
+                <DropdownMenuItem
+                  key={value}
+                  onClick={() => setFilterCategory(value)}
+                  className={`capitalize ${
+                    filterCategory === value
+                      ? "bg-blockly-purple/10 text-blockly-purple"
+                      : ""
+                  }`}
+                >
+                  <Icon size={13}/>
+                  {label}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-2xl border border-border shadow overflow-hidden">
         {loading ? (
           <div className="flex items-center justify-center py-16">
             <Loader2 className="w-5 h-5 animate-spin text-gray-300" />
@@ -251,6 +261,6 @@ export default function ReportsAndFeedback() {
           </div>
         )}
       </div>
-    </PageWrapper>
+    </div>
   )
 }

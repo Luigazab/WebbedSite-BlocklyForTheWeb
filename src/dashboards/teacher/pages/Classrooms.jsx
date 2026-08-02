@@ -1,3 +1,6 @@
+/**
+ * Old classroom page - delete later if not needed upon evaluation
+ */
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { useAuthStore } from '../../../store/authStore'
@@ -6,15 +9,9 @@ import { useClassroom } from '../../../hooks/useClassroom'
 import PageWrapper from '../../../components/layout/PageWrapper'
 import ClassroomCard from '../components/ClassroomCard'
 import CreateClassroomModal from '../components/CreateClassroomModal'
-import {
-  Plus, Loader2, Archive, University,
-  Users, Award, Target, TrendingUp, ChevronRight,
-} from 'lucide-react'
+import { Plus, Loader2, Archive, University, Users, Award, Target, TrendingUp, ChevronRight, } from 'lucide-react'
 import { format } from 'date-fns'
-import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, Cell,
-} from 'recharts'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, } from 'recharts'
 
 const TABS = ['Classes', 'Performance', 'Archived']
 

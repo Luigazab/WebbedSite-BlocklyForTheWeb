@@ -1,490 +1,277 @@
-import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router'
-import { useAuthStore } from '../../../store/authStore'
-import { useClassroomStore } from '../../../store/classroomStore'
-import PageWrapper from '../../../components/layout/PageWrapper'
-import {
-  BookOpen, Users, HelpCircle, GraduationCap,
-  Plus, ChevronRight, Award, TrendingUp, Clock,
-  BookMarked, Zap, ArrowRight, BarChart2, Star,
-  AlertCircle, CheckCircle2, Loader2,
-} from 'lucide-react'
-import { formatDistanceToNow, format, isPast } from 'date-fns'
-import {
-  AreaChart, Area, XAxis, YAxis, CartesianGrid,
-  Tooltip, ResponsiveContainer,
-} from 'recharts'
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router';
+import { supabase } from '@/supabaseClient';
+import { teacherService } from '@/services/teacherService';
+import Loader from '#components/layout/Loader';
+import { Button } from '#components/ui/button';
+import { ArrowRightCircleIcon } from 'lucide-react';
 
-// ─── Colour palette (matches rest of app) ────────────────────────────────────
-const C = {
-  purple: '#7c3aed', purpleL: '#ede9fe',
-  green:  '#22c55e', greenL:  '#dcfce7',
-  amber:  '#f59e0b', amberL:  '#fef3c7',
-  sky:    '#0ea5e9', skyL:    '#e0f2fe',
-  red:    '#ef4444', redL:    '#fee2e2',
-}
+const LoadingSpinner = () => (
+  <Loader/>
+);
 
-// ─── Greeting ─────────────────────────────────────────────────────────────────
-function getGreeting() {
-  const h = new Date().getHours()
-  if (h < 12) return 'Good morning'
-  if (h < 17) return 'Good afternoon'
-  return 'Good evening'
-}
-
-// ─── Stat card ────────────────────────────────────────────────────────────────
-function StatCard({ icon: Icon, label, value, sub, color = C.purple, bg = C.purpleL, onClick }) {
-  return (
-    <button
-      onClick={onClick}
-      className={`bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex items-center gap-4 text-left w-full transition-all hover:shadow-md hover:-translate-y-0.5 ${onClick ? 'cursor-pointer' : 'cursor-default'}`}
-    >
-      <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0" style={{ backgroundColor: bg }}>
-        <Icon className="w-5 h-5" style={{ color }} />
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-2xl font-black text-gray-900 leading-none">{value}</p>
-        <p className="text-xs font-semibold text-gray-500 mt-0.5">{label}</p>
-        {sub && <p className="text-xs text-gray-400 mt-0.5 truncate">{sub}</p>}
-      </div>
-      {onClick && <ChevronRight className="w-4 h-4 text-gray-300 shrink-0" />}
-    </button>
-  )
-}
-
-// ─── Quick action button ──────────────────────────────────────────────────────
-function QuickAction({ icon: Icon, label, desc, color, bg, onClick }) {
-  return (
-    <button
-      onClick={onClick}
-      className="flex items-center gap-4 p-4 bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all text-left w-full group"
-    >
-      <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ backgroundColor: bg }}>
-        <Icon className="w-5 h-5" style={{ color }} />
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-bold text-gray-800">{label}</p>
-        <p className="text-xs text-gray-400">{desc}</p>
-      </div>
-      <ArrowRight className="w-4 h-4 text-gray-300 group-hover:text-gray-500 group-hover:translate-x-0.5 transition-all shrink-0" />
-    </button>
-  )
-}
-
-// ─── Empty state ──────────────────────────────────────────────────────────────
-function EmptyState({ icon: Icon, title, desc, action, onAction }) {
-  return (
-    <div className="flex flex-col items-center justify-center py-10 gap-3 text-center">
-      <div className="w-12 h-12 rounded-2xl bg-gray-100 flex items-center justify-center">
-        <Icon className="w-5 h-5 text-gray-300" />
-      </div>
-      <div>
-        <p className="text-sm font-semibold text-gray-500">{title}</p>
-        {desc && <p className="text-xs text-gray-400 mt-0.5">{desc}</p>}
-      </div>
-      {action && (
-        <button
-          onClick={onAction}
-          className="flex items-center gap-1.5 px-4 py-2 bg-blockly-purple text-white text-xs font-semibold rounded-lg hover:bg-blockly-purple/90 transition-colors"
-        >
-          <Plus className="w-3.5 h-3.5" /> {action}
-        </button>
-      )}
-    </div>
-  )
-}
-
-// ─── Section wrapper ──────────────────────────────────────────────────────────
-function Section({ title, subtitle, action, onAction, children }) {
-  return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-      <div className="flex items-center justify-between px-6 py-4 border-b border-gray-50">
-        <div>
-          <h2 className="font-bold text-gray-800">{title}</h2>
-          {subtitle && <p className="text-xs text-gray-400 mt-0.5">{subtitle}</p>}
-        </div>
-        {action && (
-          <button
-            onClick={onAction}
-            className="flex items-center gap-1.5 text-xs font-semibold text-blockly-purple hover:text-blockly-purple/80 transition-colors"
-          >
-            {action} <ChevronRight className="w-3.5 h-3.5" />
-          </button>
-        )}
-      </div>
-      <div>{children}</div>
-    </div>
-  )
-}
-
-// ─── Activity chart tooltip ───────────────────────────────────────────────────
-function ChartTip({ active, payload, label }) {
-  if (!active || !payload?.length) return null
-  return (
-    <div className="bg-white border border-gray-200 rounded-xl shadow-lg px-3 py-2 text-xs">
-      <p className="font-bold text-gray-700 mb-1">{label}</p>
-      {payload.map((p, i) => (
-        <p key={i} style={{ color: p.color }} className="font-semibold">
-          {p.name}: {p.value}
-        </p>
-      ))}
-    </div>
-  )
-}
-
-// ─── Main ─────────────────────────────────────────────────────────────────────
-export default function TeacherHome() {
-  const navigate  = useNavigate()
-  const profile   = useAuthStore((s) => s.profile)
-  const {
-    classrooms,
-    loading,
-    fetchTeacherClassrooms,
-    aggregatePerformance,
-    fetchAggregatePerformance,
-  } = useClassroomStore()
-
-  const [recentActivity, setRecentActivity] = useState([])
+function TeacherHome() {
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [classrooms, setClassrooms] = useState([]);
+  const [students, setStudents] = useState([]);
+  const [announcements, setAnnouncements] = useState([]);
+  const [stats, setStats] = useState({
+    totalStudents: 0,
+    avgProgress: 0,
+    totalPending: 0,
+  });
+  const navigate = useNavigate();
 
   useEffect(() => {
-    if (profile?.id) {
-      fetchTeacherClassrooms(profile.id)
-      fetchAggregatePerformance(profile.id)
-    }
-  }, [profile?.id])
+    const fetchTeacherData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
 
-  // ── Derived stats ─────────────────────────────────────────────────────────
-  const totalStudents   = aggregatePerformance?.totalStudents    ?? 0
-  const totalBadges     = aggregatePerformance?.totalBadges      ?? 0
-  const avgCompletion   = aggregatePerformance?.overallCompletion ?? 0
-  const avgQuizScore    = aggregatePerformance?.overallAvgScore   ?? null
-  const activeClassrooms = classrooms.filter((c) => !c.is_archived)
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        
+        if (userError) throw userError;
+        if (!user) throw new Error('No user authenticated');
 
-  // Build a small sparkline dataset from per-classroom completion
-  const byClassroom = aggregatePerformance?.byClassroom ?? {}
-  const classroomList = Object.entries(byClassroom).map(([id, data]) => ({ id, ...data }))
+        const [
+          classroomsData,
+          announcementsData,
+          totalStudents,
+          avgProgress,
+          totalPending
+        ] = await Promise.all([
+          teacherService.getTeacherClassrooms(user.id),
+          teacherService.getTeacherAnnouncements(user.id),
+          teacherService.getTotalStudents(user.id),
+          teacherService.getAverageProgress(user.id),
+          teacherService.getTotalPendingSubmissions(user.id),
+        ]);
 
-  const sparkData = classroomList.slice(0, 7).map((c, i) => ({
-    name: c.name?.slice(0, 8) ?? `C${i + 1}`,
-    completion: c.completionRate ?? 0,
-    quiz: c.avgQuizScore ?? 0,
-  }))
+        let studentsData = [];
+        if (classroomsData.length > 0) {
+          studentsData = await teacherService.getClassroomStudents(classroomsData[0].id);
+        }
 
-  // Most recent classrooms (show up to 4)
-  const recentClassrooms = [...activeClassrooms]
-    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-    .slice(0, 4)
+        setClassrooms(classroomsData);
+        setStudents(studentsData);
+        setAnnouncements(announcementsData);
+        setStats({
+          totalStudents,
+          avgProgress,
+          totalPending,
+        });
 
-  // Active classrooms sorted by student count for top-performers widget
-  const topClassrooms = [...classroomList]
-    .sort((a, b) => (b.students ?? 0) - (a.students ?? 0))
-    .slice(0, 3)
+      } catch (err) {
+        console.error('Error fetching teacher data:', err);
+        setError(err.message || 'Failed to load data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTeacherData();
+
+    // Optional: Set up real-time subscriptions
+    const classroomsSubscription = supabase
+      .channel('classrooms_changes')
+      .on('postgres_changes', 
+        { event: '*', schema: 'public', table: 'classrooms' },
+        () => fetchTeacherData()
+      )
+      .subscribe();
+
+    return () => {
+      classroomsSubscription.unsubscribe();
+    };
+  }, []);
+
+  if (loading) {
+    return <LoadingSpinner />;
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-destructive">Error: {error}</p>
+        <button 
+          onClick={() => window.location.reload()} 
+          className="mt-4 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90"
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
+
+  const totalStudents = stats.totalStudents;
+  const avgProgress = stats.avgProgress;
+  const totalPending = stats.totalPending;
 
   return (
-    <PageWrapper
-      title={`${getGreeting()}, ${profile?.username ?? 'Teacher'}`}
-      subtitle="Here's what's happening across your classrooms today."
-    >
-      {/* ── Stat cards ──────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatCard
-          icon={GraduationCap}
-          label="Active Classrooms"
-          value={loading ? '—' : activeClassrooms.length}
-          sub={activeClassrooms.length === 0 ? 'Create your first' : `${activeClassrooms.length} running`}
-          color={C.purple}
-          bg={C.purpleL}
-          onClick={() => navigate('/teacher/classrooms')}
-        />
-        <StatCard
-          icon={Users}
-          label="Total Students"
-          value={loading ? '—' : totalStudents}
-          sub="across all classrooms"
-          color={C.sky}
-          bg={C.skyL}
-          onClick={() => navigate('/teacher/classrooms')}
-        />
-        <StatCard
-          icon={TrendingUp}
-          label="Avg Completion"
-          value={loading ? '—' : `${avgCompletion}%`}
-          sub="lesson completion rate"
-          color={C.green}
-          bg={C.greenL}
-        />
-        <StatCard
-          icon={Award}
-          label="Badges Earned"
-          value={loading ? '—' : totalBadges}
-          sub="by all students"
-          color={C.amber}
-          bg={C.amberL}
-        />
+    <div className="p-6 space-y-6">
+      <div>
+        <h2 className="font-display text-2xl font-semibold">Home</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Dashboard overview of your class and activities.
+        </p>
       </div>
-
-      {/* ── Middle row: chart + quick actions ───────────────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-
-        {/* Completion chart */}
-        <div className="lg:col-span-2 bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-          <div className="flex items-center justify-between mb-5">
-            <div>
-              <h2 className="font-bold text-gray-800">Classroom Performance</h2>
-              <p className="text-xs text-gray-400 mt-0.5">Completion & quiz scores per classroom</p>
-            </div>
-            <button
-              onClick={() => navigate('/teacher/classrooms')}
-              className="text-xs font-semibold text-blockly-purple hover:text-blockly-purple/80 flex items-center gap-1"
-            >
-              Details <ChevronRight className="w-3.5 h-3.5" />
-            </button>
+      {/* Editorial hero band */}
+      <section className="relative overflow-hidden rounded-3xl border border-border border-b-4 border-b-slate-400 shadow bg-[url('/teacher_banner.png')] bg-cover bg-center p-8 text-sky-800">
+        <div className="pointer-events-none absolute -right-24 -top-24 size-72 rounded-full bg-primary-glow/25 blur-3xl" />
+        <div className="relative flex flex-wrap items-end justify-between gap-6">
+          <div className="max-w-xl">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-primary-glow">
+              Class Summary
+            </p>
+            <h2 className="mt-3 font-display text-3xl font-semibold leading-tight tracking-tight text-balance md:text-4xl">
+              {totalPending} submissions waiting on you, {avgProgress}% avg class progress.
+            </h2>
+            <p className="mt-3 max-w-md text-pretty text-sm text-muted-foreground md:text-base">
+              Pick a classroom to review progress or clone a fresh topic from the master library.
+            </p>
           </div>
-          {sparkData.length === 0 ? (
-            <EmptyState
-              icon={BarChart2}
-              title="No performance data yet"
-              desc="Add students to your classrooms to see data here."
-            />
-          ) : (
-            <ResponsiveContainer width="100%" height={200}>
-              <AreaChart data={sparkData} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="gradComp" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%"  stopColor={C.purple} stopOpacity={0.2} />
-                    <stop offset="95%" stopColor={C.purple} stopOpacity={0}   />
-                  </linearGradient>
-                  <linearGradient id="gradQuiz" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%"  stopColor={C.sky} stopOpacity={0.2} />
-                    <stop offset="95%" stopColor={C.sky} stopOpacity={0}   />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                <XAxis dataKey="name" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
-                <YAxis domain={[0, 100]} tick={{ fontSize: 10 }} axisLine={false} tickLine={false} unit="%" />
-                <Tooltip content={<ChartTip />} />
-                <Area
-                  type="monotone"
-                  dataKey="completion"
-                  name="Completion"
-                  stroke={C.purple}
-                  strokeWidth={2}
-                  fill="url(#gradComp)"
-                  dot={{ r: 3, fill: C.purple }}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="quiz"
-                  name="Quiz Score"
-                  stroke={C.sky}
-                  strokeWidth={2}
-                  fill="url(#gradQuiz)"
-                  dot={{ r: 3, fill: C.sky }}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          )}
+          <div className="grid grid-cols-3 gap-3">
+            <MiniStat label="Classrooms" value={classrooms.length} />
+            <MiniStat label="Students" value={totalStudents} />
+            <MiniStat label="Pending" value={totalPending} accent />
+          </div>
         </div>
+      </section>
 
-        {/* Quick actions */}
-        <div className="flex flex-col gap-3">
-          <h2 className="font-bold text-gray-800 px-1">Quick Actions</h2>
-          <QuickAction
-            icon={Plus}
-            label="New Classroom"
-            desc="Set up a new class for your students"
-            color={C.purple}
-            bg={C.purpleL}
-            onClick={() => navigate('/teacher/classrooms')}
-          />
-          <QuickAction
-            icon={BookOpen}
-            label="Create Lesson"
-            desc="Build a lesson with rich content"
-            color={C.sky}
-            bg={C.skyL}
-            onClick={() => navigate('/teacher/lessons/create')}
-          />
-          <QuickAction
-            icon={HelpCircle}
-            label="Create Quiz"
-            desc="Design a quiz with questions & badges"
-            color={C.green}
-            bg={C.greenL}
-            onClick={() => navigate('/teacher/quizzes/create')}
-          />
-          <QuickAction
-            icon={Zap}
-            label="Build Tutorial"
-            desc="Step-by-step interactive coding guide"
-            color={C.amber}
-            bg={C.amberL}
-            onClick={() => navigate('/teacher/tutorials/create')}
-          />
+      {/* Classrooms grid */}
+      <section>
+        <div className="mb-4 flex items-center justify-between">
+          <h3 className="font-display text-xl font-semibold">Active classrooms</h3>
+          <Button variant='ghost' onClick={() => {navigate('')}}>Classrooms view <ArrowRightCircleIcon size={20}/></Button>
         </div>
-      </div>
-
-      {/* ── Bottom row: classrooms + top performers ──────────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-
-        {/* Recent classrooms */}
-        <Section
-          title="My Classrooms"
-          subtitle={`${activeClassrooms.length} active`}
-          action="View all"
-          onAction={() => navigate('/teacher/classrooms')}
-        >
-          {loading ? (
-            <div className="flex justify-center py-10">
-              <Loader2 className="w-5 h-5 animate-spin text-gray-300" />
-            </div>
-          ) : recentClassrooms.length === 0 ? (
-            <EmptyState
-              icon={GraduationCap}
-              title="No classrooms yet"
-              desc="Create a classroom and invite your students."
-              action="New Classroom"
-              onAction={() => navigate('/teacher/classrooms')}
-            />
-          ) : (
-            <div className="divide-y divide-gray-50">
-              {recentClassrooms.map((classroom) => {
-                const enrollment = classroom.classroom_enrollments ?? []
-                const count = typeof enrollment === 'number'
-                  ? enrollment
-                  : Array.isArray(enrollment) ? enrollment.length : 0
-                const perf = byClassroom[classroom.id]
-                return (
-                  <button
-                    key={classroom.id}
-                    onClick={() => navigate(`/teacher/classrooms/${classroom.id}`)}
-                    className="w-full flex items-center gap-4 px-6 py-4 hover:bg-gray-50 transition-colors text-left group"
-                  >
-                    <div className="w-10 h-10 rounded-xl bg-blockly-purple/10 flex items-center justify-center shrink-0">
-                      <GraduationCap className="w-5 h-5 text-blockly-purple" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold text-gray-800 truncate">{classroom.name}</p>
-                      <p className="text-xs text-gray-400 mt-0.5">
-                        Code: <span className="font-mono font-bold text-blockly-purple">{classroom.class_code}</span>
-                        {' · '}{formatDistanceToNow(new Date(classroom.created_at), { addSuffix: true })}
-                      </p>
-                    </div>
-                    <div className="text-right shrink-0">
-                      {perf && (
-                        <div className="flex items-center gap-1.5">
-                          <div className="w-16 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                            <div
-                              className="h-full bg-blockly-purple rounded-full"
-                              style={{ width: `${perf.completionRate ?? 0}%` }}
-                            />
-                          </div>
-                          <span className="text-xs font-semibold text-gray-500">{perf.completionRate ?? 0}%</span>
+        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+          {classrooms.length > 0 ? (
+            classrooms.map((classroom) => (
+              <Link
+                key={classroom.id}
+                to={`/teacher/classrooms/${classroom.id}`}
+                className="group relative flex flex-col overflow-hidden rounded-2xl shadow border-b-4 border-b-slate-400 border border-border bg-card p-6 transition-all! duration-300! hover:-translate-y-0.5 hover:border-primary/50"
+              >
+                <div className="relative">
+                  <div className="flex items-center justify-between">
+                    <span className="rounded-md bg-primary/15 px-2 py-1 font-mono text-[11px] font-extrabold tracking-widest text-primary">
+                      {classroom.code || 'N/A'}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      {classroom.section || 'No section'}
+                    </span>
+                  </div>
+                  <h4 className="mt-5 font-display text-lg font-extrabold leading-tight text-balance">
+                    {classroom.name || 'Unnamed Classroom'}
+                  </h4>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    From <span className="text-foreground">{classroom.courseTitle || 'No course'}</span>
+                  </p>
+                  <div className="mt-5 flex items-center justify-between text-xs">
+                    <span className="text-muted-foreground">
+                      {classroom.studentCount || 0} students
+                    </span>
+                    <span className="font-mono text-primary">
+                      {classroom.averageProgress || 0}%
+                    </span>
+                  </div>
+                  <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
+                    <div
+                      className="h-full rounded-full bg-linear-to-r from-primary to-primary-glow"
+                      style={{ width: `${classroom.averageProgress || 0}%` }}
+                    />
+                  </div>
+                  <div className="mt-5 flex items-center justify-between">
+                    <div className="flex -space-x-1.5">
+                      {students.slice(0, 4).map((student, i) => (
+                        <div
+                          key={student.id}
+                          className="grid size-7 place-items-center rounded-full border-2 border-card bg-muted font-bold text-slate-500"
+                          style={{ zIndex: 10 - i }}
+                        >
+                          {student.avatar_url ? <img src={student.avatar_url} className='rounded-full' /> : student.username?.[0]?.toUpperCase() || 'S'}
+                        </div>
+                      ))}
+                      {classroom.studentCount && classroom.studentCount > 4 && (
+                        <div className="grid size-7 place-items-center rounded-full border-2 border-card bg-primary/20 text-[10px] font-medium text-primary">
+                          +{classroom.studentCount - 4}
                         </div>
                       )}
-                      <p className="text-xs text-gray-400 mt-1">{perf?.students ?? 0} students</p>
                     </div>
-                    <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-gray-500 shrink-0 transition-colors" />
-                  </button>
-                )
-              })}
-            </div>
-          )}
-        </Section>
-
-        {/* Top classrooms by engagement */}
-        <Section
-          title="Class Leaderboard"
-          subtitle="Ranked by student completion"
-          action="Full report"
-          onAction={() => navigate('/teacher/classrooms')}
-        >
-          {loading ? (
-            <div className="flex justify-center py-10">
-              <Loader2 className="w-5 h-5 animate-spin text-gray-300" />
-            </div>
-          ) : topClassrooms.length === 0 ? (
-            <EmptyState
-              icon={Star}
-              title="No data yet"
-              desc="Student activity will appear here once classes start."
-            />
+                    <span className="text-xs text-warning">
+                      {classroom.pendingSubmissions || 0} pending
+                    </span>
+                  </div>
+                </div>
+              </Link>
+            ))
           ) : (
-            <div className="divide-y divide-gray-50">
-              {topClassrooms.map((c, idx) => {
-                const medals = ['🥇', '🥈', '🥉']
-                return (
-                  <button
-                    key={c.id}
-                    onClick={() => navigate(`/teacher/classrooms/${c.id}`)}
-                    className="w-full flex items-center gap-4 px-6 py-4 hover:bg-gray-50 transition-colors text-left"
-                  >
-                    <span className="text-xl w-8 shrink-0">{medals[idx] ?? `${idx + 1}.`}</span>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold text-gray-800 truncate">{c.name}</p>
-                      <p className="text-xs text-gray-400">
-                        {c.students ?? 0} students
-                        {c.avgQuizScore != null ? ` · ${c.avgQuizScore}% avg quiz` : ''}
-                      </p>
-                    </div>
-                    <div className="shrink-0 text-right">
-                      <p className="text-base font-black text-blockly-purple">{c.completionRate ?? 0}%</p>
-                      <p className="text-xs text-gray-400">completion</p>
-                    </div>
-                  </button>
-                )
-              })}
-
-              {/* Summary footer */}
-              <div className="px-6 py-4 bg-gray-50 flex items-center justify-between">
-                <div className="flex items-center gap-2 text-xs text-gray-500">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-green-500" />
-                  {avgQuizScore != null
-                    ? `Overall avg quiz score: ${avgQuizScore}%`
-                    : 'No quiz data yet'}
-                </div>
-                <div className="flex items-center gap-2 text-xs text-gray-500">
-                  <Award className="w-3.5 h-3.5 text-amber-400" />
-                  {totalBadges} badge{totalBadges !== 1 ? 's' : ''} earned
-                </div>
-              </div>
+            <div className="col-span-full text-center py-8 text-muted-foreground">
+              No active classrooms found
             </div>
           )}
-        </Section>
-      </div>
-
-      {/* ── Tips / Getting started banner (only shown if no classrooms) ───────── */}
-      {!loading && activeClassrooms.length === 0 && (
-        <div className="bg-linear-to-br from-blockly-purple/5 to-blockly-purple/10 border border-blockly-purple/20 rounded-2xl p-6">
-          <div className="flex items-start gap-4">
-            <div className="w-10 h-10 rounded-xl bg-blockly-purple/20 flex items-center justify-center shrink-0">
-              <BookMarked className="w-5 h-5 text-blockly-purple" />
-            </div>
-            <div className="flex-1">
-              <h3 className="font-bold text-gray-800 mb-1">Get started in 3 steps</h3>
-              <ol className="text-sm text-gray-600 space-y-1 list-decimal list-inside">
-                <li>Create a classroom and share the class code with your students.</li>
-                <li>Write a lesson or build a tutorial for them to complete.</li>
-                <li>Attach a quiz and award badges for passing — students love it!</li>
-              </ol>
-              <div className="flex flex-wrap gap-2 mt-4">
-                <button
-                  onClick={() => navigate('/teacher/classrooms')}
-                  className="flex items-center gap-1.5 px-4 py-2 bg-blockly-purple text-white text-sm font-semibold rounded-lg hover:bg-blockly-purple/90 transition-colors"
-                >
-                  <Plus className="w-4 h-4" /> Create Classroom
-                </button>
-                <button
-                  onClick={() => navigate('/teacher/lessons/create')}
-                  className="flex items-center gap-1.5 px-4 py-2 bg-white border border-blockly-purple/20 text-blockly-purple text-sm font-semibold rounded-lg hover:bg-blockly-purple/5 transition-colors"
-                >
-                  <BookOpen className="w-4 h-4" /> Create Lesson
-                </button>
-              </div>
-            </div>
-          </div>
         </div>
-      )}
-    </PageWrapper>
-  )
+      </section>
+
+      {/* Announcements */}
+      <section className="rounded-2xl shadow border border-border border-b-4 border-b-slate-400 bg-card">
+        <div className="flex items-center justify-between border-b border-border px-6 py-4">
+          <h3 className="font-display text-lg font-semibold">Latest announcements</h3>
+          <Button variant='ghost' >
+            Post new <ArrowRightCircleIcon size={20}/>
+          </Button>
+        </div>
+        <ul className="divide-y divide-border">
+          {announcements.length > 0 ? (
+            announcements.map((announcement) => (
+              <li key={announcement.id} className="flex items-start gap-4 px-6 py-4">
+                <span
+                  className={`mt-1 rounded-md px-2 py-0.5 text-[10px] font-semibold uppercase tracking-widest ring-1 ring-inset ${
+                    announcement.tag === "urgent"
+                      ? "bg-red/15 text-red ring-red/25"
+                      : announcement.tag === "reminder"
+                      ? "bg-amber/15 text-amber ring-amber/30"
+                      : "bg-primary/15 text-primary ring-primary/25"
+                  }`}
+                >
+                  {announcement.tag || 'info'}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium">{announcement.title}</p>
+                  <p className="mt-1 text-sm text-muted-foreground">{announcement.body}</p>
+                  <p className="mt-2 text-[11px] text-muted-foreground">
+                    {announcement.postedBy || 'Unknown'} · {announcement.postedAt || 'Recently'}
+                  </p>
+                </div>
+              </li>
+            ))
+          ) : (
+            <li className="px-6 py-8 text-center text-muted-foreground">
+              No announcements yet
+            </li>
+          )}
+        </ul>
+      </section>
+    </div>
+  );
 }
+
+function MiniStat({ label, value, accent }) {
+  return (
+    <div className="rounded-xl border border-border/60 bg-card/70 px-4 py-3 backdrop-blur shadow">
+      <p className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground">
+        {label}
+      </p>
+      <p
+        className={`mt-1 font-display text-2xl font-semibold ${
+          accent ? "text-primary-glow" : "text-foreground"
+        }`}
+      >
+        {value}
+      </p>
+    </div>
+  );
+}
+
+export default TeacherHome;

@@ -1,3 +1,6 @@
+/**
+ * TODO: delete if not needed anymore, database table no longer exist - July 24, 2026
+ */
 import { supabase } from '../supabaseClient'
 export const assignmentService = {
   // Get assignments for a student (with submission status)

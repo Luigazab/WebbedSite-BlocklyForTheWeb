@@ -1,32 +1,38 @@
 import { useClassroomStore } from '../store/classroomStore'
 import { useAuthStore } from '../store/authStore'
-import { useUIStore } from '../store/uiStore'
+import { toast } from 'sonner'
 
 export function useClassroom() {
   const store = useClassroomStore()
   const profile = useAuthStore((state) => state.profile)
-  const addToast = useUIStore((state) => state.addToast)
 
-  const handleCreateClassroom = async (formData) => {
+  const fetchTeacherClassrooms = async () => {
+    if (!profile?.id) return
     try {
-      const classroom = await store.createClassroom({
-        ...formData,
-        teacher_id: profile.id,
-      })
-      addToast(`"${classroom.name}" created successfully!`, 'success')
-      return classroom
+      await store.fetchTeacherClassrooms(profile.id)
     } catch (err) {
-      addToast(err.message || 'Failed to create classroom.', 'error')
-      throw err
+      toast.error('Failed to load classrooms')
     }
   }
 
-  const handleUpdateClassroom = async (classroomId, updates) => {
+  const handleCreateClassroom = async ({ name, description }) => {
     try {
-      await store.updateClassroom(classroomId, updates)
-      addToast('Classroom updated.', 'success')
+      const classroom = await store.createClassroom({ teacherId: profile.id, name, description })
+      toast.success(`"${classroom.name}" created successfully!`)
+      return classroom
     } catch (err) {
-      addToast(err.message || 'Failed to update classroom.', 'error')
+      toast.error('Failed to create classroom.', err.message)
+      throw err
+    }
+  }
+  
+
+  const handleUpdateClassroom = async (formData) => {
+    try {
+      await store.editClassroom(formData.id, {name: formData.name, description: formData.description})
+      toast.success('Classroom updated succesfully!.')
+    } catch (err) {
+      toast.error('Failed to update classroom.', err.message)
       throw err
     }
   }
@@ -34,41 +40,60 @@ export function useClassroom() {
   const handleArchiveClassroom = async (classroomId, name) => {
     try {
       await store.archiveClassroom(classroomId)
-      addToast(`"${name}" has been archived.`, 'info')
+      toast.success(`"${name}" has been archived.`)
     } catch (err) {
-      addToast(err.message || 'Failed to archive classroom.', 'error')
+      toast.error('Failed to archive classroom.', err.message)
+      throw err
+    }
+  }
+
+  const handleDeleteClassroom = async (classroomId, name) => {
+    try {
+      await store.deleteClassroom(classroomId)
+      toast.success(`"${name}" has been deleted`)
+    } catch (err) {
+      toast.error('Failed to delete classroom')
       throw err
     }
   }
 
   const handleRegenerateCode = async (classroomId) => {
     try {
-      const updated = await store.regenerateCode(classroomId)
-      addToast('Class code regenerated.', 'success')
-      return updated
+      const code = await store.regenerateCode(classroomId)
+      toast.success('Class join code regenerated.')
+      return code
     } catch (err) {
-      addToast(err.message || 'Failed to regenerate code.', 'error')
+      toast.error('Failed to regenerate code.', err.message)
       throw err
     }
   }
 
-  const handleRemoveStudent = async (enrollmentId, studentName) => {
+  const handleRemoveStudent = async (studentId, classroomId, username) => {
     try {
-      await store.removeStudent(enrollmentId)
-      addToast(`${studentName} removed from classroom.`, 'info')
+      await store.removeStudent(studentId, classroomId)
+      toast.success(`${username} removed from classroom.`)
     } catch (err) {
-      addToast(err.message || 'Failed to remove student.', 'error')
+      toast.error('Failed to remove student.')
       throw err
     }
   }
 
-  const handleJoinClassroom = async (classCode) => {
+  const fetchStudentClassroom = async () => {
+    if (!profile?.id) return
     try {
-      const classroom = await store.joinClassroom(profile.id, classCode)
-      addToast(`Joined "${classroom.name}"!`, 'success')
+      await store.fetchStudentClassroom(profile.id)
+    } catch (err) {
+      toast.error('Failed to load your classroom')
+    }
+  }
+
+  const handleJoinClassroom = async (joinCode) => {
+    try {
+      const classroom = await store.joinClassroom(profile.id, joinCode)
+      toast.success(`Joined "${classroom.name}"!`)
       return classroom
     } catch (err) {
-      addToast(err.message || 'Failed to join classroom.', 'error')
+      toast.error('Failed to join classroom.', err.message)
       throw err
     }
   }
@@ -76,21 +101,122 @@ export function useClassroom() {
   const handleLeaveClassroom = async (classroomId, name) => {
     try {
       await store.leaveClassroom(profile.id, classroomId)
-      addToast(`You left "${name}".`, 'info')
+      toast.success(`You left "${name}".`)
     } catch (err) {
-      addToast(err.message || 'Failed to leave classroom.', 'error')
+      toast.error('Failed to leave classroom.', err.message)
       throw err
     }
   }
 
+  const fetchClassroomDetail = async (classroomId) => {
+    try {
+      await store.fetchClassroomDetail(classroomId, profile?.id)
+    } catch (err) {
+      toast.error('Failed to load classroom')
+    }
+  }
+ 
+  const fetchClassroomPosts = async (classroomId) => {
+    try {
+      await store.fetchClassroomPosts(classroomId)
+    } catch (err) {
+      toast.error('Failed to load activity feed')
+    }
+  }
+ 
+  const fetchMoreClassroomPosts = async (classroomId) => {
+    try {
+      await store.fetchMoreClassroomPosts(classroomId)
+    } catch (err) {
+      toast.error('Failed to load more posts')
+    }
+  }
+ 
+  const handleCreatePost = async ({ classroomId, type, content, projectId }) => {
+    try {
+      return await store.createPost({ classroomId, authorId: profile.id, type, content, projectId })
+    } catch (err) {
+      toast.error('Failed to create post')
+      throw err
+    }
+  }
+ 
+  const handleLikePost = async (postId) => {
+    try {
+      await store.likePost(postId, profile.id)
+    } catch (err) {
+      toast.error('Failed to update like')
+    }
+  }
+ 
+  const handleCommentOnPost = async (postId, content) => {
+    try {
+      return await store.commentOnPost(postId, profile.id, content)
+    } catch (err) {
+      toast.error('Failed to post comment')
+      throw err
+    }
+  }
+ 
+  // ── Milestones ──────────────────────────────────────────────────────────
+  const fetchMilestones = async (classroomId) => {
+    try {
+      return await store.fetchMilestones(classroomId)
+    } catch (err) {
+      toast.error('Failed to load milestones')
+    }
+  }
+ 
+  const handleCreateMilestone = async ({ classroomId, title, targetScore }) => {
+    try {
+      const milestone = await store.createMilestone({ classroomId, title, targetScore })
+      toast.success(`Milestone "${title}" created`)
+      return milestone
+    } catch (err) {
+      toast.error('Failed to create milestone')
+      throw err
+    }
+  }
+ 
+  const handleRefreshMilestoneProgress = async (classroomId) => {
+    try {
+      return await store.refreshMilestoneProgress(classroomId)
+    } catch (err) {
+      console.error('Milestone refresh failed:', err.message)
+    }
+  }
+
   return {
-    ...store,
+    teacherClassrooms: store.teacherClassrooms,
+    studentClassroom:  store.studentClassroom,
+    currentClassroom:  store.currentClassroom,
+    classroomPosts:    store.classroomPosts,
+    hasMorePosts:      store.hasMorePosts,
+    loading:           store.loading,
+    detailLoading:     store.detailLoading,
+    postsLoading:      store.postsLoading,
+    actionLoading:     store.actionLoading,
+    error:             store.error,
+ 
+    fetchTeacherClassrooms,
     handleCreateClassroom,
     handleUpdateClassroom,
     handleArchiveClassroom,
+    handleDeleteClassroom,
     handleRegenerateCode,
     handleRemoveStudent,
+    fetchStudentClassroom,
     handleJoinClassroom,
     handleLeaveClassroom,
+    fetchClassroomDetail,
+    clearCurrentClassroom: store.clearCurrentClassroom,
+    fetchClassroomPosts,
+    fetchMoreClassroomPosts,
+    handleCreatePost,
+    handleLikePost,
+    handleCommentOnPost,
+    fetchMilestones,
+    handleCreateMilestone,
+    handleRefreshMilestoneProgress,
   }
 }

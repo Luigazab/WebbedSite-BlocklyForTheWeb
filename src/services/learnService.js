@@ -24,7 +24,7 @@ export const fetchLearnTopics = async () => {
       id, category_id, title, description, estimated_duration,
       prerequisite_topic, created_at,
       lesson:lessons(
-        id, title, content, estimated_duration, thumbnail_url,
+        id, title, content, estimated_duration, thumbnail_url, base_xp,
         teacher:profiles!lessons_teacher_id_fkey(id, username, avatar_url),
         lesson_attachments(*),
         lesson_quizzes(
@@ -64,7 +64,7 @@ export const fetchLearnTopicById = async (topicId) => {
       id, category_id, title, description, estimated_duration,
       prerequisite_topic, created_at,
       lesson:lessons(
-        id, title, content, estimated_duration, thumbnail_url, created_at,
+        id, title, content, estimated_duration, thumbnail_url, created_at, base_xp,
         teacher:profiles!lessons_teacher_id_fkey(id, username, avatar_url),
         lesson_attachments(*),
         lesson_quizzes(

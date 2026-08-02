@@ -1,57 +1,67 @@
+/**
+ * July 24, 2026 teachers/classrooms
+ * TODO: replace guildcard with same as home card
+ */
 import { useEffect, useState } from 'react'
 import { useAuthStore }      from '../../../store/authStore'
-import { useClassroomStore } from '../../../store/classroomStore'
-import PageWrapper           from '../../../components/layout/PageWrapper'
 import GuildCard             from '../components/GuildCard'
 import CreateClassroomModal  from '../components/CreateClassroomModal'
 import { Plus, Loader2, GraduationCap } from 'lucide-react'
+import { AppBreadcrumb } from '#components/common/breadcrumb'
+import { Button } from '#components/ui/button'
+import { useClassroom } from '#hooks/useClassroom'
+import ClassroomCard from '../components/ClassroomCard'
 
 export default function TeacherClassrooms() {
   const [showCreate, setShowCreate] = useState(false)
+  const [showEdit, setShowEdit] = useState(false)
+  const [selectedClassroom, setSelectedClassroom] = useState(null)
 
   const profile = useAuthStore((s) => s.profile)
-  const {
-    teacherGuilds,
-    loading,
-    actionLoading,
-    fetchTeacherGuilds,
-    handleCreateClassroom,
-    handleArchiveClassroom,
-    handleRegenerateCode,
-  } = useClassroomStore()
+  const { teacherClassrooms, loading, actionLoading, fetchTeacherClassrooms, handleCreateClassroom, handleArchiveClassroom, handleRegenerateCode, handleUpdateClassroom } = useClassroom()
 
   useEffect(() => {
-    if (profile?.id) fetchTeacherGuilds(profile.id)
+    if (profile?.id) fetchTeacherClassrooms()
   }, [profile?.id])
 
   const onCreateSubmit = async (formData) => {
-    await handleCreateClassroom({ teacherId: profile.id, ...formData })
+    await handleCreateClassroom(formData)
     setShowCreate(false)
   }
 
+  const onEditSubmit = async (formData) => {
+    await handleUpdateClassroom(formData)
+    setShowEdit(false)
+    setSelectedClassroom(null)
+  }
+
   return (
-    <PageWrapper
-      title="My Classrooms"
-      subtitle="Manage your guild classrooms"
-      actions={
-        <button
-          onClick={() => setShowCreate(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-blockly-purple text-white text-sm font-semibold rounded-lg hover:bg-blockly-purple/90 transition-colors"
-        >
+    <div className='p-6 space-y-6'>
+      <AppBreadcrumb
+        items={[
+          { label: 'Home', href: '/teachers/' },
+          { label: 'Classrooms', href: '/teachers/classrooms' },
+        ]}
+      />
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="font-display text-2xl font-semibold">My Classrooms</h2>
+          <p className="mt-1 text-sm text-muted-foreground">Create and manage classrooms to track your student's progress</p>
+        </div>
+        <Button variant="primary" onClick={() => setShowCreate(true)}>
           <Plus className="w-4 h-4" />
           New Classroom
-        </button>
-      }
-    >
+        </Button>
+      </div>
+    
       {loading ? (
         <div className="flex justify-center py-24">
           <Loader2 className="w-6 h-6 animate-spin text-gray-300" />
         </div>
-      ) : teacherGuilds.length === 0 ? (
-        /* ── Empty state ── */
+      ) : teacherClassrooms.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-24 gap-5 text-center bg-gray-50 rounded-3xl">
-          <div className="w-16 h-16 rounded-2xl bg-blockly-purple/10 flex items-center justify-center">
-            <GraduationCap className="w-8 h-8 text-blockly-purple" />
+          <div className="w-16 h-16 rounded-2xl bg-blockly-blue/10 flex items-center justify-center">
+            <GraduationCap className="w-8 h-8 text-blockly-blue" />
           </div>
           <div>
             <p className="font-bold text-gray-800">No classrooms yet</p>
@@ -59,22 +69,22 @@ export default function TeacherClassrooms() {
               Create your first classroom and share the join code with students.
             </p>
           </div>
-          <button
-            onClick={() => setShowCreate(true)}
-            className="px-5 py-2.5 bg-blockly-purple text-white text-sm font-semibold rounded-xl hover:bg-blockly-purple/90 transition-colors"
-          >
+          <Button variant='primary' onClick={() => setShowCreate(true)}>
             Create a Classroom
-          </button>
+          </Button>
         </div>
       ) : (
-        /* ── Guild grid ── */
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-          {teacherGuilds.map((guild) => (
-            <GuildCard
-              key={guild.id}
-              guild={guild}
-              onArchive={() => handleArchiveClassroom(guild.id, guild.name)}
-              onRegenerateCode={() => handleRegenerateCode(guild.id)}
+        <div className="grid md:grid-cols-3 gap-3">
+          {teacherClassrooms.map((classroom) => (
+            <ClassroomCard 
+              key={classroom.id}
+              classroom={classroom} 
+              averageProgress={20}
+              onArchive={() => handleArchiveClassroom(classroom.id, classroom.name)}
+              onEdit={() => {
+                setSelectedClassroom(classroom)
+                setShowEdit(true)
+              }}
             />
           ))}
         </div>
@@ -82,11 +92,22 @@ export default function TeacherClassrooms() {
 
       {showCreate && (
         <CreateClassroomModal
+          mode='create'
           loading={actionLoading}
           onSubmit={onCreateSubmit}
           onClose={() => setShowCreate(false)}
         />
       )}
-    </PageWrapper>
+      {showEdit && selectedClassroom && (
+        <CreateClassroomModal
+          mode='edit'
+          classroom={selectedClassroom}
+          loading={actionLoading}
+          onSubmit={onEditSubmit}
+          onClose={() => {setShowEdit(false), setSelectedClassroom(null)}}
+          handleRegenerate={() => handleRegenerateCode(selectedClassroom.id)}
+        />
+      )}
+    </div>
   )
 }

@@ -7,11 +7,11 @@ export default function AdminNavbar() {
 
   return (
     <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 shrink-0 z-20">
-      <div>
-        <p className="text-sm text-slate-500">
-          Welcome back,{' '}
-          <span className="font-semibold text-slate-800">{profile?.username}</span>
+      <div className='leading-tightest'>
+        <p className="text-sm text-gray-500">
+          Admin Dashboard
         </p>
+        <span className="font-semibold text-gray-800">{profile?.username}</span>
       </div>
 
       <div className="flex items-center gap-1">

@@ -2,30 +2,22 @@ import { NavLink, useLocation } from 'react-router'
 import { useUIStore } from '../../../store/uiStore'
 import { useAuthStore } from '../../../store/authStore'
 import { useTour } from '../../../components/tour/TourProvider'
-import {
-  Home, BookOpen, PlayCircle, FolderOpen,
-  BarChart2, ChevronLeft, ChevronRight,
-  HelpCircle, Settings, UserSquare2, University,
-  ClipboardMinus, FileQuestion, ChevronDown, Map,
-} from 'lucide-react'
+import { ChevronLeft, ChevronRight, HelpCircle } from 'lucide-react'
 import { useState } from 'react'
 
 const links = [
-  { to: '/teacher',            label: 'Home',               icon: Home           },
-  { to: '/teacher/projects',   label: 'Projects',           icon: FolderOpen     },
-  { to: '/teacher/content',    label: 'Content Management', icon: ClipboardMinus },
-  // { to: '/teacher/quizzes',    label: 'Quizzes',            icon: FileQuestion   },
-  // { to: '/teacher/tutorials',  label: 'Tutorials',          icon: PlayCircle     },
-  { to: '/teacher/classrooms', label: 'Classrooms',         icon: University     },
-  // Learn is a group — handled separately below
-  { to: '/teacher/profile',    label: 'Profile',            icon: UserSquare2    },
-  { to: '/teacher/settings',   label: 'Settings',           icon: Settings       },
+  { to: '/teacher',            label: 'Home',               icon: (props) => <img src="/svghome.svg" alt="" {...props} />           },
+  { to: '/teacher/projects',   label: 'Projects',           icon: (props) => <img src="/svgfolder.svg" alt="" {...props} />     },
+  { to: '/teacher/content',    label: 'Content Management', icon: (props) => <img src="/svgbook.svg" alt="" {...props} /> },
+  // { to: '/teacher/quizzes',    label: 'Quizzes',            icon: (props) => <img src="/svghome.svg" alt="" {...props} />   },
+  // { to: '/teacher/tutorials',  label: 'Tutorials',          icon: (props) => <img src="/svghome.svg" alt="" {...props} />     },
+  { to: '/teacher/classrooms', label: 'Classrooms',         icon: (props) => <img src="/svgclass.svg" alt="" {...props} />     },
+  { to: '/teacher/students',    label: 'Students',          icon: (props) => <img src="/svgstudent.svg" alt="" {...props} />    },
+  { to: '/teacher/grades',    label: 'Grades',              icon: (props) => <img src="/svggrade.svg" alt="" {...props} />    },
+  { to: '/teacher/profile',    label: 'Profile',            icon: (props) => <img src="/svgprofile.svg" alt="" {...props} />    },
+  // { to: '/teacher/settings',   label: 'Settings',           icon: (props) => <img src="/svgsettings.svg" alt="" {...props} />       },
 ]
 
-const learnLinks = [
-  { to: '/teacher/learn',            label: 'Learn Page'  },
-  { to: '/teacher/learn/management', label: 'Management'  },
-]
 
 export default function TeacherSidebar() {
   const { sidebarOpen, toggleSidebar } = useUIStore()
@@ -55,82 +47,29 @@ export default function TeacherSidebar() {
   const isLearnActive = location.pathname.startsWith('/teacher/learn')
 
   return (
-    <aside className={`fixed top-0 left-0 h-screen bg-white border-r border-slate-200 flex flex-col transition-all! duration-300! z-30 ${sidebarOpen ? 'w-64' : 'w-16'}`}>
-      <div className="flex items-center justify-between px-4 py-5 border-b border-slate-100">
+    <aside className={`fixed top-0 left-0 h-screen bg-white border-r border-slate-200 flex flex-col transition-all! duration-300! z-30 ${sidebarOpen ? 'w-75' : 'w-16'}`}>
+      <div className="flex items-center justify-start px-4 pt-10 pb-3">
         {sidebarOpen && (
-          <img src="/anotherlogo.png" alt="WebbedSite" className="h-10 text-lg font-bold text-blockly-purple" />
+          <img src="/anotherlogo.png" alt="WebbedSite" className="h-14 text-lg font-bold text-blockly-purple" />
         )}
         <button onClick={toggleSidebar} className="p-2 rounded-md hover:bg-slate-100 ml-auto">
           {sidebarOpen ? <ChevronLeft className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
         </button>
       </div>
 
-      <nav className="flex-1 px-2 py-4 flex flex-col gap-1 overflow-y-auto">
+      <nav className="flex-1 px-2 flex flex-col gap-1 overflow-y-auto">
         {/* Regular links up to classrooms */}
-        {links.slice(0, 6).map(({ to, label, icon: Icon }) => (
+        {links.slice(0, 7).map(({ to, label, icon: Icon }) => (
           <NavLink
             key={to}
             to={to}
             end={to === '/teacher'}
             className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2.5 rounded-2xl font-bold transition-colors!
-              ${isActive ? 'bg-indigo-900 text-amber-200' : 'text-slate-600 hover:bg-slate-200 hover:text-slate-800'}`
+              `flex items-center w-full ${sidebarOpen ? 'justify-start gap-3 px-5' : 'justify-center'} px-5 text-lg py-2 rounded-2xl font-bold transition-colors!
+              ${isActive ? 'bg-slate-100 text-slate-800' : 'text-slate-500 hover:bg-slate-50'}`
             }
           >
-            <Icon className="w-5 h-5 shrink-0" />
-            {sidebarOpen && <span>{label}</span>}
-          </NavLink>
-        ))}
-
-        {/* Learn group with sub-nav */}
-        <div>
-          <button
-            onClick={() => { if (sidebarOpen) setLearnOpen((v) => !v) }}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl font-bold transition-colors!
-              ${isLearnActive ? 'bg-indigo-900 text-amber-200' : 'text-slate-600 hover:bg-slate-200 hover:text-slate-800'}`}
-          >
-            <BookOpen className="w-5 h-5 shrink-0" />
-            {sidebarOpen && (
-              <>
-                <span className="flex-1 text-left">Learn</span>
-                <ChevronDown
-                  className={`w-4 h-4 transition-transform! ${learnOpen ? 'rotate-180' : ''}`}
-                />
-              </>
-            )}
-          </button>
-
-          {sidebarOpen && learnOpen && (
-            <div className="ml-8 mt-1 flex flex-col gap-0.5">
-              {learnLinks.map(({ to, label }) => (
-                <NavLink
-                  key={to}
-                  to={to}
-                  end
-                  className={({ isActive }) =>
-                    `flex items-center px-3 py-2 rounded-2xl text-sm font-semibold transition-colors!
-                    ${isActive ? 'bg-indigo-900 text-amber-200' : 'text-slate-600 hover:bg-slate-200 hover:text-slate-800'}`
-                  }
-                >
-                  {label}
-                </NavLink>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Remaining links */}
-        {links.slice(6).map(({ to, label, icon: Icon }) => (
-          <NavLink
-            key={to}
-            to={to}
-            end={to === '/teacher'}
-            className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2.5 rounded-2xl font-bold transition-colors!
-              ${isActive ? 'bg-indigo-900 text-amber-200' : 'text-slate-600 hover:bg-slate-200 hover:text-slate-800'}`
-            }
-          >
-            <Icon className="w-5 h-5 shrink-0" />
+            <Icon className="w-10 h-10 shrink-0 min-w-[2.5rem] min-h-[2.5rem] object-contain" />
             {sidebarOpen && <span>{label}</span>}
           </NavLink>
         ))}

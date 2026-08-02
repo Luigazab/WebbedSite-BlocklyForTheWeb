@@ -43,6 +43,7 @@ const LaboratoryBuilderPage = () => {
   const isEditMode = Boolean(id);
   const [lessonId, setLessonId] = useState(id || null);
   const [title, setTitle] = useState("");
+  const [baseXp, setBaseXp] = useState("50");
   const [description, setDescription] = useState("");
   const [selectedTopicId, setSelectedTopicId] = useState("");
   const [courseTopics, setCourseTopics] = useState([]);
@@ -102,6 +103,7 @@ const LaboratoryBuilderPage = () => {
         })) : [makeFile()];
         setLessonId(data.id);
         setTitle(data.title || "");
+        setBaseXp((data.base_xp ?? 50).toString());
         setSelectedTopicId(data.topics_id || "");
         setDescription(lab.description || "");
         setReferenceImageUrl(lab.referenceImageUrl || "");
@@ -187,6 +189,7 @@ const LaboratoryBuilderPage = () => {
   const handleSave = async () => {
     if (!user?.id) return addToast("You must be signed in to save a laboratory.", "error");
     if (!title.trim()) return addToast("Laboratory title is required.", "error");
+    if (!/^\d+$/.test(baseXp) || Number(baseXp) <= 0) return addToast("Base XP must be a positive whole number.", "error");
     if (!selectedTopicId) return addToast("Select a topic for this laboratory.", "error");
     if (!expectedBlocks) return addToast("Capture the final expected workspace before saving.", "error");
 
@@ -194,8 +197,8 @@ const LaboratoryBuilderPage = () => {
     try {
       const latestFiles = flushActiveFile();
       const lesson = lessonId
-        ? await updateLessonBase({ lessonId, topicId: selectedTopicId, title })
-        : await createLessonBase({ topicId: selectedTopicId, authorId: user.id, title, type: "laboratory" });
+        ? await updateLessonBase({ lessonId, topicId: selectedTopicId, title, baseXp: Number(baseXp) })
+        : await createLessonBase({ topicId: selectedTopicId, authorId: user.id, title, type: "laboratory", baseXp: Number(baseXp) });
       setLessonId(lesson.id);
       await upsertLaboratoryContent({
         lessonId: lesson.id,
@@ -239,6 +242,10 @@ const LaboratoryBuilderPage = () => {
               <div>
                 <Label>Title *</Label>
                 <Input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Build a profile card" />
+              </div>
+              <div>
+                <Label>Base XP *</Label>
+                <Input type="number" min="1" step="1" value={baseXp} onChange={(event) => setBaseXp(event.target.value)} />
               </div>
               <div>
                 <Label>Topic *</Label>

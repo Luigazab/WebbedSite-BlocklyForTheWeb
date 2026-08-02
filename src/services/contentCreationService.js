@@ -85,7 +85,7 @@ export const removeLessonById = async (lessonId) => {
   if (error) throw error;
 };
 
-export const createLessonBase = async ({ topicId, authorId, title, type }) => {
+export const createLessonBase = async ({ topicId, authorId, title, type, baseXp = 50 }) => {
   const { data: existingRows, error: orderError } = await supabase
     .from("lessons")
     .select("order")
@@ -104,6 +104,7 @@ export const createLessonBase = async ({ topicId, authorId, title, type }) => {
     is_published: false,
     slug: makeLessonSlug(title),
     order: nextOrder,
+    base_xp: baseXp,
   };
 
   const { data, error } = await supabase.from("lessons").insert(payload).select().single();
@@ -111,7 +112,7 @@ export const createLessonBase = async ({ topicId, authorId, title, type }) => {
   return data;
 };
 
-export const updateLessonBase = async ({ lessonId, topicId, title }) => {
+export const updateLessonBase = async ({ lessonId, topicId, title, baseXp = 50 }) => {
   const { data, error } = await supabase
     .from("lessons")
     .update({
@@ -119,6 +120,7 @@ export const updateLessonBase = async ({ lessonId, topicId, title }) => {
       title: title.trim(),
       is_published: false,
       updated_at: new Date().toISOString(),
+      base_xp: baseXp,
     })
     .eq("id", lessonId)
     .select()
@@ -136,6 +138,7 @@ export const fetchLectureEditorData = async (lessonId) => {
       title,
       topics_id,
       type,
+      base_xp,
       lectures (
         id,
         content,
@@ -219,6 +222,7 @@ export const fetchQuizEditorData = async (lessonId) => {
       title,
       topics_id,
       type,
+      base_xp,
       quizzes (
         id,
         time_limit,
@@ -260,6 +264,7 @@ export const fetchTutorialEditorData = async (lessonId) => {
       title,
       topics_id,
       type,
+      base_xp,
       tutorials (
         id
       )

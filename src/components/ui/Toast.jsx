@@ -1,3 +1,6 @@
+/**
+ * TODO: DELETE in the future if not broken without it. We are using sonner
+ */
 import { useEffect } from 'react'
 import { useUIStore } from '../../store/uiStore'
 import { X, CheckCircle, AlertCircle, Info } from 'lucide-react'

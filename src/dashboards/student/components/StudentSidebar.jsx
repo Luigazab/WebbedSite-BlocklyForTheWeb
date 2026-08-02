@@ -2,12 +2,7 @@ import { NavLink, useLocation } from 'react-router'
 import { useUIStore } from '../../../store/uiStore'
 import { useAuthStore } from '../../../store/authStore'
 import { useTour } from '../../../components/tour/TourProvider'
-import {
-  Home, BookOpen, ChevronLeft, ChevronRight,
-  University, FolderOpen, Settings, UserSquare2, HelpCircle,
-  LibraryBigIcon,
-  Plus
-} from 'lucide-react'
+import { ChevronLeft, ChevronRight, HelpCircle } from 'lucide-react'
 import CreateProjectModal from '../../../components/shared/CreateProjectModal'
 import { useState } from 'react'
 
@@ -57,12 +52,12 @@ export default function StudentSidebar() {
   return (
     <aside className={`fixed top-0 left-0 h-screen bg-white border-r border-slate-200 flex flex-col transition-all! duration-300! z-30 ${sidebarOpen ? 'w-75' : 'w-16'}`}>
       <div className="flex items-center justify-start px-4 pt-10 pb-3">
-        <img src="/anotherlogo.png" alt="WebbedSite"  className='h-14 text-lg font-bold text-blockly-purple'/>
-        {/* {sidebarOpen && (
+        {sidebarOpen && (
+          <img src="/anotherlogo.png" alt="WebbedSite"  className='h-14 text-lg font-bold text-blockly-purple'/>
         )}
         <button onClick={toggleSidebar} className="p-1 rounded-md hover:bg-gray-100 ml-auto">
           {sidebarOpen ? <ChevronLeft className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
-        </button> */}
+        </button>
       </div>
 
       <nav className="flex-1 px-2 flex flex-col gap-1">
@@ -72,13 +67,13 @@ export default function StudentSidebar() {
             to={to}
             end={to === '/student'}
             className={({ isActive }) =>
-              `flex items-center gap-5 px-5 text-lg py-2 rounded-lg font-bold transition-colors!
+              `flex items-center w-full ${sidebarOpen ? 'justify-start gap-3 px-5' : 'justify-center'} px-5 text-lg py-2 rounded-lg font-bold transition-colors!
               ${isActive
                 ? 'bg-slate-100 text-slate-800' : 'text-slate-500 hover:bg-slate-50'
               }`
             }
           >
-            <span className=""><Icon className="w-10 h-10 shrink-0" /></span>
+            <span className=""><Icon className="w-10 h-10 shrink-0 min-w-10 min-h-10 object-contain" /></span>
             {sidebarOpen && <span>{label}</span>}
           </NavLink>
         ))}

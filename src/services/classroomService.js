@@ -6,7 +6,7 @@ function generateJoinCode() {
   return nanoid(6).toUpperCase()
 }
 
-function normalizeClassroom(row, currentUserId = null) {
+export function normalizeClassroom(row, currentUserId = null) {
   const members = row.classroom_members ?? []
   return {
     id:                    row.id,
@@ -15,8 +15,11 @@ function normalizeClassroom(row, currentUserId = null) {
     join_code:             row.join_code,
     is_active:             row.is_active,
     created_at:            row.created_at,
-    teacher:               row.profiles ?? null,       // joined teacher profile
+    teacher:               row.profiles ?? null,
     members,
+    students: members
+      .map(member => member.student)
+      .filter(Boolean),
     member_count:          members.length,
     milestones:            row.classroom_milestones ?? [],
     posts:                 row.classroom_posts ?? [],
@@ -43,7 +46,7 @@ export async function createClassroom({ teacherId, name, description = '' }) {
   return normalizeClassroom(data)
 }
 
-export async function getTeacherGuilds(teacherId) {
+export async function getTeacherClassrooms(teacherId) {
   const { data, error } = await supabase
     .from('classrooms')
     .select(`
@@ -61,6 +64,29 @@ export async function getTeacherGuilds(teacherId) {
   if (error) throw error
   return (data ?? []).map((row) => normalizeClassroom(row))
 }
+
+  export async function updateClassroom(classroomId, updates) {
+    const { data, error } = await supabase
+      .from('classrooms')
+      .update({
+        name: updates.name,
+        description: updates.description,
+      })
+      .eq('id', classroomId)
+      .select(`
+        *,
+        profiles:teacher_id ( id, username, avatar_url, email ),
+        classroom_members ( classroom_id, student_id, enrolled_at,
+          student:student_id ( id, username, avatar_url, email )
+        ),
+        classroom_milestones ( id, title, target_score, current_score )
+      `)
+      .single()
+
+    if (error) throw error
+    return normalizeClassroom(data)
+  }
+
 
 export async function archiveClassroom(classroomId) {
   const { error } = await supabase
@@ -93,7 +119,7 @@ export async function regenerateJoinCode(classroomId) {
   return data.join_code
 }
 
-export async function getGuildDetail(classroomId, currentUserId = null) {
+export async function getClassroomDetail(classroomId, currentUserId = null) {
   const { data, error } = await supabase
     .from('classrooms')
     .select(`
@@ -169,7 +195,7 @@ export async function removeStudent(studentId, classroomId) {
   if (error) throw error
 }
 
-export async function getStudentGuild(studentId) {
+export async function getStudentClassroom(studentId) {
   const { data: membership, error: mErr } = await supabase
     .from('classroom_members')
     .select('classroom_id')
@@ -179,10 +205,10 @@ export async function getStudentGuild(studentId) {
   if (mErr) throw mErr
   if (!membership) return null
 
-  return getGuildDetail(membership.classroom_id, studentId)
+  return getClassroomDetail(membership.classroom_id, studentId)
 }
 
-export async function getGuildPosts(classroomId, { limit = 20, offset = 0 } = {}) {
+export async function getClassroomPosts(classroomId, { limit = 20, offset = 0 } = {}) {
   const { data, error } = await supabase
     .from('classroom_posts')
     .select(`
@@ -202,7 +228,7 @@ export async function getGuildPosts(classroomId, { limit = 20, offset = 0 } = {}
   return data ?? []
 }
 
-export async function createGuildPost({ classroomId, authorId, type, content, projectId = null }) {
+export async function createClassroomPost({ classroomId, authorId, type, content, projectId = null }) {
   const { data, error } = await supabase
     .from('classroom_posts')
     .insert({
@@ -224,7 +250,7 @@ export async function createGuildPost({ classroomId, authorId, type, content, pr
   return data
 }
 
-export async function likeGuildPost(postId, userId) {
+export async function likeClassroomPost(postId, userId) {
   const { data: existing } = await supabase
     .from('classroom_post_likes')
     .select('user_id')
@@ -249,7 +275,7 @@ export async function likeGuildPost(postId, userId) {
   }
 }
 
-export async function commentOnGuildPost(postId, authorId, content) {
+export async function commentOnClassroomPost(postId, authorId, content) {
   const { data, error } = await supabase
     .from('comments')
     .insert({ post_id: postId, author_id: authorId, content })
@@ -263,7 +289,7 @@ export async function commentOnGuildPost(postId, authorId, content) {
   return data
 }
 
-export async function getGuildMilestones(classroomId) {
+export async function getClassroomMilestones(classroomId) {
   const { data, error } = await supabase
     .from('classroom_milestones')
     .select('*')
@@ -334,7 +360,7 @@ export async function onLessonComplete({ studentId, lessonTitle, lessonId }) {
   const classroomId = await getStudentClassroomId(studentId)
   if (!classroomId) return
 
-  await createGuildPost({
+  await createClassroomPost({
     classroomId,
     authorId: studentId,
     type:    'lecture_completed',
@@ -346,7 +372,7 @@ export async function onQuizComplete({ studentId, quizId, lessonTitle, score }) 
   const classroomId = await getStudentClassroomId(studentId)
   if (!classroomId) return
 
-  await createGuildPost({
+  await createClassroomPost({
     classroomId,
     authorId: studentId,
     type:    'quiz_scored',
@@ -358,7 +384,7 @@ export async function onLabComplete({ studentId, labId, lessonTitle }) {
   const classroomId = await getStudentClassroomId(studentId)
   if (!classroomId) return
 
-  await createGuildPost({
+  await createClassroomPost({
     classroomId,
     authorId: studentId,
     type:    'laboratory_completed',

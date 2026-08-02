@@ -12,6 +12,8 @@ import {
   LayoutList, Play, Medal, Calendar,
 } from 'lucide-react'
 import { format } from 'date-fns'
+import { xpService } from '../../../services/xpService'
+import CourseXPProgress from '../../../components/shared/CourseXPProgress'
 
 // ─── Confetti ─────────────────────────────────────────────────────────────────
 const CONFETTI_COLORS = ['#7c3aed','#a78bfa','#fbbf24','#34d399','#60a5fa','#f472b6','#fb923c','#4ade80']
@@ -164,6 +166,7 @@ export default function TopicViewer() {
   const [locked,         setLocked]          = useState(false)
   const [timeSpent,      setTimeSpent]       = useState(0)
   const [pendingBadge,   setPendingBadge]    = useState(null)
+  const [pendingScore,   setPendingScore]    = useState(100)
 
   const progressTimer = useRef(null)
   const timeTimer     = useRef(null)
@@ -237,7 +240,11 @@ export default function TopicViewer() {
     }
   }, [locked, scrollProgress])
 
-  const doLockTopic = async () => {
+  const doLockTopic = async (score = 100) => {
+    const lessonId = currentTopic?.lesson?.id
+    if (profile?.id && lessonId) {
+      await xpService.completeLesson({ userId: profile.id, lessonId, score })
+    }
     await handleCompleteTopicFromViewer(topicId)
     setLocked(true)
   }
@@ -254,19 +261,20 @@ export default function TopicViewer() {
     try { await doLockTopic() } finally { setFinishing(false) }
   }
 
-  const handleQuizComplete = (passed, earnedBadge) => {
+  const handleQuizComplete = (passed, earnedBadge, score) => {
     if (!passed) return
     setQuizCompleted(true)
     if (earnedBadge) {
       setPendingBadge(earnedBadge)
+      setPendingScore(score ?? 100)
     } else {
-      doLockTopic()
+      doLockTopic(score)
     }
   }
 
   const handleBadgeDismiss = () => {
     setPendingBadge(null)
-    doLockTopic()
+    doLockTopic(pendingScore)
   }
 
   // ── Derived ───────────────────────────────────────────────────────────────
@@ -310,7 +318,8 @@ export default function TopicViewer() {
             <ArrowLeft className="w-4 h-4" />
             Back to Journey
           </button>
-          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4">
+              <CourseXPProgress userId={profile?.id} lessonId={lesson?.id} />
             <div className="flex items-center gap-1.5 text-xs text-gray-400">
               <MapPin className="w-3.5 h-3.5 text-indigo-400" />
               <span className="font-semibold text-slate-600">{currentTopic.title}</span>

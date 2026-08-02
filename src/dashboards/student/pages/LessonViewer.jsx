@@ -14,6 +14,8 @@ import {
   Medal
 } from 'lucide-react'
 import { format, differenceInDays, isPast } from 'date-fns'
+import { xpService } from '../../../services/xpService'
+import CourseXPProgress from '../../../components/shared/CourseXPProgress'
 
 // ─── Confetti ─────────────────────────────────────────────────────────────────
 const CONFETTI_COLORS = ['#7c3aed','#a78bfa','#fbbf24','#34d399','#60a5fa','#f472b6','#fb923c','#4ade80']
@@ -164,6 +166,7 @@ export default function LessonViewer() {
   const [timeSpent,      setTimeSpent]       = useState(0)
   // Badge popup lives HERE so it isn't destroyed by QuizSection unmounting
   const [pendingBadge,   setPendingBadge]    = useState(null)
+  const [pendingScore,   setPendingScore]    = useState(100)
 
   const progressTimer = useRef(null)
   const timeTimer     = useRef(null)
@@ -252,7 +255,10 @@ export default function LessonViewer() {
     } finally { setSaving(false) }
   }
 
-  const doLockLesson = async () => {
+  const doLockLesson = async (score = 100) => {
+    if (profile?.id && lessonId) {
+      await xpService.completeLesson({ userId: profile.id, lessonId, score })
+    }
     await handleUpdateProgress(lessonId, {
       progress_percentage: 100,
       scroll_position: mainElRef.current?.scrollTop ?? 0,
@@ -269,20 +275,21 @@ export default function LessonViewer() {
 
   // QuizSection calls this with (passed, earnedBadge | null)
   // We show the badge FIRST, then lock the lesson when the user dismisses it
-  const handleQuizComplete = (passed, earnedBadge) => {
+  const handleQuizComplete = (passed, earnedBadge, score) => {
     if (!passed) return
     setQuizCompleted(true)
     if (earnedBadge) {
       setPendingBadge(earnedBadge)
+      setPendingScore(score ?? 100)
       // Don't lock yet — lock when badge is dismissed
     } else {
-      doLockLesson()
+      doLockLesson(score)
     }
   }
 
   const handleBadgeDismiss = () => {
     setPendingBadge(null)
-    doLockLesson()
+    doLockLesson(pendingScore)
   }
 
   const goBack = () =>
@@ -332,6 +339,7 @@ export default function LessonViewer() {
             {classroomId ? 'Back to classroom' : 'Back'}
           </button>
           <div className="flex items-center gap-4">
+            <CourseXPProgress userId={profile?.id} lessonId={lessonId} />
             <div className="flex items-center gap-1.5 text-xs text-gray-400">
               <Clock className="w-3.5 h-3.5" />
               <span>{Math.floor(timeSpent / 60)}m {timeSpent % 60}s</span>

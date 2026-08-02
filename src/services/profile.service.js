@@ -25,35 +25,29 @@ export const profileService = {
   async uploadAvatar(userId, file) {
     const ext  = file.name.split('.').pop()
     const filename = `avatar.${ext}`
-    const path = `${userId}/${filename}`  // This matches your bucket policy structure
+    const path = `${userId}/${filename}`
 
-    // Upload to storage (upsert: true will replace existing)
     const { error: uploadError } = await supabase.storage
       .from('avatars')
       .upload(path, file, { upsert: true })
     if (uploadError) throw uploadError
 
-    // Get public URL
     const { data } = supabase.storage
       .from('avatars')
       .getPublicUrl(path)
 
-    // Add cache-busting timestamp to force browser to reload
     const urlWithTimestamp = `${data.publicUrl}?t=${Date.now()}`
 
-    // Save URL to profile
     await profileService.updateProfile(userId, { avatar_url: urlWithTimestamp })
     return urlWithTimestamp
   },
 
   async deleteAvatar(userId) {
-    // List all files in user's folder
     const { data: files } = await supabase.storage
       .from('avatars')
       .list(userId)
 
     if (files && files.length > 0) {
-      // Delete all files in the user's folder
       const filePaths = files.map(f => `${userId}/${f.name}`)
       const { error } = await supabase.storage
         .from('avatars')
@@ -61,7 +55,6 @@ export const profileService = {
       if (error) throw error
     }
 
-    // Remove URL from profile
     await profileService.updateProfile(userId, { avatar_url: null })
   },
 

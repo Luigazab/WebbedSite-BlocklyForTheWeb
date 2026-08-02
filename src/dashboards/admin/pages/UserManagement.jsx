@@ -1,265 +1,13 @@
 import { useState, useEffect, useCallback } from "react";
-import {
-  Search, UserPlus, MoreHorizontal, Shield, ShieldOff,
-  KeyRound, Trash2, ChevronDown, X, Check, Loader2,
-  Filter, RefreshCw, Mail, User, Lock
-} from "lucide-react";
+import { Search, UserPlus, MoreHorizontal, Shield, ShieldOff, KeyRound, Trash2, X, Check, Loader2, RefreshCw, Mail, User, Lock, Users, GraduationCap, ShieldUser, School, Plus, ChevronDown, Ellipsis } from "lucide-react";
 import { supabase } from "../../../supabaseClient";
-
-// ── Role Badge ─────────────────────────────────────────────────────────────────
-function RoleBadge({ role }) {
-  const map = {
-    student: "bg-sky-500/15 text-sky-300 border-sky-500/20",
-    teacher: "bg-violet-500/15 text-violet-300 border-violet-500/20",
-    admin:   "bg-amber-500/15 text-amber-300 border-amber-500/20",
-  };
-  return (
-    <span className={`inline-flex items-center text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full border ${map[role] || map.student}`}>
-      {role}
-    </span>
-  );
-}
-
-// ── Status Dot ─────────────────────────────────────────────────────────────────
-function StatusDot({ banned }) {
-  return (
-    <span className={`inline-flex items-center gap-1.5 text-xs ${banned ? "text-rose-400" : "text-emerald-400"}`}>
-      <span className={`w-1.5 h-1.5 rounded-full ${banned ? "bg-rose-400" : "bg-emerald-400"}`} />
-      {banned ? "Banned" : "Active"}
-    </span>
-  );
-}
-
-// ── Create User Modal ──────────────────────────────────────────────────────────
-function CreateUserModal({ onClose, onCreated }) {
-  const [form, setForm] = useState({ email: "", username: "", password: "", role: "student" });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-
-  const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
-
-  const handleSubmit = async () => {
-    if (!form.email || !form.username || !form.password) { setError("All fields required."); return; }
-    setLoading(true); setError("");
-    try {
-      const { data, error: authErr } = await supabase.auth.admin.createUser({
-        email: form.email,
-        password: form.password,
-        email_confirm: true,
-        user_metadata: { username: form.username },
-      });
-      if (authErr) throw authErr;
-
-      const { error: profileErr } = await supabase.from("profiles").upsert({
-        id: data.user.id,
-        email: form.email,
-        username: form.username,
-        role: form.role,
-      });
-      if (profileErr) throw profileErr;
-
-      onCreated();
-      onClose();
-    } catch (e) {
-      setError(e.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={onClose}>
-      <div className="bg-white border border-white/10 rounded-2xl w-full max-w-md p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h2 className="text-lg font-bold">Create New User</h2>
-            <p className="text-xs mt-0.5 font-semibold text-slate-600">Add a new account to the platform</p>
-          </div>
-          <button onClick={onClose} className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-slate-200 transition-colors">
-            <X size={16} />
-          </button>
-        </div>
-
-        <div className="space-y-4">
-          <Field icon={<Mail size={13} />} label="Email" placeholder="user@example.com" value={form.email} onChange={set("email")} type="email" />
-          <Field icon={<User size={13} />} label="Username" placeholder="johndoe" value={form.username} onChange={set("username")} />
-          <Field icon={<Lock size={13} />} label="Password" placeholder="••••••••" value={form.password} onChange={set("password")} type="password" />
-
-          <div>
-            <label className=" text-xs font-medium mb-1.5">Role</label>
-            <div className="flex gap-2">
-              {["student", "teacher", "admin"].map((r) => (
-                <button
-                  key={r}
-                  onClick={() => setForm((f) => ({ ...f, role: r }))}
-                  className={`flex-1 py-2 text-xs font-medium rounded-lg border transition-all capitalize ${
-                    form.role === r
-                      ? "bg-amber-500/15 border-amber-500/40 text-amber-800"
-                      : "bg-green-500/15 border-green-500/40 text-green-800"
-                  }`}
-                >
-                  {r}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {error && <p className="text-rose-400 text-xs bg-rose-500/10 border border-rose-500/20 rounded-lg px-3 py-2">{error}</p>}
-        </div>
-
-        <div className="flex gap-2 mt-6">
-          <button onClick={onClose} className="flex-1 py-2.5 text-sm font-medium  bg-white  border-slate-200 hover:bg-slate-200 rounded-lg transition-colors">
-            Cancel
-          </button>
-          <button
-            onClick={handleSubmit}
-            disabled={loading}
-            className="flex-1 py-2.5 text-sm font-medium text-black bg-blockly-yellow/80 hover:bg-blockly-yellow rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-60"
-          >
-            {loading ? <Loader2 size={14} className="animate-spin" /> : <UserPlus size={14} />}
-            Create User
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function Field({ icon, label, placeholder, value, onChange, type = "text" }) {
-  return (
-    <div>
-      <label className=" text-xs font-medium mb-1.5">{label}</label>
-      <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-lg px-3 py-2.5 focus-within:border-blockly-green transition-colors">
-        <span className="">{icon}</span>
-        <input
-          type={type}
-          placeholder={placeholder}
-          value={value}
-          onChange={onChange}
-          className="bg-transparent  text-sm placeholder: outline-none flex-1"
-        />
-      </div>
-    </div>
-  );
-}
-
-// ── Reset Password Modal ───────────────────────────────────────────────────────
-function ResetPasswordModal({ user, onClose }) {
-  const [pw, setPw] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [done, setDone] = useState(false);
-
-  const handleReset = async () => {
-    if (!pw || pw.length < 6) return;
-    setLoading(true);
-    try {
-      await supabase.auth.admin.updateUserById(user.id, { password: pw });
-      setDone(true);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={onClose}>
-      <div className="bg-white border border-white/10 rounded-2xl w-full max-w-sm p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between mb-5">
-          <h2 className="text-white text-base font-semibold">Reset Password</h2>
-          <button onClick={onClose} className="w-7 h-7 flex items-center justify-center rounded-lg bg-white/[0.04]  hover:">
-            <X size={14} />
-          </button>
-        </div>
-        {done ? (
-          <div className="text-center py-4">
-            <div className="w-10 h-10 rounded-full bg-emerald-500/15 flex items-center justify-center mx-auto mb-3">
-              <Check size={18} className="text-emerald-400" />
-            </div>
-            <p className=" text-sm">Password reset for <span className="text-white font-medium">@{user.username}</span></p>
-            <button onClick={onClose} className="mt-4 px-4 py-2 bg-white/[0.06]  text-sm rounded-lg hover:bg-white/[0.09]">Close</button>
-          </div>
-        ) : (
-          <>
-            <p className=" text-xs mb-4">Setting new password for <span className="">@{user.username}</span></p>
-            <Field icon={<Lock size={13} />} label="New Password" placeholder="••••••••" value={pw} onChange={(e) => setPw(e.target.value)} type="password" />
-            <div className="flex gap-2 mt-4">
-              <button onClick={onClose} className="flex-1 py-2.5 text-sm  bg-white/[0.04] rounded-lg hover:bg-white/[0.07]">Cancel</button>
-              <button onClick={handleReset} disabled={loading || pw.length < 6} className="flex-1 py-2.5 text-sm font-medium text-black bg-amber-500 hover:bg-amber-400 rounded-lg disabled:opacity-50 flex items-center justify-center gap-2">
-                {loading ? <Loader2 size={13} className="animate-spin" /> : <KeyRound size={13} />}
-                Reset
-              </button>
-            </div>
-          </>
-        )}
-      </div>
-    </div>
-  );
-}
-
-// ── Confirm Delete Modal ───────────────────────────────────────────────────────
-function ConfirmDeleteModal({ user, onClose, onConfirm, loading }) {
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={onClose}>
-      <div className="bg-white border border-white/10 rounded-2xl w-full max-w-sm p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
-        <div className="w-10 h-10 rounded-full bg-rose-500/15 flex items-center justify-center mb-4">
-          <Trash2 size={18} className="text-rose-400" />
-        </div>
-        <h2 className="text-white text-base font-semibold mb-1">Remove User</h2>
-        <p className=" text-sm mb-6">
-          Are you sure you want to permanently remove <span className="text-white font-medium">@{user.username}</span>? This cannot be undone.
-        </p>
-        <div className="flex gap-2">
-          <button onClick={onClose} className="flex-1 py-2.5 text-sm  bg-white/[0.04] rounded-lg hover:bg-white/[0.07]">Cancel</button>
-          <button onClick={onConfirm} disabled={loading} className="flex-1 py-2.5 text-sm font-medium text-white bg-rose-600 hover:bg-rose-500 rounded-lg flex items-center justify-center gap-2 disabled:opacity-60">
-            {loading ? <Loader2 size={13} className="animate-spin" /> : <Trash2 size={13} />}
-            Remove
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ── Row Actions Dropdown ───────────────────────────────────────────────────────
-function RowActions({ user, onBan, onReset, onDelete, onRoleChange }) {
-  const [open, setOpen] = useState(false);
-  return (
-    <div className="relative">
-      <button
-        onClick={() => setOpen((o) => !o)}
-        className="w-7 h-7 flex items-center justify-center rounded-md hover:bg-slate-300 transition-colors"
-      >
-        <MoreHorizontal size={15} />
-      </button>
-      {open && (
-        <>
-          <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 z-50 top-8 w-44 bg-white border border-slate-200 rounded-xl shadow-2xl py-1.5 text-sm overflow-hidden">
-            <button onClick={() => { onBan(user); setOpen(false); }} className={`w-full flex items-center gap-2.5 px-3 py-2 hover:bg-emerald-500/20 text-left transition-colors ${user.is_banned ? "text-emerald-400" : "text-amber-300"}`}>
-              {user.is_banned ? <Shield size={13} /> : <ShieldOff size={13} />}
-              {user.is_banned ? "Unban User" : "Ban User"}
-            </button>
-            <button onClick={() => { onReset(user); setOpen(false); }} className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-emerald-500/20  text-left transition-colors">
-              <KeyRound size={13} />
-              Reset Password
-            </button>
-            <div className="my-1 border-t border-slate-200" />
-            {["student", "teacher", "admin"].filter((r) => r !== user.role).map((r) => (
-              <button key={r} onClick={() => { onRoleChange(user, r); setOpen(false); }} className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-emerald-500/20  text-left transition-colors capitalize">
-                <User size={13} />
-                Set as {r}
-              </button>
-            ))}
-            <div className="my-1 border-t border-slate-200" />
-            <button onClick={() => { onDelete(user); setOpen(false); }} className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-rose-500/10 text-rose-400 text-left transition-colors">
-              <Trash2 size={13} />
-              Remove User
-            </button>
-          </div>
-        </>
-      )}
-    </div>
-  );
-}
+import { AppBreadcrumb } from "#components/common/breadcrumb";
+import AdminStat from "../components/AdminStat";
+import { Button } from "#components/ui/button";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "#components/ui/dropdown-menu";
+import DeleteModal from "#components/ui/DeleteModal";
+import ResetPasswordModal from "../components/ResetPasswordModal";
+import CreateUserModal from "../components/CreateUserModal";
 
 // ── Main ───────────────────────────────────────────────────────────────────────
 const PAGE_SIZE = 15;
@@ -336,10 +84,32 @@ export default function UserManagement() {
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
   return (
-    <div className="max-w-7xl space-y-4 mx-auto py-4">
+    <div className="p-6 space-y-6">
+      <AppBreadcrumb
+        items={[
+          { label: 'Home', href: '/admin/' },
+          { label: 'User Management', href: '/admin/users' },
+        ]}
+      />
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h2 className="font-display text-2xl font-semibold">User Management</h2>
+          <p className="mt-1 text-sm text-muted-foreground">View and manage user accounts.</p>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="formalPlain">Import CSV</Button>
+          <Button onClick={() => setShowCreate(true)} variant="formalPrimary"><UserPlus size={20}/>Invite User</Button>
+        </div>
+      </div>
+      <section className="grid gap-4 md:grid-cols-4">
+        <AdminStat label="Total Users" value="5" icon={Users} sub="registered"/>
+        <AdminStat label="Students" value="3" icon={GraduationCap} sub="active"/>
+        <AdminStat label="Teachers" value="2" icon={School} sub="active"/>
+        <AdminStat label="Admins" value="1" icon={ShieldUser} sub="active" accent/>
+      </section>
       {/* Toolbar */}
-      <div className="flex items-center gap-3 flex-wrap">
-        <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-lg px-3 py-2.5 flex-1 min-w-48 max-w-72 focus-within:border-amber-500/30 transition-colors">
+      <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-6">
+        <div className="relative flex items-center gap-2 bg-card border border-border rounded-lg px-3 py-2.5 flex-1 min-w-48 shadow focus-within:border-sky-500/30 transition-colors!">
           <Search size={13} className="shrink-0" />
           <input
             placeholder="Search username or email..."
@@ -347,41 +117,50 @@ export default function UserManagement() {
             onChange={(e) => { setSearch(e.target.value); setPage(0); }}
             className="bg-transparent text-sm  outline-none flex-1"
           />
-        </div>
-
-        <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-lg p-1">
-          {["all", "student", "teacher", "admin"].map((r) => (
-            <button
-              key={r}
-              onClick={() => { setRoleFilter(r); setPage(0); }}
-              className={`px-3 py-1.5 rounded-md text-xs font-medium capitalize transition-all ${roleFilter === r ? "bg-blockly-yellow text-white" : "text-blockly-yellow hover:text-yellow-900"}`}
-            >
-              {r}
+          {search && (
+            <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+              <X className="w-4 h-4" />
             </button>
-          ))}
+          )}
         </div>
 
-        <button onClick={fetchUsers} className="w-9 h-9 flex items-center justify-center rounded-lg bg-white border border-slate-200 hover:text-slate-600 hover:bg-slate-100 transition-colors">
-          <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
-        </button>
+        <div className="flex items-center gap-2 self-end">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="flex shadow items-center gap-2 px-3 py-2.5 text-sm bg-white border border-border rounded-lg hover:bg-slate-50 transition-colors">
+                <span className="capitalize">
+                  {roleFilter === "all" ? "All Roles" : roleFilter}
+                </span>
+                <ChevronDown size={14} className="text-slate-500" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="center" className="min-w-40">
+              {["all", "student", "teacher", "admin"].map((role) => (
+                <DropdownMenuItem 
+                  key={role}
+                  onClick={() => { setRoleFilter(role); setPage(0); }}
+                  className={`capitalize ${roleFilter === role ? "bg-sky-700/10 text-sky-700" : ""}`}
+                >
+                  {role === "all" ? "All Roles" : role}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <button onClick={fetchUsers} className="w-10 h-10 flex items-center justify-center rounded-lg shadow bg-white border border-slate-200 hover:text-slate-600 hover:bg-slate-100 transition-colors">
+            <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
+          </button>
+        </div>
 
-        <button
-          onClick={() => setShowCreate(true)}
-          className="flex items-center gap-2 px-4 py-2.5 bg-blockly-yellow/80 hover:bg-blockly-yellow text-black text-sm font-semibold rounded-lg transition-colors ml-auto"
-        >
-          <UserPlus size={14} />
-          New User
-        </button>
       </div>
 
       {/* Table */}
-      <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
+      <div className="overflow-hidden bg-card border border-border shadow rounded-lg">
+        <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-purple-300 scrollbar-track-slate-50">
+          <table className="min-w-[760px] w-full text-left text-sm">
             <thead>
-              <tr className="border-b border-slate-200">
-                {["User", "Role", "Status", "Joined", "Last Login", ""].map((h) => (
-                  <th key={h} className="text-left text-[11px] font-semibold  uppercase tracking-wider px-4 py-3">
+              <tr className="border-b border-border text-[10px] uppercase tracking-widest text-muted-foreground">
+                {["User", "Email", "Role", "Status", "Joined", "Last Login", ""].map((h, i) => (
+                  <th key={h} className={`px-6 py-3 ${i === 0 ? "sticky left-0 bg-card z-10" : ""}`}>
                     {h}
                   </th>
                 ))}
@@ -390,32 +169,30 @@ export default function UserManagement() {
             <tbody>
               {loading
                 ? Array(8).fill(0).map((_, i) => (
-                    <tr key={i} className="border-b border-white/[0.03]">
+                    <tr key={i} className="border-b border-border/60">
                       {Array(6).fill(0).map((_, j) => (
                         <td key={j} className="px-4 py-3">
-                          <div className="h-3 bg-white/[0.04] rounded animate-pulse w-24" />
+                          <div className="h-3 bg-card/60 rounded animate-pulse w-24" />
                         </td>
                       ))}
                     </tr>
                   ))
                 : users.map((u) => (
-                    <tr key={u.id} className="border-b border-black/20 hover:bg-emerald-50 transition-colors group">
-                      <td className="px-4 py-3">
+                    <tr key={u.id} className="border-b border-black/20 hover:bg-border/10 transition-colors group">
+                      <td className="px-6 py-3 sticky left-0 bg-card z-10">
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-400/20 to-violet-400/20 border border-white/[0.08] flex items-center justify-center  text-xs font-bold shrink-0">
-                            {u.username?.[0]?.toUpperCase()}
-                          </div>
+                          <img src={u.avatar_url || '/default-avatar.png'} alt="" className="w-8 h-8 rounded-full border border-border object-cover" />
                           <div>
-                            <p className=" text-sm font-medium">@{u.username}</p>
-                            <p className=" text-xs">{u.email}</p>
+                            <p className="font-medium truncate">{u.username}</p>
                           </div>
                         </div>
                       </td>
-                      <td className="px-4 py-3"><RoleBadge role={u.role} /></td>
-                      <td className="px-4 py-3"><StatusDot banned={u.is_banned} /></td>
-                      <td className="px-4 py-3  text-xs">{timeAgo(u.created_at)}</td>
-                      <td className="px-4 py-3  text-xs">{timeAgo(u.last_login)}</td>
-                      <td className="px-4 py-3">
+                      <td className="px-6 py-3">{u.email}</td>
+                      <td className="px-6 py-3"><RoleBadge role={u.role} /></td>
+                      <td className="px-6 py-3"><StatusDot banned={u.is_banned} /></td>
+                      <td className="px-6 py-3 text-muted-foreground">{timeAgo(u.created_at)}</td>
+                      <td className="px-6 py-3 text-muted-foreground">{timeAgo(u.last_login)}</td>
+                      <td className="px-6 py-3 w-10">
                         <RowActions
                           user={u}
                           onBan={handleBan}
@@ -435,19 +212,19 @@ export default function UserManagement() {
           <div className="flex items-center justify-between px-4 py-3 border-t border-slate-200">
             <p className=" text-xs">{total.toLocaleString()} total users</p>
             <div className="flex items-center gap-1">
-              <button onClick={() => setPage((p) => Math.max(0, p - 1))} disabled={page === 0} className="px-3 py-1.5 text-xs  hover: disabled:opacity-30 rounded-md hover:bg-white/[0.04] transition-colors">
+              <button onClick={() => setPage((p) => Math.max(0, p - 1))} disabled={page === 0} className="px-3 py-1.5 text-xs  hover: disabled:opacity-30 rounded-md hover:bg-slate-50 transition-colors">
                 Prev
               </button>
               {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                 const pg = page < 3 ? i : page - 2 + i;
                 if (pg >= totalPages) return null;
                 return (
-                  <button key={pg} onClick={() => setPage(pg)} className={`w-7 h-7 text-xs rounded-md transition-colors ${pg === page ? "bg-amber-500/20 text-amber-300" : " hover:bg-white/[0.04]"}`}>
+                  <button key={pg} onClick={() => setPage(pg)} className={`w-7 h-7 text-xs rounded-md transition-colors ${pg === page ? "bg-amber-500/20 text-amber-300" : " hover:bg-slate-50"}`}>
                     {pg + 1}
                   </button>
                 );
               })}
-              <button onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))} disabled={page >= totalPages - 1} className="px-3 py-1.5 text-xs  hover: disabled:opacity-30 rounded-md hover:bg-white/[0.04] transition-colors">
+              <button onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))} disabled={page >= totalPages - 1} className="px-3 py-1.5 text-xs  hover: disabled:opacity-30 rounded-md hover:bg-slate-50 transition-colors">
                 Next
               </button>
             </div>
@@ -459,13 +236,68 @@ export default function UserManagement() {
       {showCreate && <CreateUserModal onClose={() => setShowCreate(false)} onCreated={fetchUsers} />}
       {resetUser && <ResetPasswordModal user={resetUser} onClose={() => setResetUser(null)} />}
       {deleteUser && (
-        <ConfirmDeleteModal
-          user={deleteUser}
-          onClose={() => setDeleteUser(null)}
-          onConfirm={handleDelete}
-          loading={deleteLoading}
-        />
+        <DeleteModal isOpen={!!deleteUser} onClose={() => setDeleteUser(null)} onConfirm={handleDelete} title="Remove User" message={`Are you sure you want to permanently remove ${deleteUser.username}? This cannot be undone.`}confirmText="Remove" loading={deleteLoading}/>
       )}
     </div>
+  );
+}
+function RoleBadge({ role }) {
+  const map = {
+    student: "bg-sky-700/15 text-sky-600 border-sky-700/20",
+    teacher: "bg-amber-600/15 text-amber-600 border-amber-600/20",
+    admin:   "bg-violet-600/15 text-violet-600 border-violet-600/20",
+  };
+  return (
+    <span className={`inline-flex items-center text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full border ${map[role] || map.student}`}>
+      {role}
+    </span>
+  );
+}
+
+function StatusDot({ banned }) {
+  return (
+    <span className={`inline-flex items-center gap-1.5 ${banned ? "text-red-600" : "text-emerald-600"}`}>
+      <span className={`w-1.5 h-1.5 rounded-full ${banned ? "bg-red-600" : "bg-emerald-600"}`} />
+      {banned ? "Banned" : "Active"}
+    </span>
+  );
+}
+
+function RowActions({ user, onBan, onReset, onDelete, onRoleChange }) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon" className="h-8 w-8">
+          <Ellipsis />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-48">
+        <DropdownMenuItem onClick={() => onBan(user)} className={`${user.is_banned ? "text-emerald-600" : "text-amber-600"} cursor-pointer`}>
+          {user.is_banned ? <Shield className="h-4 w-4 mr-2" /> : <ShieldOff className="h-4 w-4 mr-2" />}
+          {user.is_banned ? "Unban User" : "Ban User"}
+        </DropdownMenuItem>
+        
+        <DropdownMenuItem onClick={() => onReset(user)} className="cursor-pointer">
+          <KeyRound className="h-4 w-4 mr-2" />
+          Reset Password
+        </DropdownMenuItem>
+        
+        <DropdownMenuSeparator />
+        
+        {["student", "teacher", "admin"].filter((r) => r !== user.role).map((r) => (
+          <DropdownMenuItem key={r} onClick={() => onRoleChange(user, r)} className="capitalize cursor-pointer">
+            <User className="h-4 w-4 mr-2" />
+            Set as {r}
+          </DropdownMenuItem>
+        ))}
+        
+        <DropdownMenuSeparator />
+        
+        <DropdownMenuItem onClick={() => onDelete(user)} className="text-rose-600 cursor-pointer hover:text-rose-700 hover:bg-rose-50">
+          <Trash2 className="h-4 w-4 mr-2" />
+          Remove User
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

@@ -32,6 +32,7 @@ export default function CreateLessonPage() {
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')           // HTML from TipTap
   const [estimatedDuration, setEstimatedDuration] = useState('')
+  const [baseXp, setBaseXp] = useState('50')
   const [attachments, setAttachments] = useState([])
   const [linkedQuizzes, setLinkedQuizzes] = useState([])
   const [isPublished, setIsPublished] = useState(false)
@@ -66,6 +67,7 @@ export default function CreateLessonPage() {
         setTitle(lesson.title || '')
         setContent(lesson.content || '')
         setEstimatedDuration(lesson.estimated_duration?.toString() || '')
+        setBaseXp((lesson.base_xp ?? 50).toString())
         setLinkedTutorials(lesson.lesson_tutorials || [])
         setIsPublished(lesson.is_published || false)
         setAttachments(
@@ -96,6 +98,7 @@ export default function CreateLessonPage() {
     // Strip tags to check for actual content
     const stripped = content.replace(/<[^>]*>/g, '').trim()
     if (!stripped) e.content = 'Content cannot be empty.'
+    if (!/^\d+$/.test(baseXp) || Number(baseXp) <= 0) e.baseXp = 'Base XP must be a positive whole number.'
     setErrors(e)
     return Object.keys(e).length === 0
   }
@@ -113,6 +116,7 @@ export default function CreateLessonPage() {
         has_quiz: linkedQuizzes.length > 0,
         is_published: publish ? true : isPublished,
         estimated_duration: estimatedDuration ? parseInt(estimatedDuration) : null,
+        base_xp: Number(baseXp),
         updated_at: new Date().toISOString(),
       }
 
@@ -327,6 +331,20 @@ export default function CreateLessonPage() {
                   />
                   <span className="absolute right-4 top-1/2 -translate-y-1/2 font-bold text-slate-400">min</span>
                 </div>
+              </div>
+              <div className="w-full md:w-40">
+                <label className="text-md font-bold text-slate-700 mb-2">
+                  Base XP <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  step="1"
+                  value={baseXp}
+                  onChange={(e) => { setBaseXp(e.target.value); setErrors((p) => ({ ...p, baseXp: '' })) }}
+                  className={`w-full px-4 py-3 text-lg font-bold border-2 rounded-xl focus:outline-none transition-all ${errors.baseXp ? 'border-red-400 focus:border-red-500' : 'border-slate-200 focus:border-violet-400'}`}
+                />
+                {errors.baseXp && <p className="mt-1 text-xs font-medium text-red-500">{errors.baseXp}</p>}
               </div>
             </div>
 

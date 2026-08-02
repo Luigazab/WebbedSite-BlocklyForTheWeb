@@ -4,6 +4,8 @@ import PreviewPane from "@/components/editor/PreviewPane";
 import { defineFileReferenceBlocks } from "@/blockly/fileReferenceBlocks";
 import { codeGeneratorService } from "@/services/codeGenerator.service";
 import { useUIStore } from "@/store/uiStore";
+import { useAuthStore } from "@/store/authStore";
+import { xpService } from "@/services/xpService";
 import { ArrowLeft, CheckCircle2, FlaskConical, Image, XCircle } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
@@ -25,6 +27,7 @@ const sameWorkspace = (left, right) => JSON.stringify(left ?? {}) === JSON.strin
 const LaboratoryViewer = ({ lesson, onNext, onPrevious, navigation }) => {
   const navigate = useNavigate();
   const addToast = useUIStore((state) => state.addToast);
+  const profile = useAuthStore((state) => state.profile);
   const lab = parseLabInstruction(lesson?.laboratory?.instruction);
   const starterFiles = lab.files?.length
     ? lab.files.map((file) => ({ id: uid(), filename: file.filename, blocks_json: file.blocks_json ?? null }))
@@ -86,7 +89,7 @@ const LaboratoryViewer = ({ lesson, onNext, onPrevious, navigation }) => {
     setFilesWithCode((prev) => prev.map((item) => item.id === activeFileId ? { ...item, generatedCode: code } : item));
   };
 
-  const checkWork = () => {
+  const checkWork = async () => {
     const current = workspace.getWorkspaceState?.();
     if (!lab.expectedBlocks) {
       addToast("No validator was saved for this laboratory yet.", "error");
@@ -94,6 +97,14 @@ const LaboratoryViewer = ({ lesson, onNext, onPrevious, navigation }) => {
     }
     const passed = sameWorkspace(current, lab.expectedBlocks);
     setValidationState(passed ? "passed" : "failed");
+    if (passed && profile?.id && lesson?.id) {
+      try {
+        await xpService.completeLesson({ userId: profile.id, lessonId: lesson.id, score: 100 });
+      } catch (error) {
+        addToast(error.message || "Could not award lesson XP.", "error");
+        return;
+      }
+    }
     addToast(passed ? "Laboratory complete!" : "Not quite yet. Compare your blocks with the goal.", passed ? "success" : "error");
   };
 

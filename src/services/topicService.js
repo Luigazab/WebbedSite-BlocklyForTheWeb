@@ -9,7 +9,6 @@ import { supabase } from '../supabaseClient'
 export const getCourseAndTopicsWithProgress = async (courseSlug, userId) => {
   if (!courseSlug || !userId) return null;
 
-  // 1. Get course by slug
   const { data: course, error: courseError } = await supabase
     .from('courses')
     .select('id, title, description, slug, image_src, total_xp')
@@ -19,7 +18,6 @@ export const getCourseAndTopicsWithProgress = async (courseSlug, userId) => {
   if (courseError) throw courseError;
   if (!course) throw new Error(`Course with slug "${courseSlug}" not found.`);
 
-  // 2. Get user progress for this course
   const { data: userProgress, error: progressError } = await supabase
     .from('user_progress')
     .select('current_xp, current_level')
@@ -28,11 +26,8 @@ export const getCourseAndTopicsWithProgress = async (courseSlug, userId) => {
     .single();
 
   if (progressError && progressError.code !== 'PGRST116') {
-    // PGRST116: "The result contains 0 rows" - this is not an error if user hasn't started the course
     console.error("Error fetching user progress:", progressError);
   }
-
-  // 3. Get topics and their lessons with user's completion status for each lesson
   const { data: topics, error: topicsError } = await supabase
     .from('topics')
     .select(`
@@ -51,8 +46,6 @@ export const getCourseAndTopicsWithProgress = async (courseSlug, userId) => {
 
   if (topicsError) throw topicsError;
 
-  // 4. Process data to determine lesson status ('completed', 'current', 'locked')
-  const finalTopics = [];
   let currentLessonFound = false;
 
   for (const topic of topics) {
@@ -81,7 +74,6 @@ export const getCourseAndTopicsWithProgress = async (courseSlug, userId) => {
     });
   }
 
-  // 5. Combine user progress with total_xp from course
   const finalUserProgress = userProgress ? {
     ...userProgress,
     total_xp: course.total_xp,
@@ -89,3 +81,56 @@ export const getCourseAndTopicsWithProgress = async (courseSlug, userId) => {
 
   return { course, userProgress: finalUserProgress, topics: finalTopics };
 };
+
+export const topicService = {
+  async createTopic(course_id, title, description ){
+    const { data, error } = await supabase
+      .from('topics')
+      .insert([course_id, title, description])
+    if (error) throw error;
+    return data;
+  },
+
+  async getTopics(){
+    const { data, error } = await supabase
+      .from('topics')
+      .select('*')
+      .order('order', { ascending: true})
+    if (error) throw error;
+    return data;
+  },
+  async getTopicsById(topicsId) {
+    const { data, error } = await supabase
+      .from('topics')
+      .select('*')
+      .eq('id', topicsId)
+      .single();
+    if (error) throw error;
+    return data;
+  },
+  async updateTopic(topicsId, updates, userId){
+    const { data, error } = await supabase
+      .from('topics')
+      .update({
+        title: updates.title,
+        description: updates.description,
+        order:updates.order,
+        is_published: updates.is_published,
+        required_level: updates.required_level,
+        required_xp: updates.required_xp,
+        is_unlocked: updates.is_unlocked,
+        unlocked_by: userId || null,
+      })
+      .eq('id', topicsId)
+      .select();
+    if (error) throw error;
+    return data;
+  },
+  async deleteTopic(topicsId) {
+    const { data, error } = await supabase
+      .from('topics')
+      .delete()
+      .eq('id', topicsId)
+    if (error) throw error;
+  }
+}

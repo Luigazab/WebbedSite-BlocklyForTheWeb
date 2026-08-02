@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import Router from './router'
 import Toast from './components/ui/Toast'
+import { Toaster } from 'sonner'
 import { useAuthStore } from './store/authStore'
 import { TourProvider } from './components/tour/TourProvider'
 
@@ -14,7 +15,7 @@ export default function App() {
   return (
     <TourProvider>
       <Router />
-      <Toast />
+      <Toaster richColors position='bottom-right'/>
     </TourProvider>
   )
 }
