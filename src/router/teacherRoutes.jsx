@@ -4,7 +4,6 @@ import TeacherClassrooms from '../dashboards/teacher/pages/TeacherClassroom'
 // import TeacherClassroomDetail from '../dashboards/teacher/pages/TeacherClassroomDetail'
 // import TeacherStudentProfile from '../dashboards/teacher/pages/TeacherStudentProfile'
 // import FeedbackPage from '../dashboards/teacher/pages/FeedbackPage'
-// import ProjectsPage from '../components/shared/ProjectsPage'
 // import LearnPage from '../components/shared/LearnPage'
 // import SettingsPage from '../components/shared/SettingsPage'
 // import ProfilePage from '../components/shared/ProfilePage'
@@ -28,13 +27,15 @@ import TeacherGuildDashboard from '@/dashboards/teacher/pages/TeacherGuildDashbo
 import ClassroomDetail from '@/dashboards/teacher/pages/ClassroomDetail'
 import StudentsManagement from '@/dashboards/teacher/pages/StudentsManagement'
 import GradesReport from '@/dashboards/teacher/pages/GradesReport'
+import ProjectsPage from '#components/shared/ProjectsPage'
+import ExercisePage from '@/pages/editor/ExercisePage'
 
 export const teacherRoutes = [
   {
     element: <TeacherLayout />,
     children: [
-      { index: true,                                       element: <TeacherHome /> },
-//       { path: 'projects',                                  element: <ProjectsPage /> },
+      { index: true,                                         element: <TeacherHome /> },
+      { path: 'projects',                                    element: <ProjectsPage /> },
       { path: 'content',                                     element: <ContentManagement /> },
       { path: 'lecture/create',                              element: <LecturePage /> },
       { path: 'lecture/edit/:id',                            element: <LecturePage /> },
@@ -63,7 +64,7 @@ export const teacherRoutes = [
 // TODO: until up of this
 //       // Classrooms
       { path: 'classrooms',                                element: <TeacherClassrooms /> },
-      { path: 'classrooms/:classroomId',                   element: <TeacherGuildDashboard /> },
+      { path: 'classrooms/:classroomId',                   element: <ClassroomDetail /> },
       { path: 'classrooms/classroomdetail/see',            element: <ClassroomDetail/> },
       { path: 'students',                                  element: <StudentsManagement/> },
       { path: 'grades',                                    element: <GradesReport/> },
@@ -82,6 +83,8 @@ export const teacherRoutes = [
       { path: 'editor/:id', element: <BlockEditor /> },
     ]
   },
+  { path: 'exercise',                                    element: <ExercisePage/> },
+
 //   {
 //     element: <TutorialLayout />,
 //     children: [

@@ -4,7 +4,6 @@
  */
 import { useEffect, useState } from 'react'
 import { useAuthStore }      from '../../../store/authStore'
-import GuildCard             from '../components/GuildCard'
 import CreateClassroomModal  from '../components/CreateClassroomModal'
 import { Plus, Loader2, GraduationCap } from 'lucide-react'
 import { AppBreadcrumb } from '#components/common/breadcrumb'

@@ -1,4 +1,139 @@
-import { supabase } from '../supabaseClient';
+import { supabase } from "@/supabaseClient";
+
+const slugify = (value) =>
+  value
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-");
+
+export const makeLessonSlug = (title) => {
+  const base = slugify(title) || "lesson";
+  return `${base}-${Date.now().toString(36)}`;
+};
+
+export const fetchTopicGroupsForAuthoring = async () => {
+  const { data, error } = await supabase
+    .from("topics")
+    .select("id, title, description, order, course_id, courses(title)")
+    .order("order", { ascending: true });
+
+  if (error) throw error;
+
+  const grouped = {};
+  for (const topic of data ?? []) {
+    const courseName = topic.courses?.title ?? "Uncategorized";
+    if (!grouped[courseName]) grouped[courseName] = [];
+    grouped[courseName].push({
+      id: topic.id,
+      title: topic.title,
+      description: topic.description,
+    });
+  }
+
+  return Object.entries(grouped).map(([course, topics]) => ({ course, topics }));
+};
+
+export const fetchTeacherContentTree = async (teacherId) => {
+  const { data, error } = await supabase
+    .from("courses")
+    .select(`
+      id,
+      title,
+      description,
+      image_src,
+      order,
+      topics (
+        id,
+        title,
+        description,
+        order,
+        lessons (
+          id,
+          title,
+          type,
+          is_published,
+          author,
+          updated_at,
+          profiles!lessons_author_fkey (username)
+        )
+      )
+    `)
+    .order("order", { ascending: true })
+    .order("order", { foreignTable: "topics", ascending: true })
+    .order("order", { foreignTable: "topics.lessons", ascending: true });
+
+  if (error) throw error;
+
+  return (data ?? []).map((course) => ({
+    ...course,
+    topics: (course.topics ?? []).map((topic) => ({
+      ...topic,
+      lessons: (topic.lessons ?? [])
+        .filter((lesson) => lesson.author === teacherId)
+        .map((lesson) => ({
+          ...lesson,
+          author_name: lesson.profiles?.username ?? "Unknown",
+        })),
+    })),
+  }));
+};
+
+export const removeLessonById = async (lessonId) => {
+  const { error } = await supabase.from("lessons").delete().eq("id", lessonId);
+  if (error) throw error;
+};
+
+export const createLessonBase = async ({ topicId, authorId, title, type, baseXp = 50 }) => {
+  const { data: existingRows, error: orderError } = await supabase
+    .from("lessons")
+    .select("order")
+    .eq("topics_id", topicId)
+    .order("order", { ascending: false })
+    .limit(1);
+
+  if (orderError) throw orderError;
+
+  const nextOrder = (existingRows?.[0]?.order ?? 0) + 1;
+  const payload = {
+    topics_id: topicId,
+    author: authorId,
+    title: title.trim(),
+    type,
+    is_published: false,
+    slug: makeLessonSlug(title),
+    order: nextOrder,
+    base_xp: baseXp,
+  };
+
+  const { data, error } = await supabase.from("lessons").insert(payload).select().single();
+  if (error) throw error;
+  return data;
+};
+
+export const updateLessonBase = async ({ lessonId, topicId, title, baseXp = 50 }) => {
+  const { data, error } = await supabase
+    .from("lessons")
+    .update({
+      topics_id: topicId,
+      title: title.trim(),
+      is_published: false,
+      updated_at: new Date().toISOString(),
+      base_xp: baseXp,
+    })
+    .eq("id", lessonId)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+};
+
+
+/**
+ * Old one, format url to use slug and not id I think
+ */
 
 const formatLessonUrl = (lesson, courseSlug) => {
   if (!lesson) return null;

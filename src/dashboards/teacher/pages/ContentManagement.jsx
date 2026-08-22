@@ -109,7 +109,7 @@ const ContentManagement = () => {
               value={String(course.id)}
               className="gap-2 min-w-30 after:bg-transparent"
             >
-              <img src={course.image_src} alt={course.title} className="w-10 h-10"/>
+              <img src={course.image_src ? `https://ffnjdqoiaywleodqswnp.supabase.co/storage/v1/object/public/${course.image_src}` : '/icon.png'} alt={course.title} className="w-10 h-10"/>
               {course.title}
             </TabsTrigger>
           ))}

@@ -20,17 +20,17 @@ export default function StudentLayout() {
     }
   }, [user?.id, fetchUserProgress]);
 
-  useEffect(() => {
-    if (isLoadingProgress || !user?.id || !allUserCourseProgresses) return;
+  // useEffect(() => {
+  //   if (isLoadingProgress || !user?.id || !allUserCourseProgresses) return;
 
-    const isOnboardingPath = location.pathname.includes('/welcome') || location.pathname.includes('/course-select');
+  //   const isOnboardingPath = location.pathname.includes('/welcome') || location.pathname.includes('/course-select');
 
-    if (allUserCourseProgresses.length === 0 && !isOnboardingPath) {
-      navigate('/student/welcome', { replace: true });
-    } else if (allUserCourseProgresses.length > 0 && isOnboardingPath) {
-      navigate('/student', { replace: true });
-    }
-  }, [allUserCourseProgresses, isLoadingProgress, location.pathname, navigate]);
+  //   if (allUserCourseProgresses.length === 0 && !isOnboardingPath) {
+  //     navigate('/student/welcome', { replace: true });
+  //   } else if (allUserCourseProgresses.length > 0 && isOnboardingPath) {
+  //     navigate('/student', { replace: true });
+  //   }
+  // }, [allUserCourseProgresses, isLoadingProgress, location.pathname, navigate]);
 
   if (isLoadingProgress) {
     return <Loader/>;

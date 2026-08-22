@@ -1,40 +1,39 @@
+import { toast } from 'sonner'
 import { authService } from '../services/auth.service'
 import { useAuthStore } from '../store/authStore'
-import { useUIStore } from '../store/uiStore'
 import { useNavigate } from 'react-router'
 
 export function useAuth() {
   const { signIn, signUp, signOut, user, profile, loading } = useAuthStore()
-  const addToast = useUIStore((state) => state.addToast)
   const navigate = useNavigate()
 
   const handleSignIn = async (email, password) => {
     try {
       const profile = await signIn(email, password)
-      addToast(`Welcome back, ${profile.username}!`, 'success')
+      toast.success(`Welcome back, ${profile.username}!`)
 
       if (profile.role === 'student') navigate('/student')
       else if (profile.role === 'teacher') navigate('/teacher')
       else if (profile.role === 'admin') navigate('/admin')
     } catch (err) {
-      addToast(err.message || 'Failed to sign in.', 'error')
+      toast.error(err.message || 'Failed to sign in.')
     }
   }
 
   const handleSignUp = async (email, password, confirmPassword, username, role) => {
     if (password !== confirmPassword) {
-      addToast('Passwords do not match.', 'error')
+      toast.error('Passwords do not match.')
       return false;
     }
     if (username.trim().length < 3) {
-      addToast('Username must be at least 3 characters.', 'error')
+      toast.error('Username must be at least 3 characters.')
       return false;
     }
     try {
       await signUp(email, password, username, role)
       return true;
     } catch (err) {
-      addToast(err.message || 'Failed to create account.', 'error');
+      toast.error(err.message || 'Failed to create account.');
       return false;
     }
   }
@@ -42,19 +41,19 @@ export function useAuth() {
   const handleSignOut = async () => {
     try {
       await signOut()
-      addToast('Signed out successfully.', 'info')
+      toast.info('Signed out successfully.')
       navigate('/login')
     } catch (err) {
-      addToast(err.message || 'Failed to sign out.', 'error')
+      toast.error(err.message || 'Failed to sign out.')
     }
   }
 
   const handleResendConfirmation = async (email) => {
     try {
       await authService.resendConfirmation(email);
-      addToast('Confirmation email resent. Please check your inbox.', 'success');
+      toast.success('Confirmation email resent. Please check your inbox.');
     } catch (err) {
-      addToast(err.message || 'Failed to resend email.', 'error');
+      toast.error(err.message || 'Failed to resend email.');
     }
   };
 
@@ -63,7 +62,7 @@ export function useAuth() {
       await authService.resetPasswordRequest(email);
       return true;
     } catch (err) {
-      addToast(err.message || 'Failed to send reset link.', 'error');
+      toast.error(err.message || 'Failed to send reset link.');
       return false;
     }
   };
@@ -71,10 +70,10 @@ export function useAuth() {
   const handlePasswordUpdate = async (newPassword) => {
     try {
       await authService.updatePassword(newPassword);
-      addToast('Password updated successfully.', 'success');
+      toast.success('Password updated successfully.');
       navigate('/login');
     } catch (err) {
-      addToast(err.message || 'Failed to update password.', 'error');
+      toast.error(err.message || 'Failed to update password.');
     }
   };
 

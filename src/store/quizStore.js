@@ -1,5 +1,22 @@
 import { create } from 'zustand'
 import { quizService } from '../services/quiz.service'
+import { 
+  createLessonBase,
+  updateLessonBase,
+  fetchQuizEditorData,
+  fetchTopicGroupsForAuthoring,
+  upsertQuizContent,
+  removeLessonById,
+} from '@/services/contentCreationService'
+
+const emptyQuiz = {
+  id: null,
+  title: "",
+  topicId: "",
+  timeLimit: "",
+  passingScore: "",
+  questions: null, // null = "no server data yet", let the hook decide the default question shape
+};
 
 export const useQuizStore = create((set) => ({
   quizzes: [],
@@ -7,6 +24,15 @@ export const useQuizStore = create((set) => ({
   quizAttempt: null,
   loading: false,
   error: null,
+
+  topics: [],
+  topicsLoading: false,
+
+  quiz: emptyQuiz,
+  quizLoading: false,
+
+  saving: false,
+  deleting: false,
 
   // ─── Teacher: CRUD Operations ──────────────────────────
 
@@ -20,55 +46,68 @@ export const useQuizStore = create((set) => ({
     }
   },
 
-  fetchQuiz: async (quizId) => {
-    set({ loading: true, error: null })
+  fetchTopics: async () => {
+    set({ topicsLoading: true });
     try {
-      const quiz = await quizService.getQuizById(quizId)
-      set({ currentQuiz: quiz, loading: false })
-    } catch (err) {
-      set({ error: err.message, loading: false })
+      const topics = await fetchTopicGroupsForAuthoring();
+      set({ topics });
+      return topics;
+    } finally {
+      set({ topicsLoading: false });
     }
   },
 
-  createQuiz: async (payload) => {
+  fetchQuiz: async (lessonId) => {
+    set({ quizLoading: true });
     try {
-      const quiz = await quizService.createQuiz(payload)
-      set((state) => ({
-        quizzes: [quiz, ...state.quizzes],
-        currentQuiz: quiz,
-      }))
-      return quiz
-    } catch (err) {
-      set({ error: err.message })
-      throw err
+      const data = await fetchQuizEditorData(lessonId);
+      const quiz = {
+        id: data.id,
+        title: data.title ?? "",
+        topicId: data.topics_id ?? "",
+        timeLimit: data.quiz?.time_limit ? String(data.quiz.time_limit) : "",
+        passingScore: data.quiz?.passing_score ? String(data.quiz.passing_score) : "",
+        questions: data.quiz?.questions ?? [],
+      };
+      set({ quiz });
+      return quiz;
+    } finally {
+      set({ quizLoading: false });
     }
   },
 
-  updateQuiz: async (quizId, updates) => {
+  createQuiz: async ({ authorId, title, topicId, timeLimit, passingScore, questions }) => {
+    set({ saving: true });
     try {
-      const quiz = await quizService.updateQuiz(quizId, updates)
-      set((state) => ({
-        quizzes: state.quizzes.map((q) => (q.id === quizId ? quiz : q)),
-        currentQuiz: quiz,
-      }))
-      return quiz
-    } catch (err) {
-      set({ error: err.message })
-      throw err
+      const lesson = await createLessonBase({ topicId, authorId, title: title.trim(), type: "quiz" });
+      await upsertQuizContent({ lessonId: lesson.id, timeLimit, passingScore, questions });
+      return lesson;
+    } finally {
+      set({ saving: false });
     }
   },
 
-  deleteQuiz: async (quizId) => {
+  updateQuiz: async ({ lessonId, title, topicId, timeLimit, passingScore, questions }) => {
+    set({ saving: true });
     try {
-      await quizService.deleteQuiz(quizId)
-      set((state) => ({
-        quizzes: state.quizzes.filter((q) => q.id !== quizId),
-      }))
-    } catch (err) {
-      set({ error: err.message })
-      throw err
+      const lesson = await updateLessonBase({ lessonId, topicId, title: title.trim() });
+      await upsertQuizContent({ lessonId: lesson.id, timeLimit, passingScore, questions });
+      return lesson;
+    } finally {
+      set({ saving: false });
     }
   },
+
+  deleteQuiz: async (lessonId) => {
+    set({ deleting: true });
+    try {
+      await removeLessonById(lessonId);
+    } finally {
+      set({ deleting: false });
+    }
+  },
+
+  resetQuiz: () => set({ quiz: emptyQuiz }),
 
   // ─── Questions Management ──────────────────────────────
 

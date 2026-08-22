@@ -1,11 +1,35 @@
 import { useQuizStore } from '../store/quizStore'
 import { useAuthStore } from '../store/authStore'
 import { useUIStore } from '../store/uiStore'
+import { useAuth } from './useAuth'
+import { toast } from 'sonner'
 
 export function useQuiz() {
   const store = useQuizStore()
   const profile = useAuthStore((s) => s.profile)
   const addToast = useUIStore((s) => s.addToast)
+
+  const { user } = useAuth();
+  const isEditMode = Boolean(lessonId);
+
+  useEffect(() => {
+    store.fetchTopics().catch((error) =>
+      toast.error(error.message || "Failed to load topics.")
+    );
+  }, [store.fetchTopics]);
+
+  useEffect(() => {
+    if (!isEditMode) {
+      store.resetQuiz();
+      return;
+    }
+
+    store.fetchQuiz(lessonId).catch((error) =>
+      toast.error(error.message || "Failed to load quiz.")
+    );
+  }, [isEditMode, lessonId, store.fetchQuiz, store.resetQuiz]);
+
+  
 
   const handleCreateQuiz = async (quizData) => {
     try {

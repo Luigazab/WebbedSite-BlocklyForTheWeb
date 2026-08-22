@@ -161,12 +161,12 @@ export const uploadLectureAttachment = async ({ lessonId, file }) => {
   const safeName = file.name.replace(/\s+/g, "_");
   const path = `lectures/${lessonId}/${Date.now()}_${safeName}`;
 
-  const { error: uploadError } = await supabase.storage.from("lesson-files").upload(path, file, {
+  const { error: uploadError } = await supabase.storage.from("lesson-attachments").upload(path, file, {
     upsert: false,
   });
   if (uploadError) throw uploadError;
 
-  const { data } = supabase.storage.from("lesson-files").getPublicUrl(path);
+  const { data } = supabase.storage.from("lesson-attachments").getPublicUrl(path);
   return data.publicUrl;
 };
 

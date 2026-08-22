@@ -8,85 +8,43 @@ import { Input } from "#components/ui/input";
 import { Item, ItemContent, ItemDescription, ItemTitle } from "#components/ui/item";
 import { Label } from "#components/ui/label";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "#components/ui/dialog";
-import { useAuth } from "@/hooks/useAuth";
-import { Calendar } from "lucide-react";
-import {
-  createLessonBase,
-  fetchLectureEditorData,
-  fetchTopicGroupsForAuthoring,
-  updateLessonBase,
-  upsertLectureContent,
-  uploadLectureAttachment,
-} from "@/services/contentCreationService";
-import { useUIStore } from "@/store/uiStore";
+import { Calendar, FileText, Film } from "lucide-react";
+import { useLectureEditor } from "@/hooks/useLectureEditor";
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useParams } from "react-router";
 
 const LecturePage = () => {
   const params = useParams();
   const location = useLocation();
-  const { user } = useAuth();
-  const addToast = useUIStore((state) => state.addToast);
   const editLessonId = location.state?.lessonId ?? params.id;
-  const isEditMode = Boolean(editLessonId);
-  const [courseTopics, setCourseTopics] = useState([]);
+
+  const {
+    isEditMode,
+    topics: courseTopics,
+    topicsLoading,
+    lecture,
+    lectureLoading,
+    saving,
+    deleting,
+    saveLecture,
+    removeLecture,
+  } = useLectureEditor(editLessonId);
+
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [selectedTopicId, setSelectedTopicId] = useState("");
-  const [loadingTopics, setLoadingTopics] = useState(true);
-  const [loadingLesson, setLoadingLesson] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [attachments, setAttachments] = useState({
-    file: null,
-    video: null,
-  });
+  const [attachments, setAttachments] = useState({ file: null, video: null });
   const [showSubmittedDialog, setShowSubmittedDialog] = useState(false);
   const [showPreviewDialog, setShowPreviewDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
+  // Sync local form state whenever the loaded lecture changes (edit mode load, or reset on create)
   useEffect(() => {
-    const loadTopics = async () => {
-      setLoadingTopics(true);
-      try {
-        const groupedTopics = await fetchTopicGroupsForAuthoring();
-        setCourseTopics(groupedTopics);
-      } catch (error) {
-        addToast(error.message || "Failed to load topics.", "error");
-      } finally {
-        setLoadingTopics(false);
-      }
-    };
-    loadTopics();
-  }, [addToast]);
-
-  useEffect(() => {
-    if (!isEditMode || !editLessonId) return;
-
-    const loadLesson = async () => {
-      setLoadingLesson(true);
-      try {
-        const lessonData = await fetchLectureEditorData(editLessonId);
-        setTitle(lessonData.title ?? "");
-        setSelectedTopicId(lessonData.topics_id ?? "");
-        setContent(lessonData.lecture?.content ?? "");
-        setAttachments({
-          file: lessonData.lecture?.file_url
-            ? {
-                type: "link",
-                name: lessonData.lecture.file_url,
-                value: lessonData.lecture.file_url,
-              }
-            : null,
-          video: lessonData.lecture?.video_src ?? null,
-        });
-      } catch (error) {
-        addToast(error.message || "Failed to load lecture.", "error");
-      } finally {
-        setLoadingLesson(false);
-      }
-    };
-
-    loadLesson();
-  }, [isEditMode, editLessonId, addToast]);
+    setTitle(lecture.title);
+    setSelectedTopicId(lecture.topicId);
+    setContent(lecture.content);
+    setAttachments(lecture.attachments);
+  }, [lecture]);
 
   const selectedTopic = useMemo(
     () => courseTopics.flatMap((group) => group.topics).find((topic) => topic.id === selectedTopicId),
@@ -101,64 +59,22 @@ const LecturePage = () => {
       : null;
 
   const handleSaveLecture = async () => {
-    if (!user?.id) {
-      addToast("You must be signed in to save a lecture.", "error");
-      return;
-    }
-    if (!title.trim()) {
-      addToast("Lecture title is required.", "error");
-      return;
-    }
-    if (!selectedTopicId) {
-      addToast("Please select a topic.", "error");
-      return;
-    }
+    const lesson = await saveLecture({ title, topicId: selectedTopicId, content, attachments });
+    if (!lesson) return;
 
-    setSaving(true);
-    try {
-      const lesson = isEditMode
-        ? await updateLessonBase({
-            lessonId: editLessonId,
-            topicId: selectedTopicId,
-            title,
-          })
-        : await createLessonBase({
-            topicId: selectedTopicId,
-            authorId: user.id,
-            title,
-            type: "lecture",
-          });
-
-      let fileUrl = null;
-      if (attachments.file?.type === "file" && attachments.file.value instanceof File) {
-        fileUrl = await uploadLectureAttachment({
-          lessonId: lesson.id,
-          file: attachments.file.value,
-        });
-      } else if (attachments.file?.type === "link") {
-        fileUrl = attachments.file.value;
-      }
-
-      await upsertLectureContent({
-        lessonId: lesson.id,
-        content: content || "",
-        videoSrc: attachments.video || null,
-        fileUrl,
-      });
-
-      addToast(isEditMode ? "Lecture updated successfully." : "Lecture saved successfully.", "success");
-      setShowSubmittedDialog(true);
-      if (!isEditMode) {
-        setTitle("");
-        setContent("");
-        setSelectedTopicId("");
-        setAttachments({ file: null, video: null });
-      }
-    } catch (error) {
-      addToast(error.message || `Failed to ${isEditMode ? "update" : "save"} lecture.`, "error");
-    } finally {
-      setSaving(false);
+    setShowSubmittedDialog(true);
+    if (!isEditMode) {
+      setTitle("");
+      setContent("");
+      setSelectedTopicId("");
+      setAttachments({ file: null, video: null });
     }
+  };
+
+  const handleDeleteLecture = async () => {
+    const ok = await removeLecture();
+    if (ok) setShowDeleteDialog(false);
+    // navigate away here if desired, e.g. navigate("/teacher/content")
   };
 
   return(
@@ -192,7 +108,7 @@ const LecturePage = () => {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {loadingLesson && <p className="text-sm text-muted-foreground">Loading lecture...</p>}
+            {lectureLoading && <p className="text-sm text-muted-foreground">Loading lecture...</p>}
             <div>
               <Label htmlFor="title" className="mb-2 text-lg font-bold text-slate-800">Title:<span className="text-red-500">*</span> </Label>
               <Input
@@ -209,8 +125,8 @@ const LecturePage = () => {
                 <ComboboxInput placeholder="Select topics..." className="w-full bg-background/60 rounded-lg border border-slate-300 shadow" />
                 <ComboboxContent>
                   <ComboboxList>
-                    {loadingTopics && <ComboboxLabel>Loading topics...</ComboboxLabel>}
-                    {!loadingTopics && courseTopics.map((courseGroup) => (
+                    {topicsLoading && <ComboboxLabel>Loading topics...</ComboboxLabel>}
+                    {!topicsLoading && courseTopics.map((courseGroup) => (
                       <ComboboxGroup key={courseGroup.course}>
                         <ComboboxLabel>{courseGroup.course}</ComboboxLabel>
                         {courseGroup.topics.map((topic) => (
@@ -243,33 +159,34 @@ const LecturePage = () => {
               <Label className="mb-2 text-lg font-bold text-slate-800">Content:</Label>
               <SimpleEditor value={content} onChange={setContent} placeholder="Write lecture content..." />
             </div>
-            <div className="bg-background backdrop-blur-sm rounded-2xl border border-white/60 shadow-sm p-5">
-              <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-                Attachments <span className="text-muted-foreground/60 text-sm">(Optional)</span>
-              </h2>
-              <p className="text-sm text-slate-500 mb-4 font-medium">
-                Add PDFs, PowerPoint files, or external links.
-              </p>
-              <div className="space-y-3">
+            <div className="bg-background backdrop-blur-sm rounded-2xl border border-white/60 shadow-sm p-5 space-y-3">
+              <div className="md:flex justify-between items-center">
+                <div>
+                  <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                    Attachments <span className="text-muted-foreground/60 text-sm">(Optional)</span>
+                  </h2>
+                  <p className="text-sm text-slate-500 mb-4 font-medium">
+                    Add PDFs, PowerPoint files, or external links.
+                  </p>
+                </div>
                 <AddAttachmentModal onSave={setAttachments} />
-
-                {(attachments.file || attachments.video) && (
-                  <div className="space-y-2 rounded-xl border border-slate-200 bg-slate-50 p-3">
-                    <p className="text-xs uppercase tracking-wide text-muted-foreground">Current attachments</p>
-                    {attachments.file && (
-                      <p className="text-sm text-slate-700">
-                        <span className="font-semibold">File:</span>{" "}
-                        {attachments.file.type === "file" ? attachments.file.name : attachments.file.value}
-                      </p>
-                    )}
-                    {attachments.video && (
-                      <p className="text-sm text-slate-700">
-                        <span className="font-semibold">Video:</span> {attachments.video}
-                      </p>
-                    )}
-                  </div>
-                )}
               </div>
+              {(attachments.file || attachments.video) && (
+                <div className="space-y-2 rounded-xl border border-slate-200 bg-slate-50 p-3">
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Current attachments</p>
+                  {attachments.file && (
+                    <div className="text-sm text-blue-700 border rounded-sm px-2 border-blue-400 flex gap-2 items-center ">
+                      <span className="font-semibold"><FileText/></span>{" "}
+                      {attachments.file.type === "file" ? attachments.file.name : attachments.file.value}
+                    </div>
+                  )}
+                  {attachments.video && (
+                    <p className="text-sm text-blue-700 border rounded-sm px-2 border-blue-400 flex gap-2 items-center ">
+                      <span className="font-semibold"><Film/></span> {attachments.video}
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
           </CardContent>
           <CardFooter className="self-end gap-2">
@@ -302,7 +219,7 @@ const LecturePage = () => {
             <DialogHeader>
               <DialogTitle>Lecture Preview</DialogTitle>
             </DialogHeader>
-            <div className="space-y-4 max-w-2xl mx-auto py-2">
+            <div className="space-y-4 max-w-2xl w-full mx-auto py-2">
               <h1 className="text-center font-bold text-4xl font-sans! border-b border-slate-400 pb-4">
                 {title || "Untitled Lecture"}
               </h1>

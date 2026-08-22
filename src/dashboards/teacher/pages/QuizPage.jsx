@@ -9,18 +9,10 @@ import { Combobox, ComboboxContent, ComboboxGroup, ComboboxInput, ComboboxItem, 
 import { Item, ItemContent, ItemDescription, ItemTitle } from "#components/ui/item";
 import { Badge } from "#components/ui/badge";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "#components/ui/dialog";
-import { useAuth } from "@/hooks/useAuth";
-import {
-  createLessonBase,
-  fetchQuizEditorData,
-  fetchTopicGroupsForAuthoring,
-  updateLessonBase,
-  upsertQuizContent,
-} from "@/services/contentCreationService";
-import { useUIStore } from "@/store/uiStore";
 import { Check, GripVertical, Plus, Trash2, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useParams } from "react-router";
+import { useQuizEditor } from "#hooks/useQuizEditor";
 
 const QUESTION_MIN_OPTIONS = 2;
 const QUESTION_DEFAULT_OPTIONS = 4;
@@ -50,15 +42,21 @@ const normalizeOptions = (options = []) => {
 const QuizPage = () => {
   const params = useParams();
   const location = useLocation();
-  const { user } = useAuth();
-  const addToast = useUIStore((state) => state.addToast);
   const editLessonId = location.state?.lessonId ?? params.id;
-  const isEditMode = Boolean(editLessonId);
-  const [courseTopics, setCourseTopics] = useState([]);
+
+  const {
+    isEditMode,
+    topics: courseTopics,
+    topicsLoading,
+    quiz,
+    quizLoading,
+    saving,
+    deleting,
+    saveQuiz,
+    removeQuiz,
+  } = useQuizEditor(editLessonId);
+
   const [selectedTopicId, setSelectedTopicId] = useState("");
-  const [loadingTopics, setLoadingTopics] = useState(true);
-  const [loadingQuiz, setLoadingQuiz] = useState(false);
-  const [saving, setSaving] = useState(false);
   const [title, setTitle] = useState("");
   const [timeLimit, setTimeLimit] = useState("");
   const [passingScore, setPassingScore] = useState("");
@@ -66,58 +64,33 @@ const QuizPage = () => {
   const [draggingQuestionId, setDraggingQuestionId] = useState(null);
   const [showSubmittedDialog, setShowSubmittedDialog] = useState(false);
   const [showPreviewDialog, setShowPreviewDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const questionCount = questions.length;
+
   const selectedTopic = useMemo(
     () => courseTopics.flatMap((group) => group.topics).find((topic) => topic.id === selectedTopicId),
     [courseTopics, selectedTopicId]
   );
+
   const parsedPassingScore = Number(passingScore);
   const passingScoreError =
     passingScore !== "" && (!Number.isInteger(parsedPassingScore) || parsedPassingScore < 1 || parsedPassingScore > questionCount);
-
+  
   useEffect(() => {
-    const loadTopics = async () => {
-      setLoadingTopics(true);
-      try {
-        const groupedTopics = await fetchTopicGroupsForAuthoring();
-        setCourseTopics(groupedTopics);
-      } catch (error) {
-        addToast(error.message || "Failed to load topics.", "error");
-      } finally {
-        setLoadingTopics(false);
-      }
-    };
-    loadTopics();
-  }, [addToast]);
+    setTitle(quiz.title);
+    setSelectedTopicId(quiz.topicId);
+    setTimeLimit(quiz.timeLimit);
+    setPassingScore(quiz.passingScore);
 
-  useEffect(() => {
-    if (!isEditMode || !editLessonId) return;
-
-    const loadQuiz = async () => {
-      setLoadingQuiz(true);
-      try {
-        const lessonData = await fetchQuizEditorData(editLessonId);
-        setTitle(lessonData.title ?? "");
-        setSelectedTopicId(lessonData.topics_id ?? "");
-        setTimeLimit(lessonData.quiz?.time_limit ? String(lessonData.quiz.time_limit) : "");
-        setPassingScore(lessonData.quiz?.passing_score ? String(lessonData.quiz.passing_score) : "");
-
-        const loadedQuestions = (lessonData.quiz?.questions ?? []).map((question) => ({
-          id: crypto.randomUUID(),
-          text: question.text ?? "",
-          options: normalizeOptions(question.options ?? []),
-        }));
-        setQuestions(loadedQuestions.length > 0 ? loadedQuestions : [createQuestion()]);
-      } catch (error) {
-        addToast(error.message || "Failed to load quiz.", "error");
-      } finally {
-        setLoadingQuiz(false);
-      }
-    };
-
-    loadQuiz();
-  }, [isEditMode, editLessonId, addToast]);
+    if (quiz.questions === null) return; // create-mode default, don't stomp on it
+    const loaded = quiz.questions.map((q) => ({
+      id: crypto.randomUUID(),
+      text: q.text ?? "",
+      options: normalizeOptions(q.options ?? []),
+    }));
+    setQuestions(loaded.length > 0 ? loaded : [createQuestion()]);
+  }, [quiz]);
 
   const updateQuestion = (questionId, updater) => {
     setQuestions((prev) =>
@@ -200,65 +173,42 @@ const QuizPage = () => {
   };
 
   const validateQuiz = () => {
-    if (!user?.id) return "You must be signed in to save a quiz.";
     if (!title.trim()) return "Quiz title is required.";
     if (!selectedTopicId) return "Please select a topic.";
     if (questions.length === 0) return "Add at least one question.";
     if (passingScoreError) return "Passing score cannot be greater than question count.";
-
     for (const question of questions) {
       if (!question.text.trim()) return "Each question needs text.";
       if (question.options.length < QUESTION_MIN_OPTIONS) return "Each question needs at least 2 options.";
       if (question.options.some((option) => !option.text.trim())) return "All options must have text.";
       if (!question.options.some((option) => option.isCorrect)) return "Every question needs at least one correct option.";
     }
-
     return null;
   };
 
   const handleSaveQuiz = async () => {
-    const validationError = validateQuiz();
-    if (validationError) {
-      addToast(validationError, "error");
-      return;
+    const lesson = await saveQuiz({
+      title,
+      topicId: selectedTopicId,
+      timeLimit: timeLimit ? Number(timeLimit) : null,
+      passingScore: passingScore ? Number(passingScore) : null,
+      questions,
+      validationError: validateQuiz(),
+    });
+    if (!lesson) return;
+
+    setShowSubmittedDialog(true);
+    if (!isEditMode) {
+      setTitle("");
+      setTimeLimit("");
+      setPassingScore("");
+      setQuestions([createQuestion()]);
+      setSelectedTopicId("");
     }
-
-    setSaving(true);
-    try {
-      const lesson = isEditMode
-        ? await updateLessonBase({
-            lessonId: editLessonId,
-            topicId: selectedTopicId,
-            title: title.trim(),
-          })
-        : await createLessonBase({
-            topicId: selectedTopicId,
-            authorId: user.id,
-            title: title.trim(),
-            type: "quiz",
-          });
-
-      await upsertQuizContent({
-        lessonId: lesson.id,
-        timeLimit: timeLimit ? Number(timeLimit) : null,
-        passingScore: passingScore ? Number(passingScore) : null,
-        questions,
-      });
-
-      addToast(isEditMode ? "Quiz updated successfully." : "Quiz saved successfully.", "success");
-      setShowSubmittedDialog(true);
-      if (!isEditMode) {
-        setTitle("");
-        setTimeLimit("");
-        setPassingScore("");
-        setQuestions([createQuestion()]);
-        setSelectedTopicId("");
-      }
-    } catch (error) {
-      addToast(error.message || `Failed to ${isEditMode ? "update" : "save"} quiz.`, "error");
-    } finally {
-      setSaving(false);
-    }
+  };
+  const handleDeleteQuiz = async () => {
+    const ok = await removeQuiz();
+    if (ok) setShowDeleteDialog(false);
   };
 
   return (
@@ -294,7 +244,7 @@ const QuizPage = () => {
           </CardHeader>
 
           <CardContent className="space-y-6">
-            {loadingQuiz && <p className="text-sm text-muted-foreground">Loading quiz...</p>}
+            {quizLoading && <p className="text-sm text-muted-foreground">Loading quiz...</p>}
             <div>
               <Label htmlFor="quiz-title" className="mb-2 text-lg font-bold text-slate-800">
                 Title:<span className="text-red-500">*</span>
@@ -314,8 +264,8 @@ const QuizPage = () => {
                 <ComboboxInput placeholder="Select topics..."  className="w-full bg-background/60 rounded-lg border border-slate-300 shadow" />
                 <ComboboxContent>
                   <ComboboxList>
-                    {loadingTopics && <ComboboxLabel>Loading topics...</ComboboxLabel>}
-                    {!loadingTopics && courseTopics.map((courseGroup) => (
+                    {topicsLoading && <ComboboxLabel>Loading topics...</ComboboxLabel>}
+                    {!topicsLoading && courseTopics.map((courseGroup) => (
                       <ComboboxGroup key={courseGroup.course}>
                         <ComboboxLabel>{courseGroup.course}</ComboboxLabel>
                         {courseGroup.topics.map((topic) => (
@@ -492,6 +442,12 @@ const QuizPage = () => {
           </CardContent>
 
           <CardFooter className="self-end gap-2">
+            {isEditMode && (
+              <Button variant="dangerOutline" onClick={() => setShowDeleteDialog(true)}>
+                <Trash2 />
+                Delete
+              </Button>
+            )}
             <Button variant="primary" onClick={() => setShowPreviewDialog(true)}>Preview</Button>
             <Button variant="secondary" onClick={handleSaveQuiz} disabled={saving}>
               {saving ? (isEditMode ? "Updating..." : "Saving...") : (isEditMode ? "Update Quiz" : "Save Quiz")}
@@ -521,7 +477,7 @@ const QuizPage = () => {
               <DialogTitle>Quiz Preview</DialogTitle>
             </DialogHeader>
 
-            <div className="space-y-4 max-w-3xl mx-auto py-2">
+            <div className="space-y-4 max-w-3xl w-full mx-auto py-2">
               <h1 className="text-center font-bold text-4xl font-sans! border-b border-slate-400 pb-4">
                 {title || "Untitled Quiz"}
               </h1>
@@ -554,6 +510,25 @@ const QuizPage = () => {
 
             <DialogFooter>
               <Button variant="primary" onClick={() => setShowPreviewDialog(false)}>Close</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Delete this quiz?</DialogTitle>
+            </DialogHeader>
+            <p className="text-sm text-slate-600">
+              This will permanently delete "{title || "Untitled Quiz"}" and all of its questions. This action cannot be undone.
+            </p>
+            <DialogFooter>
+              <Button variant="secondaryOutline" onClick={() => setShowDeleteDialog(false)} disabled={deleting}>
+                Cancel
+              </Button>
+              <Button variant="danger" onClick={handleDeleteQuiz} disabled={deleting}>
+                {deleting ? "Deleting..." : "Delete Quiz"}
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
