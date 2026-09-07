@@ -19,6 +19,19 @@ export const toolboxConfig = {
       name: 'Page',
       colour: '#FF8500',
       contents: [
+        { kind: 'block', blockxml: `
+          <block type="html_doctype">
+              <statement name="HTML">
+                <block type="head">
+                  <next>
+                    <block type="body">
+                      <statement name="body_element">
+                      </statement>
+                    </block>
+                  </next>
+                </block>
+              </statement>
+            </block>` },
         { kind: 'block', type: 'html_doctype' },
         { kind: 'block', type: 'head' },
         { kind: 'block', type: 'body' },
