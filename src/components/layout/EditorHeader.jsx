@@ -48,22 +48,15 @@ const EditorHeader = ({ onNew, onSave, onLoad, projectTitle }) => {
   const isProjectTitle = Boolean(projectTitle?.trim())
 
   return (
-    <header data-tour="editor-header" className="w-full bg-white border-b border-gray-200 relative z-99">
+    <header data-tour="editor-header" className="w-full relative z-99">
 
       {/* ── Desktop Layout ─────────────────────────────────── */}
-      <div className="hidden lg:flex items-center justify-between px-6 py-3">
+      <div className="hidden lg:flex items-center justify-between px-4 py-2.5">
 
         {/* Left: hamburger + logo + title */}
         <div className="flex items-center space-x-3 relative">
-          <button
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
-            aria-label="Toggle menu"
-          >
-            <Menu size={24} />
-          </button>
 
-          <img src="/anotherlogo.png" alt="Logo" className="w-auto h-12" />
+          <img src="/anotherlogo.png" alt="Logo" className="w-auto h-10" />
 
           <div className="flex flex-col leading-tight">
             {isProjectTitle ? (
@@ -102,13 +95,13 @@ const EditorHeader = ({ onNew, onSave, onLoad, projectTitle }) => {
         {/* Right: action buttons */}
         <div className="flex gap-2" data-tour="file-actions">
           <button onClick={onNew}  className="btn flex items-center space-x-2 btn-lead">
-            <Plus size={18} /><span>New</span>
+            <Plus size={15} /><span>New</span>
           </button>
           <button onClick={onSave}  data-tour="save-btn" className="btn flex items-center space-x-2 btn-secondary">
-            <Save size={18} /><span>Save</span>
+            <Save size={15} /><span>Save</span>
           </button>
           <button onClick={onLoad} className="btn flex items-center space-x-2 btn-primary">
-            <Download size={18} /><span>Load</span>
+            <Download size={15} /><span>Load</span>
           </button>
         </div>
         <TourHelpButton/>

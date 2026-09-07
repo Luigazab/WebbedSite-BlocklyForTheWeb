@@ -14,29 +14,29 @@ const FileTabs = ({ files, activeFile, onFileChange, onFileCreate, onFileDelete,
   };
 
   const getFileIcon = (filename) => {
-    if (filename.endsWith('.html')) return <FileCode/>;
-    if (filename.endsWith('.css')) return <Palette/>;
-    if (filename.endsWith('.js')) return <Code2Icon/>;
-    return <NotebookText/>;
+    if (filename.endsWith('.html')) return <FileCode size={15}/>;
+    if (filename.endsWith('.css')) return <Palette size={15}/>;
+    if (filename.endsWith('.js')) return <Code2Icon size={15}/>;
+    return <NotebookText size={15}/>;
   };
 
   return (
-    <div data-tour="file-tabs" className="flex items-center gap-1 bg-gray-800 px-2 py-1 overflow-x-auto">
-      {isLocal && (
+    <div data-tour="file-tabs" className="flex items-center gap-1 bg-slate-200 overflow-x-auto">
+      {/* {isLocal && (
         <div className="flex items-center gap-1 px-2 py-1 text-xs text-yellow-400 bg-yellow-900/30 rounded mr-2">
           <HardDrive size={12} />
           <span>Local</span>
         </div>
-      )}
+      )} */}
       {files.map((file) => (
         <div
           key={file.id}
           className={`
-            flex items-center gap-2 px-3 py-1.5 rounded-t cursor-pointer
-            transition-all min-w-fit group
+            flex items-center gap-1 px-3 py-2 cursor-pointer
+            transition-all! min-w-fit group
             ${activeFile === file.id 
-              ? 'btn-secondary border-2 border-gray-600 border-b-0 -mb-0.5' 
-              : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+              ? 'bg-white shadow text-black font-black' 
+              : 'bg-slate-400 text-slate-100 hover:bg-slate-500'
             }
           `}
           onClick={() => onFileChange(file.id)}
@@ -51,7 +51,7 @@ const FileTabs = ({ files, activeFile, onFileChange, onFileCreate, onFileDelete,
                   onFileDelete(file.id);
                 }
               }}
-              className="opacity-0 group-hover:opacity-100 hover:text-red-500 transition-opacity ml-1"
+              className="opacity-0 group-hover:opacity-100 hover:text-red-500 transition-opacity! ml-1"
             >
               <X size={14} />
             </button>
@@ -86,7 +86,7 @@ const FileTabs = ({ files, activeFile, onFileChange, onFileCreate, onFileDelete,
       ) : (
         <button
           onClick={() => setShowNewFileInput(true)}
-          className="p-1.5 hover:bg-gray-600 rounded transition-colors text-gray-300"
+          className="p-1.5 hover:bg-slate-300 rounded transition-colors! text-slate-700"
           title="Add new file"
         >
           <Plus size={16} />

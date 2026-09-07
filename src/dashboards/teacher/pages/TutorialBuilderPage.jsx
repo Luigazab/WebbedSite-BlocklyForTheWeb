@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { useNavigate, useParams } from 'react-router'
+import { Link, useNavigate, useParams } from 'react-router'
 import {
   createTutorial,
   updateTutorial,
@@ -24,13 +24,11 @@ import FileTabs from '../../../components/editor/FileTabs'
 import { codeGeneratorService } from '../../../services/codeGenerator.service'
 import { defineFileReferenceBlocks } from '../../../blockly/fileReferenceBlocks'
 import { useUIStore } from '../../../store/uiStore'
-import BadgeModal from '../components/BadgeModal'
-import {
-  ArrowLeft, Award, BookOpen, Check,
-  ChevronDown, ChevronRight, CircleDot,
-  GripVertical, Lightbulb, ListOrdered,
-  PlusCircle, Save, Trash2, Zap,
-} from 'lucide-react'
+import { BookOpen, Check, ChevronDown, ChevronLeft, ChevronRight, CircleDot, GripVertical, Lightbulb, ListOrdered, PlusCircle, Sun, Trash2, Zap} from 'lucide-react'
+import BackButton from '#components/common/BackButton'
+import { Button } from '#components/ui/button'
+import SwitchButton from '#components/editor/SwitchButton'
+import { toast } from 'sonner'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const uid = () => Math.random().toString(36).slice(2, 10)
@@ -68,112 +66,80 @@ const DIFFICULTY_OPTIONS = ['beginner', 'intermediate', 'advanced']
 function StepPanel({
   tutorialTitle, setTutorialTitle,
   baseXp, setBaseXp,
-  tutorialDescription, setTutorialDescription,
   courseTopics,
   selectedTopicId, setSelectedTopicId,
   loadingTopics,
-  difficulty, setDifficulty,
-  estimatedTime, setEstimatedTime,
   isPublished,
   steps,
   currentStepIndex,
   onGoToStep,
   onAddStep,
   onDeleteStep,
-  onDragReorder,
   instruction, setInstruction,
   hint, setHint,
   requireBlocks, setRequireBlocks,
   capturedBlocks,
   onCaptureBlocks,
   onClearBlocks,
+  panelOpen, setPanelOpen,
   onSaveTutorial,
-  onOpenBadge,
   onPublish,
   saving,
   saveMsg,
-  hasBadge,
 }) {
   const [metaOpen, setMetaOpen] = useState(true)
-  const dragFromRef = useRef(null)
-
-  const handleDragStart = (e, idx) => { dragFromRef.current = idx; e.dataTransfer.effectAllowed = 'move' }
-  const handleDragOver  = (e)      => e.preventDefault()
-  const handleDrop      = (e, idx) => {
-    e.preventDefault()
-    const from = dragFromRef.current
-    if (from != null && from !== idx) onDragReorder(from, idx)
-    dragFromRef.current = null
-  }
 
   return (
-    <div className="flex flex-col h-full bg-white border-r border-slate-200 overflow-hidden">
-
+    <div className="flex flex-col h-full bg-white border border-border overflow-hidden rounded">
       {/* Header */}
-      <div className="shrink-0 bg-blockly-blue px-4 py-4">
-        <div className="flex items-center gap-2 mb-1">
-          <BookOpen size={16} className="text-white/80" />
-          <span className="text-xs font-bold text-white/80 uppercase tracking-wider">Tutorial Builder</span>
-        </div>
-        <p className="text-white font-black text-sm leading-tight truncate">
-          {tutorialTitle || 'Untitled Tutorial'}
-        </p>
-        {saveMsg && (
+      <div className={`shrink-0 flex justify-between py-1 ${panelOpen ? ` bg-slate-200` : ``}`}>
+        {panelOpen && (
+          <div className="flex items-center gap-2 mb-1 px-4">
+            <BookOpen size={16} className="" />
+            <span className="font-bold tracking-wider">Tutorial Builder</span>
+          </div>
+        )}
+        {panelOpen && saveMsg && (
           <span className="inline-flex items-center gap-1 mt-1 text-[10px] font-semibold text-emerald-200">
             <Check size={10} /> {saveMsg}
           </span>
         )}
+        <button onClick={() => {setPanelOpen(!panelOpen)}} className={`p-2 rounded hover:bg-slate-300 transition-colors! ${panelOpen ? 'mr-2' : 'mx-auto'}`}>
+          {panelOpen ? <ChevronLeft size={15}/> : <ChevronRight size={15}/>}
+        </button>
       </div>
 
+      {panelOpen && (
+          
       <div className="flex-1 overflow-y-auto">
-
         {/* ── Tutorial Meta ──────────────────────────────────────────── */}
-        <div className="border-b border-slate-100">
+        <div className="border-b border-border">
           <button
             onClick={() => setMetaOpen((o) => !o)}
-            className="w-full flex items-center justify-between px-4 py-3 text-xs font-bold text-slate-600 hover:bg-slate-50 transition-colors"
+            className="w-full flex items-center justify-between px-4 py-3 text-xs font-bold text-slate-800 hover:bg-slate-100 transition-colors!"
           >
             <span className="flex items-center gap-1.5"><ListOrdered size={13} /> Tutorial Info</span>
             {metaOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
           </button>
 
           {metaOpen && (
-            <div className="px-4 pb-4 space-y-3">
+            <div className="px-4 pb-4">
               <div>
-                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wide">Title *</label>
+                <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wide">Tutorial Title <span className='text-red-600 text-sm'>*</span></label>
                 <input
                   type="text"
                   value={tutorialTitle}
                   onChange={(e) => setTutorialTitle(e.target.value)}
                   placeholder="e.g. Build a webpage from scratch"
-                  className="mt-1 w-full px-3 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blockly-blue bg-white"
+                  className="w-full px-3 py-2 text-sm border border-border rounded focus:outline-none focus:ring-1 focus:ring-indigo-400 bg-white"
                 />
               </div>
               <div>
-                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wide">Description</label>
-                <textarea
-                  value={tutorialDescription}
-                  onChange={(e) => setTutorialDescription(e.target.value)}
-                  placeholder="What will students learn?"
-                  rows={2}
-                  className="mt-1 w-full px-3 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blockly-blue bg-white resize-none"
-                />
-              </div>
-              <div>
-                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wide">Base XP *</label>
-                <input
-                  type="number" min={1} step={1}
-                  value={baseXp}
-                  onChange={(e) => setBaseXp(e.target.value)}
-                  className="mt-1 w-full px-3 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blockly-blue bg-white"
-                />
-              </div>
-              <div>
-                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wide">Topic *</label>
+                <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wide">Topic <span className='text-red-600 text-sm'>*</span></label>
                 <select
                   value={selectedTopicId}
                   onChange={(e) => setSelectedTopicId(e.target.value)}
-                  className="mt-1 w-full px-3 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blockly-blue bg-white"
+                  className="w-full px-3 py-2 text-sm border border-border rounded focus:outline-none focus:ring-1 focus:ring-indigo-400 bg-white"
                 >
                   <option value="">{loadingTopics ? 'Loading topics...' : 'Select a topic'}</option>
                   {courseTopics.map((group) => (
@@ -185,43 +151,28 @@ function StepPanel({
                   ))}
                 </select>
               </div>
-              <div className="flex gap-2">
-                <div className="flex-1">
-                  <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wide">Difficulty</label>
-                  <select
-                    value={difficulty}
-                    onChange={(e) => setDifficulty(e.target.value)}
-                    className="mt-1 w-full px-3 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blockly-blue bg-white"
-                  >
-                    {DIFFICULTY_OPTIONS.map((d) => (
-                      <option key={d} value={d}>{d.charAt(0).toUpperCase() + d.slice(1)}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="w-24">
-                  <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wide">Min</label>
-                  <input
-                    type="number" min={1}
-                    value={estimatedTime}
-                    onChange={(e) => setEstimatedTime(e.target.value)}
-                    placeholder="30"
-                    className="mt-1 w-full px-3 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blockly-blue bg-white"
-                  />
-                </div>
+              <div>
+                <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wide">Base XP <span className='text-red-600 text-sm'>*</span></label>
+                <input
+                  type="number" min={1} step={1}
+                  value={baseXp}
+                  onChange={(e) => setBaseXp(e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-border rounded focus:outline-none focus:ring-1 focus:ring-indigo-400 bg-white"
+                />
               </div>
             </div>
           )}
         </div>
 
         {/* ── Steps List ─────────────────────────────────────────────── */}
-        <div className="border-b border-slate-100">
-          <div className="flex items-center justify-between px-4 py-3">
-            <span className="text-xs font-bold text-slate-600 flex items-center gap-1.5">
-              <CircleDot size={13} /> Steps ({steps.length})
+        <div className="border-b border-border">
+          <div className="flex items-center justify-between px-4 py-1">
+            <span className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+              <CircleDot size={13} /> Steps<span className='text-indigo-600'>({steps.length})</span> 
             </span>
             <button
               onClick={onAddStep}
-              className="flex items-center gap-1 text-xs font-semibold text-indigo-600 hover:text-indigo-800 transition-colors"
+              className="flex items-center gap-1 text-xs font-semibold text-indigo-600 hover:text-indigo-800 hover:bg-slate-200 p-1 transition-colors"
             >
               <PlusCircle size={14} /> Add Step
             </button>
@@ -231,19 +182,10 @@ function StepPanel({
             {steps.map((step, idx) => (
               <div
                 key={step.id ?? `new-${idx}`}
-                draggable
-                onDragStart={(e) => handleDragStart(e, idx)}
-                onDragOver={handleDragOver}
-                onDrop={(e) => handleDrop(e, idx)}
                 className={`group flex items-start gap-1.5 rounded-xl transition-all ${
                   idx === currentStepIndex ? 'bg-indigo-600 shadow-sm' : 'hover:bg-slate-100'
                 }`}
               >
-                <div className={`shrink-0 pt-2.5 pl-1.5 cursor-grab active:cursor-grabbing ${
-                  idx === currentStepIndex ? 'text-white/40' : 'text-slate-300 group-hover:text-slate-400'
-                }`}>
-                  <GripVertical size={14} />
-                </div>
                 <button
                   onClick={() => onGoToStep(idx)}
                   className="flex-1 text-left px-2 py-2.5 text-xs font-semibold flex items-start gap-2"
@@ -285,44 +227,44 @@ function StepPanel({
         </div>
 
         {/* ── Current Step Editor ────────────────────────────────────── */}
-        <div className="px-4 py-4 space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-xs font-black text-slate-700 uppercase tracking-wide">
-              Step {currentStepIndex + 1} — Content
+        <div className="px-4 py-4">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-xs font-bold text-slate-700 uppercase">
+              Step <span className='bg-indigo-50 text-indigo-600 px-1 rounded'>{currentStepIndex + 1}</span> Content
             </h3>
             {/* Show how many files this step has */}
             {steps[currentStepIndex]?.files?.length > 0 && (
               <span className="text-[10px] text-slate-400 font-semibold">
-                {steps[currentStepIndex].files.length} file{steps[currentStepIndex].files.length !== 1 ? 's' : ''} in this step
+                {steps[currentStepIndex].files.length} file{steps[currentStepIndex].files.length !== 1 ? 's' : ''}
               </span>
             )}
           </div>
 
           <div>
-            <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wide">Instruction *</label>
+            <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wide">Instruction <span className='text-red-600 text-sm'>*</span></label>
             <textarea
               value={instruction}
               onChange={(e) => setInstruction(e.target.value)}
               placeholder="Tell students what to do in this step…"
               rows={5}
-              className="mt-1 w-full px-3 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blockly-blue bg-white resize-none leading-relaxed"
+              className="w-full px-3 py-2 text-sm border border-border rounded focus:outline-none focus:ring-1 focus:ring-indigo-400 bg-white resize-none leading-relaxed"
             />
           </div>
 
           <div>
-            <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wide flex items-center gap-1">
-              <Lightbulb size={11} /> Hint (optional)
+            <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wide flex items-center gap-1">
+              <Lightbulb size={11} /> Hint <span className='text-slate-400 lowercase font-normal'>(optional)</span>
             </label>
             <input
               type="text"
               value={hint}
               onChange={(e) => setHint(e.target.value)}
               placeholder="Give a helpful nudge…"
-              className="mt-1 w-full px-3 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blockly-blue bg-white"
+              className="w-full px-3 py-2 text-sm border border-border rounded focus:outline-none focus:ring-1 focus:ring-indigo-400 bg-white"
             />
           </div>
 
-          <div className="bg-slate-50 rounded-xl p-3 border border-slate-200 space-y-2">
+          <div className="bg-slate-50 rounded-xl p-3 border border-slate-200 space-y-2 mt-2">
             <label className="flex items-center gap-2 cursor-pointer select-none">
               <input
                 type="checkbox"
@@ -359,33 +301,7 @@ function StepPanel({
           </div>
         </div>
       </div>
-
-      {/* ── Footer ─────────────────────────────────────────────────────── */}
-      <div className="shrink-0  flex  gap-4 border-t border-slate-200 p-3 bg-slate-50">
-        <button
-          onClick={onOpenBadge}
-          className="w-full flex items-center justify-center gap-1.5 py-2 text-xs font-semibold border border-amber-300 text-amber-700 bg-amber-50 hover:bg-amber-100 rounded-xl transition-colors"
-        >
-          <Award size={13} />
-          {hasBadge ? 'Edit Badge' : 'Attach Badge'}
-        </button>
-        <button
-          onClick={onSaveTutorial}
-          disabled={saving}
-          className="w-full flex items-center justify-center gap-1.5 py-2.5 text-xs font-bold btn btn-primary disabled:opacity-50 rounded-xl"
-        >
-          <Save size={13} />
-          {saving ? 'Saving…' : 'Save Tutorial'}
-        </button>
-        <button
-          onClick={onPublish}
-          disabled={saving || isPublished}
-          className="w-2/5 flex items-center justify-center gap-1.5 py-2.5 text-xs font-bold btn btn-secondary disabled:opacity-50 rounded-xl"
-        >
-          <Check size={13} />
-          {isPublished ? 'Published' : 'Publish'}
-        </button>
-      </div>
+      )}
     </div>
   )
 }
@@ -403,18 +319,13 @@ export default function TutorialBuilderPage() {
   const [savedLessonId, setSavedLessonId]             = useState(id || null)
   const [tutorialTitle, setTutorialTitle]             = useState('')
   const [baseXp, setBaseXp]                           = useState('50')
-  const [tutorialDescription, setTutorialDescription] = useState('')
   const [courseTopics, setCourseTopics]               = useState([])
   const [selectedTopicId, setSelectedTopicId]         = useState('')
   const [loadingTopics, setLoadingTopics]             = useState(true)
-  const [difficulty, setDifficulty]                   = useState('beginner')
-  const [estimatedTime, setEstimatedTime]             = useState('')
   const [isPublished, setIsPublished]                 = useState(false)
   const [loading, setLoading]                         = useState(isEdit)
   const [saving, setSaving]                           = useState(false)
   const [saveMsg, setSaveMsg]                         = useState('')
-  const [badge, setBadge]                             = useState(null)
-  const [showBadgeModal, setShowBadgeModal]           = useState(false)
 
   // ── Steps ──────────────────────────────────────────────────────────────────
   // Each step: { id, instruction, hint, requireBlocks, capturedBlocks,
@@ -428,6 +339,8 @@ export default function TutorialBuilderPage() {
   const [hint, setHint]                     = useState('')
   const [requireBlocks, setRequireBlocks]   = useState(false)
   const [capturedBlocks, setCapturedBlocks] = useState(null)
+  const [panelOpen, setPanelOpen] = useState(true)
+
 
   // ── Refs to latest values (avoid stale closures in callbacks) ─────────────
   const stepsRef         = useRef(steps)
@@ -440,6 +353,7 @@ export default function TutorialBuilderPage() {
   // Holds blocks_json queued during fetch; useState so the drain effect below
   // re-fires whether isInitialized or pendingFirstStep changes last.
   const [pendingFirstStep, setPendingFirstStep] = useState(null)
+  const [activeSwitch, setActiveSwitch] = useState('initial')
 
   useEffect(() => {
     ;(async () => {
@@ -466,7 +380,7 @@ export default function TutorialBuilderPage() {
   const [generatedCode, setGeneratedCode]         = useState('')
   const [activePreviewKey, setActivePreviewKey]   = useState(null)
   const [responsive, setResponsive]               = useState(true)
-  const [selectedDevice, setSelectedDevice]       = useState('desktop')
+  const [selectedDevice, setSelectedDevice]       = useState()
 
   // ── Blockly workspace ─────────────────────────────────────────────────────
   // NOTE: BlocklyWorkspace is a CUSTOM HOOK, NOT a component.
@@ -520,12 +434,8 @@ export default function TutorialBuilderPage() {
           return
         }
         setTutorialTitle(tut.title || '')
-        setTutorialDescription(tut.description || '')
-        setDifficulty(tut.difficulty_level || 'beginner')
-        setEstimatedTime(tut.estimated_time_minutes?.toString() || '')
         setIsPublished(tut.is_published || false)
         setSavedId(tut.id)
-        if (tut.badges?.length > 0) setBadge(tut.badges[0])
 
         const loaded = (tut.tutorial_steps || []).map((s) => {
           const stepFiles =
@@ -702,22 +612,6 @@ export default function TutorialBuilderPage() {
     })
   }
 
-  // ── Drag reorder ───────────────────────────────────────────────────────────
-  const handleDragReorder = (from, to) => {
-    setSteps((prev) => {
-      const arr = [...prev]
-      const [moved] = arr.splice(from, 1)
-      arr.splice(to, 0, moved)
-      return arr
-    })
-    setCurrentStepIndex((prev) => {
-      if (prev === from) return to
-      if (from < to && prev > from && prev <= to) return prev - 1
-      if (from > to && prev >= to && prev < from) return prev + 1
-      return prev
-    })
-  }
-
   // ── File operations (within current step) ─────────────────────────────────
   /** Switch active file within the current step */
   const handleFileChange = useCallback((_key) => {
@@ -774,8 +668,8 @@ export default function TutorialBuilderPage() {
     if (filename.endsWith('.html')) setActivePreviewKey(newFile._key)
 
     defineFileReferenceBlocks(newFiles.map((f) => ({ id: f._key, filename: f.filename })))
-    addToast(`Created ${filename}`, 'success')
-  }, [workspace, addToast])
+    toast.success(`Created ${filename}`)
+  }, [workspace])
 
   /** Delete a file from the current step */
   const handleDeleteFile = useCallback((_key) => {
@@ -808,7 +702,7 @@ export default function TutorialBuilderPage() {
   // ── Capture / clear expected blocks ───────────────────────────────────────
   const handleCaptureBlocks = () => {
     setCapturedBlocks(workspace.getWorkspaceState?.())
-    addToast('Workspace captured!', 'success')
+    toast.success('Workspace captured!')
   }
   const handleClearBlocks = () => setCapturedBlocks(null)
 
@@ -838,9 +732,6 @@ export default function TutorialBuilderPage() {
   const ensureTutorial = async (lessonId) => {
     const meta = {
       title:                   tutorialTitle.trim() || 'Untitled Tutorial',
-      description:             tutorialDescription.trim(),
-      difficulty_level:        difficulty,
-      estimated_time_minutes:  estimatedTime ? parseInt(estimatedTime) : null,
       lesson_id:                lessonId,
     }
     if (savedId) { await updateTutorial(savedId, meta); return savedId }
@@ -852,9 +743,9 @@ export default function TutorialBuilderPage() {
 
   // ── Save all steps + their files ──────────────────────────────────────────
   const handleSaveTutorial = async (silent = false) => {
-    if (!tutorialTitle.trim()) { addToast('Add a tutorial title first', 'error'); return null }
-    if (!/^\d+$/.test(baseXp) || Number(baseXp) <= 0) { addToast('Base XP must be a positive whole number', 'error'); return null }
-    if (!selectedTopicId) { addToast('Select a topic for this tutorial', 'error'); return null }
+    if (!tutorialTitle.trim()) { toast.error('Add a tutorial title first'); return null }
+    if (!/^\d+$/.test(baseXp) || Number(baseXp) <= 0) { toast.error('Base XP must be a positive whole number'); return null }
+    if (!selectedTopicId) { toast.error('Select a topic for this tutorial'); return null }
     setSaving(true)
     setSaveMsg('')
     try {
@@ -868,7 +759,7 @@ export default function TutorialBuilderPage() {
 
       // Validate
       const badIdx = toSave.findIndex((s) => !s.instruction.trim())
-      if (badIdx !== -1) { addToast(`Step ${badIdx + 1} needs an instruction`, 'error'); setSaving(false); return null }
+      if (badIdx !== -1) { toast.error(`Step ${badIdx + 1} needs an instruction`); setSaving(false); return null }
 
       const lessonId = await ensureLesson()
       const tutId = await ensureTutorial(lessonId)
@@ -887,7 +778,6 @@ export default function TutorialBuilderPage() {
             ? await updateTutorialStep(step.id, stepPayload)
             : await createTutorialStep(stepPayload)
 
-          // Save this step's files as template files
           await saveStepFiles(savedStep.id, step.files)
 
           return { ...savedStep, _localStep: step }
@@ -906,24 +796,15 @@ export default function TutorialBuilderPage() {
       if (!silent) {
         setSaveMsg('Saved!')
         setTimeout(() => setSaveMsg(''), 3000)
-        addToast('Tutorial saved!', 'success')
+        toast.success('Tutorial saved!', 'success')
       }
       return tutId
     } catch (err) {
-      addToast('Save failed: ' + err.message, 'error')
+      toast.error('Save failed: ' + err.message, 'error')
       return null
     } finally {
       setSaving(false)
     }
-  }
-
-  // ── Open badge modal (save first if new) ──────────────────────────────────
-  const handleOpenBadge = async () => {
-    if (!savedId) {
-      const tutId = await handleSaveTutorial(true)
-      if (!tutId) return
-    }
-    setShowBadgeModal(true)
   }
 
   // ── Publish ────────────────────────────────────────────────────────────────
@@ -965,7 +846,7 @@ export default function TutorialBuilderPage() {
   // We use a loading OVERLAY instead.
   // ═══════════════════════════════════════════════════════════════════════════
   return (
-    <div className="relative flex flex-col h-screen bg-slate-100">
+    <div className="relative flex flex-col h-screen bg-gray-100">
 
       {/* Loading overlay — sits on top, never unmounts the Blockly div */}
       {loading && (
@@ -978,23 +859,14 @@ export default function TutorialBuilderPage() {
       )}
 
       {/* Top bar */}
-      <div className="shrink-0 flex items-center gap-3 px-4 py-2.5 bg-white border-b border-slate-200 shadow-sm">
-        <button
-          onClick={() => navigate('/teacher/content')}
-          className="flex items-center gap-1.5 text-sm font-semibold text-slate-500 hover:text-slate-800 transition-colors"
-        >
-          <ArrowLeft size={16} /> Content
-        </button>
-        <span className="text-slate-300">/</span>
-        <span className="text-sm font-black text-slate-700 truncate max-w-xs">
+      <div className="shrink-0 flex items-center gap-3 px-4 py-2.5 ">
+        <Link to="/"><img src="/icon.png" alt="icon image" className='w-8 h-8' /></Link>
+        <BackButton />
+        <span className="text-slate-500">/</span>
+        <span className="font-bold text-slate-700 truncate max-w-xs">
           {tutorialTitle || 'New Tutorial'}
         </span>
-        <div className="ml-auto flex items-center gap-3">
-          {badge && (
-            <span className="flex items-center gap-1.5 px-2.5 py-0.5 bg-amber-50 border border-amber-200 rounded-full text-[11px] font-bold text-amber-700">
-              <Award size={11} /> {badge.title}
-            </span>
-          )}
+        {/* <div className="ml-auto flex items-center gap-3">
           <span className={`px-2.5 py-0.5 text-[11px] font-bold rounded-full ${
             isPublished ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'
           }`}>
@@ -1003,30 +875,34 @@ export default function TutorialBuilderPage() {
           <span className="text-xs text-slate-400 tabular-nums">
             Step {currentStepIndex + 1} / {steps.length}
           </span>
+        </div> */}
+          
+        <div className='ml-auto flex truncate max-w-xs'>
+          <Button variant='ghost'>
+            <Sun size={20}/>Light Mode
+          </Button>
+          <Button variant='secondary'>
+            Save Tutorial
+          </Button>
         </div>
       </div>
 
       {/* Body */}
-      <div className="flex flex-1 overflow-hidden">
-
+      <div className="relative flex flex-1 overflow-hidden px-3 gap-1.5 mb-4">
         {/* Left panel */}
-        <div className="w-1/3 min-w-70 max-w-sm shrink-0 h-full overflow-hidden">
+        <div className={`${panelOpen ? `w-1/3 min-w-70` : `w-10`} max-w-sm shrink-0 h-full overflow-hidden`}>
           <StepPanel
             tutorialTitle={tutorialTitle}             setTutorialTitle={setTutorialTitle}
             baseXp={baseXp}                           setBaseXp={setBaseXp}
-            tutorialDescription={tutorialDescription} setTutorialDescription={setTutorialDescription}
             courseTopics={courseTopics}
             selectedTopicId={selectedTopicId}         setSelectedTopicId={setSelectedTopicId}
             loadingTopics={loadingTopics}
-            difficulty={difficulty}                   setDifficulty={setDifficulty}
-            estimatedTime={estimatedTime}             setEstimatedTime={setEstimatedTime}
             isPublished={isPublished}
             steps={steps}
             currentStepIndex={currentStepIndex}
             onGoToStep={handleGoToStep}
             onAddStep={handleAddStep}
             onDeleteStep={handleDeleteStep}
-            onDragReorder={handleDragReorder}
             instruction={instruction}                 setInstruction={setInstruction}
             hint={hint}                               setHint={setHint}
             requireBlocks={requireBlocks}             setRequireBlocks={setRequireBlocks}
@@ -1034,16 +910,15 @@ export default function TutorialBuilderPage() {
             onCaptureBlocks={handleCaptureBlocks}
             onClearBlocks={handleClearBlocks}
             onSaveTutorial={handleSaveTutorial}
-            onOpenBadge={handleOpenBadge}
             onPublish={handlePublish}
+            panelOpen={panelOpen}                     setPanelOpen={setPanelOpen}
             saving={saving}
             saveMsg={saveMsg}
-            hasBadge={!!badge}
           />
         </div>
 
         {/* Blockly — always in the DOM */}
-        <div className="flex flex-col flex-1 h-full border-r border-gray-600 bg-white overflow-hidden">
+        <div className="flex flex-col flex-1 h-full border border-border rounded bg-white overflow-hidden">
           <FileTabs
             files={currentFiles.map((f) => ({ id: f._key, filename: f.filename }))}
             activeFile={activeFileKey}
@@ -1053,7 +928,9 @@ export default function TutorialBuilderPage() {
             onFileDelete={handleDeleteFile}
           />
           {/* THIS DIV MUST ALWAYS RENDER — Blockly injects into it on mount */}
-          <div ref={workspace.blocklyDiv} className="blocklyDiv flex-1" />
+          <div ref={workspace.blocklyDiv} className="blocklyDiv flex-1 relative" >
+            <SwitchButton activeTab={activeSwitch} setActiveTab={setActiveSwitch}/>
+          </div>
         </div>
 
         {/* Preview */}
@@ -1077,18 +954,11 @@ export default function TutorialBuilderPage() {
           />
         </div>
       </div>
-
-      {/* Badge modal */}
-      {showBadgeModal && savedId && (
-        <BadgeModal
-          tutorialId={savedId}
-          existingBadge={badge}
-          onClose={() => setShowBadgeModal(false)}
-          onSaved={(saved) => {
-            setBadge(saved)
-            addToast(saved ? 'Badge saved!' : 'Badge removed', 'success')
-          }}
-        />
+      {isEdit && (
+        <div className='flex gap-4 px-4 text-slate-400'>
+          <p>Created:</p>
+          <p>Last Modified:</p>
+        </div>
       )}
     </div>
   )

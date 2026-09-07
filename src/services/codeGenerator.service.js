@@ -45,7 +45,7 @@ export const codeGeneratorService = {
     }
 
     if (!activeHtml) {
-      return '<html><body><p>No HTML file to preview</p></body></html>';
+      return '<html>\n  <body>\n    <p>No HTML file to preview</p>\n  </body>\n</html>';
     }
 
     let htmlCode = activeHtml.generatedCode || '';
