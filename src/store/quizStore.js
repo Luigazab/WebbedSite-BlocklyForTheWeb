@@ -1,13 +1,7 @@
 import { create } from 'zustand'
 import { quizService } from '../services/quiz.service'
-import { 
-  createLessonBase,
-  updateLessonBase,
-  fetchQuizEditorData,
-  fetchTopicGroupsForAuthoring,
-  upsertQuizContent,
-  removeLessonById,
-} from '@/services/contentCreationService'
+import { createLessonBase, updateLessonBase, removeLessonById, fetchTopicGroupsForAuthoring } from "@/services/lessonService";
+import { fetchQuizEditorData, upsertQuizContent } from "@/services/quizService";
 
 const emptyQuiz = {
   id: null,

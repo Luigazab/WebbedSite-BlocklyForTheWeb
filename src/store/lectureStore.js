@@ -1,13 +1,6 @@
 import { create } from "zustand";
-import {
-  createLessonBase,
-  updateLessonBase,
-  fetchLectureEditorData,
-  fetchTopicGroupsForAuthoring,
-  upsertLectureContent,
-  uploadLectureAttachment,
-  removeLessonById,
-} from "@/services/contentCreationService";
+import { createLessonBase, updateLessonBase, removeLessonById, fetchTopicGroupsForAuthoring } from "@/services/lessonService";
+import { fetchLectureEditorData, uploadLectureAttachment, upsertLectureContent } from "@/services/lectureService";
 
 const emptyLecture = {
   id: null,

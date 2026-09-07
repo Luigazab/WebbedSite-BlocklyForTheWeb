@@ -1,4 +1,26 @@
-import { supabase } from "@/supabaseClient";
+/**
+ * CREATE TABLE public.lessons (
+    id uuid NOT NULL DEFAULT gen_random_uuid(),
+    topics_id uuid NOT NULL,
+    author uuid NOT NULL,
+    prerequisite_lesson uuid,
+    title text NOT NULL DEFAULT ''::text,
+    type text NOT NULL,
+    is_published boolean DEFAULT false,   
+    updated_at timestamp with time zone DEFAULT now(),
+    created_at timestamp with time zone NOT NULL DEFAULT now(),
+    slug text NOT NULL,
+    order integer,
+    base_xp integer NOT NULL DEFAULT 50,
+    classroom_id uuid,
+    CONSTRAINT lessons_pkey PRIMARY KEY (id),
+    CONSTRAINT lessons_topics_id_fkey FOREIGN KEY (topics_id) REFERENCES public.topics(id),
+    CONSTRAINT lessons_author_fkey FOREIGN KEY (author) REFERENCES public.profiles(id),
+    CONSTRAINT lessons_prerequisite_lesson_fkey FOREIGN KEY (prerequisite_lesson) REFERENCES public.lessons(id),
+    CONSTRAINT lessons_classroom_id_fkey FOREIGN KEY (classroom_id) REFERENCES public.classrooms(id)
+  );
+ */
+import { supabase } from "../supabaseClient";
 
 const slugify = (value) =>
   value

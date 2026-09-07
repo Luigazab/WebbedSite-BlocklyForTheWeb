@@ -1,3 +1,24 @@
+/**
+ * CREATE TABLE public.classrooms (
+    id uuid NOT NULL DEFAULT gen_random_uuid(),
+    teacher_id uuid NOT NULL,
+    name text,
+    description text,
+    join_code text,
+    created_at timestamp with time zone NOT NULL DEFAULT now(),
+    is_active boolean,
+    CONSTRAINT classrooms_pkey PRIMARY KEY (id),
+    CONSTRAINT classrooms_teacher_id_fkey FOREIGN KEY (teacher_id) REFERENCES public.profiles(id)
+  );
+  CREATE TABLE public.classroom_members (
+    classroom_id uuid NOT NULL,
+    student_id uuid NOT NULL,
+    enrolled_at timestamp with time zone NOT NULL DEFAULT now(),
+    CONSTRAINT classroom_members_pkey PRIMARY KEY (classroom_id, student_id),
+    CONSTRAINT classroom_members_classroom_id_fkey FOREIGN KEY (classroom_id) REFERENCES public.classrooms(id),
+    CONSTRAINT classroom_members_student_id_fkey FOREIGN KEY (student_id) REFERENCES public.profiles(id)
+  );
+ */
 import { supabase } from '../supabaseClient'
 import { nanoid } from 'nanoid'
 

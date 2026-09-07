@@ -123,6 +123,66 @@ export async function submitQuizAttempt({
   return { score, passed }
 }
 
+export async function getAllQuizAttempts(userId, quizId) {
+  const { data, error } = await supabase
+    .from('quiz_attempts')
+    .select(`
+      id, quiz_id, score, status, started_at, finished_at,
+      quiz_answers ( question_id, options_id, is_correct )
+    `)
+    .eq('user_id', userId)
+    .eq('quiz_id', quizId)
+    .order('started_at', { ascending: true })
+
+  if (error) throw error
+  return (data ?? []).map((attempt) => ({
+    ...attempt,
+    answers: attempt.quiz_answers ?? [],
+  }))
+}
+
+export async function recordQuizAttempt({
+  userId, quizId, score, startedAt, answers,
+  lessonId, classroomId, courseId, topicId, baseXp, passingScore,
+}) {
+  const passed = passingScore == null || score >= passingScore
+
+  const { data: attempt, error: attemptErr } = await supabase
+    .from('quiz_attempts')
+    .insert({
+      user_id:     userId,
+      quiz_id:     quizId,
+      score,
+      status:      passed ? 'passed' : 'failed',
+      started_at:  startedAt ? new Date(startedAt).toISOString() : new Date().toISOString(),
+      finished_at: new Date().toISOString(),
+    })
+    .select()
+    .single()
+  if (attemptErr) throw attemptErr
+
+  // quiz_answers.options_id is NOT NULL, so unanswered questions are simply omitted.
+  const rows = answers
+    .filter((a) => a.selectedOptionId)
+    .map((a) => ({
+      attempt_id:  attempt.id,
+      question_id: a.questionId,
+      options_id:  a.selectedOptionId,
+      is_correct:  a.isCorrect,
+    }))
+
+  if (rows.length > 0) {
+    const { error: answersErr } = await supabase.from('quiz_answers').insert(rows)
+    if (answersErr) throw answersErr
+  }
+
+  if (passed && lessonId) {
+    await completeLesson({ userId, classroomId, courseId, lessonId, topicId, baseXp })
+  }
+
+  return attempt
+}
+
 export async function completeLaboratory({ userId, classroomId, courseId, laboratoryId, lessonId, topicId, baseXp }) {
   const { error } = await supabase
     .from('laboratory_completed')

@@ -1,3 +1,25 @@
+/**
+ * CREATE TABLE public.topics (
+    id uuid NOT NULL DEFAULT gen_random_uuid(),
+    course_id uuid NOT NULL,
+    title text NOT NULL,
+    description text NOT NULL,
+    order integer NOT NULL,
+    created_at timestamp with time zone NOT NULL DEFAULT now(),
+    is_published boolean NOT NULL DEFAULT false,
+    required_level integer NOT NULL DEFAULT 1,
+    required_xp bigint NOT NULL DEFAULT '0'::bigint,
+    slug text NOT NULL,
+    classroom_id uuid,
+    is_unlocked boolean NOT NULL DEFAULT false,
+    unlocked_at timestamp with time zone,
+    unlocked_by uuid,
+    CONSTRAINT topics_pkey PRIMARY KEY (id),
+    CONSTRAINT topics_course_id_fkey FOREIGN KEY (course_id) REFERENCES public.courses(id),
+    CONSTRAINT topics_classroom_id_fkey FOREIGN KEY (classroom_id) REFERENCES public.classrooms(id),
+    CONSTRAINT topics_unlocked_by_fkey FOREIGN KEY (unlocked_by) REFERENCES public.profiles(id)
+  );
+ */
 import { supabase } from '../supabaseClient'
 
 /**

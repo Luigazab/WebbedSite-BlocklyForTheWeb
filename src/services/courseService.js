@@ -3,6 +3,20 @@
  * Read check getCourses and getCoursesById
  * Update check updateCourse
  * Delete check deleteCourse
+ * 
+ * 
+ * CREATE TABLE public.courses (
+    id uuid NOT NULL DEFAULT gen_random_uuid(),
+    title text,
+    description text,
+    color text,
+    image_src text,
+    created_at timestamp with time zone NOT NULL DEFAULT now(),
+    order smallint GENERATED ALWAYS AS IDENTITY NOT NULL,
+    slug text NOT NULL UNIQUE,
+    total_xp bigint NOT NULL DEFAULT '3000'::bigint,
+    CONSTRAINT courses_pkey PRIMARY KEY (id)
+  );
  */
 import { supabase } from "../supabaseClient";
 
