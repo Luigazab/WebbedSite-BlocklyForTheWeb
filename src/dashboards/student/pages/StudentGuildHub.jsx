@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router'
 import { useAuthStore } from '../../../store/authStore'
 import { useClassroomStore } from '../../../store/classroomStore'
 import PageWrapper from '../../../components/layout/PageWrapper'
-import PostFeed from '../../teacher/components/PostFeed'
+// import PostFeed from '../../teacher/components/PostFeed'
 import StudentMilestonePanel from '../components/StudentMilestonePanel'
 import GuildMembersPanel from '../components/GuildMembersPanel'
 import {

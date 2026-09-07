@@ -8,10 +8,11 @@ import { Input } from "#components/ui/input";
 import { Item, ItemContent, ItemDescription, ItemTitle } from "#components/ui/item";
 import { Label } from "#components/ui/label";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "#components/ui/dialog";
-import { Calendar, FileText, Film } from "lucide-react";
+import { Calendar, FileText, Film, Sun } from "lucide-react";
 import { useLectureEditor } from "@/hooks/useLectureEditor";
 import { useEffect, useMemo, useState } from "react";
-import { useLocation, useParams } from "react-router";
+import { Link, useLocation, useParams } from "react-router";
+import BackButton from "#components/common/BackButton";
 
 const LecturePage = () => {
   const params = useParams();
@@ -78,7 +79,7 @@ const LecturePage = () => {
   };
 
   return(
-    <div className="h-[93vh] w-full bg-slate-50 relative overflow-hidden flex">
+    <div className="h-screen w-full bg-slate-50 relative overflow-hidden flex">
       <div
         className="absolute inset-0 z-0"
         style={{
@@ -92,14 +93,25 @@ const LecturePage = () => {
         }}
       />
 
-      <div className="z-10 p-8 h-full w-full overflow-y-auto">
-        <AppBreadcrumb
-          items={[
-            { label: 'Home', href: '/teacher' },
-            { label: 'Content Management', href: '/teacher/content' },
-            { label: isEditMode ? 'Edit Lecture' : 'Create Lecture', href: '/teacher/lecture/create' },
-          ]}
-        />
+      <div className="z-10 h-full w-full overflow-y-auto">
+        <div className="top-1 sticky shrink-0 flex items-center gap-3 px-4 py-2.5 ">
+          <Link to="/"><img src="/icon.png" alt="icon image" className='w-8 h-8' /></Link>
+          <BackButton />
+          <span className="text-slate-500">/</span>
+          <span className="font-bold text-slate-700 truncate max-w-xs">
+            {title || 'New Lecture'}
+          </span>
+            
+          <div className='ml-auto flex truncate gap-1.5'>
+            <Button variant='ghost'>
+              <Sun size={20}/>Light Mode
+            </Button>
+            <Button variant="primary" onClick={() => setShowPreviewDialog(true)}>Preview</Button>
+            <Button variant="secondary" onClick={handleSaveLecture} disabled={saving}>
+              {saving ? (isEditMode ? "Updating..." : "Saving...") : (isEditMode ? "Update Lecture" : "Save Lecture")}
+            </Button>
+          </div>
+        </div>
         <Card className="w-full max-w-5xl mx-auto mt-6 bg-white/60!">
           <CardHeader>
             <CardTitle className="text-2xl font-bold text-slate-800">{isEditMode ? "Edit Lecture" : "Create New Lecture"}</CardTitle>

@@ -35,7 +35,7 @@ export const studentRoutes = [
       { path: 'quiz',                                       element: <QuizAssessment />           },
       { path: 'quiz/result',                                element: <QuizResult />               },
       { path: 'docs',                                       element: <Documentation />            },
-      { path: 'lessons',                                    element: <LessonPage />               },
+      // { path: 'lessons',                                    element: <LessonPage />               },
       { path: 'feedback',                                   element: <FeedbackPage />             },
       { path: 'profile',                                    element: <ProfilePage />              },
       { path: 'settings',                                   element: <SettingsPage />             },
