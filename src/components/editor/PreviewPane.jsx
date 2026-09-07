@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Play, Eye, Terminal, MonitorSmartphone, Trash2 } from 'lucide-react';
+import { Play, Eye, Terminal, MonitorSmartphone, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
 import DeviceSelector from './DeviceSelector';
 import DevicePreviewModal from './DevicePreviewModal';
 import { deviceSizes } from '../utils/deviceConstant';
@@ -19,6 +19,7 @@ const PreviewPane = ({
 }) => {
   const [activeTab, setActiveTab] = useState('preview');
   const [showDeviceModal, setShowDeviceModal] = useState(false);
+  const [hidePanel, setHidePanel] = useState(false);
   
   // --- New State for Console and Bottom Panel ---
   const [activeBottomPanel, setActiveBottomPanel] = useState('devices'); // 'devices' or 'console'
@@ -26,7 +27,7 @@ const PreviewPane = ({
 
   const handleDeviceSelect = (device) => {
     onSelectDevice(device);
-    setShowDeviceModal(device !== 'desktop');
+    setShowDeviceModal(true);
   };
 
   // Listen for messages from the iframe (Navigation & Console Logs)
@@ -48,6 +49,15 @@ const PreviewPane = ({
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
   }, [onNavigateToFile]);
+
+  const handleToggle = () => {
+    if (activeTab === "preview") {
+      setActiveTab("code");
+      onRunCode && onRunCode();
+    } else {
+      setActiveTab("preview");
+    }
+  };
 
   // Clear logs automatically when the preview code completely changes
   useEffect(() => {
@@ -119,13 +129,30 @@ const PreviewPane = ({
   const previewCode = interceptorScript + generatedCode;
 
   return (
-    <div className='w-full h-full relative flex flex-col'>
-      <div id="outputPanel" className="flex-1 flex flex-col border-2 bg-gray-800 relative overflow-hidden">
-        <h4 className="font-bold z-1 text-4xl text-white px-2 tracking-widest shrink-0">
-          Preview
-        </h4>
+    <div className='w-full h-full relative flex flex-col border border-border rounded shadow gap-2'>
+      <div id="outputPanel" className="flex-1 flex flex-col bg-slate-200 relative overflow-hidden rounded">
+        <div className='flex items-center justify-between p-1'>
+          <h4 className="font-bold tracking-wider shrink-0">
+            Preview
+          </h4>
+          <div className="flex items-center border-l border-black pl-2">
+            <button
+              onClick={handleToggle}
+              className={`relative inline-flex items-center h-6 w-13 rounded-full transition-colors 
+                ${activeTab === "code" ? "bg-emerald-600" : "bg-gray-300"}`}
+            >
+              <span
+                className={`absolute left-1 inline-block w-5 h-4 transform bg-white rounded-full transition-transform!
+                  ${activeTab === "code" ? "translate-x-6" : "translate-x-0"}`}
+              />
+            </button>
+            <span className="ml-3 font-bold text-gray-700">
+              {activeTab === "preview" ? "Output" : "Code"}
+            </span>
+          </div>
+        </div>
         
-        <div data-tour="preview-tabs" className="flex justify-around px-4 border-t bg-gray-800 border-b border-gray-600 group transition-all relative shrink-0">
+        <div data-tour="preview-tabs" className="flex justify-around px-4 bg-gray-800 group transition-all relative shrink-0">
           {previewFileName && previewFileName !== currentFileName && (
             <div className="absolute left-2 top-2 flex items-center gap-1 px-2 py-1 bg-blue-500 text-white text-xs rounded">
               <Eye size={12} />
@@ -133,26 +160,7 @@ const PreviewPane = ({
             </div>
           )}
           
-          <button 
-            onClick={() => setActiveTab('preview')}
-            className={`px-5 py-2 font-bold border-b-4 ${
-              activeTab === 'preview'
-                ? 'border-green-500 text-green-600'
-                : 'border-transparent text-gray-600'
-            }`}
-          >
-            Output
-          </button>
-          <button 
-            onClick={() => {setActiveTab('code'); onRunCode && onRunCode();}}
-            className={`px-5 py-2 font-bold border-b-4 ${
-              activeTab === 'code'
-                ? 'border-green-500 text-green-600'
-                : 'border-transparent text-gray-600'
-            }`}
-          >
-            Code
-          </button>
+          
           {htmlFiles && htmlFiles.length > 1 && (
             <button 
               onClick={() => setActiveTab('pages')}
@@ -168,10 +176,10 @@ const PreviewPane = ({
         </div>
 
         {/* Main Preview/Code Area */}
-        <div className="flex-1 overflow-auto">
+        <div className="flex-1 overflow-auto bg-white border rounded border-border shadow">
           {activeTab === 'preview' && (
-            <div className="flex-col w-full h-full flex items-center justify-center bg-gray-100">
-              <div className="flex w-full items-center justify-end gap-2 px-3 py-1.5 border-b border-slate-600 bg-slate-300">
+            <div className="flex-col w-full h-full flex items-center justify-center bg-white">
+              <div className="flex w-full items-center justify-end gap-2 px-3 py-1.5 bg-slate-400">
                   <span className="w-3 h-3 rounded-full bg-blockly-red"></span>
                   <span className="w-3 h-3 rounded-full bg-blockly-yellow"></span>
                   <span className="w-3 h-3 rounded-full bg-blockly-green"></span>
@@ -186,7 +194,7 @@ const PreviewPane = ({
           )}
           
           {activeTab === 'code' && (
-            <pre className="p-4 bg-gray-900 text-green-400 text-sm h-full overflow-auto font-mono whitespace-pre-wrap">
+            <pre className="p-4 bg-gray-700 text-green-500 text-sm h-full overflow-auto font-mono whitespace-pre-wrap">
               {currentFileCode || generatedCode}
             </pre>
           )}
@@ -231,35 +239,44 @@ const PreviewPane = ({
         </div>
 
         {/* --- Bottom Swappable Panel --- */}
-        <div className="flex flex-col border-t-2 border-gray-700 shrink-0 bg-gray-900 max-h-[40%]">
+        <div className=" shrink-0 bg-slate-200 max-h-[40%] mt-1.5 rounded border border-slate-300">
           
           {/* Panel Toggle Tabs */}
-          <div className="flex w-full bg-gray-800 border-b border-gray-700">
+          <div className="flex justify-between bg-slate-400 rounded-t">
+            <div className='flex'>
+              <button 
+                onClick={() => {setActiveBottomPanel('devices'); setHidePanel(false)}}
+                className={`px-4 py-2 text-sm flex items-center justify-center rounded-t gap-2 transition-colors! ${activeBottomPanel === 'devices' ? 'bg-slate-600 text-white font-semibold' : 'text-slate-600 hover:text-gray-200 hover:bg-slate-500'}`}
+              >
+                <MonitorSmartphone size={16} />
+                Devices
+              </button>
+              <button 
+                onClick={() => {setActiveBottomPanel('console'); setHidePanel(false)}}
+                className={`px-4 py-2 text-sm flex items-center justify-center rounded-t gap-2 transition-colors! ${activeBottomPanel === 'console' ? 'bg-slate-600 text-white font-semibold' : 'text-slate-600 hover:text-gray-200 hover:bg-slate-500'}`}
+              >
+                <Terminal size={16} />
+                Console 
+                {logs.length > 0 && (
+                  <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                    {logs.length}
+                  </span>
+                )}
+              </button>
+            </div>
             <button 
-              onClick={() => setActiveBottomPanel('devices')}
-              className={`flex-1 py-2 text-sm flex items-center justify-center gap-2 transition-colors ${activeBottomPanel === 'devices' ? 'bg-gray-700 text-white font-semibold' : 'text-gray-400 hover:text-gray-200 hover:bg-gray-750'}`}
+              onClick={() => setHidePanel(!hidePanel) }
+              className={`px-4 py-2 text-sm text-gray-600 flex items-center justify-center gap-2 transition-colors! hover:bg-slate-500 hover:text-gray-200`}
+              title='Toggle panel visibility'
             >
-              <MonitorSmartphone size={16} />
-              Devices
-            </button>
-            <button 
-              onClick={() => setActiveBottomPanel('console')}
-              className={`flex-1 py-2 text-sm flex items-center justify-center gap-2 transition-colors ${activeBottomPanel === 'console' ? 'bg-gray-700 text-white font-semibold' : 'text-gray-400 hover:text-gray-200 hover:bg-gray-750'}`}
-            >
-              <Terminal size={16} />
-              Console 
-              {logs.length > 0 && (
-                <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
-                  {logs.length}
-                </span>
-              )}
+              {hidePanel ? <ChevronDown size={16} /> : <ChevronUp size={16} /> }
             </button>
           </div>
 
           {/* Render Active Bottom Panel */}
-          <div className="flex flex-col overflow-hidden h-48">
-            {activeBottomPanel === 'devices' && (
-              <div className="p-2 overflow-y-auto h-full">
+          {!hidePanel && (
+            <div className="flex flex-col overflow-hidden h-48">
+              {activeBottomPanel === 'devices' && (
                 <DeviceSelector 
                   deviceSizes={deviceSizes} 
                   responsive={responsive} 
@@ -267,52 +284,52 @@ const PreviewPane = ({
                   onToggleResponsive={onToggleResponsive} 
                   onSelectDevice={handleDeviceSelect}
                 />
-              </div>
-            )}
+              )}
 
-            {activeBottomPanel === 'console' && (
-              <div className="flex flex-col bg-black text-gray-300 font-mono text-sm h-full w-full">
-                <div className="flex justify-between items-center bg-gray-900 px-3 py-1 border-b border-gray-800 shrink-0">
-                  <span className="text-xs text-gray-500 uppercase tracking-wider font-bold">Developer Console</span>
-                  <button 
-                    onClick={() => setLogs([])}
-                    className="text-gray-400 hover:text-red-400 transition-colors flex items-center gap-1 text-xs"
-                    title="Clear console"
-                  >
-                    <Trash2 size={12} /> Clear
-                  </button>
-                </div>
-                
-                <div className="p-2 overflow-y-auto flex-1">
-                  {logs.length === 0 ? (
-                    <div className="text-gray-600 italic text-center mt-4 text-xs">Waiting for logs...</div>
-                  ) : (
-                    logs.map((log, i) => (
-                      <div key={i} className={`mb-1.5 pb-1.5 border-b border-gray-800/50 break-words ${
-                        log.type === 'error' ? 'text-red-400' : 
-                        log.type === 'warn' ? 'text-yellow-400' : 
-                        log.type === 'info' ? 'text-blue-300' : 
-                        'text-green-400'
-                      }`}>
-                        <span className="text-gray-600 text-xs mr-3 select-none">[{log.time}]</span>
-                        <span className="whitespace-pre-wrap">{log.message}</span>
-                      </div>
-                    ))
-                  )}
-                </div>
+              {activeBottomPanel === 'console' && (
+                <div className="flex flex-col bg-slate-200 text-gray-300 font-mono text-sm h-full w-full">
+                  <div className="flex justify-between items-center bg-slate-300 px-3 py-1 border-b border-slate-400 shrink-0">
+                    <span className="text-xs text-gray-400 uppercase tracking-wider font-bold">Developer Console</span>
+                    <button 
+                      onClick={() => setLogs([])}
+                      className="text-gray-400 hover:text-red-400 transition-colors flex items-center gap-1 text-xs"
+                      title="Clear console"
+                    >
+                      <Trash2 size={12} /> Clear
+                    </button>
+                  </div>
+                  
+                  <div className="p-2 overflow-y-auto flex-1">
+                    {logs.length === 0 ? (
+                      <div className="text-gray-300 italic text-center mt-4">Waiting for logs...</div>
+                    ) : (
+                      logs.map((log, i) => (
+                        <div key={i} className={`mb-1.5 pb-1.5 border-b border-slate-700/50 break-words ${
+                          log.type === 'error' ? 'text-red-400' : 
+                          log.type === 'warn' ? 'text-yellow-400' : 
+                          log.type === 'info' ? 'text-blue-300' : 
+                          'text-green-400'
+                        }`}>
+                          <span className="text-gray-600 text-xs mr-3 select-none">[{log.time}]</span>
+                          <span className="whitespace-pre-wrap">{log.message}</span>
+                        </div>
+                      ))
+                    )}
+                  </div>
 
-                {/* Console Footer / Run Button */}
-                <div className="bg-gray-900 border-t border-gray-800 p-2 flex justify-end shrink-0">
-                  <button 
-                    onClick={onRunCode}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-green-600 hover:bg-green-500 text-white text-xs font-bold rounded shadow transition-all active:scale-95"
-                  >
-                    <Play size={14} fill="currentColor" /> Run Code
-                  </button>
+                  {/* Console Footer / Run Button */}
+                  <div className="bg-slate-300 border-t border-slate-400 p-2 flex justify-end shrink-0">
+                    <button 
+                      onClick={onRunCode}
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-green-500 hover:bg-green-600 text-white text-xs font-bold rounded shadow transition-all active:scale-95"
+                    >
+                      <Play size={14} fill="currentColor" /> Run Code
+                    </button>
+                  </div>
                 </div>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
+          )}
         </div>
 
       </div>

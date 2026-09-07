@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Award, Check, X } from 'lucide-react'
-import BadgePicker from './BadgePicker'
+// import BadgePicker from './BadgePicker'
 import { upsertTutorialBadge, deleteTutorialBadge } from '../../../services/tutorial.service'
 
 // BadgeModal: shown after saving a tutorial to let teachers award a completion badge.
@@ -91,7 +91,7 @@ export default function BadgeModal({ tutorialId, existingBadge, onClose, onSaved
 
         {/* Body */}
         <div className="flex-1 overflow-y-auto px-6 py-5">
-          <BadgePicker value={badge} onChange={setBadge} />
+          {/* <BadgePicker value={badge} onChange={setBadge} /> */}
         </div>
 
         {/* Footer */}

@@ -458,8 +458,8 @@ const BlockEditor = () => {
         projectTitle={projectTitle}
       />
       
-      <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
-        <div className="flex flex-col md:w-2/3 h-full border border-gray-600 bg-white overflow-hidden">
+      <div className="flex flex-col px-4 gap-3 py-2.5 md:flex-row flex-1 overflow-hidden">
+        <div className="flex flex-col md:w-2/3 h-full rounded shadow border border-border bg-white overflow-hidden">
           <FileTabs
             files={files}
             activeFile={activeFile}
