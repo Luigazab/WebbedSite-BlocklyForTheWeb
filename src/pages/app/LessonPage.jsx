@@ -34,7 +34,7 @@ const LessonPage = () => {
       case "lecture":
         return (
           <LectureContent
-            lesson={lesson}
+            lesson={lesson.id}
             onNext={handleNext}
             onPrevious={handlePrevious}
             navigation={navigation}
@@ -43,7 +43,7 @@ const LessonPage = () => {
       case "quiz":
         return (
           <QuizContent
-            lesson={lesson}
+            lesson={lesson.id}
             onNext={handleNext}
             navigation={navigation}
           />
