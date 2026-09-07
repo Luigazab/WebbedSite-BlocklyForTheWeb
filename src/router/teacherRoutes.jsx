@@ -15,7 +15,7 @@ import BlockEditor from '../components/shared/BlockEditor'
 // import CreateQuizPage from '../dashboards/teacher/pages/CreateQuizPage'
 // import TutorialsPage from '../dashboards/teacher/pages/TutorialsPage'
 // import TutorialBuilderPage from '../dashboards/teacher/pages/TutorialBuilderPage'
-// import TutorialLayout from '../dashboards/teacher/TutorialLayout'
+import TutorialLayout from '@/dashboards/teacher/TutorialLayout'
 // import LearnManagementPage from '../dashboards/teacher/pages/LearnManagementPage'
 // import TopicViewer from '../dashboards/student/pages/TopicViewer'
 import ContentManagement from '@/dashboards/teacher/pages/ContentManagement'
@@ -23,7 +23,6 @@ import LecturePage from '@/dashboards/teacher/pages/LecturePage'
 import QuizPage from '@/dashboards/teacher/pages/QuizPage'
 import TutorialBuilderPage from '../dashboards/teacher/pages/TutorialBuilderPage'
 import LaboratoryBuilderPage from '@/dashboards/teacher/pages/LaboratoryBuilderPage'
-import TeacherGuildDashboard from '@/dashboards/teacher/pages/TeacherGuildDashboard'
 import ClassroomDetail from '@/dashboards/teacher/pages/ClassroomDetail'
 import StudentsManagement from '@/dashboards/teacher/pages/StudentsManagement'
 import GradesReport from '@/dashboards/teacher/pages/GradesReport'
@@ -37,14 +36,14 @@ export const teacherRoutes = [
       { index: true,                                         element: <TeacherHome /> },
       { path: 'projects',                                    element: <ProjectsPage /> },
       { path: 'content',                                     element: <ContentManagement /> },
-      { path: 'lecture/create',                              element: <LecturePage /> },
-      { path: 'lecture/edit/:id',                            element: <LecturePage /> },
-      { path: 'quiz/create',                                 element: <QuizPage /> },
-      { path: 'quiz/edit/:id',                               element: <QuizPage /> },
-      { path: 'tutorial/create',                             element: <TutorialBuilderPage /> },
-      { path: 'tutorial/edit/:id',                           element: <TutorialBuilderPage /> },
-      { path: 'laboratory/create',                           element: <LaboratoryBuilderPage /> },
-      { path: 'laboratory/edit/:id',                         element: <LaboratoryBuilderPage /> },
+      // { path: 'lecture/create',                              element: <LecturePage /> },
+      // { path: 'lecture/edit/:id',                            element: <LecturePage /> },
+      // { path: 'quiz/create',                                 element: <QuizPage /> },
+      // { path: 'quiz/edit/:id',                               element: <QuizPage /> },
+      // { path: 'tutorial/create',                             element: <TutorialBuilderPage /> },
+      // { path: 'tutorial/edit/:id',                           element: <TutorialBuilderPage /> },
+      // { path: 'laboratory/create',                           element: <LaboratoryBuilderPage /> },
+      // { path: 'laboratory/edit/:id',                         element: <LaboratoryBuilderPage /> },
 //       { path: 'learn',                                     element: <LearnPage /> },
 //       { path: 'learn/management',                          element: <LearnManagementPage /> },
 //       { path: 'learn/:topicId', element: <TopicViewer /> },
@@ -84,12 +83,19 @@ export const teacherRoutes = [
     ]
   },
   { path: 'exercise',                                    element: <ExercisePage/> },
+  { path: 'lecture/create',                              element: <LecturePage /> },
+  { path: 'lecture/edit/:id',                            element: <LecturePage /> },
+  { path: 'quiz/create',                                 element: <QuizPage /> },
+  { path: 'quiz/edit/:id',                               element: <QuizPage /> },
+  { path: 'tutorial/create',       element: <TutorialBuilderPage /> },
+  { path: 'tutorial/:id/edit',     element: <TutorialBuilderPage /> },
+  { path: 'laboratory/create',                           element: <LaboratoryBuilderPage /> },
+  { path: 'laboratory/edit/:id',                         element: <LaboratoryBuilderPage /> },
 
-//   {
-//     element: <TutorialLayout />,
-//     children: [
-//       { path: 'tutorials/create',       element: <TutorialBuilderPage /> },
-//       { path: 'tutorials/:id/edit',     element: <TutorialBuilderPage /> },
-//     ]
-//   }
+  // {
+  //   element: <TutorialLayout />,
+  //   children: [
+      
+  //   ]
+  // }
 ]
