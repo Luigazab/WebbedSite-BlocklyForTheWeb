@@ -1,118 +1,64 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
-import {
-  createTutorial,
-  updateTutorial,
-  fetchTutorialById,
-  createTutorialStep,
-  updateTutorialStep,
-  deleteTutorialStep,
-  reorderTutorialSteps,
-  saveStepFiles,
-} from '../../../services/tutorial.service'
 import { useAuth } from '../../../hooks/useAuth'
-import {
-  createLessonBase,
-  fetchTopicGroupsForAuthoring,
-  fetchTutorialEditorData,
-  linkTutorialToLesson,
-  updateLessonBase,
-} from '../../../services/contentCreationService'
+import { useTutorialBuilder } from '../../../hooks/useTutorialBuilder'
+import { fetchTopicGroupsForAuthoring } from '../../../services/contentCreationService'
 import BlocklyWorkspace from '../../../components/editor/BlocklyWorkspace'
 import PreviewPane from '../../../components/editor/PreviewPane'
 import FileTabs from '../../../components/editor/FileTabs'
 import { codeGeneratorService } from '../../../services/codeGenerator.service'
 import { defineFileReferenceBlocks } from '../../../blockly/fileReferenceBlocks'
-import { useUIStore } from '../../../store/uiStore'
-import { BookOpen, Check, ChevronDown, ChevronLeft, ChevronRight, CircleDot, GripVertical, Lightbulb, ListOrdered, PlusCircle, Sun, Trash2, Zap} from 'lucide-react'
+import {
+  BookOpen, Check, ChevronDown, ChevronLeft, ChevronRight,
+  CircleDot, Lightbulb, ListOrdered, PlusCircle, Sun, Trash2,
+} from 'lucide-react'
 import BackButton from '#components/common/BackButton'
 import { Button } from '#components/ui/button'
-import SwitchButton from '#components/editor/SwitchButton'
 import { toast } from 'sonner'
+import { getToolboxCategoryOptions } from '@/blockly/toolboxCategoryTree'
+import RemiGuide from '#components/tutorial/RemiGuide'
+import { useRemiHighlight } from '#hooks/useRemiHighlights'
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-const uid = () => Math.random().toString(36).slice(2, 10)
-
-/** A single file object for a tutorial step */
-const makeFile = (filename = 'index.html') => ({
-  _key: uid(),   // stable local React key + used as FileTabs "id"
-  id:   null,    // tutorial_step_files.id (null = not yet persisted)
-  filename,
-  blocks_json: null,
-})
-
-/**
- * A blank step — optionally inherits the previous step's files so teachers
- * build incrementally (html template already in place, add css next).
- */
-const makeBlankStep = (inheritedFiles = null) => {
-  const files = inheritedFiles
-    ? inheritedFiles.map((f) => ({ ...f, _key: uid(), id: null })) // copy, reset id
-    : [makeFile()]
-  return {
-    id:            null,
-    instruction:   '',
-    hint:          '',
-    requireBlocks: false,
-    capturedBlocks: null,
-    files,
-    activeFileKey: files[0]._key,
-  }
+const CATEGORY_OPTIONS = getToolboxCategoryOptions()
+const STATUS_STYLES = {
+  captured:  { label: 'Captured',  cls: 'bg-emerald-100 text-emerald-700' },
+  inherited: { label: 'Inherited', cls: 'bg-sky-100 text-sky-700' },
+  initial:   { label: 'Initial content', cls: 'bg-slate-100 text-slate-500' },
+  empty:     { label: 'Empty', cls: 'bg-slate-50 text-slate-400' },
 }
 
-const DIFFICULTY_OPTIONS = ['beginner', 'intermediate', 'advanced']
-
-// ─── Step Panel ───────────────────────────────────────────────────────────────
+// ─── Step Panel ─────────────────────────────────────────────────────────────
 function StepPanel({
-  tutorialTitle, setTutorialTitle,
-  baseXp, setBaseXp,
-  courseTopics,
-  selectedTopicId, setSelectedTopicId,
-  loadingTopics,
-  isPublished,
-  steps,
-  currentStepIndex,
-  onGoToStep,
-  onAddStep,
-  onDeleteStep,
-  instruction, setInstruction,
-  hint, setHint,
-  requireBlocks, setRequireBlocks,
-  capturedBlocks,
-  onCaptureBlocks,
-  onClearBlocks,
+  meta, setMeta, courseTopics, loadingTopics,
+  files, activeFilename, getFileStatusForStep, currentStepIndex,
+  steps, onGoToStep, onAddStep, onDeleteStep,
+  currentStep, onUpdateCurrentStep,
+  onCapture, onClearCapture,
   panelOpen, setPanelOpen,
-  onSaveTutorial,
-  onPublish,
-  saving,
-  saveMsg,
 }) {
   const [metaOpen, setMetaOpen] = useState(true)
+  const activeExpected = currentStep?.expectedByFile[activeFilename]
+  const selectedCategory = CATEGORY_OPTIONS.find(
+    (c) => JSON.stringify(c.path) === JSON.stringify(currentStep?.highlightCategoryPath ?? [])
+  )
 
   return (
     <div className="flex flex-col h-full bg-white border border-border overflow-hidden rounded">
-      {/* Header */}
-      <div className={`shrink-0 flex justify-between py-1 ${panelOpen ? ` bg-slate-200` : ``}`}>
+      <div className={`shrink-0 flex justify-between py-1 ${panelOpen ? 'bg-slate-200' : ''}`}>
         {panelOpen && (
           <div className="flex items-center gap-2 mb-1 px-4">
-            <BookOpen size={16} className="" />
+            <BookOpen size={16} />
             <span className="font-bold tracking-wider">Tutorial Builder</span>
           </div>
         )}
-        {panelOpen && saveMsg && (
-          <span className="inline-flex items-center gap-1 mt-1 text-[10px] font-semibold text-emerald-200">
-            <Check size={10} /> {saveMsg}
-          </span>
-        )}
-        <button onClick={() => {setPanelOpen(!panelOpen)}} className={`p-2 rounded hover:bg-slate-300 transition-colors! ${panelOpen ? 'mr-2' : 'mx-auto'}`}>
-          {panelOpen ? <ChevronLeft size={15}/> : <ChevronRight size={15}/>}
+        <button onClick={() => setPanelOpen(!panelOpen)} className={`p-2 rounded hover:bg-slate-300 transition-colors! ${panelOpen ? 'mr-2' : 'mx-auto'}`}>
+          {panelOpen ? <ChevronLeft size={15} /> : <ChevronRight size={15} />}
         </button>
       </div>
 
       {panelOpen && (
-          
       <div className="flex-1 overflow-y-auto">
-        {/* ── Tutorial Meta ──────────────────────────────────────────── */}
+        {/* Tutorial meta */}
         <div className="border-b border-border">
           <button
             onClick={() => setMetaOpen((o) => !o)}
@@ -121,24 +67,27 @@ function StepPanel({
             <span className="flex items-center gap-1.5"><ListOrdered size={13} /> Tutorial Info</span>
             {metaOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
           </button>
-
           {metaOpen && (
-            <div className="px-4 pb-4">
+            <div className="px-4 pb-4 flex flex-col gap-3">
               <div>
-                <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wide">Tutorial Title <span className='text-red-600 text-sm'>*</span></label>
+                <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wide">
+                  Tutorial Title <span className="text-red-600 text-sm">*</span>
+                </label>
                 <input
                   type="text"
-                  value={tutorialTitle}
-                  onChange={(e) => setTutorialTitle(e.target.value)}
+                  value={meta.title}
+                  onChange={(e) => setMeta({ title: e.target.value })}
                   placeholder="e.g. Build a webpage from scratch"
                   className="w-full px-3 py-2 text-sm border border-border rounded focus:outline-none focus:ring-1 focus:ring-indigo-400 bg-white"
                 />
               </div>
               <div>
-                <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wide">Topic <span className='text-red-600 text-sm'>*</span></label>
+                <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wide">
+                  Topic <span className="text-red-600 text-sm">*</span>
+                </label>
                 <select
-                  value={selectedTopicId}
-                  onChange={(e) => setSelectedTopicId(e.target.value)}
+                  value={meta.topicId}
+                  onChange={(e) => setMeta({ topicId: e.target.value })}
                   className="w-full px-3 py-2 text-sm border border-border rounded focus:outline-none focus:ring-1 focus:ring-indigo-400 bg-white"
                 >
                   <option value="">{loadingTopics ? 'Loading topics...' : 'Select a topic'}</option>
@@ -152,11 +101,13 @@ function StepPanel({
                 </select>
               </div>
               <div>
-                <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wide">Base XP <span className='text-red-600 text-sm'>*</span></label>
+                <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wide">
+                  Base XP <span className="text-red-600 text-sm">*</span>
+                </label>
                 <input
                   type="number" min={1} step={1}
-                  value={baseXp}
-                  onChange={(e) => setBaseXp(e.target.value)}
+                  value={meta.baseXp}
+                  onChange={(e) => setMeta({ baseXp: e.target.value })}
                   className="w-full px-3 py-2 text-sm border border-border rounded focus:outline-none focus:ring-1 focus:ring-indigo-400 bg-white"
                 />
               </div>
@@ -164,11 +115,11 @@ function StepPanel({
           )}
         </div>
 
-        {/* ── Steps List ─────────────────────────────────────────────── */}
+        {/* Steps list — append-only, no reorder */}
         <div className="border-b border-border">
           <div className="flex items-center justify-between px-4 py-1">
             <span className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-              <CircleDot size={13} /> Steps<span className='text-indigo-600'>({steps.length})</span> 
+              <CircleDot size={13} /> Steps<span className="text-indigo-600">({steps.length})</span>
             </span>
             <button
               onClick={onAddStep}
@@ -195,20 +146,10 @@ function StepPanel({
                   }`}>
                     {idx + 1}
                   </span>
-                  <span className={`line-clamp-2 leading-snug ${
-                    idx === currentStepIndex ? 'text-white' : 'text-slate-600'
-                  }`}>
+                  <span className={`line-clamp-2 leading-snug ${idx === currentStepIndex ? 'text-white' : 'text-slate-600'}`}>
                     {step.instruction?.trim() || `Step ${idx + 1}`}
                   </span>
                 </button>
-                {/* File count badge */}
-                {step.files?.length > 1 && (
-                  <span className={`shrink-0 self-center mr-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
-                    idx === currentStepIndex ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-400'
-                  }`}>
-                    {step.files.length}f
-                  </span>
-                )}
                 <button
                   onClick={(e) => { e.stopPropagation(); onDeleteStep(idx) }}
                   title="Delete step"
@@ -226,25 +167,19 @@ function StepPanel({
           </div>
         </div>
 
-        {/* ── Current Step Editor ────────────────────────────────────── */}
-        <div className="px-4 py-4">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="text-xs font-bold text-slate-700 uppercase">
-              Step <span className='bg-indigo-50 text-indigo-600 px-1 rounded'>{currentStepIndex + 1}</span> Content
-            </h3>
-            {/* Show how many files this step has */}
-            {steps[currentStepIndex]?.files?.length > 0 && (
-              <span className="text-[10px] text-slate-400 font-semibold">
-                {steps[currentStepIndex].files.length} file{steps[currentStepIndex].files.length !== 1 ? 's' : ''}
-              </span>
-            )}
-          </div>
+        {/* Current step editor */}
+        <div className="px-4 py-4 flex flex-col gap-3">
+          <h3 className="text-xs font-bold text-slate-700 uppercase">
+            Step <span className="bg-indigo-50 text-indigo-600 px-1 rounded">{currentStepIndex + 1}</span> Content
+          </h3>
 
           <div>
-            <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wide">Instruction <span className='text-red-600 text-sm'>*</span></label>
+            <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wide">
+              Instruction <span className="text-red-600 text-sm">*</span>
+            </label>
             <textarea
-              value={instruction}
-              onChange={(e) => setInstruction(e.target.value)}
+              value={currentStep?.instruction ?? ''}
+              onChange={(e) => onUpdateCurrentStep({ instruction: e.target.value })}
               placeholder="Tell students what to do in this step…"
               rows={5}
               className="w-full px-3 py-2 text-sm border border-border rounded focus:outline-none focus:ring-1 focus:ring-indigo-400 bg-white resize-none leading-relaxed"
@@ -253,52 +188,90 @@ function StepPanel({
 
           <div>
             <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wide flex items-center gap-1">
-              <Lightbulb size={11} /> Hint <span className='text-slate-400 lowercase font-normal'>(optional)</span>
+              <Lightbulb size={11} /> Hint <span className="text-slate-400 lowercase font-normal">(optional)</span>
             </label>
             <input
               type="text"
-              value={hint}
-              onChange={(e) => setHint(e.target.value)}
+              value={currentStep?.hint ?? ''}
+              onChange={(e) => onUpdateCurrentStep({ hint: e.target.value })}
               placeholder="Give a helpful nudge…"
               className="w-full px-3 py-2 text-sm border border-border rounded focus:outline-none focus:ring-1 focus:ring-indigo-400 bg-white"
             />
           </div>
+          <div className="bg-slate-50 rounded-xl p-3 border border-slate-200 space-y-2">
+            <p className="text-xs font-bold text-slate-700">Remi's pointer for this step</p>
+            <select
+              value={currentStep?.highlightCategoryPath ? JSON.stringify(currentStep.highlightCategoryPath) : ''}
+              onChange={(e) => {
+                const path = e.target.value ? JSON.parse(e.target.value) : null
+                onUpdateCurrentStep({ highlightCategoryPath: path, highlightBlockType: null })
+              }}
+              className="w-full px-3 py-2 text-sm border border-border rounded bg-white"
+            >
+              <option value="">No highlight</option>
+              {CATEGORY_OPTIONS.map((c) => (
+                <option key={c.label} value={JSON.stringify(c.path)}>{c.label}</option>
+              ))}
+            </select>
 
-          <div className="bg-slate-50 rounded-xl p-3 border border-slate-200 space-y-2 mt-2">
-            <label className="flex items-center gap-2 cursor-pointer select-none">
-              <input
-                type="checkbox"
-                checked={requireBlocks}
-                onChange={(e) => setRequireBlocks(e.target.checked)}
-                className="rounded border-slate-300 accent-indigo-600 w-4 h-4"
-              />
-              <span className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                <Zap size={13} className="text-amber-500" />
-                Require expected blocks
-              </span>
-            </label>
-            {requireBlocks && (
-              <div className="space-y-2 pt-1">
-                <p className="text-[11px] text-slate-500">
-                  Build the solution in the active file, then capture it as the expected answer.
-                </p>
-                {capturedBlocks ? (
-                  <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">
-                    <Check size={13} className="text-emerald-600 shrink-0" />
-                    <span className="text-xs text-emerald-700 font-semibold flex-1">Workspace captured</span>
-                    <button onClick={onClearBlocks} className="text-[11px] text-red-400 hover:text-red-600 font-semibold">Clear</button>
-                  </div>
-                ) : (
-                  <button
-                    onClick={onCaptureBlocks}
-                    className="w-full py-2 text-xs font-bold border-2 border-dashed border-indigo-300 text-indigo-600 rounded-lg hover:bg-indigo-50 transition-colors"
-                  >
-                    📸 Capture active file's workspace
-                  </button>
-                )}
-              </div>
+            {selectedCategory?.blockTypes.length > 0 && (
+              <select
+                value={currentStep?.highlightBlockType ?? ''}
+                onChange={(e) => onUpdateCurrentStep({ highlightBlockType: e.target.value || null })}
+                className="w-full px-3 py-2 text-sm border border-border rounded bg-white"
+              >
+                <option value="">Just highlight the category</option>
+                {selectedCategory.blockTypes.map((t) => (
+                  <option key={t} value={t}>{t}</option>
+                ))}
+              </select>
             )}
           </div>
+
+          {/* Capture the active file's solution for this step */}
+          <div className="bg-slate-50 rounded-xl p-3 border border-slate-200 space-y-2">
+            <p className="text-xs font-bold text-slate-700">
+              Solution for <span className="text-indigo-600">{activeFilename}</span>
+            </p>
+            {activeExpected ? (
+              <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">
+                <Check size={13} className="text-emerald-600 shrink-0" />
+                <span className="text-xs text-emerald-700 font-semibold flex-1">Captured for this step</span>
+                <button onClick={() => onClearCapture(activeFilename)} className="text-[11px] text-red-400 hover:text-red-600 font-semibold">
+                  Clear
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => onCapture(activeFilename)}
+                className="w-full py-2 text-xs font-bold border-2 border-dashed border-indigo-300 text-indigo-600 rounded-lg hover:bg-indigo-50 transition-colors"
+              >
+                📸 Capture this file as the step's solution
+              </button>
+            )}
+            <p className="text-[11px] text-slate-400">
+              Uncaptured files here inherit content from the nearest earlier step (or the file's starting content).
+            </p>
+          </div>
+
+          {/* Status checklist across all files */}
+          {files.length > 1 && (
+            <div className="space-y-1.5">
+              <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wide">Files in this step</p>
+              {files.map((f) => {
+                const status = getFileStatusForStep(f.filename, currentStepIndex)
+                const s = STATUS_STYLES[status]
+                return (
+                  <div key={f.filename} className="flex items-center justify-between text-xs px-2 py-1.5 rounded-lg border border-slate-100">
+                    <span className={`truncate font-semibold ${f.filename === activeFilename ? 'text-indigo-600' : 'text-slate-600'}`}>
+                      {f.filename}
+                    </span>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${s.cls}`}>{s.label}</span>
+                  </div>
+                )
+              })}
+            </div>
+          )}
         </div>
       </div>
       )}
@@ -306,550 +279,155 @@ function StepPanel({
   )
 }
 
-// ─── Main Builder ─────────────────────────────────────────────────────────────
+// ─── Main Builder ───────────────────────────────────────────────────────────
 export default function TutorialBuilderPage() {
-  const { user }    = useAuth()
-  const navigate    = useNavigate()
-  const { id }      = useParams()
-  const isEdit      = Boolean(id)
-  const addToast    = useUIStore((s) => s.addToast)
+  const { user } = useAuth()
+  const navigate = useNavigate()
+  const { id } = useParams()
+  const isEdit = Boolean(id)
 
-  // ── Tutorial meta ──────────────────────────────────────────────────────────
-  const [savedId, setSavedId]                         = useState(null)
-  const [savedLessonId, setSavedLessonId]             = useState(id || null)
-  const [tutorialTitle, setTutorialTitle]             = useState('')
-  const [baseXp, setBaseXp]                           = useState('50')
-  const [courseTopics, setCourseTopics]               = useState([])
-  const [selectedTopicId, setSelectedTopicId]         = useState('')
-  const [loadingTopics, setLoadingTopics]             = useState(true)
-  const [isPublished, setIsPublished]                 = useState(false)
-  const [loading, setLoading]                         = useState(isEdit)
-  const [saving, setSaving]                           = useState(false)
-  const [saveMsg, setSaveMsg]                         = useState('')
-
-  // ── Steps ──────────────────────────────────────────────────────────────────
-  // Each step: { id, instruction, hint, requireBlocks, capturedBlocks,
-  //              files: [{ _key, id, filename, blocks_json }],
-  //              activeFileKey: string }
-  const [steps, setSteps]                   = useState([makeBlankStep()])
-  const [currentStepIndex, setCurrentStepIndex] = useState(0)
-
-  // Live edit fields for the currently selected step
-  const [instruction, setInstruction]       = useState('')
-  const [hint, setHint]                     = useState('')
-  const [requireBlocks, setRequireBlocks]   = useState(false)
-  const [capturedBlocks, setCapturedBlocks] = useState(null)
+  const [courseTopics, setCourseTopics] = useState([])
+  const [loadingTopics, setLoadingTopics] = useState(true)
+  const [activeFilename, setActiveFilename] = useState(null)
+  const [previewFilename, setPreviewFilename] = useState(null)
+  const [filesWithCode, setFilesWithCode] = useState([])
+  const [generatedCode, setGeneratedCode] = useState('')
+  const [responsive, setResponsive] = useState(true)
+  const [selectedDevice, setSelectedDevice] = useState()
   const [panelOpen, setPanelOpen] = useState(true)
+  const [remiMinimized, setRemiMinimized] = useState(false)
 
-
-  // ── Refs to latest values (avoid stale closures in callbacks) ─────────────
-  const stepsRef         = useRef(steps)
-  const currentIdxRef    = useRef(currentStepIndex)
-  const instructionRef   = useRef(instruction)
-  const hintRef          = useRef(hint)
-  const requireBlocksRef = useRef(requireBlocks)
-  const capturedRef      = useRef(capturedBlocks)
-  const isLoadingWsRef         = useRef(false)
-  // Holds blocks_json queued during fetch; useState so the drain effect below
-  // re-fires whether isInitialized or pendingFirstStep changes last.
-  const [pendingFirstStep, setPendingFirstStep] = useState(null)
-  const [activeSwitch, setActiveSwitch] = useState('initial')
-
-  useEffect(() => {
-    ;(async () => {
-      setLoadingTopics(true)
-      try {
-        setCourseTopics(await fetchTopicGroupsForAuthoring())
-      } catch (err) {
-        addToast(err.message || 'Failed to load topics.', 'error')
-      } finally {
-        setLoadingTopics(false)
-      }
-    })()
-  }, [addToast])
-
-  useEffect(() => { stepsRef.current = steps },                 [steps])
-  useEffect(() => { currentIdxRef.current = currentStepIndex }, [currentStepIndex])
-  useEffect(() => { instructionRef.current = instruction },      [instruction])
-  useEffect(() => { hintRef.current = hint },                   [hint])
-  useEffect(() => { requireBlocksRef.current = requireBlocks },  [requireBlocks])
-  useEffect(() => { capturedRef.current = capturedBlocks },      [capturedBlocks])
-
-  // ── Preview state ──────────────────────────────────────────────────────────
-  const [filesWithCode, setFilesWithCode]         = useState([]) // { _key, filename, generatedCode }
-  const [generatedCode, setGeneratedCode]         = useState('')
-  const [activePreviewKey, setActivePreviewKey]   = useState(null)
-  const [responsive, setResponsive]               = useState(true)
-  const [selectedDevice, setSelectedDevice]       = useState()
-
-  // ── Blockly workspace ─────────────────────────────────────────────────────
-  // NOTE: BlocklyWorkspace is a CUSTOM HOOK, NOT a component.
-  // The blocklyDiv ref must ALWAYS be in the DOM — we never early-return before
-  // attaching it. Instead we use a loading overlay (see return below).
   const workspace = BlocklyWorkspace({
-    onWorkspaceChange: (wsRef) => {
-      if (isLoadingWsRef.current) return
-      const step    = stepsRef.current[currentIdxRef.current]
-      const file    = step?.files.find((f) => f._key === step.activeFileKey)
-      if (!file) return
-      const code = codeGeneratorService.generateCode(wsRef, file.filename)
-      setFilesWithCode((prev) => {
-        const exists = prev.find((f) => f._key === file._key)
-        if (exists) return prev.map((f) => f._key === file._key ? { ...f, generatedCode: code } : f)
-        return [...prev, { _key: file._key, filename: file.filename, generatedCode: code }]
-      })
+    onWorkspaceChange: () => {
+      if (builder.isLoadingWsRef.current || !activeFilename) return
+      builder.recordWorkingEdit(activeFilename)
+      const wsObj = workspace.getWorkspace()
+      const code = codeGeneratorService.generateCode(wsObj, activeFilename)
+      setFilesWithCode((prev) => prev.map((f) => f.filename === activeFilename ? { ...f, generatedCode: code } : f))
     },
     onWorkspaceLoad: () => {
-      const step = stepsRef.current[currentIdxRef.current]
-      if (step) defineFileReferenceBlocks(step.files.map((f) => ({ id: f._key, filename: f.filename })))
+      defineFileReferenceBlocks(builder.files.map((f) => ({ id: f.filename, filename: f.filename })))
     },
   })
 
-  // ── Recompute generatedCode whenever filesWithCode or preview file changes ─
-  useEffect(() => {
-    const step = steps[currentStepIndex]
-    if (!step) return
-    const previewFile = step.files.find((f) => f._key === activePreviewKey) ?? step.files[0]
-    const combined = codeGeneratorService.combineFilesForPreview(
-      filesWithCode.map((f) => ({ filename: f.filename, generatedCode: f.generatedCode })),
-      previewFile?.filename
-    )
-    setGeneratedCode(combined)
-  }, [filesWithCode, activePreviewKey, currentStepIndex])
+  const builder = useTutorialBuilder({ lessonId: id, authorId: user?.id, workspace })
 
-  // ── Load existing tutorial for edit mode ──────────────────────────────────
+  // Load topics for the dropdown
   useEffect(() => {
-    if (!isEdit) return
     ;(async () => {
-      setLoading(true)
-      try {
-        const lesson = await fetchTutorialEditorData(id)
-        setSavedLessonId(lesson.id)
-        setSelectedTopicId(lesson.topics_id || '')
-        setTutorialTitle(lesson.title || '')
-        setBaseXp((lesson.base_xp ?? 50).toString())
-        const tut = lesson.tutorial?.id ? await fetchTutorialById(lesson.tutorial.id) : null
-        if (!tut) {
-          setLoading(false)
-          return
-        }
-        setTutorialTitle(tut.title || '')
-        setIsPublished(tut.is_published || false)
-        setSavedId(tut.id)
-
-        const loaded = (tut.tutorial_steps || []).map((s) => {
-          const stepFiles =
-            s.tutorial_step_files?.length > 0
-              ? s.tutorial_step_files.map((f) => ({
-                  _key:        uid(),
-                  id:          f.id,
-                  filename:    f.filename,
-                  blocks_json: f.blocks_json ?? null,
-                }))
-              : [makeFile()]
-
-          return {
-            id:            s.id,
-            instruction:   s.instruction_text || '',
-            hint:          s.hint || '',
-            requireBlocks: !!s.expected_blocks_exact,
-            capturedBlocks: s.expected_blocks_exact || null,
-            files:         stepFiles,
-            activeFileKey: stepFiles[0]._key,
-          }
-        })
-
-        const initial = loaded.length > 0 ? loaded : [makeBlankStep()]
-        setSteps(initial)
-        syncFields(initial[0])
-        initPreviewForStep(initial[0])
-
-        // Queue the first step's blocks for loading.
-        // The useEffect below watches workspace.isInitialized and drains this ref
-        // once Blockly is ready — avoids the stale-closure problem of polling here.
-        const firstFile = initial[0]?.files.find((f) => f._key === initial[0].activeFileKey)
-        if (firstFile?.blocks_json) {
-          setPendingFirstStep(firstFile.blocks_json)
-        }
-      } catch (err) {
-        console.error(err)
-      } finally {
-        setLoading(false)
-      }
+      setLoadingTopics(true)
+      try { setCourseTopics(await fetchTopicGroupsForAuthoring()) }
+      catch (err) { toast.error(err.message || 'Failed to load topics.') }
+      finally { setLoadingTopics(false) }
     })()
-  }, [id, isEdit])
+  }, [])
 
-  // ── Drain pending first-step load once Blockly is ready ──────────────────
-  // workspace.isInitialized is React state inside BlocklyWorkspace, so changes
-  // to it cause a re-render and this effect fires with the fresh true value —
-  // unlike a setTimeout closure that captures the stale false forever.
+  // Pick a sane default active file once data is loaded
   useEffect(() => {
-    if (!workspace.isInitialized || !pendingFirstStep) return
-    isLoadingWsRef.current = true
-    workspace.loadWorkspaceState?.(pendingFirstStep)
-    setPendingFirstStep(null)
-    setTimeout(() => { isLoadingWsRef.current = false }, 200)
-  }, [workspace.isInitialized, pendingFirstStep])
+    if (builder.loading || builder.files.length === 0) return
+    setActiveFilename((prev) => (prev && builder.files.some((f) => f.filename === prev)) ? prev : builder.files[0].filename)
+  }, [builder.loading, builder.files])
 
-  // ── Helpers ────────────────────────────────────────────────────────────────
-  const syncFields = (step) => {
-    setInstruction(step?.instruction || '')
-    setHint(step?.hint || '')
-    setRequireBlocks(step?.requireBlocks || false)
-    setCapturedBlocks(step?.capturedBlocks || null)
-  }
+  // Reload workspace + recompute preview code whenever step or active file changes
+  useEffect(() => {
+    if (builder.loading || !activeFilename) return
+    builder.loadFileIntoWorkspace(activeFilename, builder.currentStepIndex)
+    setFilesWithCode(builder.getFilesWithCodeForStep(builder.currentStepIndex))
+    defineFileReferenceBlocks(builder.files.map((f) => ({ id: f.filename, filename: f.filename })))
+  }, [builder.currentStepIndex, activeFilename, builder.loading])
 
-  const initPreviewForStep = (step) => {
-    if (!step) return
-    setFilesWithCode(step.files.map((f) => ({ _key: f._key, filename: f.filename, generatedCode: '' })))
-    const firstHtml = step.files.find((f) => f.filename.endsWith('.html')) ?? step.files[0]
-    setActivePreviewKey(firstHtml?._key ?? null)
-  }
+  // Default preview file to first html file
+  useEffect(() => {
+    if (previewFilename && builder.files.some((f) => f.filename === previewFilename)) return
+    const firstHtml = builder.files.find((f) => f.filename.endsWith('.html'))
+    setPreviewFilename(firstHtml?.filename ?? builder.files[0]?.filename ?? null)
+  }, [builder.files, previewFilename])
 
-  /**
-   * Build a flushed version of the current step synchronously from refs.
-   * Captures the current workspace state into the active file.
-   */
-  const buildFlushedStep = (wsState) => {
-    const idx  = currentIdxRef.current
-    const step = stepsRef.current[idx]
-    return {
-      ...step,
-      instruction:   instructionRef.current,
-      hint:          hintRef.current,
-      requireBlocks: requireBlocksRef.current,
-      capturedBlocks: capturedRef.current,
-      files: step.files.map((f) =>
-        f._key === step.activeFileKey ? { ...f, blocks_json: wsState } : f
-      ),
-    }
-  }
+  // Combine files into the previewable HTML
+  useEffect(() => {
+    setGeneratedCode(codeGeneratorService.combineFilesForPreview(filesWithCode, previewFilename))
+  }, [filesWithCode, previewFilename])
 
-  /** Replace current step in the array with flushed version, update ref + state */
-  const commitFlushedStep = (flushedStep) => {
-    const idx = currentIdxRef.current
-    const newSteps = stepsRef.current.map((s, i) => (i === idx ? flushedStep : s))
-    stepsRef.current = newSteps
-    setSteps(newSteps)
-    return newSteps
-  }
+  // ── File tab handlers ──────────────────────────────────────────────────
+  const handleFileChange = useCallback((filename) => {
+    setActiveFilename(filename)
+    if (filename.endsWith('.html')) setPreviewFilename(filename)
+  }, [])
 
-  // ── Switch step ────────────────────────────────────────────────────────────
-  const handleGoToStep = useCallback((idx) => {
-    if (idx === currentIdxRef.current) return
-
-    // 1. Flush current
-    const ws      = workspace.getWorkspaceState?.() ?? null
-    const flushed = buildFlushedStep(ws)
-    commitFlushedStep(flushed)
-
-    // 2. Switch
-    currentIdxRef.current = idx
-    setCurrentStepIndex(idx)
-
-    const target = stepsRef.current[idx]
-    syncFields(target)
-    initPreviewForStep(target)
-
-    // 3. Load target file's workspace (or keep current if null = inherited)
-    const activeFile = target.files.find((f) => f._key === target.activeFileKey)
-    if (activeFile?.blocks_json) {
-      isLoadingWsRef.current = true
-      workspace.loadWorkspaceState?.(activeFile.blocks_json)
-      setTimeout(() => { isLoadingWsRef.current = false }, 150)
-    }
-    // If null → workspace stays as-is (inherited from previous step)
-
-    // Update file-reference blocks for the new step
-    defineFileReferenceBlocks(target.files.map((f) => ({ id: f._key, filename: f.filename })))
-  }, [workspace])
-
-  // ── Add step — inherits current files & workspace ─────────────────────────
-  const handleAddStep = useCallback(() => {
-    const ws      = workspace.getWorkspaceState?.() ?? null
-    const flushed = buildFlushedStep(ws)
-    const newSteps = [...commitFlushedStep(flushed), makeBlankStep(flushed.files)]
-    stepsRef.current = newSteps
-    setSteps(newSteps)
-
-    const newIdx = newSteps.length - 1
-    currentIdxRef.current = newIdx
-    setCurrentStepIndex(newIdx)
-    syncFields(newSteps[newIdx])
-    initPreviewForStep(newSteps[newIdx])
-    // Workspace stays as-is — inherited from the last step
-  }, [workspace])
-
-  // ── Delete step ────────────────────────────────────────────────────────────
-  const handleDeleteStep = async (idx) => {
-    const step = stepsRef.current[idx]
-    if (step?.id) {
-      try { await deleteTutorialStep(step.id) } catch (e) { console.error(e) }
-    }
-    setSteps((prev) => {
-      const updated  = prev.filter((_, i) => i !== idx)
-      const fallback = updated.length > 0 ? updated : [makeBlankStep()]
-      const safeIdx  = Math.min(
-        currentIdxRef.current >= idx ? currentIdxRef.current - 1 : currentIdxRef.current,
-        fallback.length - 1
-      )
-      const clampedIdx = Math.max(0, safeIdx)
-
-      setTimeout(() => {
-        currentIdxRef.current = clampedIdx
-        setCurrentStepIndex(clampedIdx)
-        syncFields(fallback[clampedIdx])
-        initPreviewForStep(fallback[clampedIdx])
-        const af = fallback[clampedIdx]?.files.find((f) => f._key === fallback[clampedIdx].activeFileKey)
-        if (af?.blocks_json) {
-          isLoadingWsRef.current = true
-          workspace.loadWorkspaceState?.(af.blocks_json)
-          setTimeout(() => { isLoadingWsRef.current = false }, 150)
-        }
-      }, 0)
-
-      return fallback
-    })
-  }
-
-  // ── File operations (within current step) ─────────────────────────────────
-  /** Switch active file within the current step */
-  const handleFileChange = useCallback((_key) => {
-    const step = stepsRef.current[currentIdxRef.current]
-    if (!step || _key === step.activeFileKey) return
-
-    // Save current file's workspace state
-    const ws      = workspace.getWorkspaceState?.() ?? null
-    const newFiles = step.files.map((f) =>
-      f._key === step.activeFileKey ? { ...f, blocks_json: ws } : f
-    )
-    const newStep = { ...step, files: newFiles, activeFileKey: _key }
-    const newSteps = stepsRef.current.map((s, i) => (i === currentIdxRef.current ? newStep : s))
-    stepsRef.current = newSteps
-    setSteps(newSteps)
-
-    // Load new file's workspace
-    const targetFile = newFiles.find((f) => f._key === _key)
-    isLoadingWsRef.current = true
-    if (targetFile?.blocks_json) {
-      workspace.loadWorkspaceState?.(targetFile.blocks_json)
-    } else {
-      workspace.clearWorkspace?.()
-    }
-    setTimeout(() => { isLoadingWsRef.current = false }, 150)
-
-    // Auto-set preview to this file if it's HTML
-    if (targetFile?.filename.endsWith('.html')) setActivePreviewKey(_key)
-  }, [workspace])
-
-  /** Create a new file in the current step */
   const handleCreateFile = useCallback((filename) => {
-    const step    = stepsRef.current[currentIdxRef.current]
-    if (!step) return
-    // Save current file's workspace
-    const ws      = workspace.getWorkspaceState?.() ?? null
-    const newFile = makeFile(filename)
-    const newFiles = [
-      ...step.files.map((f) => f._key === step.activeFileKey ? { ...f, blocks_json: ws } : f),
-      newFile,
-    ]
-    const newStep  = { ...step, files: newFiles, activeFileKey: newFile._key }
-    const newSteps = stepsRef.current.map((s, i) => (i === currentIdxRef.current ? newStep : s))
-    stepsRef.current = newSteps
-    setSteps(newSteps)
-
-    // Clear workspace for blank new file
-    isLoadingWsRef.current = true
-    workspace.clearWorkspace?.()
-    setTimeout(() => { isLoadingWsRef.current = false }, 150)
-
-    // Update preview list
-    setFilesWithCode((prev) => [...prev, { _key: newFile._key, filename, generatedCode: '' }])
-    if (filename.endsWith('.html')) setActivePreviewKey(newFile._key)
-
-    defineFileReferenceBlocks(newFiles.map((f) => ({ id: f._key, filename: f.filename })))
+    builder.addFile(filename)
+    setActiveFilename(filename)
     toast.success(`Created ${filename}`)
-  }, [workspace])
+  }, [builder])
 
-  /** Delete a file from the current step */
-  const handleDeleteFile = useCallback((_key) => {
-    const step = stepsRef.current[currentIdxRef.current]
-    if (!step || step.files.length <= 1) return // can't delete the last file
+  const handleDeleteFile = useCallback(async (filename) => {
+    const remaining = builder.files.filter((f) => f.filename !== filename)
+    await builder.removeFile(filename)
+    if (activeFilename === filename) setActiveFilename(remaining[0]?.filename ?? null)
+  }, [builder, activeFilename])
 
-    const remaining   = step.files.filter((f) => f._key !== _key)
-    const wasActive   = step.activeFileKey === _key
-    const newActiveKey = wasActive ? remaining[0]._key : step.activeFileKey
-    const newStep     = { ...step, files: remaining, activeFileKey: newActiveKey }
-    const newSteps    = stepsRef.current.map((s, i) => (i === currentIdxRef.current ? newStep : s))
-    stepsRef.current  = newSteps
-    setSteps(newSteps)
-    setFilesWithCode((prev) => prev.filter((f) => f._key !== _key))
+  // ── Capture / clear ─────────────────────────────────────────────────────
+  const handleCapture = useCallback((filename) => {
+    builder.captureActiveFile(filename)
+    toast.success(`Captured ${filename} for this step`)
+  }, [builder])
 
-    if (wasActive) {
-      const af = remaining[0]
-      isLoadingWsRef.current = true
-      if (af?.blocks_json) {
-        workspace.loadWorkspaceState?.(af.blocks_json)
-      } else {
-        workspace.clearWorkspace?.()
-      }
-      setTimeout(() => { isLoadingWsRef.current = false }, 150)
-    }
+  const handleClearCapture = useCallback((filename) => {
+    builder.clearCapture(filename)
+    if (filename === activeFilename) builder.loadFileIntoWorkspace(filename, builder.currentStepIndex)
+    setFilesWithCode(builder.getFilesWithCodeForStep(builder.currentStepIndex))
+  }, [builder, activeFilename])
 
-    defineFileReferenceBlocks(remaining.map((f) => ({ id: f._key, filename: f.filename })))
-  }, [workspace])
+  // ── Step nav ────────────────────────────────────────────────────────────
+  const handleDeleteStep = useCallback((idx) => {
+    if (!window.confirm('Delete this step? This cannot be undone.')) return
+    builder.deleteStepAt(idx)
+  }, [builder])
 
-  // ── Capture / clear expected blocks ───────────────────────────────────────
-  const handleCaptureBlocks = () => {
-    setCapturedBlocks(workspace.getWorkspaceState?.())
-    toast.success('Workspace captured!')
-  }
-  const handleClearBlocks = () => setCapturedBlocks(null)
-
-  // ── Ensure tutorial exists in DB ──────────────────────────────────────────
-  const ensureLesson = async () => {
-    if (savedLessonId) {
-      const lesson = await updateLessonBase({
-        lessonId: savedLessonId,
-        topicId: selectedTopicId,
-        title: tutorialTitle.trim() || 'Untitled Tutorial',
-        baseXp: Number(baseXp),
-      })
-      return lesson.id
-    }
-
-    const lesson = await createLessonBase({
-      topicId: selectedTopicId,
-      authorId: user.id,
-      title: tutorialTitle.trim() || 'Untitled Tutorial',
-      type: 'tutorial',
-      baseXp: Number(baseXp),
-    })
-    setSavedLessonId(lesson.id)
-    return lesson.id
-  }
-
-  const ensureTutorial = async (lessonId) => {
-    const meta = {
-      title:                   tutorialTitle.trim() || 'Untitled Tutorial',
-      lesson_id:                lessonId,
-    }
-    if (savedId) { await updateTutorial(savedId, meta); return savedId }
-    const tut = await createTutorial({ ...meta, teacher_id: user.id, is_published: false })
-    setSavedId(tut.id)
-    await linkTutorialToLesson({ tutorialId: tut.id, lessonId })
-    return tut.id
-  }
-
-  // ── Save all steps + their files ──────────────────────────────────────────
-  const handleSaveTutorial = async (silent = false) => {
-    if (!tutorialTitle.trim()) { toast.error('Add a tutorial title first'); return null }
-    if (!/^\d+$/.test(baseXp) || Number(baseXp) <= 0) { toast.error('Base XP must be a positive whole number'); return null }
-    if (!selectedTopicId) { toast.error('Select a topic for this tutorial'); return null }
-    setSaving(true)
-    setSaveMsg('')
+  // ── Save / Publish ──────────────────────────────────────────────────────
+  const handleSave = async () => {
     try {
-      // Build latest snapshot synchronously from refs
-      const ws       = workspace.getWorkspaceState?.() ?? null
-      const flushed  = buildFlushedStep(ws)
-      const toSave   = stepsRef.current.map((s, i) => (i === currentIdxRef.current ? flushed : s))
-      // Commit to state + ref
-      stepsRef.current = toSave
-      setSteps(toSave)
-
-      // Validate
-      const badIdx = toSave.findIndex((s) => !s.instruction.trim())
-      if (badIdx !== -1) { toast.error(`Step ${badIdx + 1} needs an instruction`); setSaving(false); return null }
-
-      const lessonId = await ensureLesson()
-      const tutId = await ensureTutorial(lessonId)
-
-      // Upsert all steps + their files
-      const savedSteps = await Promise.all(
-        toSave.map(async (step, idx) => {
-          const stepPayload = {
-            tutorial_id:          tutId,
-            instruction_text:     step.instruction.trim(),
-            hint:                 step.hint?.trim() || null,
-            expected_blocks_exact: step.requireBlocks && step.capturedBlocks ? step.capturedBlocks : null,
-            order_index:          idx,
-          }
-          const savedStep = step.id
-            ? await updateTutorialStep(step.id, stepPayload)
-            : await createTutorialStep(stepPayload)
-
-          await saveStepFiles(savedStep.id, step.files)
-
-          return { ...savedStep, _localStep: step }
-        })
-      )
-
-      // Sync DB ids back into state
-      const withIds = toSave.map((s, i) => ({ ...s, id: savedSteps[i].id }))
-      stepsRef.current = withIds
-      setSteps(withIds)
-
-      await reorderTutorialSteps(savedSteps.map((s) => s.id))
-
+      const lessonId = await builder.saveAll()
       if (!isEdit) navigate(`/teacher/tutorial/edit/${lessonId}`, { replace: true })
-
-      if (!silent) {
-        setSaveMsg('Saved!')
-        setTimeout(() => setSaveMsg(''), 3000)
-        toast.success('Tutorial saved!', 'success')
-      }
-      return tutId
+      toast.success('Tutorial saved!')
     } catch (err) {
-      toast.error('Save failed: ' + err.message, 'error')
-      return null
-    } finally {
-      setSaving(false)
+      toast.error(err.message || 'Save failed')
     }
   }
 
-  // ── Publish ────────────────────────────────────────────────────────────────
   const handlePublish = async () => {
-    const tutId = await handleSaveTutorial(true)
-    if (!tutId) return
-    setSaving(true)
     try {
-      await updateTutorial(tutId, { is_published: true })
-      setIsPublished(true)
-      addToast('Tutorial published!', 'success')
+      const lessonId = await builder.publish()
+      if (!isEdit) navigate(`/teacher/tutorial/edit/${lessonId}`, { replace: true })
+      toast.success('Tutorial published!')
     } catch (err) {
-      addToast('Publish failed: ' + err.message, 'error')
-    } finally {
-      setSaving(false)
+      toast.error(err.message || 'Publish failed')
     }
   }
 
-  // ── Derive current step's files for FileTabs ───────────────────────────────
-  const currentStep    = steps[currentStepIndex]
-  const currentFiles   = currentStep?.files ?? []
-  const activeFileKey  = currentStep?.activeFileKey ?? null
-  const activeFileObj  = currentFiles.find((f) => f._key === activeFileKey)
-  const htmlFiles      = currentFiles
-    .filter((f) => f.filename.endsWith('.html'))
-    .map((f) => ({ id: f._key, filename: f.filename }))
-
-  // ── Navigate to a file in the preview (Pages tab) ─────────────────────────
-  const handleNavigateToFile = (filename) => {
-    const file = currentFiles.find((f) => f.filename === filename)
-    if (file) setActivePreviewKey(file._key)
+  const handleRunCode = () => {
+    const wsObj = workspace.getWorkspace()
+    if (!wsObj || !activeFilename) return
+    const code = codeGeneratorService.generateCode(wsObj, activeFilename)
+    setFilesWithCode((prev) => prev.map((f) => f.filename === activeFilename ? { ...f, generatedCode: code } : f))
   }
 
-  // ═══════════════════════════════════════════════════════════════════════════
-  // RENDER
-  // IMPORTANT: We NEVER do an early return before the JSX that contains
-  // `workspace.blocklyDiv` — if the div is not in the DOM when Blockly's
-  // useEffect fires, injection silently fails and the workspace disappears.
-  // We use a loading OVERLAY instead.
-  // ═══════════════════════════════════════════════════════════════════════════
+  const htmlFiles = builder.files
+    .filter((f) => f.filename.endsWith('.html'))
+    .map((f) => ({ id: f.filename, filename: f.filename }))
+
+  const currentFileCode = filesWithCode.find((f) => f.filename === activeFilename)?.generatedCode || ''
+
+  
+  useRemiHighlight(
+    workspace.getWorkspace,
+    builder.currentStep?.highlightCategoryPath,
+    builder.currentStep?.highlightBlockType
+  )
+
   return (
     <div className="relative flex flex-col h-screen bg-gray-100">
-
-      {/* Loading overlay — sits on top, never unmounts the Blockly div */}
-      {loading && (
+      {builder.loading && (
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-white/95 backdrop-blur-sm">
           <div className="flex flex-col items-center gap-3">
             <div className="w-8 h-8 rounded-full border-4 border-indigo-200 border-t-indigo-600 animate-spin" />
@@ -858,108 +436,90 @@ export default function TutorialBuilderPage() {
         </div>
       )}
 
-      {/* Top bar */}
-      <div className="shrink-0 flex items-center gap-3 px-4 py-2.5 ">
-        <Link to="/"><img src="/icon.png" alt="icon image" className='w-8 h-8' /></Link>
+      <div className="shrink-0 flex items-center gap-3 px-4 py-2.5">
+        <Link to="/"><img src="/icon.png" alt="icon" className="w-8 h-8" /></Link>
         <BackButton />
         <span className="text-slate-500">/</span>
         <span className="font-bold text-slate-700 truncate max-w-xs">
-          {tutorialTitle || 'New Tutorial'}
+          {builder.meta.title || 'New Tutorial'}
         </span>
-        {/* <div className="ml-auto flex items-center gap-3">
-          <span className={`px-2.5 py-0.5 text-[11px] font-bold rounded-full ${
-            isPublished ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'
-          }`}>
-            {isPublished ? 'Published' : 'Draft'}
-          </span>
-          <span className="text-xs text-slate-400 tabular-nums">
-            Step {currentStepIndex + 1} / {steps.length}
-          </span>
-        </div> */}
-          
-        <div className='ml-auto flex truncate max-w-xs'>
-          <Button variant='ghost'>
-            <Sun size={20}/>Light Mode
+        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+          builder.isPublished ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'
+        }`}>
+          {builder.isPublished ? 'Published' : 'Draft'}
+        </span>
+        {builder.dirty && <span className="text-[10px] text-amber-600 font-semibold">Unsaved changes</span>}
+
+        <div className="ml-auto flex gap-1.5">
+          <Button variant="ghost"><Sun size={20} />Light Mode</Button>
+          <Button variant="secondary" onClick={handleSave} disabled={builder.saving}>
+            {builder.saving ? 'Saving…' : 'Save Tutorial'}
           </Button>
-          <Button variant='secondary'>
-            Save Tutorial
+          <Button variant="primary" onClick={handlePublish} disabled={builder.saving}>
+            Publish
           </Button>
         </div>
       </div>
 
-      {/* Body */}
       <div className="relative flex flex-1 overflow-hidden px-3 gap-1.5 mb-4">
-        {/* Left panel */}
-        <div className={`${panelOpen ? `w-1/3 min-w-70` : `w-10`} max-w-sm shrink-0 h-full overflow-hidden`}>
+        <div className={`${panelOpen ? 'w-1/3 min-w-70' : 'w-10'} max-w-sm shrink-0 h-full overflow-hidden`}>
           <StepPanel
-            tutorialTitle={tutorialTitle}             setTutorialTitle={setTutorialTitle}
-            baseXp={baseXp}                           setBaseXp={setBaseXp}
-            courseTopics={courseTopics}
-            selectedTopicId={selectedTopicId}         setSelectedTopicId={setSelectedTopicId}
-            loadingTopics={loadingTopics}
-            isPublished={isPublished}
-            steps={steps}
-            currentStepIndex={currentStepIndex}
-            onGoToStep={handleGoToStep}
-            onAddStep={handleAddStep}
+            meta={builder.meta} setMeta={builder.setMeta}
+            courseTopics={courseTopics} loadingTopics={loadingTopics}
+            files={builder.files} activeFilename={activeFilename}
+            getFileStatusForStep={builder.getFileStatusForStep}
+            currentStepIndex={builder.currentStepIndex}
+            steps={builder.steps}
+            onGoToStep={builder.goToStep}
+            onAddStep={builder.addStep}
             onDeleteStep={handleDeleteStep}
-            instruction={instruction}                 setInstruction={setInstruction}
-            hint={hint}                               setHint={setHint}
-            requireBlocks={requireBlocks}             setRequireBlocks={setRequireBlocks}
-            capturedBlocks={capturedBlocks}
-            onCaptureBlocks={handleCaptureBlocks}
-            onClearBlocks={handleClearBlocks}
-            onSaveTutorial={handleSaveTutorial}
-            onPublish={handlePublish}
-            panelOpen={panelOpen}                     setPanelOpen={setPanelOpen}
-            saving={saving}
-            saveMsg={saveMsg}
+            currentStep={builder.currentStep}
+            onUpdateCurrentStep={builder.updateCurrentStep}
+            onCapture={handleCapture}
+            onClearCapture={handleClearCapture}
+            panelOpen={panelOpen} setPanelOpen={setPanelOpen}
           />
         </div>
 
-        {/* Blockly — always in the DOM */}
         <div className="flex flex-col flex-1 h-full border border-border rounded bg-white overflow-hidden">
           <FileTabs
-            files={currentFiles.map((f) => ({ id: f._key, filename: f.filename }))}
-            activeFile={activeFileKey}
-            isLocal={true}
+            files={builder.files.map((f) => ({ id: f.filename, filename: f.filename }))}
+            activeFile={activeFilename}
+            isLocal
             onFileChange={handleFileChange}
             onFileCreate={handleCreateFile}
             onFileDelete={handleDeleteFile}
           />
-          {/* THIS DIV MUST ALWAYS RENDER — Blockly injects into it on mount */}
-          <div ref={workspace.blocklyDiv} className="blocklyDiv flex-1 relative" >
-            <SwitchButton activeTab={activeSwitch} setActiveTab={setActiveSwitch}/>
-          </div>
+          <div ref={workspace.blocklyDiv} className="blocklyDiv flex-1 relative" />
         </div>
 
-        {/* Preview */}
         <div className="w-1/4 h-full overflow-hidden">
           <PreviewPane
             generatedCode={generatedCode}
-            currentFileCode={filesWithCode.find((f) => f._key === activeFileKey)?.generatedCode || ''}
-            currentFileName={activeFileObj?.filename || ''}
-            previewFileName={currentFiles.find((f) => f._key === activePreviewKey)?.filename || ''}
+            currentFileCode={currentFileCode}
+            currentFileName={activeFilename || ''}
+            previewFileName={previewFilename || ''}
             htmlFiles={htmlFiles}
-            onRunCode={() => {
-              if (!workspace.getWorkspace() || !activeFileObj) return
-              const code = codeGeneratorService.generateCode(workspace.getWorkspace(), activeFileObj.filename)
-              setFilesWithCode((prev) => prev.map((f) => f._key === activeFileKey ? { ...f, generatedCode: code } : f))
-            }}
-            onNavigateToFile={handleNavigateToFile}
+            onRunCode={handleRunCode}
+            onNavigateToFile={(filename) => setPreviewFilename(filename)}
             responsive={responsive}
             selectedDevice={selectedDevice}
             onToggleResponsive={() => setResponsive((r) => !r)}
             onSelectDevice={setSelectedDevice}
           />
         </div>
+        <RemiGuide
+          instruction={builder.currentStep?.instruction || 'Add an instruction for this step.'}
+          hint={builder.currentStep?.hint}
+          stepLabel={`Step ${builder.currentStepIndex + 1} of ${builder.steps.length}`}
+          minimized={remiMinimized}
+          onToggleMinimize={() => setRemiMinimized((m) => !m)}
+          onPrev={() => builder.goToStep(builder.currentStepIndex - 1)}
+          onNext={() => builder.goToStep(builder.currentStepIndex + 1)}
+          isFirst={builder.currentStepIndex === 0}
+          isLast={builder.currentStepIndex === builder.steps.length - 1}
+        />
       </div>
-      {isEdit && (
-        <div className='flex gap-4 px-4 text-slate-400'>
-          <p>Created:</p>
-          <p>Last Modified:</p>
-        </div>
-      )}
     </div>
   )
 }

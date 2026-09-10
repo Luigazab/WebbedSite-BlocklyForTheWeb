@@ -88,7 +88,7 @@ export const teacherRoutes = [
   { path: 'quiz/create',                                 element: <QuizPage /> },
   { path: 'quiz/edit/:id',                               element: <QuizPage /> },
   { path: 'tutorial/create',       element: <TutorialBuilderPage /> },
-  { path: 'tutorial/:id/edit',     element: <TutorialBuilderPage /> },
+  { path: 'tutorial/edit/:id',     element: <TutorialBuilderPage /> },
   { path: 'laboratory/create',                           element: <LaboratoryBuilderPage /> },
   { path: 'laboratory/edit/:id',                         element: <LaboratoryBuilderPage /> },
 
