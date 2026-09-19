@@ -8,10 +8,11 @@ import { useTeacherOverview } from "#hooks/useTeacherOverview";
 import { useAuthStore } from "@/store/authStore";
 import { useCopyCode } from "@/utils/copyCode";
 import { formatTimeAgo } from "@/utils/dateFormat";
-import { Activity, BookOpen, ClipboardCheck, FlaskConical, GraduationCap, Loader2, Megaphone, MonitorPlay, Plus, Users } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Activity, BookOpen, ClipboardCheck, FlaskConical, GraduationCap, Loader2, Lock, Megaphone, MonitorPlay, Plus, Users } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { toast } from "sonner";
+import AssignCurriculumModal from "../components/AssignCurriculumModal";
 
 const lessonIcons = {
   lecture:    <BookOpen className="w-6 h-6" />,
@@ -37,10 +38,11 @@ export default function ClassroomDetail() {
   const profile = useAuthStore((s) => s.profile);
   const [activeTab, setActiveTab] = useState('activities');
   const {copied, copyCode} = useCopyCode()
+  const [showAssignModal, setShowAssignModal] = useState(false)
 
   const { currentClassroom, detailLoading, classroomPosts, fetchClassroomDetail, fetchClassroomPosts, handleCreatePost } = useClassroom();
 
-  const { classroomCourse, topics, loading: curriculumLoading, assigning, masterCourses, fetchMasterCourses, handleAssignCourse, fetchClassroomCurriculum, handleUnlockTopic, handleCreateTopic } = useCurriculum();
+  const { classroomCourses, topics, loading: curriculumLoading, assigning, masterCourses, fetchMasterCourses, handleAssignCourses, fetchClassroomCurriculum, handleUnlockTopic, handleCreateTopic } = useCurriculum();
 
   const { stats, studentProgress, lessonCompletion, loading: overviewLoading, fetchOverview } = useTeacherOverview();
 
@@ -53,14 +55,28 @@ export default function ClassroomDetail() {
     fetchMasterCourses()
   }, [classroomId]);
 
+  const groupedCurriculum = useMemo(() => {
+    return classroomCourses.map((cc) => ({
+      courseId: cc.course_id,
+      course: cc.courses,
+      sequenceOrder: cc.sequence_order,
+      topics: topics.filter((t) => t.courseId === cc.course_id),
+    }))
+  }, [classroomCourses, topics])
+
   const onAddWeek = async () => {
-    if (!classroomCourse) {
+    if (!classroomCourses) {
       toast.error('Assign a curriculum first before adding weeks.')
       return
     }
     const title = window.prompt('Title for the new week?')
     if (!title) return
-    await handleCreateTopic(classroomId, classroomCourse.course_id, { title, description: '' })
+    await handleCreateTopic(classroomId, classroomCourses.course_id, { title, description: '' })
+  }
+
+  const onAssignSubmit = async ({ course_ids }) => {
+    await handleAssignCourses(classroomId, course_ids)
+    setShowAssignModal(false)
   }
 
   const onNewAnnouncement = async () => {
@@ -90,16 +106,14 @@ export default function ClassroomDetail() {
           { label: currentClassroom?.name ?? 'Classroom', href: `/teacher/classrooms/${classroomId}` },
         ]}
       />
-      <section className="relative overflow-hidden rounded-3xl border border-border border-b-4 border-b-slate-400 shadow bg-[url('/teacher_banner.png')] bg-cover bg-center p-8 text-sky-800">
+      <section className="relative overflow-hidden rounded-3xl border border-border border-b-4 border-b-slate-400 shadow bg-[url('/classroom_bg.png')] bg-cover p-8 text-sky-800">
         <div className="relative flex flex-wrap items-end justify-between gap-6">
           <div className="max-w-2xl">
             <h1 className="text-3xl font-semibold leading-tight tracking-tight text-balance md:text-4xl">
               {currentClassroom?.name}
             </h1>
             <p className="mt-3 max-w-lg text-pretty text-sm text-muted-foreground md:text-base">
-              {classroomCourse
-                ? <>Cloned from <span className="text-foreground">{classroomCourse.courses?.title}</span>. Edit topics freely — changes stay in this classroom.</>
-                : "No curriculum assigned yet."}
+              {currentClassroom?.description}
             </p>
             <div className="flex items-center gap-2 mt-3">
               <img src={currentClassroom?.teacher?.avatar_url || "/default-avatar.png"} alt="teacher picture" className="w-10 h-10 rounded-full object-cover object-center" />
@@ -109,7 +123,7 @@ export default function ClassroomDetail() {
               </div>
             </div>
           </div>
-          <div className="flex items-end gap-3 rounded-xl border border-border/60 bg-card/70 px-4 py-3 backdrop-blur shadow">
+          <div className="flex items-end gap-3 rounded-xl border border-border/60 bg-slate-50/70 px-4 py-3 backdrop-blur shadow">
             <div>
               <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
                 Join code
@@ -191,23 +205,15 @@ export default function ClassroomDetail() {
               </div>
             </div>
  
-            {!classroomCourse && !curriculumLoading && (
+            {!curriculumLoading && classroomCourses.length === 0 ? (
               <div className="rounded-2xl border border-dashed border-border p-8 text-center space-y-3">
                 <p className="font-medium">This classroom doesn't have a curriculum yet.</p>
-                <p className="text-sm text-muted-foreground">Pick one from the library — it'll be cloned into this classroom so you can edit it freely.</p>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button disabled={assigning}>{assigning ? 'Setting up…' : 'Assign Curriculum'}</Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="center">
-                    {masterCourses.map((c) => (
-                      <DropdownMenuItem key={c.id} onClick={() => handleAssignCourse(classroomId, c.id, c.title)}>
-                        {c.title}
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                <Button onClick={() => setShowAssignModal(true)}>Assign Curriculum</Button>
               </div>
+            ) : (
+              <Button variant="outline" size="sm" onClick={() => setShowAssignModal(true)}>
+                Manage Courses ({classroomCourses.length}/4)
+              </Button>
             )}
  
             {curriculumLoading && (
@@ -217,83 +223,120 @@ export default function ClassroomDetail() {
             )}
  
             {!curriculumLoading && topics.length > 0 && (
-              <ol className="space-y-4">
-                {topics.map((t, i) => (
-                  <li
-                    key={t.id}
-                    className={`rounded-2xl border border-b-4 p-6 transition-colors border-b-slate-400 ${
-                      t.isUnlocked
-                        ? "border-border bg-card"
-                        : "border-border bg-card/50 opacity-40"
-                    }`}
-                  >
-                    <div className="flex flex-wrap items-start justify-between gap-4">
-                      <div className="flex items-start gap-4">
+              <div className="space-y-8">
+                {groupedCurriculum.map((group) => (
+                  <div key={group.courseId} className="space-y-4">
+                    <div
+                      className="flex items-center gap-3 rounded-xl border border-border p-3"
+                      style={{ borderLeft: `4px solid ${group.course?.color || '#94a3b8'}` }}
+                    >
+                      {group.course?.image_src ? (
+                        <img
+                          src={group.course.image_src ? `https://ffnjdqoiaywleodqswnp.supabase.co/storage/v1/object/public/${group.course.image_src}` : '/icon.png'}
+                          alt={group.course.title}
+                          className="w-10 h-10 rounded-lg object-cover object-center"
+                        />
+                      ) : (
                         <div
-                          className={`grid size-10 place-items-center rounded-lg font-mono text-sm font-semibold ${
+                          className="grid size-10 place-items-center rounded-lg text-sm font-bold text-white"
+                          style={{ backgroundColor: group.course?.color || '#94a3b8' }}
+                        >
+                          {group.sequenceOrder}
+                        </div>
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+                          Course {group.sequenceOrder}
+                        </p>
+                        <h3 className="font-display text-base font-semibold truncate">
+                          {group.course?.title ?? 'Untitled course'}
+                        </h3>
+                      </div>
+                      <span className="text-xs text-muted-foreground shrink-0">
+                        {group.topics.length} {group.topics.length === 1 ? 'week' : 'weeks'}
+                      </span>
+                    </div>
+
+                    <ol className="space-y-4">
+                      {group.topics.map((t, i) => (
+                        <li
+                          key={t.id}
+                          className={`rounded-2xl border border-b-4 p-6 transition-colors border-b-slate-400 ${
                             t.isUnlocked
-                              ? "bg-primary/15 text-primary"
-                              : "bg-muted text-muted-foreground"
+                              ? "border-border bg-card"
+                              : "border-border bg-card/50 opacity-40"
                           }`}
                         >
-                          {t.isUnlocked ? String(i + 1).padStart(2, "0") : "🔒"}
-                        </div>
-                        <div>
-                          <h3 className="font-display text-lg font-semibold">{t.title}</h3>
-                          <p className="mt-1 text-sm text-muted-foreground">{t.description}</p>
-                        </div>
-                      </div>
-                    </div>
- 
-                    <div className="mt-5 grid gap-2 sm:grid-cols-2">
-                      {t.lessons.map((l) => {
-                        const pct = lessonCompletion[l.id] ?? 0
-                        return (
-                          <div
-                            key={l.id}
-                            className="flex items-center gap-3 rounded-xl border border-border bg-background/50 px-3 py-2.5"
-                          >
-                            <LessonChip type={l.type} size="sm" />
-                            <div className="min-w-0 flex-1">
-                              <p className="truncate text-sm font-medium">{l.title}</p>
-                              <div className="mt-1 h-1 overflow-hidden rounded-full bg-muted">
-                                <div className="h-full rounded-full bg-primary" style={{ width: `${pct}%` }} />
+                          <div className="flex flex-wrap items-start justify-between gap-4">
+                            <div className="flex items-start gap-4">
+                              <div
+                                className={`grid size-10 place-items-center rounded-lg font-mono text-sm font-semibold ${
+                                  t.isUnlocked
+                                    ? "bg-primary/15 text-primary"
+                                    : "bg-muted text-muted-foreground"
+                                }`}
+                              >
+                                {t.isUnlocked ? String(i + 1).padStart(2, "0") : <Lock color="blue"/>}
+                              </div>
+                              <div>
+                                <h3 className="font-display text-lg font-semibold">{t.title}</h3>
+                                <p className="mt-1 text-sm text-muted-foreground">{t.description}</p>
                               </div>
                             </div>
-                            <span className="font-mono text-[10px] text-muted-foreground">{pct}%</span>
                           </div>
-                        )
-                      })}
-                    </div>
- 
-                    <div className="mt-4 flex items-center justify-between border-t border-border pt-4 text-xs text-muted-foreground">
-                      <span>
-                        Class-wide unlock:{" "}
-                        <span className="text-foreground">
-                          {t.isUnlocked
-                            ? "all lessons available"
-                            : "waiting on students to finish previous topic"}
-                        </span>
-                      </span>
-                      {t.isUnlocked ? (
-                        <button
-                          className="rounded-md border border-border px-2 py-1 hover:bg-surface-hover"
-                          onClick={() => navigate(`/teacher/topics/${t.id}/edit`)}
-                        >
-                          Edit
-                        </button>
-                      ) : (
-                        <button
-                          className="rounded-md border border-border px-2 py-1 hover:bg-surface-hover"
-                          onClick={() => handleUnlockTopic(t.id, t.title)}
-                        >
-                          Force unlock
-                        </button>
-                      )}
-                    </div>
-                  </li>
+
+                          <div className="mt-5 grid gap-2 sm:grid-cols-2">
+                            {t.lessons.map((l) => {
+                              const pct = lessonCompletion[l.id] ?? 0
+                              return (
+                                <div
+                                  key={l.id}
+                                  className="flex items-center gap-3 rounded-xl border border-border bg-background/50 px-3 py-2.5"
+                                >
+                                  <LessonChip type={l.type} size="sm" />
+                                  <div className="min-w-0 flex-1">
+                                    <p className="truncate text-sm font-medium">{l.title}</p>
+                                    <div className="mt-1 h-1 overflow-hidden rounded-full bg-muted">
+                                      <div className="h-full rounded-full bg-primary" style={{ width: `${pct}%` }} />
+                                    </div>
+                                  </div>
+                                  <span className="font-mono text-[10px] text-muted-foreground">{pct}%</span>
+                                </div>
+                              )
+                            })}
+                          </div>
+
+                          <div className="mt-4 flex items-center justify-between border-t border-border pt-4 text-xs text-muted-foreground">
+                            <span>
+                              Class-wide unlock:{" "}
+                              <span className="text-foreground">
+                                {t.isUnlocked
+                                  ? "all lessons available"
+                                  : "waiting on students to finish previous topic"}
+                              </span>
+                            </span>
+                            {t.isUnlocked ? (
+                              <button
+                                className="rounded-md border border-border px-2 py-1 hover:bg-surface-hover"
+                                onClick={() => navigate(`/teacher/topics/${t.id}/edit`)}
+                              >
+                                Edit
+                              </button>
+                            ) : (
+                              <button
+                                className="rounded-md border border-border px-2 py-1 hover:bg-surface-hover"
+                                onClick={() => handleUnlockTopic(t.id, t.title)}
+                              >
+                                Force unlock
+                              </button>
+                            )}
+                          </div>
+                        </li>
+                      ))}
+                    </ol>
+                  </div>
                 ))}
-              </ol>
+              </div>
             )}
           </div>
           <aside className="space-y-4">
@@ -411,6 +454,17 @@ export default function ClassroomDetail() {
             ))}
           </div>
         </div>
+      )}
+      {showAssignModal && (
+        <AssignCurriculumModal
+          classroom={currentClassroom}
+          courses={masterCourses}
+          assignedCourses={classroomCourses.map((cc) => cc.courses)}
+          loading={assigning}
+          onSubmit={onAssignSubmit}
+          onClose={() => setShowAssignModal(false)}
+          handleRegenerate={() => handleRegenerateCode(classroomId)}
+        />
       )}
     </div>
   )

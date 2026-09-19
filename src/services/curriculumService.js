@@ -32,9 +32,32 @@ export async function getClassroomCourse(classroomId) {
   return data ?? null
 }
 
+export async function getClassroomCourses(classroomId) {
+  const { data, error } = await supabase
+    .from('classroom_courses')
+    .select(`
+      course_id, sequence_order, assigned_at,
+      courses:course_id ( id, title, description, color, image_src, total_xp, slug )
+    `)
+    .eq('classroom_id', classroomId)
+    .order('sequence_order', { ascending: true })
+
+  if (error) throw error
+  return data ?? []
+}
+
+export async function assignCoursesToClassroom(classroomId, courseIds) {
+  const { error } = await supabase.rpc('assign_courses_to_classroom', {
+    p_classroom_id: classroomId,
+    p_course_ids: courseIds,
+  })
+  if (error) throw error
+}
+
 export function normalizeTopic(row) {
   return {
     id:          row.id,
+    courseId:    row.course_id, 
     title:       row.title,
     description: row.description,
     order:       row.order,
@@ -49,7 +72,7 @@ export async function getClassroomTopics(classroomId) {
   const { data, error } = await supabase
     .from('topics')
     .select(`
-      id, title, description, "order", is_unlocked, unlocked_at, unlocked_by,
+      id, course_id, title, description, "order", is_unlocked, unlocked_at, unlocked_by,
       lessons ( id, title, type, "order", is_published, base_xp, slug )
     `)
     .eq('classroom_id', classroomId)

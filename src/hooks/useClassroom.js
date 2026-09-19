@@ -21,7 +21,7 @@ export function useClassroom() {
       toast.success(`"${classroom.name}" created successfully!`)
       return classroom
     } catch (err) {
-      toast.error('Failed to create classroom.', err.message)
+      toast.error(err.message || 'Failed to create classroom.')
       throw err
     }
   }
@@ -32,7 +32,7 @@ export function useClassroom() {
       await store.editClassroom(formData.id, {name: formData.name, description: formData.description})
       toast.success('Classroom updated succesfully!.')
     } catch (err) {
-      toast.error('Failed to update classroom.', err.message)
+      toast.error(err.message || 'Failed to update classroom.')
       throw err
     }
   }
@@ -42,7 +42,7 @@ export function useClassroom() {
       await store.archiveClassroom(classroomId)
       toast.success(`"${name}" has been archived.`)
     } catch (err) {
-      toast.error('Failed to archive classroom.', err.message)
+      toast.error(err.message || 'Failed to archive classroom.')
       throw err
     }
   }
@@ -63,7 +63,7 @@ export function useClassroom() {
       toast.success('Class join code regenerated.')
       return code
     } catch (err) {
-      toast.error('Failed to regenerate code.', err.message)
+      toast.error(err.message || 'Failed to regenerate code.')
       throw err
     }
   }
@@ -93,7 +93,7 @@ export function useClassroom() {
       toast.success(`Joined "${classroom.name}"!`)
       return classroom
     } catch (err) {
-      toast.error('Failed to join classroom.', err.message)
+      toast.error(err.message || 'Failed to join classroom.')
       throw err
     }
   }
@@ -103,7 +103,7 @@ export function useClassroom() {
       await store.leaveClassroom(profile.id, classroomId)
       toast.success(`You left "${name}".`)
     } catch (err) {
-      toast.error('Failed to leave classroom.', err.message)
+      toast.error(err.message || 'Failed to leave classroom.')
       throw err
     }
   }
@@ -182,7 +182,7 @@ export function useClassroom() {
     try {
       return await store.refreshMilestoneProgress(classroomId)
     } catch (err) {
-      console.error('Milestone refresh failed:', err.message)
+      console.error(err.message || 'Milestone refresh failed:')
     }
   }
 

@@ -1,9 +1,10 @@
 import { create } from 'zustand'
-import { getMasterCourses, assignCourseToClassroom as assignCourseToClassroomService, getClassroomCourse, getClassroomTopics, getLessonDetail as getLessonDetailService, updateTopic as updateTopicService, updateLesson as updateLessonService, teacherUnlockTopic as teacherUnlockTopicService, createTopic as createTopicService} from '@/services/curriculumService'
+import { getMasterCourses, assignCourseToClassroom as assignCourseToClassroomService, getClassroomCourse, getClassroomTopics, getLessonDetail as getLessonDetailService, updateTopic as updateTopicService, updateLesson as updateLessonService, teacherUnlockTopic as teacherUnlockTopicService, createTopic as createTopicService, getClassroomCourses, assignCoursesToClassroom as assignCoursesToClassroomService} from '@/services/curriculumService'
 
 export const useCurriculumStore = create((set, get) => ({
   masterCourses:   [],
   classroomCourse: null,
+  classroomCourses: [],
   topics:          [],
   currentLesson:   null,
 
@@ -38,16 +39,26 @@ export const useCurriculumStore = create((set, get) => ({
   fetchClassroomCurriculum: async (classroomId) => {
     set({ loading: true, error: null })
     try {
-      const [course, topics] = await Promise.all([
-        getClassroomCourse(classroomId),
+      const [courses, topics] = await Promise.all([
+        getClassroomCourses(classroomId),
         getClassroomTopics(classroomId),
       ])
-      set({ classroomCourse: course, topics })
+      set({ classroomCourses: courses, topics })
     } catch (err) {
       set({ error: err.message })
       throw err
     } finally {
       set({ loading: false })
+    }
+  },
+
+  assignCoursesToClassroom: async (classroomId, courseIds) => {
+    set({ assigning: true })
+    try {
+      await assignCoursesToClassroomService(classroomId, courseIds)
+      await get().fetchClassroomCurriculum(classroomId)
+    } finally {
+      set({ assigning: false })
     }
   },
 
@@ -87,7 +98,7 @@ export const useCurriculumStore = create((set, get) => ({
   createTopic: async (classroomId, courseId, { title, description }) => {
     const topic = await createTopicService(classroomId, courseId, { title, description })
     set((s) => ({
-      topics: [...s.topics, { ...topic, isUnlocked: topic.is_unlocked, lessons: [] }].sort(
+      topics: [...s.topics, { ...topic, courseId: topic.course_id, isUnlocked: topic.is_unlocked, lessons: [] }].sort(
         (a, b) => (a.order ?? 0) - (b.order ?? 0)
       ),
     }))

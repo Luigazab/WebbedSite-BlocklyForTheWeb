@@ -17,7 +17,17 @@ export function useCurriculum() {
       await store.assignCourseToClassroom(classroomId, courseId)
       toast.success(`"${courseName}" is now set up for this classroom.`)
     } catch (err) {
-      toast.error('Failed to assign curriculum.', err.message)
+      toast.error(err.message || 'Failed to assign curriculum.')
+      throw err
+    }
+  }
+
+  const handleAssignCourses = async (classroomId, courseIds) => {
+    try {
+      await store.assignCoursesToClassroom(classroomId, courseIds)
+      toast.success('Curriculum updated for this classroom.')
+    } catch (err) {
+      toast.error(err.message || 'Failed to assign courses.')
       throw err
     }
   }
@@ -44,7 +54,7 @@ export function useCurriculum() {
       await store.editTopic(topicId, updates)
       toast.success('Week updated.')
     } catch (err) {
-      toast.error('Failed to update week.', err.message)
+      toast.error(err.message || 'Failed to update week.')
       throw err
     }
   }
@@ -54,7 +64,7 @@ export function useCurriculum() {
       await store.editLesson(topicId, lessonId, updates)
       toast.success('Lesson updated.')
     } catch (err) {
-      toast.error('Failed to update lesson.', err.message)
+      toast.error(err.message || 'Failed to update lesson.')
       throw err
     }
   }
@@ -65,7 +75,7 @@ export function useCurriculum() {
       toast.success(`"${title}" added.`)
       return topic
     } catch (err) {
-      toast.error('Failed to add week.', err.message)
+      toast.error(err.message || 'Failed to add week.')
       throw err
     }
   }
@@ -75,7 +85,7 @@ export function useCurriculum() {
       await store.unlockTopic(topicId)
       toast.success(`"${topicTitle}" opened for the class.`)
     } catch (err) {
-      toast.error('Failed to unlock week.', err.message)
+      toast.error(err.message || 'Failed to unlock week.')
       throw err
     }
   }
@@ -90,6 +100,7 @@ export function useCurriculum() {
   return {
     masterCourses:   store.masterCourses,
     classroomCourse: store.classroomCourse,
+    classroomCourses: store.classroomCourses,
     topics:          store.topics,
     currentLesson:   store.currentLesson,
     loading:         store.loading,
@@ -99,6 +110,7 @@ export function useCurriculum() {
 
     fetchMasterCourses,
     handleAssignCourse,
+    handleAssignCourses,
     fetchClassroomCurriculum,
     fetchLessonDetail,
     clearCurrentLesson: store.clearCurrentLesson,
