@@ -246,8 +246,16 @@ export function useTutorialBuilder({ lessonId, authorId, workspace }) {
       const savedSteps = await Promise.all(
         s.steps.map((step, order) =>
           step.id
-            ? updateStep(step.id, { instruction: step.instruction, hint: step.hint, order })
-            : createStep({ tutorialId, instruction: step.instruction, hint: step.hint, order })
+            ? updateStep(step.id, {
+                instruction: step.instruction, hint: step.hint, order,
+                highlightCategoryPath: step.highlightCategoryPath,
+                highlightBlockType: step.highlightBlockType,
+              })
+            : createStep({
+                tutorialId, instruction: step.instruction, hint: step.hint, order,
+                highlightCategoryPath: step.highlightCategoryPath,
+                highlightBlockType: step.highlightBlockType,
+              })
         )
       )
       store.patchStepIds(savedSteps)
