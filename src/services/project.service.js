@@ -1,4 +1,5 @@
 import { supabase } from '../supabaseClient'
+import { createDefaultProjectFiles } from './projectfiles.service'
 
 export const projectService = {
   async getUserProjects({ filter = 'All', sortBy = 'Recent' } = {}) {
@@ -13,12 +14,11 @@ export const projectService = {
         description,
         thumbnail_url,
         is_public,
+        type,
         created_at,
         updated_at,
         likes_count,
-        views_count,
-        generated_html,
-        blocks_json 
+        views_count
       `)
       .eq('user_id', user.id)
 
@@ -34,41 +34,37 @@ export const projectService = {
     return data
   },
 
-  async createBlocksProject({ title, description = '' }) {
+  async createBlocksProject({ title, description = '', type = 'blocks' }) {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) throw new Error('Not authenticated')
 
-    const { data, error } = await supabase
+    const { data: project, error: projectError } = await supabase
       .from('projects')
       .insert({
         user_id:        user.id,
         title,
         description,
-        blocks_json:    {},          // empty workspace
-        generated_html: '',
+        type,
         is_public:      false,
-        updated_at:     new Date().toISOString(),
+        updated_at:     new Date().toISOString()
       })
       .select()
       .single()
 
-    if (error) throw error
-    return data
+    if (projectError) throw projectError
+    await createDefaultProjectFiles(project.id)
+    return project
   },
+
   async getPublicProjectsByUser(userId) {
     const { data, error } = await supabase
       .from('projects')
-      .select('*, comments_count:comments(count)')
+      .select('*')
       .eq('user_id', userId)
       .eq('is_public', true)
       .order('updated_at', { ascending: false })
     if (error) throw error
-  
-    // Flatten the count aggregate Supabase returns
-    return data.map((p) => ({
-      ...p,
-      comments_count: p.comments_count?.[0]?.count ?? 0,
-    }))
+    return data
   },
 
   async toggleVisibility(projectId, isPublic) {
@@ -89,14 +85,14 @@ export const projectService = {
       .eq('id', projectId)
     if (error) throw error
   },
-  async updateProjectGeneratedHtml(projectId, generatedHtml) {
+  async updateProjectFileCode(fileId, code) {
     const { error } = await supabase
-      .from('projects')
-      .update({ 
-        generated_html: generatedHtml,
-        updated_at: new Date().toISOString()
+      .from('project_files')
+      .update({
+        code, 
+        updated_at: new Date().toISOString(),
       })
-      .eq('id', projectId)
+      .eq('id', fileId)
 
     if (error) throw error
   }

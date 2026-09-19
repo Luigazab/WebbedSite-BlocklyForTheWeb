@@ -1,8 +1,6 @@
-// src/components/shared/ProjectsPage.jsx
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router'
 import { useAuthStore } from '../../store/authStore'
-import PageWrapper from '../layout/PageWrapper'
 import CreateProjectModal from './CreateProjectModal'
 import ProjectDetailsModal from './ProjectDetailsModal'
 import { useTour } from '../tour/TourProvider'
@@ -16,6 +14,7 @@ import {
   Plus,
 } from 'lucide-react'
 import { useLikes } from '../../hooks/useLikes'
+import { PageHeader } from '#components/common/PageHeader'
 
 const FILTERS      = ['All', 'Public', 'Private']
 const SORT_OPTIONS = ['Recent', 'Name', 'Most Liked']
@@ -25,7 +24,7 @@ const SORT_OPTIONS = ['Recent', 'Name', 'Most Liked']
 export default function ProjectsPage() {
   const profile  = useAuthStore((s) => s.profile)
   const navigate = useNavigate()
-  const { activeTour, isVisible } = useTour()
+  const { activeTour, isVisible, startTour } = useTour()
 
   const [projects,        setProjects]        = useState([])
   const [loading,         setLoading]         = useState(true)
@@ -88,23 +87,27 @@ export default function ProjectsPage() {
     )
   }
 
-  const handleCommentsCountChanged = (projectId, delta) => {
-    setProjects(prev =>
-      prev.map(p => p.id === projectId
-        ? { ...p, comments_count: (p.comments_count || 0) + delta }
-        : p
-      )
-    )
-  }
+  // const handleCommentsCountChanged = (projectId, delta) => {
+  //   setProjects(prev =>
+  //     prev.map(p => p.id === projectId
+  //       ? { ...p, comments_count: (p.comments_count || 0) + delta }
+  //       : p
+  //     )
+  //   )
+  // }
   useEffect(() => {
     const hasSeenTour = localStorage.getItem('tour_projects_completed')
     if (!hasSeenTour) {
       setTimeout(() => startTour('projects'), 500)
     }
-  }, [])
+  }, [startTour])
 
   return (
-    <PageWrapper title="Projects" subtitle="View all projects you have">
+    <div className='p-8'>
+      <PageHeader
+        title="Projects"
+        description="View all projects you have"
+      />
       <div className="flex flex-col gap-6">
 
         {/* ── Controls bar ─────────────────────────────────── */}
@@ -258,18 +261,17 @@ export default function ProjectsPage() {
         />
       )}
       {activeTour === 'projects' && isVisible && <TourSpotlight steps={projectsTourSteps} />}
-    </PageWrapper>
+    </div>
   )
 }
 
 // ─────────────────────────────────────────────────────────────
 // Project Card
 // ─────────────────────────────────────────────────────────────
-// At the top of ProjectsPage.jsx, add this new component
 function ProjectCard({ project, onClick }) {
-  const [showPreview, setShowPreview] = useState(false)
+  const [isHovering, setIsHovering] = useState(false)
   const [likesCount, setLikesCount] = useState(project.likes_count || 0)
-  const { isLiked, toggleLike } = useLikes([project.id])
+  const { toggleLike } = useLikes([project.id])
 
   const handleLike = async (e) => {
     e.stopPropagation() 
@@ -286,8 +288,8 @@ function ProjectCard({ project, onClick }) {
   return (
     <button
       onClick={onClick}
-      onMouseEnter={() => setShowPreview(true)}
-      onMouseLeave={() => setShowPreview(false)}
+      onMouseEnter={() => setIsHovering(true)}
+      onMouseLeave={() => setIsHovering(false)}
       className="bg-white rounded-2xl  hover:btn shadow p-2 border border-white overflow-hidden hover:border-blockly-purple hover:border hover:shadow-5xl transition-all! text-left group"
     >
       {/* Thumbnail */}
@@ -298,17 +300,17 @@ function ProjectCard({ project, onClick }) {
               src={project.thumbnail_url}
               alt={project.title}
               className={`w-full h-full object-contain group-hover:scale-105 transition-all! duration-300! ${
-                showPreview ? 'opacity-0' : 'opacity-100'
+                isHovering ? 'opacity-0' : 'opacity-100'
               }`}
             />
-            {showPreview && project.generated_html && (
+            {/* {isHovering && project.generated_html && (
               <iframe
                 srcDoc={project.generated_html}
                 className="absolute inset-0 w-full h-full border-0 pointer-events-none"
                 sandbox="allow-scripts"
                 title={`Preview of ${project.title}`}
               />
-            )}
+            )} */}
           </>
         ) : (
           <ImageIcon className="w-12 h-12 text-slate-500" />
@@ -333,8 +335,8 @@ function ProjectCard({ project, onClick }) {
 
         <div className="flex items-center gap-4 text-xs text-slate-400 mt-1">
           <div className="flex items-center gap-1.5">
-            <ThumbsUp className="w-3.5 h-3.5" />
-            <span>{project.likes_count ?? 0}</span>
+            <ThumbsUp className="w-3.5 h-3.5" onClick={handleLike}/>
+            <span>{likesCount}</span>
           </div>
           <div className="flex items-center gap-1.5">
             <MessageSquare className="w-3.5 h-3.5" />
