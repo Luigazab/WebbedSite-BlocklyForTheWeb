@@ -6,9 +6,11 @@ const SignIn = () => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
+  const [rememberMe, setRememberMe] = useState(true)
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    localStorage.setItem('remember-me', String(rememberMe))
     setLoading(true)
     await handleSignIn(email, password)
     setLoading(false)
@@ -50,8 +52,8 @@ const SignIn = () => {
         </div>
 
         <div className="flex justify-between items-center w-full text-blockly-green">
-          <div className="relative space-x-2">
-            <input type="checkbox" />
+          <div className="relative space-x-2 flex items-center">
+            <input className='accent-yellow-500/70 w-4 h-4' type="checkbox" checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)}/>
             <label>Remember me</label>
           </div>
           <a href='/forgot-password' className='text-sm! hover:underline hover:text-blockly-purple'>I forgot my password</a>
