@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect } from 'react'
 import { Menu, Home, FolderOpen, University, BookOpen, UserSquare2, Settings, Plus, Save, Download } from 'lucide-react'
-import { useNavigate } from 'react-router'
+import { Link, useNavigate } from 'react-router'
 import { useAuthStore } from '../../store/authStore'
 import { TourHelpButton } from '../tour/EditorTour'
+import BackButton from '#components/common/BackButton'
 
 const EditorHeader = ({ onNew, onSave, onLoad, projectTitle }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -56,8 +57,9 @@ const EditorHeader = ({ onNew, onSave, onLoad, projectTitle }) => {
         {/* Left: hamburger + logo + title */}
         <div className="flex items-center space-x-3 relative">
 
-          <img src="/anotherlogo.png" alt="Logo" className="w-auto h-10" />
-
+          <Link to="/"><img src="/icon.png" alt="icon image" className='w-8 h-8' /></Link>
+          <BackButton />
+          <span className="text-slate-500">/</span>
           <div className="flex flex-col leading-tight">
             {isProjectTitle ? (
               <>

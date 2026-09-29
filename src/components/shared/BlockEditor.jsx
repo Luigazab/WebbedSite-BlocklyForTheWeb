@@ -3,7 +3,7 @@ import { useNavigate, useParams, useLocation } from 'react-router'
 import BlocklyWorkspace from '../editor/BlocklyWorkspace'
 import PreviewPane from '../editor/PreviewPane'
 import FileTabs from '../editor/FileTabs'
-import { useProjectDatabase } from '../../hooks/useProjectDatabase'
+import { useProject } from '#hooks/useProject'
 import { useProjectFiles } from '../../hooks/useProjectFiles'
 import { codeGeneratorService } from '../../services/codeGenerator.service'
 import { zipExportService } from '../../services/zipExport.service'
@@ -17,6 +17,7 @@ import { useUIStore } from '../../store/uiStore'
 import { useBlocklyThumbnail } from '../../hooks/useBlocklyThumbnail'
 import { projectService } from '../../services/project.service'
 import EditorTour, { useAutoStartEditorTour } from '../tour/EditorTour'
+import { toast } from 'sonner'
 
 const BlockEditor = () => {
   const { id } = useParams()
@@ -43,7 +44,7 @@ const BlockEditor = () => {
   const lastSavedHtmlRef = useRef('');
   const { saveThumbnail, loading: thumbnailLoading, error: thumbnailError } = useBlocklyThumbnail();
   
-  const { projects, loadUserProjects, saveProject, deleteProject } = useProjectDatabase()
+  const { projects, currentProjects, fetchProjects,fetchProject, handleCreateProject, handleUpdateProject, handleDeleteProject: removeProjectFromDb, } = useProject()
   const { files, activeFile, isLocal, saveFile, deleteFile, setActiveFile, createFile, migrateLocalFilesToDb } = useProjectFiles(id || currentProjectId)
 
   const workspace = BlocklyWorkspace({
@@ -67,17 +68,17 @@ const BlockEditor = () => {
   }, [id])
 
   useEffect(() => {
-    if (id && projects.length > 0) {
-      const project = projects.find(p => p.id === id)
+    if (!id) return
+    fetchProject(id).then((project) => {
       if (project) {
         setProjectTitle(project.title)
         setProjectDescription(project.description || '')
       }
-    }
-  }, [id, projects])
+    })
+  }, [id])
 
   useEffect(() => {
-    loadUserProjects()
+    fetchProjects()
   }, [])
 
   useEffect(() => {
@@ -205,7 +206,7 @@ const BlockEditor = () => {
       setActiveFile(fileId)
     } catch (error) {
       console.error('Error switching files:', error)
-      addToast('Error switching files', 'error')
+      toast.error('Error switching files')
     }
   }
 
@@ -216,9 +217,9 @@ const BlockEditor = () => {
         await saveFile(currentProjectId, activeFile, workspaceState)
       }
       await createFile(currentProjectId, filename)
-      addToast(`Created ${filename}`, 'success')
+      toast.success(`Created ${filename}`)
     } catch (error) {
-      addToast('Error creating file', 'error')
+      toast.error('Error creating file')
     }
   }
 
@@ -226,9 +227,9 @@ const BlockEditor = () => {
     try {
       await deleteFile(fileId, currentProjectId)
       setFilesWithCode(prev => prev.filter(f => f.id !== fileId))
-      addToast('File deleted', 'info')
+      toast.info('File deleted')
     } catch (error) {
-      addToast('Error deleting file', 'error')
+      toast.error('Error deleting file')
     }
   }
 
@@ -239,78 +240,62 @@ const BlockEditor = () => {
         await saveFile(currentProjectId, activeFile, workspaceState)
       }
 
-      let projectIdToUse = currentProjectId;
+      let projectIdToUse = currentProjectId
 
       if (!currentProjectId) {
-        const savedProject = await saveProject({
-          title,
-          description,
-          workspaceState: { blocks: { languageVersion: 0, blocks: [] } },
-          code: generatedCode,
-          projectId: null
-        })
-        
+        const savedProject = await handleCreateProject({ title, description, type: 'block' })
+
         setCurrentProjectId(savedProject.id)
         setProjectTitle(title)
         setProjectDescription(description)
-        projectIdToUse = savedProject.id; 
-        
+        projectIdToUse = savedProject.id
+
         if (isLocal) {
           await migrateLocalFilesToDb(savedProject.id)
-          addToast('Local files migrated to your account', 'success')
+          toast.success('Local files migrated to your account')
         }
-        
+
         navigate(`/${profile?.role}/editor/${savedProject.id}`, { replace: true })
       } else {
-        await saveProject({
-          title,
-          description,
-          workspaceState: { blocks: { languageVersion: 0, blocks: [] } },
-          code: generatedCode,
-          projectId: currentProjectId
-        })
-        
+        await handleUpdateProject(currentProjectId, { title, description })
         setProjectTitle(title)
         setProjectDescription(description)
-        projectIdToUse = currentProjectId;
+        projectIdToUse = currentProjectId
       }
-      
+
       setShowSaveModal(false)
-      addToast(`Project "${title}" saved successfully!`, 'success')
-      loadUserProjects()
+      fetchProjects()
+
       try {
-        const result = await saveThumbnail(workspace.getWorkspace(), projectIdToUse);
-        if (result) {
-          addToast('Thumbnail saved', 'success');
-        } else {
-          addToast('Failed to save thumbnail', 'error');
-        }
+        const result = await saveThumbnail(workspace.getWorkspace(), projectIdToUse)
+        if (result) toast.success('Thumbnail saved')
+        else toast.error('Failed to save thumbnail')
       } catch (err) {
-        console.error('Thumbnail save failed:', err);
-        addToast('Thumbnail save error', 'error');
+        console.error('Thumbnail save failed:', err)
+        toast.error('Thumbnail save error')
       }
     } catch (error) {
       console.error('Save error:', error)
-      addToast(error.message || 'Failed to save project', 'error')
+      toast.error(error.message || 'Failed to save project')
     }
   }
 
   const handleExportZip = async () => {
     if (filesWithCode.length === 0) {
-      addToast('No files to export', 'error')
+      toast.error('No files to export')
       return
     }
     try {
       await zipExportService.exportProjectAsZip(projectTitle, projectDescription, filesWithCode)
-      addToast('Project exported as ZIP!', 'success')
+      toast.success('Project exported as ZIP!')
     } catch (error) {
-      addToast('Failed to export ZIP', 'error')
+      toast.error('Failed to export ZIP')
     }
   }
 
   const handleExportHTML = () => {
     if (!generatedCode) {
-      addToast('No code to export', 'error')
+      toast.error('No code to export')
       return
     }
     const blob = new Blob([generatedCode], { type: 'text/html' })
@@ -320,13 +305,13 @@ const BlockEditor = () => {
     a.download = `${projectTitle || 'website'}.html`
     a.click()
     URL.revokeObjectURL(url)
-    addToast('HTML file downloaded!', 'success')
+    toast.success('HTML file downloaded!')
   }
 
   const handleExportJSON = () => {
     const workspaceState = workspace.getWorkspaceState()
     if (!workspaceState) {
-      addToast('No workspace to export', 'error')
+      toast.error('No workspace to export')
       return
     }
     const dataToSave = {
@@ -342,7 +327,7 @@ const BlockEditor = () => {
     a.download = `${projectTitle || 'blockly-project'}.json`
     a.click()
     URL.revokeObjectURL(url)
-    addToast('Blockly project exported!', 'success')
+    toast.success('Blockly project exported!')
   }
 
   const handleLoadFromDevice = () => fileInputRef.current?.click()
@@ -355,16 +340,16 @@ const BlockEditor = () => {
       try {
         const data = JSON.parse(e.target?.result)
         if (!data.blocks_json) {
-          addToast('Invalid project file format', 'error')
+          toast.error('Invalid project file format')
           return
         }
         setProjectTitle(data.title || 'Loaded Project')
         setProjectDescription(data.description || '')
         setCurrentProjectId(null)
         setInitialWorkspaceState(data.blocks_json)
-        addToast(`Loaded "${data.title || 'project'}" from device`, 'success')
+        toast.success(`Loaded "${data.title || 'project'}" from device`)
       } catch (error) {
-        addToast('Failed to parse project file', 'error')
+        toast.error('Failed to parse project file')
       }
     }
     reader.readAsText(file)
@@ -376,18 +361,16 @@ const BlockEditor = () => {
     setProjectDescription(project.description || '')
     setCurrentProjectId(project.id)
     navigate(`/${profile?.role}/editor/${project.id}`)
-    addToast(`Loaded "${project.title}"`, 'success')
+    toast.success(`Loaded "${project.title}"`)
   }
 
   const handleDeleteProject = async (projectId) => {
     if (!window.confirm('Are you sure you want to delete this project?')) return
     try {
-      await deleteProject(projectId)
+      await removeProjectFromDb(projectId)
       if (currentProjectId === projectId) handleCreateNew()
-      addToast('Project deleted', 'info')
-      loadUserProjects()
+      fetchProjects()
     } catch (error) {
-      addToast('Error deleting project', 'error')
     }
   }
 
@@ -402,7 +385,7 @@ const BlockEditor = () => {
         setFilesWithCode([])
         localProjectFilesService.clearLocalFiles()
         navigate(`/${profile?.role}/editor`, { replace: true })
-        addToast('New project started', 'info')
+        toast.info('New project started')
       }
     } else {
       workspace.clearWorkspace()
@@ -411,7 +394,7 @@ const BlockEditor = () => {
       setCurrentProjectId(null)
       setInitialWorkspaceState(null)
       setFilesWithCode([])
-      addToast('Ready for new project', 'info')
+      toast.info('Ready for new project')
     }
   }
 
