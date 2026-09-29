@@ -1,20 +1,20 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import { useAuthStore } from '../../store/authStore'
-import { projectService } from '../../services/project.service'
-import { createDefaultProjectFiles } from '../../services/projectfiles.service'
 import { X, Loader2, Icon } from 'lucide-react'
+import { useProject } from '#hooks/useProject'
 
 const MODES = [
-  { title: 'Block-based', description: 'Code using drag and drop blocks', icon:(props) => <img src="/puzzle_diamond.png" alt="" {...props} /> },
-  { title: 'Text-based',   description: 'Code in traditional text mode', icon:(props) => <img src="/text.png" alt="" {...props} />  },
+  { title: 'Block-based', description: 'Code using drag and drop blocks', mode: 'block', icon:(props) => <img src="/puzzle_diamond.png" alt="" {...props} /> },
+  { title: 'Text-based',   description: 'Code in traditional text mode', mode: 'text', icon:(props) => <img src="/text.png" alt="" {...props} />, disabled: true, comingSoon: true  }
 ]
 
 export default function CreateProjectModal({ onClose, onCreated }) {
   const navigate = useNavigate()
   const profile  = useAuthStore((s) => s.profile)
+  const { handleCreateProject } = useProject()
 
-  const [form, setForm] = useState({ title: '', description: '', mode: 'Blocks' })
+  const [form, setForm] = useState({ title: '', description: '', mode: 'block' })
   const [loading, setLoading] = useState(false)
   const [error,   setError]   = useState(null)
 
@@ -26,16 +26,15 @@ export default function CreateProjectModal({ onClose, onCreated }) {
     setError(null)
 
     try {
-      if (form.mode === 'Blocks') {
-        const project = await projectService.createBlocksProject({
+      if (form.mode === 'block') {
+        const project = await handleCreateProject({
           title:       form.title.trim(),
           description: form.description.trim(),
+          type:        'block',
         })
 
-        await createDefaultProjectFiles(project.id)
-
         navigate(`/${profile?.role}/editor/${project.id}`, {
-          state: { projectTitle: project.title },
+          state: { projectTitle: project.title, projectDescription: project.description, },
         })
       } else {
         onCreated?.({ ...form })
@@ -44,6 +43,7 @@ export default function CreateProjectModal({ onClose, onCreated }) {
     } catch (err) {
       console.error('Error creating project:', err)
       setError(err.message || 'Failed to create project')
+    } finally {
       setLoading(false)
     }
   }
@@ -102,19 +102,25 @@ export default function CreateProjectModal({ onClose, onCreated }) {
             <div className="flex flex-col gap-2 justify-end">
               <label className="text-lg font-bold text-gray-800">Mode</label>
               <div className="flex gap-2">
-                {MODES.map(({title, description, icon: Icon}) => (
+                {MODES.map(({title, description, mode, icon: Icon, disabled: modeDisabled, comingSoon}) => (
                   <button
-                    key={title}
+                    key={mode}
                     type="button"
-                    disabled={loading}
-                    onClick={() => setForm((f) => ({ ...f, mode: title }))}
-                    className={`flex flex-col flex-1 items-center gap-0.5 p-4 rounded-xl border-2 shadow transition-all text-left
-                      ${form.mode === title
+                    disabled={loading || modeDisabled}
+                    onClick={() => setForm((f) => ({ ...f, mode }))}
+                    className={`relative flex flex-col flex-1 items-center gap-0.5 p-4 rounded-xl border-2 shadow transition-all text-left
+                      ${form.mode === mode
                         ? 'border-blockly-purple/50'
-                        : 'border-gray-200 hover:border-gray-300'}`}
+                        : 'border-gray-200 hover:border-gray-300'}
+                        ${modeDisabled ? 'opacity-50 cursor-not-allowed hover:border-gray-200' : ''}`}
                   >
+                    {comingSoon && (
+                      <span className="absolute top-1.5 right-1.5 text-[10px] font-bold uppercase text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">
+                        Soon
+                      </span>
+                    )}
                     <Icon className="w-10 h-10 shrink-0" />
-                    <span className={`uppercase font-bold ${form.mode === title ? 'text-blockly-purple' : 'text-gray-800'}`}>
+                    <span className={`uppercase font-bold ${form.mode === mode ? 'text-blockly-purple' : 'text-gray-800'}`}>
                       {title}
                     </span>
                     <span className="font-semibold text-sm text-gray-500 lowercase">{description}</span>
@@ -142,7 +148,7 @@ export default function CreateProjectModal({ onClose, onCreated }) {
             <button
               type="submit"
               disabled={loading || !form.title.trim()}
-              className="flex-1 btn btn-primary font-semibold gap-2 disabled:opacity-50"
+              className="flex flex-1 items-center justify-center btn btn-primary font-semibold gap-2 disabled:opacity-50"
             >
               {loading && <Loader2 className="w-4 h-4 animate-spin" />}
               {loading ? 'Creating…' : 'Create Project'}

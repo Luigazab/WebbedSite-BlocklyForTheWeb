@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useNavigate } from 'react-router'
-import { useAuthStore } from '../../store/authStore'
+import { useSearchParams } from 'react-router'
+import { toast } from 'sonner'
 import CreateProjectModal from './CreateProjectModal'
 import ProjectDetailsModal from './ProjectDetailsModal'
 import { useTour } from '../tour/TourProvider'
@@ -22,8 +22,8 @@ const SORT_OPTIONS = ['Recent', 'Name', 'Most Liked']
 
 
 export default function ProjectsPage() {
-  const profile  = useAuthStore((s) => s.profile)
-  const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const linkedProjectId = searchParams.get('project')
   const { activeTour, isVisible, startTour } = useTour()
 
   const [projects,        setProjects]        = useState([])
@@ -36,6 +36,14 @@ export default function ProjectsPage() {
   const [showSortMenu,    setShowSortMenu]    = useState(false)
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [selectedProject, setSelectedProject] = useState(null)
+  useEffect(() => {
+    if (!linkedProjectId) return
+    let active = true
+    projectService.getProjectById(linkedProjectId).then(project => {
+      if (active) setSelectedProject(project)
+    }).catch(() => { if (active) toast.error('This project was removed or is no longer accessible.') })
+    return () => { active = false }
+  }, [linkedProjectId])
 
   const fetchProjects = useCallback(async () => {
     setLoading(true)
@@ -253,11 +261,10 @@ export default function ProjectsPage() {
       {selectedProject && (
         <ProjectDetailsModal
           project={selectedProject}
-          onClose={() => setSelectedProject(null)}
+          onClose={() => { setSelectedProject(null); setSearchParams(params => { params.delete('project'); return params }, { replace: true }) }}
           onDelete={() => handleDeleteProject(selectedProject.id)}
           onToggleVisibility={() => handleToggleVisibility(selectedProject)}
           onLikeToggled={handleLikeToggled}
-          onCommentsCountChanged={handleCommentsCountChanged}
         />
       )}
       {activeTour === 'projects' && isVisible && <TourSpotlight steps={projectsTourSteps} />}
