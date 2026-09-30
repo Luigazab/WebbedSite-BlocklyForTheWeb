@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Link, useNavigate, useParams } from 'react-router'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router'
 import { useAuth } from '../../../hooks/useAuth'
 import { useTutorialBuilder } from '../../../hooks/useTutorialBuilder'
 import { fetchTopicGroupsForAuthoring } from '../../../services/contentCreationService'
@@ -280,10 +280,13 @@ function StepPanel({
 }
 
 // ─── Main Builder ───────────────────────────────────────────────────────────
-export default function TutorialBuilderPage() {
+export default function TutorialBuilderPage({ context = "teacher" }) {
+  const isAdmin = context === "admin";
   const { user } = useAuth()
   const navigate = useNavigate()
   const { id } = useParams()
+  const [searchParams] = useSearchParams()
+  const classroomId = searchParams.get("classroomId");
   const isEdit = Boolean(id)
 
   const [courseTopics, setCourseTopics] = useState([])
@@ -310,17 +313,17 @@ export default function TutorialBuilderPage() {
     },
   })
 
-  const builder = useTutorialBuilder({ lessonId: id, authorId: user?.id, workspace })
+  const builder = useTutorialBuilder({ lessonId: id, authorId: user?.id, workspace, initialTopicId: searchParams.get("topicId") })
 
   // Load topics for the dropdown
   useEffect(() => {
     ;(async () => {
       setLoadingTopics(true)
-      try { setCourseTopics(await fetchTopicGroupsForAuthoring()) }
+      try { setCourseTopics(await fetchTopicGroupsForAuthoring({ masterOnly: isAdmin, classroomId, lessonId: id })) }
       catch (err) { toast.error(err.message || 'Failed to load topics.') }
       finally { setLoadingTopics(false) }
     })()
-  }, [])
+  }, [isAdmin, classroomId, id])
 
   // Pick a sane default active file once data is loaded
   useEffect(() => {
@@ -385,10 +388,12 @@ export default function TutorialBuilderPage() {
   }, [builder])
 
   // ── Save / Publish ──────────────────────────────────────────────────────
+  const validTopic = () => courseTopics.some((group) => group.topics.some((topic) => topic.id === builder.meta.topicId))
   const handleSave = async () => {
+    if (!validTopic()) return toast.error("Select a topic from the current classroom or master library.")
     try {
       const lessonId = await builder.saveAll()
-      if (!isEdit) navigate(`/teacher/tutorial/edit/${lessonId}`, { replace: true })
+      if (!isEdit) navigate(`/${isAdmin ? "admin" : "teacher"}/tutorial/edit/${lessonId}`, { replace: true })
       toast.success('Tutorial saved!')
     } catch (err) {
       toast.error(err.message || 'Save failed')
@@ -396,9 +401,10 @@ export default function TutorialBuilderPage() {
   }
 
   const handlePublish = async () => {
+    if (!validTopic()) return toast.error("Select a topic from the current classroom or master library.")
     try {
       const lessonId = await builder.publish()
-      if (!isEdit) navigate(`/teacher/tutorial/edit/${lessonId}`, { replace: true })
+      if (!isEdit) navigate(`/${isAdmin ? "admin" : "teacher"}/tutorial/edit/${lessonId}`, { replace: true })
       toast.success('Tutorial published!')
     } catch (err) {
       toast.error(err.message || 'Publish failed')
@@ -439,6 +445,7 @@ export default function TutorialBuilderPage() {
       <div className="shrink-0 flex items-center gap-3 px-4 py-2.5">
         <Link to="/"><img src="/icon.png" alt="icon" className="w-8 h-8" /></Link>
         <BackButton />
+        {!isAdmin && !isEdit && !classroomId && <p className="text-sm text-muted-foreground">Open a classroom to create a lesson for its topics. <Link to="/teacher/classrooms" className="underline">Choose classroom</Link></p>}
         <span className="text-slate-500">/</span>
         <span className="font-bold text-slate-700 truncate max-w-xs">
           {builder.meta.title || 'New Tutorial'}
@@ -448,6 +455,12 @@ export default function TutorialBuilderPage() {
         }`}>
           {builder.isPublished ? 'Published' : 'Draft'}
         </span>
+
+        {isAdmin && (
+          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">
+            Master Content
+          </span>
+        )}
         {builder.dirty && <span className="text-[10px] text-amber-600 font-semibold">Unsaved changes</span>}
 
         <div className="ml-auto flex gap-1.5">

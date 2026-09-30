@@ -11,6 +11,10 @@ import PlatformConfig from '../dashboards/admin/pages/PlatformConfig'
 import CoursesLibrary from '@/dashboards/admin/pages/CoursesLibrary'
 import CourseDetail from '@/dashboards/admin/pages/CourseDetail'
 import Analytics from '@/dashboards/admin/pages/Analytics'
+import LecturePage from '@/dashboards/teacher/pages/LecturePage'
+import QuizPage from '@/dashboards/teacher/pages/QuizPage'
+import TutorialBuilderPage from '@/dashboards/teacher/pages/TutorialBuilderPage'
+import LaboratoryBuilderPage from '@/dashboards/teacher/pages/LaboratoryBuilderPage'
 
 export const adminRoutes = [
   {
@@ -28,5 +32,13 @@ export const adminRoutes = [
       { path: 'profile', element: <ProfilePage /> },
       { path: 'settings', element: <SettingsPage /> },
     ]
-  }
+  },
+  { path: 'lecture/create',    element: <LecturePage context="admin" /> },
+  { path: 'lecture/edit/:id',  element: <LecturePage context="admin" /> },
+  { path: 'quiz/create',       element: <QuizPage context="admin" /> },
+  { path: 'quiz/edit/:id',     element: <QuizPage context="admin" /> },
+  { path: 'tutorial/create',   element: <TutorialBuilderPage context="admin" /> },
+  { path: 'tutorial/edit/:id', element: <TutorialBuilderPage context="admin" /> },
+  { path: 'laboratory/create',   element: <LaboratoryBuilderPage context="admin" /> },
+  { path: 'laboratory/edit/:id', element: <LaboratoryBuilderPage context="admin" /> },
 ]

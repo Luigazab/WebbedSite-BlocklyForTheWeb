@@ -40,7 +40,8 @@ const normalizeOptions = (options = []) => {
   return [...mapped, ...Array.from({ length: QUESTION_DEFAULT_OPTIONS - mapped.length }, createOption)];
 };
 
-const QuizPage = () => {
+const QuizPage = ({ context = "teacher" }) => {
+  const isAdmin = context === "admin";
   const params = useParams();
   const location = useLocation();
   const editLessonId = location.state?.lessonId ?? params.id;
@@ -55,7 +56,7 @@ const QuizPage = () => {
     deleting,
     saveQuiz,
     removeQuiz,
-  } = useQuizEditor(editLessonId);
+  } = useQuizEditor(editLessonId, { isAdmin, classroomId: new URLSearchParams(location.search).get("classroomId") });
 
   const [selectedTopicId, setSelectedTopicId] = useState("");
   const [title, setTitle] = useState("");
@@ -80,7 +81,7 @@ const QuizPage = () => {
   
   useEffect(() => {
     setTitle(quiz.title);
-    setSelectedTopicId(quiz.topicId);
+    setSelectedTopicId(quiz.topicId || (!isEditMode ? new URLSearchParams(location.search).get("topicId") : "") || "");
     setTimeLimit(quiz.timeLimit);
     setPassingScore(quiz.passingScore);
 
@@ -231,11 +232,16 @@ const QuizPage = () => {
         <div className="top-1 sticky shrink-0 flex items-center gap-3 px-4 py-2.5 ">
           <Link to="/"><img src="/icon.png" alt="icon image" className='w-8 h-8' /></Link>
           <BackButton />
+          {!isAdmin && !isEditMode && !new URLSearchParams(location.search).get("classroomId") && <p className="text-sm text-muted-foreground">Open a classroom to create a lesson for its topics. <Link to="/teacher/classrooms" className="underline">Choose classroom</Link></p>}
           <span className="text-slate-500">/</span>
           <span className="font-bold text-slate-700 truncate max-w-xs">
             {title || 'New Quiz'}
           </span>
-            
+          {isAdmin && (
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">
+              Master Content
+            </span>
+          )}
           <div className='ml-auto flex truncate gap-1.5'>
             <Button variant='ghost'>
               <Sun size={20}/>Light Mode

@@ -24,7 +24,7 @@ const parseLabInstruction = (value) => {
 
 const sameWorkspace = (left, right) => JSON.stringify(left ?? {}) === JSON.stringify(right ?? {});
 
-const LaboratoryViewer = ({ lesson, onNext, onPrevious, navigation }) => {
+const LaboratoryViewer = ({ lesson, onNext, onPrevious, navigation, preview = false }) => {
   const navigate = useNavigate();
   const addToast = useUIStore((state) => state.addToast);
   const profile = useAuthStore((state) => state.profile);
@@ -97,7 +97,7 @@ const LaboratoryViewer = ({ lesson, onNext, onPrevious, navigation }) => {
     }
     const passed = sameWorkspace(current, lab.expectedBlocks);
     setValidationState(passed ? "passed" : "failed");
-    if (passed && profile?.id && lesson?.id) {
+    if (!preview && passed && profile?.id && lesson?.id) {
       try {
         await xpService.completeLesson({ userId: profile.id, lessonId: lesson.id, score: 100 });
       } catch (error) {

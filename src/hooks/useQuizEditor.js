@@ -3,17 +3,17 @@ import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuizStore } from "@/store/quizStore";
 
-export const useQuizEditor = (lessonId) => {
+export const useQuizEditor = (lessonId, { isAdmin = false, classroomId = null } = {}) => {
   const { user } = useAuth();
   const store = useQuizStore();
 
   const isEditMode = Boolean(lessonId);
 
   useEffect(() => {
-    store.fetchTopics().catch((error) =>
+    store.fetchTopics({ masterOnly: isAdmin, classroomId, lessonId }).catch((error) =>
       toast.error(error.message || "Failed to load topics.")
     );
-  }, [store.fetchTopics]);
+  }, [store.fetchTopics, isAdmin, classroomId, lessonId]);
 
   useEffect(() => {
     if (!isEditMode) {
@@ -40,6 +40,7 @@ export const useQuizEditor = (lessonId) => {
         return null;
       }
 
+      if (!store.topics.some((group) => group.topics.some((topic) => topic.id === topicId))) return toast.error("Select a topic from the current classroom or master library.");
       if (validationError) {
         toast.error(validationError);
         return null;

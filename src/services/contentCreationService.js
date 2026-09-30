@@ -13,12 +13,27 @@ const makeLessonSlug = (title) => {
   return `${base}-${Date.now().toString(36)}`;
 };
 
-export const fetchTopicGroupsForAuthoring = async () => {
-  const { data, error } = await supabase
+export const fetchTopicGroupsForAuthoring = async ({ masterOnly = false, classroomId = null, lessonId = null } = {}) => {
+  // Infer classroom when editing from outside a classroom route.
+  if (!masterOnly && !classroomId && lessonId) {
+    const { data: lesson, error } = await supabase.from("lessons")
+      .select("topics(classroom_id)").eq("id", lessonId).single();
+    if (error) throw error;
+    classroomId = lesson?.topics?.classroom_id;
+  }
+  if (!masterOnly && !classroomId) return [];
+  let query = supabase
     .from("topics")
-    .select("id, title, description, order, course_id, courses(title)")
+    .select("id, title, description, order, course_id, classroom_id, courses(title)")
     .order("order", { ascending: true });
 
+  if (masterOnly) {
+    query = query.is("classroom_id", null);
+  } else {
+    query = query.eq("classroom_id", classroomId);
+  }
+
+  const { data, error } = await query;
   if (error) throw error;
 
   const grouped = {};
@@ -85,6 +100,13 @@ export const removeLessonById = async (lessonId) => {
   if (error) throw error;
 };
 
+const getTopicClassroom = async (topicId) => {
+  const { data, error } = await supabase.from("topics")
+    .select("classroom_id").eq("id", topicId).single();
+  if (error) throw error;
+  return data.classroom_id;
+};
+
 export const createLessonBase = async ({ topicId, authorId, title, type, baseXp = 50 }) => {
   const { data: existingRows, error: orderError } = await supabase
     .from("lessons")
@@ -95,9 +117,11 @@ export const createLessonBase = async ({ topicId, authorId, title, type, baseXp 
 
   if (orderError) throw orderError;
 
+  const classroomId = await getTopicClassroom(topicId);
   const nextOrder = (existingRows?.[0]?.order ?? 0) + 1;
   const payload = {
     topics_id: topicId,
+    classroom_id: classroomId,
     author: authorId,
     title: title.trim(),
     type,
@@ -113,10 +137,12 @@ export const createLessonBase = async ({ topicId, authorId, title, type, baseXp 
 };
 
 export const updateLessonBase = async ({ lessonId, topicId, title, baseXp = 50 }) => {
+  const classroomId = await getTopicClassroom(topicId);
   const { data, error } = await supabase
     .from("lessons")
     .update({
       topics_id: topicId,
+      classroom_id: classroomId,
       title: title.trim(),
       is_published: false,
       updated_at: new Date().toISOString(),

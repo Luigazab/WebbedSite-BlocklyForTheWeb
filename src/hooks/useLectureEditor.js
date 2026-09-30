@@ -3,7 +3,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { useLectureStore } from "@/store/lectureStore";
 
-export const useLectureEditor = (lessonId) => {
+export const useLectureEditor = (lessonId, { isAdmin = false, classroomId = null } = {}) => {
   const { user } = useAuth();
   const isEditMode = Boolean(lessonId);
 
@@ -23,8 +23,8 @@ export const useLectureEditor = (lessonId) => {
   const deleteLecture = useLectureStore((s) => s.deleteLecture);
 
   useEffect(() => {
-    fetchTopics().catch((error) => toast.error(error.message || "Failed to load topics."));
-  }, [fetchTopics]);
+    fetchTopics({ masterOnly: isAdmin, classroomId, lessonId }).catch((error) => toast.error(error.message || "Failed to load topics."));
+  }, [fetchTopics, isAdmin, classroomId, lessonId]);
 
   useEffect(() => {
     if (!isEditMode) {
@@ -38,7 +38,7 @@ export const useLectureEditor = (lessonId) => {
     async ({ title, topicId, content, attachments }) => {
       if (!user?.id) return toast.error("You must be signed in to save a lecture.");
       if (!title?.trim()) return toast.error("Lecture title is required.");
-      if (!topicId) return toast.error("Please select a topic.");
+      if (!topics.some((group) => group.topics.some((topic) => topic.id === topicId))) return toast.error("Select a topic from the current classroom or master library.");
 
       try {
         const lesson = isEditMode
@@ -52,7 +52,7 @@ export const useLectureEditor = (lessonId) => {
         return null;
       }
     },
-    [isEditMode, lessonId, user, createLecture, updateLecture]
+    [isEditMode, lessonId, user, topics, createLecture, updateLecture]
   );
 
   const removeLecture = useCallback(async () => {

@@ -20,9 +20,10 @@ import {
 import { useUIStore } from "@/store/uiStore";
 import { BookOpen, Camera, Check, ChevronDown, ChevronLeft, ChevronRight, FlaskConical, ListOrdered, Save, Sun, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router";
+import { Link, useNavigate, useParams, useSearchParams } from "react-router";
 import BackButton from "#components/common/BackButton";
 import SwitchButton from "#components/editor/SwitchButton";
+import { toast } from "sonner";
 
 const uid = () => Math.random().toString(36).slice(2, 10);
 const makeFile = (filename = "index.html", blocks_json = null) => ({ id: uid(), filename, blocks_json });
@@ -37,8 +38,11 @@ const parseLabInstruction = (value) => {
   }
 };
 
-const LaboratoryBuilderPage = () => {
+const LaboratoryBuilderPage = ({ context = "teacher" }) => {
+  const isAdmin = context === "admin";
   const { id } = useParams();
+  const [searchParams] = useSearchParams();
+  const classroomId = searchParams.get("classroomId");
   const navigate = useNavigate();
   const { user } = useAuth();
   const addToast = useUIStore((state) => state.addToast);
@@ -47,7 +51,7 @@ const LaboratoryBuilderPage = () => {
   const [title, setTitle] = useState("");
   const [baseXp, setBaseXp] = useState("50");
   const [description, setDescription] = useState("");
-  const [selectedTopicId, setSelectedTopicId] = useState("");
+  const [selectedTopicId, setSelectedTopicId] = useState(() => id ? "" : searchParams.get("topicId") || "");
   const [courseTopics, setCourseTopics] = useState([]);
   const [loadingTopics, setLoadingTopics] = useState(true);
   const [loadingLab, setLoadingLab] = useState(isEditMode);
@@ -85,14 +89,14 @@ const LaboratoryBuilderPage = () => {
     ;(async () => {
       setLoadingTopics(true);
       try {
-        setCourseTopics(await fetchTopicGroupsForAuthoring());
+        setCourseTopics(await fetchTopicGroupsForAuthoring({ masterOnly: isAdmin, classroomId, lessonId: id }));
       } catch (error) {
-        addToast(error.message || "Failed to load topics.", "error");
+        toast.error(error.message || "Failed to load topics.");
       } finally {
         setLoadingTopics(false);
       }
     })();
-  }, [addToast]);
+  }, [isAdmin, classroomId, id]);
 
   useEffect(() => {
     if (!isEditMode) return;
@@ -195,7 +199,7 @@ const LaboratoryBuilderPage = () => {
     if (!user?.id) return addToast("You must be signed in to save a laboratory.", "error");
     if (!title.trim()) return addToast("Laboratory title is required.", "error");
     if (!/^\d+$/.test(baseXp) || Number(baseXp) <= 0) return addToast("Base XP must be a positive whole number.", "error");
-    if (!selectedTopicId) return addToast("Select a topic for this laboratory.", "error");
+    if (!selectedTopic) return addToast("Select a topic for this laboratory.", "error");
     if (!expectedBlocks) return addToast("Capture the final expected workspace before saving.", "error");
 
     setSaving(true);
@@ -231,10 +235,17 @@ const LaboratoryBuilderPage = () => {
       <div className="shrink-0 flex items-center gap-3 px-4 py-2.5 ">
         <Link to="/"><img src="/icon.png" alt="icon image" className='w-8 h-8' /></Link>
         <BackButton />
+        {!isAdmin && !isEditMode && !classroomId && <p className="text-sm text-muted-foreground">Open a classroom to create a lesson for its topics. <Link to="/teacher/classrooms" className="underline">Choose classroom</Link></p>}
         <span className="text-slate-500">/</span>
         <span className="font-bold text-slate-700 truncate max-w-xs">
           {title || 'New Laboratory'}
         </span>
+
+        {isAdmin && (
+          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">
+            Master Content
+          </span>
+        )}
           
         <div className='ml-auto flex truncate max-w-xs'>
           <Button variant='ghost'>

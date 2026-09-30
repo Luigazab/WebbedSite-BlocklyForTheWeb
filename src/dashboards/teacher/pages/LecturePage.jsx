@@ -14,7 +14,8 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useParams } from "react-router";
 import BackButton from "#components/common/BackButton";
 
-const LecturePage = () => {
+const LecturePage = ({ context = "teacher" }) => {
+  const isAdmin = context === "admin";
   const params = useParams();
   const location = useLocation();
   const editLessonId = location.state?.lessonId ?? params.id;
@@ -29,7 +30,7 @@ const LecturePage = () => {
     deleting,
     saveLecture,
     removeLecture,
-  } = useLectureEditor(editLessonId);
+  } = useLectureEditor(editLessonId, { isAdmin, classroomId: new URLSearchParams(location.search).get("classroomId") });
 
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
@@ -42,7 +43,7 @@ const LecturePage = () => {
   // Sync local form state whenever the loaded lecture changes (edit mode load, or reset on create)
   useEffect(() => {
     setTitle(lecture.title);
-    setSelectedTopicId(lecture.topicId);
+    setSelectedTopicId(lecture.topicId || (!isEditMode ? new URLSearchParams(location.search).get("topicId") : "") || "");
     setContent(lecture.content);
     setAttachments(lecture.attachments);
   }, [lecture]);
@@ -97,11 +98,16 @@ const LecturePage = () => {
         <div className="top-1 sticky shrink-0 flex items-center gap-3 px-4 py-2.5 ">
           <Link to="/"><img src="/icon.png" alt="icon image" className='w-8 h-8' /></Link>
           <BackButton />
+          {!isAdmin && !isEditMode && !new URLSearchParams(location.search).get("classroomId") && <p className="text-sm text-muted-foreground">Open a classroom to create a lesson for its topics. <Link to="/teacher/classrooms" className="underline">Choose classroom</Link></p>}
           <span className="text-slate-500">/</span>
           <span className="font-bold text-slate-700 truncate max-w-xs">
             {title || 'New Lecture'}
           </span>
-            
+          {isAdmin && (
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">
+              Master Content
+            </span>
+          )}
           <div className='ml-auto flex truncate gap-1.5'>
             <Button variant='ghost'>
               <Sun size={20}/>Light Mode

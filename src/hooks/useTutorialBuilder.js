@@ -27,7 +27,7 @@ const makeLocalStep = (order = 0) => ({
   workingState: {},
 })
 
-export function useTutorialBuilder({ lessonId, authorId, workspace }) {
+export function useTutorialBuilder({ lessonId, authorId, workspace, initialTopicId = null }) {
   const store = tutorialBuilderStore()
   const isLoadingWsRef = useRef(false)
 
@@ -35,6 +35,7 @@ export function useTutorialBuilder({ lessonId, authorId, workspace }) {
   const load = useCallback(async () => {
     if (!lessonId) {
       store.reset()
+      if (initialTopicId) store.setMeta({ topicId: initialTopicId })
       store.setFiles([{ id: null, filename: 'index.html', fileType: 'html', initialContentJson: null }])
       store.addStep(makeLocalStep(0))
       return
@@ -79,7 +80,7 @@ export function useTutorialBuilder({ lessonId, authorId, workspace }) {
     } finally {
       store.setLoading(false)
     }
-  }, [lessonId])
+  }, [lessonId, initialTopicId])
 
   useEffect(() => { load() }, [load])
 

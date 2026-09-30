@@ -40,10 +40,10 @@ export const useQuizStore = create((set) => ({
     }
   },
 
-  fetchTopics: async () => {
+  fetchTopics: async (scope = {}) => {
     set({ topicsLoading: true });
     try {
-      const topics = await fetchTopicGroupsForAuthoring();
+      const topics = await fetchTopicGroupsForAuthoring(scope);
       set({ topics });
       return topics;
     } finally {

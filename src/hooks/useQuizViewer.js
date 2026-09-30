@@ -3,7 +3,7 @@ import { toast } from "sonner";
 import { useAuthStore } from "@/store/authStore";
 import { useQuizViewStore } from "@/store/quizViewStore";
 
-export const useQuizViewer = (lessonId) => {
+export const useQuizViewer = (lessonId, { preview = false } = {}) => {
   const user = useAuthStore((s) => s.user);
 
   const lessonQuiz      = useQuizViewStore((s) => s.lessonQuiz);
@@ -24,15 +24,15 @@ export const useQuizViewer = (lessonId) => {
   }, [lessonId, fetchQuiz, resetQuiz]);
 
   useEffect(() => {
-    if (!user?.id || !lessonQuiz?.quiz?.id) return;
+    if (preview || !user?.id || !lessonQuiz?.quiz?.id) return;
     fetchAttempts({ userId: user.id, quizId: lessonQuiz.quiz.id }).catch((error) =>
       toast.error(error.message || "Failed to load your previous attempts.")
     );
-  }, [user?.id, lessonQuiz?.quiz?.id, fetchAttempts]);
+  }, [preview, user?.id, lessonQuiz?.quiz?.id, fetchAttempts]);
 
   const finishAttempt = useCallback(
     async (result) => {
-      if (!user?.id || !lessonQuiz) return null;
+      if (preview || !user?.id || !lessonQuiz) return null;
       try {
         return await submitAttempt({ userId: user.id, result, lessonMeta: lessonQuiz });
       } catch (error) {
@@ -40,8 +40,8 @@ export const useQuizViewer = (lessonId) => {
         return null;
       }
     },
-    [user, lessonQuiz, submitAttempt]
+    [preview, user, lessonQuiz, submitAttempt]
   );
 
-  return { lessonQuiz, loading, attempts, attemptsLoading, submitting, finishAttempt };
+  return { lessonQuiz, loading, attempts: preview ? [] : attempts, attemptsLoading, submitting, finishAttempt };
 };

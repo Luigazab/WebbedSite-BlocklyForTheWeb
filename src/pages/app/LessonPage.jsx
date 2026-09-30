@@ -6,10 +6,12 @@ import LaboratoryViewer from "../../dashboards/student/pages/LaboratoryViewer";
 import { useNavigate, useParams } from "react-router";
 import { useLesson } from "../../hooks/useLesson";
 
-const LessonPage = () => {
-  const { lesson, navigation, isLoading, error } = useLesson();
+const LessonPage = ({ preview = false }) => {
+  const { lesson, navigation, isLoading, error } = useLesson({ masterOnly: preview });
   const navigate    = useNavigate();
-  const { courseSlug } = useParams();
+  const { courseSlug, id } = useParams();
+  const coursePath = preview ? `/teacher/courses/${id}` : `/student/learn/${courseSlug}`;
+  const lessonPath = (path) => preview ? path.replace(`/student/learn/${courseSlug}`, `/teacher/courses/${id}/view/${courseSlug}`) : path;
 
   if (isLoading) return <Loader />;
   if (error)     return <div className="text-red-500 p-8">{error.message}</div>;
@@ -17,16 +19,16 @@ const LessonPage = () => {
 
   const handleNext = (destination) => {
     if (destination === "topic" || (!navigation?.next && destination !== "next")) {
-      navigate(`/student/learn/${courseSlug}`);
+      navigate(coursePath);
     } else if (navigation?.next) {
-      navigate(navigation.next);
+      navigate(lessonPath(navigation.next));
     } else {
-      navigate(`/student/learn/${courseSlug}`);
+      navigate(coursePath);
     }
   };
 
   const handlePrevious = () => {
-    if (navigation?.previous) navigate(navigation.previous);
+    if (navigation?.previous) navigate(lessonPath(navigation.previous));
   };
 
   const renderContent = () => {
@@ -34,7 +36,9 @@ const LessonPage = () => {
       case "lecture":
         return (
           <LectureContent
-            lesson={lesson.id}
+            key={lesson.id}
+            lessonId={lesson.id}
+            preview={preview}
             onNext={handleNext}
             onPrevious={handlePrevious}
             navigation={navigation}
@@ -43,16 +47,20 @@ const LessonPage = () => {
       case "quiz":
         return (
           <QuizContent
-            lesson={lesson.id}
+            key={lesson.id}
+            lessonId={lesson.id}
+            preview={preview}
             onNext={handleNext}
             navigation={navigation}
           />
         );
       case "tutorial":
-        return <TutorialViewer tutorialIdOverride={lesson.tutorial?.id} />;
+        return <TutorialViewer key={lesson.id} tutorialIdOverride={lesson.tutorial?.id} preview={preview} />;
       case "laboratory":
         return (
           <LaboratoryViewer
+            key={lesson.id}
+            preview={preview}
             lesson={lesson}
             onNext={handleNext}
             onPrevious={handlePrevious}
@@ -78,6 +86,7 @@ const LessonPage = () => {
       }}
     >
       <div className="relative z-10">
+        {preview && <div className="flex items-center justify-between bg-white px-4 py-3 border-b"><button onClick={() => navigate(coursePath)} className="text-primary font-semibold">Back to course</button><span className="text-sm text-muted-foreground">Student preview · Changes and progress are not saved</span></div>}
         <div className="flex sticky top-0 justify-between items-baseline border-b bg-white border-slate-200 px-4 py-2">
           <h2 className="font-bold tracking-widest text-xl text-slate-500">
             {lesson.topic.title}

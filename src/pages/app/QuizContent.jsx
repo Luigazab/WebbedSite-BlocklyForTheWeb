@@ -106,8 +106,8 @@ function PerfectRetakeDialog({ isOpen, onConfirm, onCancel }) {
   );
 }
 
-const QuizContent = ({ lessonId, onNext, navigation }) => {
-  const { lessonQuiz, loading, attempts, submitting, finishAttempt } = useQuizViewer(lessonId);
+const QuizContent = ({ lessonId, onNext, navigation, preview = false }) => {
+  const { lessonQuiz, loading, attempts, submitting, finishAttempt } = useQuizViewer(lessonId, { preview });
   const quiz = lessonQuiz?.quiz;
   const questions = quiz?.questions ?? [];
   const total = questions.length;
@@ -148,7 +148,7 @@ const QuizContent = ({ lessonId, onNext, navigation }) => {
     const displayResult = { ...result, total };
     setCurrentResult(displayResult);
 
-    if (!reviewOnly) {
+    if (!preview && !reviewOnly) {
       const attempt = await finishAttempt(result);
       if (attempt) setActiveAttemptIdx(attempts.length); // newest attempt lands at the end
     }

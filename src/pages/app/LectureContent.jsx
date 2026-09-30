@@ -4,11 +4,12 @@ import CompleteSuccessModal from "../../components/app/CompleteSuccessModal";
 import { useState } from "react";
 import Loader from "../../components/layout/Loader";
 
-const LectureContent = ({ lessonId, onNext, onPrevious, navigation }) => {
+const LectureContent = ({ lessonId, onNext, onPrevious, navigation, preview = false }) => {
   const { lecture, loading, completing, finishLecture } = useLectureViewer(lessonId);
   const [showModal, setShowModal] = useState(false);
 
   const handleFinishClick = async () => {
+    if (preview) { onNext?.("next"); return; }
     await finishLecture();
     setShowModal(true);
   };

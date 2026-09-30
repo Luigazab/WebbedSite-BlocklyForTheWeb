@@ -128,7 +128,7 @@ function CompletionPopup({ tutorial, badge, onContinue, onBack }) {
 }
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
-export default function TutorialViewer({ tutorialIdOverride = null }) {
+export default function TutorialViewer({ tutorialIdOverride = null, preview = false }) {
   const { tutorialId: routeTutorialId } = useParams()
   const tutorialId = tutorialIdOverride ?? routeTutorialId
   const navigate       = useNavigate()
@@ -207,7 +207,7 @@ export default function TutorialViewer({ tutorialIdOverride = null }) {
         setSteps(sorted)
 
         let startStep = 0
-        if (profile?.id) {
+        if (!preview && profile?.id) {
           const { data: prog } = await supabase
             .from('user_progress')
             .select('id, current_step, is_completed')
@@ -293,7 +293,7 @@ export default function TutorialViewer({ tutorialIdOverride = null }) {
 
   // ── Progress persistence ───────────────────────────────────────────────────
   const saveProgress = async (step, isCompleted = false) => {
-    if (!profile?.id) return
+    if (preview || !profile?.id) return
     try {
       if (progressId) {
         await supabase
@@ -353,7 +353,7 @@ export default function TutorialViewer({ tutorialIdOverride = null }) {
   const handleFinish = async () => {
     if (!validateCurrentStep()) return
     await saveProgress(currentStep, true)
-    if (profile?.id && tutorial?.lesson_id) {
+    if (!preview && profile?.id && tutorial?.lesson_id) {
       try {
         await xpService.completeLesson({ userId: profile.id, lessonId: tutorial.lesson_id, score: 100 })
       } catch (err) {

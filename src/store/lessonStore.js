@@ -11,10 +11,10 @@ const initialState = {
 export const useLessonStore = create((set) => ({
   ...initialState,
 
-  fetchLessonData: async (courseSlug, lessonSlug) => {
+  fetchLessonData: async (courseSlug, lessonSlug, options) => {
     try {
       set({ isLoading: true, error: null });
-      const data = await getLessonDetails(courseSlug, lessonSlug);
+      const data = await getLessonDetails(courseSlug, lessonSlug, options);
       set({
         lesson: data.lesson,
         navigation: data.navigation,
