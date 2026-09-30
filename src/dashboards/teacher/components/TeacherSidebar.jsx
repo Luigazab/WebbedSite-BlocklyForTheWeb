@@ -8,7 +8,8 @@ import { useState } from 'react'
 const links = [
   { to: '/teacher',            label: 'Home',               icon: (props) => <img src="/svghome.svg" alt="" {...props} />           },
   { to: '/teacher/projects',   label: 'Projects',           icon: (props) => <img src="/svgfolder.svg" alt="" {...props} />     },
-  { to: '/teacher/content',    label: 'Content Management', icon: (props) => <img src="/svgbook.svg" alt="" {...props} /> },
+  { to: '/teacher/courses', label: 'Course Library', icon: (props) => <img src="/svgcourse.svg" alt="" {...props} /> },
+  // { to: '/teacher/content',    label: 'Content Management', icon: (props) => <img src="/svgbook.svg" alt="" {...props} /> },
   // { to: '/teacher/quizzes',    label: 'Quizzes',            icon: (props) => <img src="/svghome.svg" alt="" {...props} />   },
   // { to: '/teacher/tutorials',  label: 'Tutorials',          icon: (props) => <img src="/svghome.svg" alt="" {...props} />     },
   { to: '/teacher/classrooms', label: 'Classrooms',         icon: (props) => <img src="/svgclass.svg" alt="" {...props} />     },
@@ -59,7 +60,7 @@ export default function TeacherSidebar() {
 
       <nav className="flex-1 px-2 flex flex-col gap-1 overflow-y-auto">
         {/* Regular links up to classrooms */}
-        {links.slice(0, 7).map(({ to, label, icon: Icon }) => (
+        {links.map(({ to, label, icon: Icon }) => (
           <NavLink
             key={to}
             to={to}

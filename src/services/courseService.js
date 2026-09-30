@@ -137,13 +137,19 @@ export const courseService = {
     const to = from + pageSize - 1;
 
     const { data, error } = await supabase
-      .from("course_with_counts")
-      .select("*")
+      .from("courses")
+      .select("*, topics(id, lessons(id))")
+      .is("topics.classroom_id", null)
+      .is("topics.lessons.classroom_id", null)
       .order("order", { ascending: true })
       .range(from, to);
 
     if (error) throw error;
-    return data;
+    return (data ?? []).map(({ topics = [], ...course }) => ({
+      ...course,
+      topics_count: topics.length,
+      lessons_count: topics.reduce((count, topic) => count + (topic.lessons?.length ?? 0), 0),
+    }));
   },
 
   

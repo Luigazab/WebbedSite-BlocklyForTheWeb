@@ -12,6 +12,7 @@ import { Activity, BookOpen, ClipboardCheck, FlaskConical, GraduationCap, Loader
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { toast } from "sonner";
+import LessonDetailsModal from "../components/LessonDetailsModal";
 import AssignCurriculumModal from "../components/AssignCurriculumModal";
 
 const lessonIcons = {
@@ -38,6 +39,7 @@ export default function ClassroomDetail() {
   const profile = useAuthStore((s) => s.profile);
   const [activeTab, setActiveTab] = useState('activities');
   const {copied, copyCode} = useCopyCode()
+  const [selectedLesson, setSelectedLesson] = useState(null)
   const [showAssignModal, setShowAssignModal] = useState(false)
 
   const { currentClassroom, detailLoading, classroomPosts, fetchClassroomDetail, fetchClassroomPosts, handleCreatePost } = useClassroom();
@@ -48,6 +50,7 @@ export default function ClassroomDetail() {
 
   useEffect(() => {
     if (!classroomId) return
+    setSelectedLesson(null)
     fetchClassroomDetail(classroomId)
     fetchClassroomCurriculum(classroomId)
     fetchOverview(classroomId)
@@ -195,7 +198,7 @@ export default function ClassroomDetail() {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="start" className="w-auto min-w-0">
                     {dropdownItems.map(({ title, to, icon: Icon }) => (
-                      <DropdownMenuItem key={title} className="gap-2 hover:cursor-pointer" onClick={() => navigate(to)}>
+                      <DropdownMenuItem key={title} className="gap-2 hover:cursor-pointer" onClick={() => navigate(to + "?classroomId=" + encodeURIComponent(classroomId))}>
                         <Icon className="w-4 h-4" />
                         {title}
                       </DropdownMenuItem>
@@ -289,9 +292,12 @@ export default function ClassroomDetail() {
                             {t.lessons.map((l) => {
                               const pct = lessonCompletion[l.id] ?? 0
                               return (
-                                <div
+                                <button
+                                  type="button"
+                                  aria-label={`View details for ${l.title}`}
+                                  onClick={() => setSelectedLesson({ lesson: l, topic: t })}
                                   key={l.id}
-                                  className="flex items-center gap-3 rounded-xl border border-border bg-background/50 px-3 py-2.5"
+                                  className="flex items-center gap-3 rounded-xl border border-border bg-background/50 px-3 py-2.5 text-left hover:bg-muted focus-visible:outline-2 focus-visible:outline-primary"
                                 >
                                   <LessonChip type={l.type} size="sm" />
                                   <div className="min-w-0 flex-1">
@@ -301,7 +307,8 @@ export default function ClassroomDetail() {
                                     </div>
                                   </div>
                                   <span className="font-mono text-[10px] text-muted-foreground">{pct}%</span>
-                                </div>
+                                  <span className="text-xs font-semibold text-primary">View</span>
+                                </button>
                               )
                             })}
                           </div>
@@ -455,6 +462,14 @@ export default function ClassroomDetail() {
           </div>
         </div>
       )}
+      {selectedLesson && <LessonDetailsModal
+        key={selectedLesson.lesson.id}
+        classroomId={classroomId}
+        lesson={selectedLesson.lesson}
+        topic={selectedLesson.topic}
+        onClose={() => setSelectedLesson(null)}
+      />}
+
       {showAssignModal && (
         <AssignCurriculumModal
           classroom={currentClassroom}

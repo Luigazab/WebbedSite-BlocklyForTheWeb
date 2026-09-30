@@ -76,6 +76,7 @@ export async function getClassroomTopics(classroomId) {
       lessons ( id, title, type, "order", is_published, base_xp, slug )
     `)
     .eq('classroom_id', classroomId)
+    .eq('lessons.classroom_id', classroomId)
     .order('order', { ascending: true })
  
   if (error) throw error

@@ -3,12 +3,14 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/supabaseClient";
 import { AppBreadcrumb } from "#components/common/breadcrumb";
 import { Button } from "#components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, ChevronDown } from "lucide-react";
 import { LessonTypeBadge } from "#components/common/LessonChip";
 import { lessonTypeMeta } from "#lib/lesson-type";
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "#components/ui/dropdown-menu";
 
 
-export default function CourseDetail() {
+export default function CourseDetail({ readOnly = false }) {
+  const basePath = readOnly ? "/teacher" : "/admin";
   const { id } = useParams();
   const navigate = useNavigate();
   const [course, setCourse] = useState(null);
@@ -49,12 +51,14 @@ export default function CourseDetail() {
             )
           )
         `)
+        .is('topics.classroom_id', null)
+        .is('topics.lessons.classroom_id', null)
         .eq('id', id)
         .single();
 
       if (courseError || !courseData) {
         console.error('Course not found');
-        navigate('/admin/courses'); // Redirect to courses list if not found
+        navigate(basePath + '/courses'); // Redirect to courses list if not found
         return;
       }
 
@@ -104,7 +108,7 @@ export default function CourseDetail() {
       setCourse(transformedCourse);
     } catch (error) {
       console.error('Error fetching course:', error);
-      navigate('/admin/courses');
+      navigate(basePath + '/courses');
     } finally {
       setLoading(false);
     }
@@ -125,7 +129,7 @@ export default function CourseDetail() {
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/^-|-$/g, '');
 
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('topics')
         .insert([{
           course_id: course.id,
@@ -162,29 +166,6 @@ export default function CourseDetail() {
       await refreshCourse();
     } catch (error) {
       console.error('Error deleting topic:', error);
-    }
-  };
-
-  // Add lesson to topic
-  const addLesson = async (topicId) => {
-    try {
-      const { data, error } = await supabase
-        .from('lessons')
-        .insert([{
-          topics_id: topicId,
-          title: 'New Lesson',
-          type: 'lecture',
-          slug: `new-lesson-${Date.now()}`,
-          order: (course.topics.find(t => t.id === topicId)?.lessons.length || 0) + 1,
-          is_published: false,
-          base_xp: 50
-        }])
-        .select();
-
-      if (error) throw error;
-      await refreshCourse();
-    } catch (error) {
-      console.error('Error adding lesson:', error);
     }
   };
 
@@ -242,8 +223,8 @@ export default function CourseDetail() {
       <div className="flex items-center justify-between">
         <AppBreadcrumb
           items={[
-            { label: 'Home', href: '/admin/' },
-            { label: 'Courses', href: '/admin/courses' },
+            { label: 'Home', href: basePath },
+            { label: 'Courses', href: basePath + '/courses' },
             { label: course.title, href: '#' },
           ]}
         />
@@ -251,9 +232,9 @@ export default function CourseDetail() {
           <Button variant="formalPlain" onClick={refreshCourse}>
             Refresh
           </Button>
-          <Button variant="formalPrimary" onClick={publishChanges} disabled={isPublishing}>
+          {!readOnly && <Button variant="formalPrimary" onClick={publishChanges} disabled={isPublishing}>
             {isPublishing ? 'Publishing...' : 'Publish changes'}
-          </Button>
+          </Button>}
         </div>
       </div>
 
@@ -280,13 +261,13 @@ export default function CourseDetail() {
       <div>
         <div className="mb-4 flex items-center justify-between">
           <h2 className="font-display text-xl font-bold">Topics</h2>
-          <Button variant="formalPlain" onClick={() => setIsEditingTopic('new')}>
+          {!readOnly && <Button variant="formalPlain" onClick={() => setIsEditingTopic('new')}>
             <Plus/> Add topic
-          </Button>
+          </Button>}
         </div>
 
         {/* Add Topic Form */}
-        {isEditingTopic === 'new' && (
+        {!readOnly && isEditingTopic === 'new' && (
           <div className="mb-4 rounded-2xl border border-border bg-card p-6">
             <h3 className="font-display text-lg font-bold mb-4">New Topic</h3>
             <div className="space-y-4">
@@ -345,12 +326,12 @@ export default function CourseDetail() {
                 </div>
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <span>{t.lessons.length} lessons</span>
-                  <button 
+                  {!readOnly && <button
                     className="rounded-md border border-border px-2 py-1 hover:bg-muted transition-colors"
                     onClick={() => deleteTopic(t.id)}
                   >
                     Delete
-                  </button>
+                  </button>}
                 </div>
               </div>
 
@@ -368,27 +349,33 @@ export default function CourseDetail() {
                     <div className="flex gap-2">
                       <button 
                         className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-                        onClick={() => console.log('Edit lesson:', l.id)}
+                        onClick={() => navigate(readOnly ? `/teacher/courses/${id}/view/${course.slug}/${l.slug}` : `/admin/${l.type}/edit/${l.id}`)}
                       >
-                        Edit
+                        {readOnly ? "View" : "Edit"}
                       </button>
-                      <button 
+                      {!readOnly && <button
                         className="text-xs text-red-500 hover:text-red-700 transition-colors"
                         onClick={() => deleteLesson(l.id)}
                       >
                         Delete
-                      </button>
+                      </button>}
                     </div>
                   </li>
                 ))}
-                <li className="px-4 py-2 text-center">
-                  <button 
-                    className="flex text-center text-xs font-medium text-primary hover:underline transition-colors"
-                    onClick={() => addLesson(t.id)}
-                  >
-                    <Plus size={14}/> Add lesson
-                  </button>
-                </li>
+                {!readOnly && <li className="px-4 py-2">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="formalPlain"><Plus size={14}/> Add lesson <ChevronDown size={14}/></Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                      {["lecture", "quiz", "tutorial", "laboratory"].map((type) => (
+                        <DropdownMenuItem key={type} onSelect={() => navigate('/admin/' + type + '/create?topicId=' + encodeURIComponent(t.id))}>
+                          {type.charAt(0).toUpperCase() + type.slice(1)}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </li>}
               </ul>
             </li>
           ))}

@@ -2,7 +2,7 @@
  * TODO: optimize pagination to show up cleanly
  * July 27, 2026
  */
-import { Link, useMatches } from "react-router";
+import { Link } from "react-router";
 import { useState, useEffect } from "react";
 import { AppBreadcrumb } from "#components/common/breadcrumb";
 import { BookPlus, Check, LogIn, Pencil, Trash2 } from "lucide-react";
@@ -11,10 +11,10 @@ import { useCreateCourse, useDeleteCourse, useGetCourses, useUpdateCourse } from
 import { toast } from "sonner";
 import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious, } from "#components/ui/pagination";
 import DeleteModal from "#components/ui/DeleteModal";
-import { format } from "date-fns";
 import { formatDate } from "@/utils/dateFormat";
 
-export default function CoursesLibrary() {
+export default function CoursesLibrary({ readOnly = false }) {
+  const basePath = readOnly ? "/teacher" : "/admin";
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -169,8 +169,8 @@ export default function CoursesLibrary() {
     <div className="p-6 space-y-6">
       <AppBreadcrumb
         items={[
-          { label: 'Home', href: '/admin/' },
-          { label: 'Courses', href: '/admin/courses' },
+          { label: 'Home', href: basePath },
+          { label: 'Courses', href: basePath + '/courses' },
         ]}
       />
       <div className="flex justify-between gap-4">
@@ -188,22 +188,22 @@ export default function CoursesLibrary() {
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-md rounded-lg border border-border bg-card px-3 py-2 focus:outline-none focus:ring-2 focus:ring-ring/40"
           />
-          <Button 
+          {!readOnly && <Button
             onClick={openCreateModal}
             variant="formalPrimary"
           >
             <BookPlus size={15}/> New course
-          </Button>
+          </Button>}
         </div>
       </div>
 
       <div className="grid gap-5 md:grid-cols-3">
         {filteredCourses.map((c) => (
-          <Link to={`/admin/courses/${c.id}`}
+          <Link key={c.id} to={`${basePath}/courses/${c.id}`}
             className="group relative flex flex-col rounded-2xl border border-border bg-card p-6 transition-all! duration-300! shadow hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md"
           >
             {/* Action buttons - positioned at top right */}
-            <div className="absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity!">
+            {!readOnly && <div className="absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity!">
               <button
                 onClick={(e) => {
                   e.preventDefault();
@@ -224,7 +224,7 @@ export default function CoursesLibrary() {
               >
                 <Trash2 size={16} />
               </button>
-            </div>
+            </div>}
             <div className="flex justify-between">
               <p className="text-muted-foreground font-extrabold text-lg">
                 {c.order}
@@ -322,7 +322,7 @@ export default function CoursesLibrary() {
       )}
 
       {/* Unified Create/Edit Modal */}
-      {isModalOpen && (
+      {!readOnly && isModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-card rounded-2xl p-6 max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
             <h3 className="font-display text-xl font-semibold mb-4">
@@ -452,7 +452,7 @@ export default function CoursesLibrary() {
       )}
 
       {/* Delete Modal */}
-      <DeleteModal isOpen={deleteModalOpen} onClose={() => { setDeleteModalOpen(false); setCourseToDelete(null); }} onConfirm={handleDeleteConfirm} title="Delete Course" message={`Are you sure you want to delete "${courseToDelete?.title}"? This action cannot be undone.`} confirmText="Delete" loading={deleteLoading}/>
+      {!readOnly && <DeleteModal isOpen={deleteModalOpen} onClose={() => { setDeleteModalOpen(false); setCourseToDelete(null); }} onConfirm={handleDeleteConfirm} title="Delete Course" message={`Are you sure you want to delete "${courseToDelete?.title}"? This action cannot be undone.`} confirmText="Delete" loading={deleteLoading}/>}
 
       {filteredCourses.length === 0 && !loading && (
         <div className="text-center py-12">

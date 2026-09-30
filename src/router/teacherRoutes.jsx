@@ -17,10 +17,17 @@ import GradesReport from '@/dashboards/teacher/pages/GradesReport'
 import ProjectsPage from '#components/shared/ProjectsPage'
 import ExercisePage from '@/pages/editor/ExercisePage'
 
+import CoursesLibrary from '@/dashboards/admin/pages/CoursesLibrary'
+import CourseDetail from '@/dashboards/admin/pages/CourseDetail'
+import LessonPage from '@/pages/app/LessonPage'
+
 export const teacherRoutes = [
   {
     element: <TeacherLayout />,
     children: [
+      { path: 'courses', element: <CoursesLibrary readOnly /> },
+      { path: 'courses/:id', element: <CourseDetail readOnly /> },
+      { path: 'courses/:id/view/:courseSlug/:slug', element: <LessonPage preview /> },
       { index: true,                                       element: <TeacherHome /> },
       { path: 'projects',                                  element: <ProjectsPage /> },
       { path: 'content',                                   element: <ContentManagement /> },

@@ -142,3 +142,21 @@ export async function getClassroomOverviewStats(classroomId) {
     pendingSubmissions,
   }
 }
+// Count only current classroom members, never infer counts from rounded rates.
+export async function getLessonCompletionSummary(classroomId, lessonId) {
+  const { data: lesson, error: lessonError } = await supabase.from('lessons')
+    .select('id').eq('id', lessonId).eq('classroom_id', classroomId).single()
+  if (lessonError) throw lessonError
+  if (!lesson) throw new Error('Lesson not found in this classroom.')
+
+  const { data: members, error: memberError } = await supabase.from('classroom_members')
+    .select('student_id').eq('classroom_id', classroomId)
+  if (memberError) throw memberError
+  const studentIds = [...new Set((members ?? []).map((member) => member.student_id))]
+  if (!studentIds.length) return { completed: 0, enrolled: 0 }
+
+  const { data: completions, error } = await supabase.from('user_lesson_progress')
+    .select('user_id').eq('lesson_id', lessonId).eq('is_completed', true).in('user_id', studentIds)
+  if (error) throw error
+  return { completed: new Set((completions ?? []).map((row) => row.user_id)).size, enrolled: studentIds.length }
+}
