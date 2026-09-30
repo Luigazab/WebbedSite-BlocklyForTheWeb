@@ -1,45 +1,42 @@
 import { create } from 'zustand'
 import { notificationService } from '../services/notification.service'
 
+let request = 0
 export const useNotificationStore = create((set, get) => ({
-  notifications: [],
-  unreadCount: 0,
-  loading: false,
-
+  notifications: [], unreadCount: 0, loading: false, error: null, userId: null, limit: 20, hasMore: false,
+  reset: (userId = null) => {
+    request++
+    set({ notifications: [], unreadCount: 0, loading: false, error: null, userId, limit: 20, hasMore: false })
+  },
   fetch: async (userId) => {
-    set({ loading: true })
+    if (!userId || get().userId !== userId) return
+    const current = ++request
+    const limit = get().limit
+    set({ loading: true, error: null })
     try {
-      const notifications = await notificationService.getNotifications(userId)
-      const unreadCount = notifications.filter((n) => !n.is_read).length
-      set({ notifications, unreadCount, loading: false })
+      const [rows, unreadCount] = await Promise.all([
+        notificationService.getNotifications(userId, limit + 1),
+        notificationService.getUnreadCount(userId),
+      ])
+      if (current === request) set({ notifications: rows.slice(0, limit), unreadCount, hasMore: rows.length > limit, loading: false })
     } catch {
-      set({ loading: false })
+      if (current === request) set({ loading: false, error: 'Could not load notifications. Please try again.' })
     }
   },
-
-  markAsRead: async (notificationId) => {
-    await notificationService.markAsRead(notificationId)
-    set((state) => ({
-      notifications: state.notifications.map((n) =>
-        n.id === notificationId ? { ...n, is_read: true } : n
-      ),
-      unreadCount: Math.max(0, state.unreadCount - 1),
-    }))
+  loadMore: () => {
+    if (get().loading) return
+    set({ limit: get().limit + 20 })
+    return get().fetch(get().userId)
   },
-
-  markAllAsRead: async (userId) => {
+  markAsRead: async (id) => {
+    const userId = get().userId
+    await notificationService.markAsRead(id)
+    await get().fetch(userId)
+  },
+  markAllAsRead: async () => {
+    const userId = get().userId
+    if (!userId) return
     await notificationService.markAllAsRead(userId)
-    set((state) => ({
-      notifications: state.notifications.map((n) => ({ ...n, is_read: true })),
-      unreadCount: 0,
-    }))
-  },
-
-  // Called from realtime subscription
-  addNotification: (notification) => {
-    set((state) => ({
-      notifications: [notification, ...state.notifications],
-      unreadCount: state.unreadCount + 1,
-    }))
+    await get().fetch(userId)
   },
 }))

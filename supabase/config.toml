@@ -1,0 +1,3 @@
+[functions.deliver-notification-emails]
+# The function verifies a random scheduler token through a service-only RPC.
+verify_jwt = false

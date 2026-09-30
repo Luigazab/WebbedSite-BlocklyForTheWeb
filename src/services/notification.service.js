@@ -1,7 +1,7 @@
 import { supabase } from '../supabaseClient'
 
 export const notificationService = {
-  async getNotifications(userId) {
+  async getNotifications(userId, limit = 20) {
     const { data, error } = await supabase
       .from('notifications')
       .select(`
@@ -10,7 +10,20 @@ export const notificationService = {
       `)
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
-      .limit(20)
+      .limit(limit)
+    if (error) throw error
+    return data
+  },
+
+  async getUnreadCount(userId) {
+    const { count, error } = await supabase.from('notifications')
+      .select('id', { count: 'exact', head: true }).eq('user_id', userId).eq('is_read', false)
+    if (error) throw error
+    return count ?? 0
+  },
+
+  async getNotification(id) {
+    const { data, error } = await supabase.from('notifications').select('*').eq('id', id).maybeSingle()
     if (error) throw error
     return data
   },
@@ -38,13 +51,13 @@ export const notificationService = {
       .on(
         'postgres_changes',
         {
-          event: 'INSERT',
+          event: '*',
           schema: 'public',
           table: 'notifications',
           filter: `user_id=eq.${userId}`,
         },
         (payload) => onNew(payload.new)
       )
-      .subscribe()
+      .subscribe((status) => { if (status === 'SUBSCRIBED') onNew() })
   },
 }

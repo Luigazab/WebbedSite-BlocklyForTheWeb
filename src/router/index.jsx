@@ -14,8 +14,12 @@ import { PublicRoute } from '../components/layout/PublicRoute'
 import BlocklyTabs from '../components/editor/BlocklyTabs'
 import UpdatePassword from '../pages/auth/UpdatePassword'
 import ForgotPassword from '../pages/auth/ForgotPassword'
+import NotificationEntry from '../pages/app/NotificationEntry'
+import ClassroomPostPage from '../pages/app/ClassroomPostPage'
 
 const router = createBrowserRouter([
+  { path: '/notifications/:notificationId', element: <NotificationEntry />, errorElement: <ErrorPage /> },
+  { path: '/classroom-posts/:postId', element: <ClassroomPostPage />, errorElement: <ErrorPage /> },
   { path: '/', element: <Navigate to="/login" replace />, errorElement: <ErrorPage/> },
   {element:<PublicRoute/>, errorElement:<ErrorPage/>, children:[
     {

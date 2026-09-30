@@ -1,18 +1,22 @@
 import { toast } from 'sonner'
 import { authService } from '../services/auth.service'
 import { useAuthStore } from '../store/authStore'
-import { useNavigate } from 'react-router'
+import { useLocation, useNavigate } from 'react-router'
+import { notificationReturnPath } from '../lib/notificationLinks'
 
 export function useAuth() {
   const { signIn, signUp, signOut, user, profile, loading } = useAuthStore()
   const navigate = useNavigate()
+  const location = useLocation()
 
   const handleSignIn = async (email, password) => {
     try {
       const profile = await signIn(email, password)
       toast.success(`Welcome back, ${profile.username}!`)
 
-      if (profile.role === 'student') navigate('/student')
+      const returnTo = notificationReturnPath(location.search)
+      if (returnTo) navigate(returnTo, { replace: true })
+      else if (profile.role === 'student') navigate('/student')
       else if (profile.role === 'teacher') navigate('/teacher')
       else if (profile.role === 'admin') navigate('/admin')
     } catch (err) {

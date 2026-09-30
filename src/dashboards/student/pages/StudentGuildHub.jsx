@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
-import { useParams, useNavigate } from 'react-router'
+import { Link, useParams } from 'react-router'
 import { useAuthStore } from '../../../store/authStore'
 import { useClassroomStore } from '../../../store/classroomStore'
 import PageWrapper from '../../../components/layout/PageWrapper'
-// import PostFeed from '../../teacher/components/PostFeed'
+import PostFeed from '../../../components/shared/PostFeed'
 import StudentMilestonePanel from '../components/StudentMilestonePanel'
 import GuildMembersPanel from '../components/GuildMembersPanel'
 import {
@@ -39,7 +39,7 @@ function GuildSidePanel({ guild, milestones, memberCount, teacher, guildPosts, c
   ]
   const totalContributions = breakdown.reduce((sum, b) => sum + b.count, 0)
 
-  const SidePanelContent = () => (
+  const sidePanelContent = (
     <div className="flex flex-col gap-4 h-full overflow-y-auto p-4">
       {/* Mobile close button */}
       <button
@@ -201,7 +201,7 @@ function GuildSidePanel({ guild, milestones, memberCount, teacher, guildPosts, c
         lg:rounded-2xl lg:border lg:border-b-8 lg:border-slate-200 lg:shadow-sm
         overflow-hidden
       `}>
-        <SidePanelContent />
+        {sidePanelContent}
       </div>
     </>
   )
@@ -247,7 +247,8 @@ function MainContent({
         {/* Tabs */}
         <div className="bg-white rounded-2xl border border-b-8 border-slate-200 shadow-sm p-1 sticky top-4 z-30">
           <div className="flex gap-1">
-            {TABS.map(({ key, label, icon: Icon }) => {
+            {TABS.map((tab) => {
+              const { key, label, icon: Icon } = tab
               let badge = null
               if (key === 'feed' && guildPosts.length > 0) badge = guildPosts.length
               if (key === 'milestones') {
@@ -322,30 +323,33 @@ function MainContent({
 // ── Main ──────────────────────────────────────────────────────────────────────
 export default function StudentGuildHub() {
   const { classroomId } = useParams()
-  const navigate = useNavigate()
   const profile = useAuthStore((s) => s.profile)
 
   const {
-    currentGuild,
-    guildPosts,
+    currentClassroom: currentGuild,
+    classroomPosts: guildPosts,
     detailLoading,
+    error,
     postsLoading,
     hasMorePosts,
-    fetchGuildDetail,
-    fetchGuildPosts,
-    fetchMorePosts,
-    handleLikePost,
-    handleCommentOnPost,
-    clearCurrentGuild,
+    fetchClassroomDetail: fetchGuildDetail,
+    fetchClassroomPosts: fetchGuildPosts,
+    fetchMoreClassroomPosts: fetchMorePosts,
+    likePost: handleLikePost,
+    commentOnPost,
+    clearCurrentClassroom: clearCurrentGuild,
   } = useClassroomStore()
 
   const [activeTab, setActiveTab] = useState('feed')
+  const handleCommentOnPost = (postId, userId, content) => commentOnPost(postId, userId, content)
 
   useEffect(() => {
-    fetchGuildDetail(classroomId, profile?.id)
-    fetchGuildPosts(classroomId)
+    fetchGuildDetail(classroomId, profile?.id).catch(() => {})
+    fetchGuildPosts(classroomId).catch(() => {})
     return () => clearCurrentGuild()
-  }, [classroomId])
+  }, [classroomId, profile?.id, fetchGuildDetail, fetchGuildPosts, clearCurrentGuild])
+
+  if (error && !currentGuild) return <PageWrapper title="Classroom unavailable"><p role="alert">This classroom was removed or you no longer have access.</p><Link to="/student/classrooms" className="underline">Back to classrooms</Link></PageWrapper>
 
   // ── Loading ────────────────────────────────────────────────────────────────
   if (detailLoading || !currentGuild) {

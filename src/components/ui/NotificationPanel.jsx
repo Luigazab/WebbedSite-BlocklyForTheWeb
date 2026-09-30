@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
-import { Bell, Check, CheckCheck, Loader2 } from 'lucide-react'
+import { Bell, CheckCheck, Loader2 } from 'lucide-react'
+import { useNavigate } from 'react-router'
+import { toast } from 'sonner'
 import { useNotifications } from '../../hooks/useNotifications'
 import { formatDistanceToNow } from 'date-fns'
 
@@ -15,7 +17,7 @@ const typeStyles = {
 function NotificationItem({ notification, onRead }) {
   return (
     <button
-      onClick={() => !notification.is_read && onRead(notification.id)}
+      onClick={() => onRead(notification)}
       className={`w-full flex items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-gray-50
         ${notification.is_read ? 'opacity-60' : 'bg-blue-50/40'}`}
     >
@@ -57,7 +59,12 @@ function NotificationItem({ notification, onRead }) {
 export default function NotificationPanel() {
   const [open, setOpen] = useState(false)
   const ref = useRef(null)
-  const { notifications, unreadCount, loading, markAsRead, markAllAsRead } = useNotifications()
+  const navigate = useNavigate()
+  const { notifications, unreadCount, loading, error, retry, hasMore, loadMore, markAllAsRead } = useNotifications()
+  const openNotification = (notification) => {
+    setOpen(false)
+    navigate(`/notifications/${notification.id}`)
+  }
 
   useEffect(() => {
     const handler = (e) => {
@@ -71,10 +78,12 @@ export default function NotificationPanel() {
     <div className="relative" ref={ref}>
       {/* Bell trigger */}
       <button
+        aria-label={`Notifications${unreadCount ? `, ${unreadCount} unread` : ''}`}
+        aria-expanded={open}
         onClick={() => setOpen((prev) => !prev)}
         className={`relative p-2 rounded-full hover:bg-gray-100 transition-colors ${open ? 'bg-slate-500 rounded-full hover:bg-slate-600' : 'text-gray-600'}`}
       >
-        <img src='/bell.svg' className={`w-6 h-6 transition-colors `} />
+        <img src='/bell.svg' alt="" className={`w-6 h-6 transition-colors `} />
         {unreadCount > 0 && (
           <span className="absolute top-1 right-1 min-w-4.5 h-4.5 px-1 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center leading-none">
             {unreadCount > 9 ? '9+' : unreadCount}
@@ -97,7 +106,7 @@ export default function NotificationPanel() {
             </div>
             {unreadCount > 0 && (
               <button
-                onClick={markAllAsRead}
+                onClick={() => markAllAsRead().catch(() => toast.error('Could not mark notifications read.'))}
                 className="flex items-center gap-1 text-xs text-blockly-purple hover:underline font-medium"
               >
                 <CheckCheck className="w-3.5 h-3.5" />
@@ -108,7 +117,8 @@ export default function NotificationPanel() {
 
           {/* List */}
           <div className="max-h-90 overflow-y-auto divide-y divide-gray-50">
-            {loading ? (
+            {error && <div role="alert" className="p-4 text-sm text-red-600">{error} <button onClick={retry} className="underline">Retry</button></div>}
+            {loading && notifications.length === 0 ? (
               <div className="flex items-center justify-center py-10">
                 <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
               </div>
@@ -119,16 +129,16 @@ export default function NotificationPanel() {
               </div>
             ) : (
               notifications.map((n) => (
-                <NotificationItem key={n.id} notification={n} onRead={markAsRead} />
+                <NotificationItem key={n.id} notification={n} onRead={openNotification} />
               ))
             )}
           </div>
 
           {/* Footer */}
-          {notifications.length > 0 && (
+          {hasMore && (
             <div className="border-t border-gray-100 px-4 py-2.5">
-              <button className="text-xs text-blockly-purple hover:underline font-medium w-full text-center">
-                View all notifications
+              <button onClick={loadMore} disabled={loading} className="text-xs text-blockly-purple hover:underline font-medium w-full text-center">
+                {loading ? 'Loading…' : 'Load older notifications'}
               </button>
             </div>
           )}

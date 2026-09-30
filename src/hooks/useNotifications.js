@@ -6,29 +6,22 @@ import { supabase } from '../supabaseClient'
 
 export function useNotifications() {
   const userId = useAuthStore((state) => state.user?.id)
-  const { notifications, unreadCount, loading, fetch, markAsRead, markAllAsRead, addNotification } =
-    useNotificationStore()
-
-  // Fetch on mount + subscribe to realtime inserts
+  const state = useNotificationStore()
+  const { fetch, reset } = state
   useEffect(() => {
+    reset(userId)
     if (!userId) return
-
-    fetch(userId)
-
-    const channel = notificationService.subscribeToNotifications(userId, (newNotification) => {
-      addNotification(newNotification)
-    })
-
+    const refresh = () => fetch(userId)
+    refresh()
+    const channel = notificationService.subscribeToNotifications(userId, refresh)
+    window.addEventListener('focus', refresh)
+    const timer = window.setInterval(refresh, 60000)
     return () => {
       supabase.removeChannel(channel)
+      window.removeEventListener('focus', refresh)
+      window.clearInterval(timer)
+      reset()
     }
-  }, [userId])
-
-  return {
-    notifications,
-    unreadCount,
-    loading,
-    markAsRead,
-    markAllAsRead: () => markAllAsRead(userId),
-  }
+  }, [userId, fetch, reset])
+  return { ...state, retry: () => fetch(userId) }
 }
