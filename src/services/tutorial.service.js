@@ -1,4 +1,5 @@
 import { supabase } from '../supabaseClient'
+import { buildStudentSteps } from '../utils/tutorialSteps'
 
 // ─── Tutorials ────────────────────────────────────────────────────────────────
 
@@ -17,26 +18,23 @@ export async function fetchTutorialById(id) {
     .from('tutorials')
     .select(`
       *,
-      badges ( id, title, description, icon_url ),
-      tutorial_steps (
-        id, instruction_text, hint, step_order, order_index,
-        expected_blocks_exact, minimum_blocks,
-        tutorial_step_files ( id, filename, blocks_json, order_index )
-      )
+      lesson:lesson_id ( id, title ),
+      block_tutorial_step_files ( * ),
+      block_tutorial_steps ( *, block_tutorial_step_expected ( * ) ),
+      text_tutorial_steps ( *, text_tutorial_step_files ( * ) )
     `)
     .eq('id', id)
     .single()
   if (error) throw error
-  if (data?.tutorial_steps) {
-    data.tutorial_steps.sort((a, b) =>
-      (a.order_index ?? a.step_order) - (b.order_index ?? b.step_order)
-    )
-    data.tutorial_steps.forEach((s) => {
-      if (s.tutorial_step_files)
-        s.tutorial_step_files.sort((a, b) => a.order_index - b.order_index)
-    })
-  }
-  return data
+  if (data.type === 'block') return { ...data, title: data.lesson?.title, badges: [], tutorial_steps: buildStudentSteps(data.block_tutorial_steps ?? [], data.block_tutorial_step_files ?? []) }
+  const steps = data.type === 'block' ? data.block_tutorial_steps : data.text_tutorial_steps
+  return { ...data, title: data.lesson?.title, badges: [], tutorial_steps: (steps ?? []).map(step => ({
+    ...step, instruction_text: step.instruction, order_index: step.order,
+    expected_blocks_exact: step.block_tutorial_step_expected?.[0]?.expected_blocks_json ?? null,
+    tutorial_step_files: (step.block_tutorial_step_files ?? step.text_tutorial_step_files ?? []).map(file => ({
+      ...file, blocks_json: file.initial_content_json ?? null, code: file.initial_content ?? '',
+    })),
+  })).sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0)) }
 }
 
 export async function createTutorial(payload) {
@@ -68,7 +66,7 @@ export async function deleteTutorial(id) {
 // ─── Tutorial Steps ───────────────────────────────────────────────────────────
 
 export async function createTutorialStep(payload) {
-  const { step_order, ...safe } = payload
+  const { step_order: _stepOrder, ...safe } = payload
   const { data, error } = await supabase
     .from('tutorial_steps')
     .insert([safe])
@@ -79,7 +77,7 @@ export async function createTutorialStep(payload) {
 }
 
 export async function updateTutorialStep(id, payload) {
-  const { step_order, ...safe } = payload
+  const { step_order: _stepOrder, ...safe } = payload
   const { data, error } = await supabase
     .from('tutorial_steps')
     .update(safe)

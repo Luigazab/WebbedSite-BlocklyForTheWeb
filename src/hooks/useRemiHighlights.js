@@ -5,10 +5,11 @@ import * as Blockly from 'blockly/core'
  * Highlights a toolbox category (expanding nested ones along the way) and,
  * optionally, selects a specific block inside that category's flyout.
  */
-export function useRemiHighlight(getWorkspace, categoryPath, blockType) {
+export function useRemiHighlight(getWorkspace, categoryPath, blockType, ready = true) {
   const highlightedDivRef = useRef(null)
 
   useEffect(() => {
+    if (!ready) return
     const ws = getWorkspace?.()
     const toolbox = ws?.getToolbox?.()
     if (!ws || !toolbox || !categoryPath?.length) return
@@ -17,6 +18,7 @@ export function useRemiHighlight(getWorkspace, categoryPath, blockType) {
 
     const clear = () => {
       highlightedDivRef.current?.classList.remove('remi-highlight')
+      if (highlightedDivRef.current) highlightedDivRef.current.style.outline = ''
       highlightedDivRef.current = null
       Blockly.common.getSelected()?.unselect()
     }
@@ -26,7 +28,7 @@ export function useRemiHighlight(getWorkspace, categoryPath, blockType) {
     let items = toolbox.getToolboxItems?.() ?? []
     let target = null
     for (let i = 0; i < categoryPath.length; i++) {
-      target = items.find((it) => it.toolboxItemDef_?.name === categoryPath[i])
+      target = items.find((it) => it.getName?.() === categoryPath[i])
       if (!target) break
       const isLast = i === categoryPath.length - 1
       if (!isLast) {
@@ -39,6 +41,7 @@ export function useRemiHighlight(getWorkspace, categoryPath, blockType) {
     const div = target.getDiv?.()
     if (div) {
       div.classList.add('remi-highlight')
+      div.style.outline = '3px solid #a855f7'
       highlightedDivRef.current = div
       div.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' })
     }
@@ -55,5 +58,5 @@ export function useRemiHighlight(getWorkspace, categoryPath, blockType) {
     }
 
     return () => { cancelled = true; clear() }
-  }, [getWorkspace, JSON.stringify(categoryPath), blockType])
+  }, [getWorkspace, JSON.stringify(categoryPath), blockType, ready])
 }

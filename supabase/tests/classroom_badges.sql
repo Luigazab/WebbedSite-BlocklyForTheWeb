@@ -1,0 +1,91 @@
+-- Run in SQL editor; all fixtures, posts and queued notifications roll back.
+begin;
+do $$
+declare teacher uuid; student uuid; outsider uuid; course uuid; classroom uuid; topic uuid; empty_topic uuid;
+  lesson1 uuid; lesson2 uuid; rule_topic uuid; rule_xp uuid; paused uuid; total integer;
+begin
+  select id into teacher from public.profiles where role='teacher' limit 1;
+  select id into student from public.profiles where role='student' limit 1;
+  select id into outsider from public.profiles where id not in (teacher,student) limit 1;
+  select id into course from public.courses limit 1;
+  if teacher is null or student is null or outsider is null or course is null then raise exception 'Tests need a teacher, student, third profile and course.'; end if;
+  insert into public.classrooms(teacher_id,name,is_active) values(teacher,'Badge test classroom',true) returning id into classroom;
+  insert into public.classroom_courses(classroom_id,course_id) values(classroom,course);
+  insert into public.topics(course_id,title,description,"order",classroom_id,is_published) values(course,'Badge test topic','',1,classroom,true) returning id into topic;
+  insert into public.topics(course_id,title,description,"order",classroom_id,is_published) values(course,'Empty badge test topic','',2,classroom,true) returning id into empty_topic;
+  insert into public.lessons(topics_id,author,title,type,classroom_id,is_published) values(topic,teacher,'Badge lesson 1','lecture',classroom,true) returning id into lesson1;
+  insert into public.lessons(topics_id,author,title,type,classroom_id,is_published) values(topic,teacher,'Badge lesson 2','lecture',classroom,true) returning id into lesson2;
+  insert into public.classroom_members(classroom_id,student_id) values(classroom,student);
+  insert into public.classroom_badge_rules(classroom_id,course_id,topic_id,name,criterion) values(classroom,course,topic,'Topic badge','topic_completed') returning id into rule_topic;
+  insert into public.classroom_badge_rules(classroom_id,course_id,topic_id,name,criterion) values(classroom,course,empty_topic,'Empty topic badge','topic_completed');
+  insert into public.classroom_badge_rules(classroom_id,course_id,name,criterion,xp_target) values(classroom,course,'XP badge','course_xp',100) returning id into rule_xp;
+  insert into public.user_lesson_progress(user_id,lesson_id,is_completed) values(student,lesson1,true);
+  if exists(select 1 from public.classroom_badge_awards where classroom_id=classroom) then raise exception 'Partial or empty topic awarded.'; end if;
+  insert into public.user_xp_logs(user_id,course_id,source_id,source_type,xp_earned) values(student,course,gen_random_uuid(),'lesson',1000);
+  perform private.evaluate_classroom_badges(student,classroom);
+  if exists(select 1 from public.classroom_badge_awards where rule_id=rule_xp) then raise exception 'Unrelated XP counted toward classroom badge.'; end if;
+  insert into public.user_xp_logs(user_id,course_id,source_id,source_type,xp_earned,classroom_id) values(student,course,lesson1,'lesson',99,classroom);
+  if exists(select 1 from public.classroom_badge_awards where rule_id=rule_xp) then raise exception 'Award below threshold.'; end if;
+  insert into public.user_lesson_progress(user_id,lesson_id,is_completed) values(student,lesson2,true);
+  insert into public.user_xp_logs(user_id,course_id,source_id,source_type,xp_earned) values(student,course,lesson2,'lesson',1);
+  if (select count(*) from public.classroom_badge_awards where classroom_id=classroom)<>2 then raise exception 'Expected topic and XP awards.'; end if;
+  update public.user_lesson_progress set completed_at=now() where user_id=student and lesson_id=lesson2;
+  perform private.evaluate_classroom_badges(student,classroom);
+  if (select count(*) from public.classroom_posts where classroom_id=classroom and type='badge_earned')<>2 then raise exception 'Duplicate or missing badge posts.'; end if;
+  if (select count(*) from public.classroom_posts where classroom_id=classroom and type='lecture_completed')<>2 then raise exception 'Duplicate or missing lesson posts.'; end if;
+  insert into public.classroom_badge_rules(classroom_id,course_id,name,criterion,xp_target) values(classroom,course,'Backfill badge','course_xp',100);
+  if (select count(*) from public.classroom_badge_awards where classroom_id=classroom)<>3 then raise exception 'New badge backfill failed.'; end if;
+  insert into public.classroom_badge_rules(classroom_id,course_id,name,criterion,xp_target,is_active) values(classroom,course,'Paused badge','course_xp',100,false) returning id into paused;
+  if exists(select 1 from public.classroom_badge_awards where rule_id=paused) then raise exception 'Paused badge awarded.'; end if;
+  update public.classroom_badge_rules set is_active=true where id=paused;
+  if not exists(select 1 from public.classroom_badge_awards where rule_id=paused) then raise exception 'Resume backfill failed.'; end if;
+  update public.classroom_badge_rules set is_active=false where id=rule_topic;
+  if not exists(select 1 from public.classroom_badge_awards where rule_id=rule_topic) then raise exception 'Pause removed achievement.'; end if;
+  begin
+    insert into public.classroom_badge_rules(classroom_id,course_id,name,criterion,xp_target) values(classroom,course,'Invalid XP','course_xp',null);
+    raise exception 'Null XP accepted';
+  exception when check_violation then null; end;
+  begin
+    update public.classroom_badge_rules set xp_target=200 where id=rule_xp;
+    raise exception 'Rule mutation accepted';
+  exception when raise_exception then if sqlerrm='Rule mutation accepted' then raise; end if; end;
+  perform set_config('request.jwt.claim.sub',student::text,true);
+  perform set_config('request.jwt.claim.role','authenticated',true);
+  perform set_config('request.jwt.claims',json_build_object('sub',student,'role','authenticated')::text,true);
+  set local role authenticated;
+  select count(*) into total from public.classroom_badge_rules where classroom_id=classroom;
+  if total<>5 then raise exception 'Student cannot view own classroom rules: got %.',total; end if;
+  perform public.complete_lesson(student,lesson2,100);
+  perform public.complete_lesson(student,lesson2,100);
+  if (select total_xp from public.user_progress where user_id=student and classroom_id=classroom)<>172 then raise exception 'Completion RPC did not aggregate classroom XP exactly once.'; end if;
+  if (select attempts_count from public.user_lesson_progress where user_id=student and lesson_id=lesson2)<>2 then raise exception 'Completion RPC attempt tracking failed.'; end if;
+  if (select count(*) from public.classroom_posts where classroom_id=classroom and type='lecture_completed')<>2 then raise exception 'RPC duplicated completion activity.'; end if;
+  begin
+    perform public.complete_lesson(outsider,lesson2,100);
+    raise exception 'RPC allowed impersonation';
+  exception when raise_exception then if sqlerrm='RPC allowed impersonation' then raise; end if; end;
+  update public.classroom_badge_rules set is_active=false where id=rule_xp;
+  get diagnostics total=row_count;
+  if total<>0 then raise exception 'Student changed a badge rule.'; end if;
+  begin
+    insert into public.classroom_badge_awards(student_id,classroom_id,name,description,requirement) values(student,classroom,'Fake award','','');
+    raise exception 'Student forged an award';
+  exception when insufficient_privilege then null; end;
+  begin
+    insert into public.classroom_badge_rules(classroom_id,course_id,name,criterion,xp_target) values(classroom,course,'Fake rule','course_xp',1);
+    raise exception 'Student created a rule';
+  exception when insufficient_privilege then null; end;
+  reset role;
+  perform set_config('request.jwt.claim.sub',outsider::text,true);
+  set local role authenticated;
+  select count(*) into total from public.classroom_badge_rules where classroom_id=classroom;
+  if total<>0 then raise exception 'Outsider can see classroom rules.'; end if;
+  reset role;
+  perform set_config('request.jwt.claim.sub',teacher::text,true);
+  set local role authenticated;
+  update public.classroom_badge_rules set is_active=false where id=rule_xp;
+  get diagnostics total=row_count;
+  if total<>1 then raise exception 'Teacher cannot pause rule.'; end if;
+  reset role;
+end $$;
+rollback;

@@ -33,11 +33,13 @@ function StepPanel({
   files, activeFilename, getFileStatusForStep, currentStepIndex,
   steps, onGoToStep, onAddStep, onDeleteStep,
   currentStep, onUpdateCurrentStep,
-  onCapture, onClearCapture,
+  onCapture, onClearCapture, onCaptureInitial, onLoadInitial, onSetTests,
   panelOpen, setPanelOpen,
 }) {
+  const [testsText, setTestsText] = useState('[]')
   const [metaOpen, setMetaOpen] = useState(true)
   const activeExpected = currentStep?.expectedByFile[activeFilename]
+  useEffect(() => { setTestsText(JSON.stringify(activeExpected?.testCases ?? [], null, 2)) }, [activeExpected, activeFilename, currentStepIndex])
   const selectedCategory = CATEGORY_OPTIONS.find(
     (c) => JSON.stringify(c.path) === JSON.stringify(currentStep?.highlightCategoryPath ?? [])
   )
@@ -228,6 +230,11 @@ function StepPanel({
             )}
           </div>
 
+          <div className="space-y-2 text-xs">
+            <p>Starting blocks: {currentStepIndex === 0 ? 'Capture the starter workspace below.' : 'Inherited automatically from previous solutions.'}</p>
+            <button onClick={() => onLoadInitial(activeFilename)} className="underline">Load starting blocks</button>
+            {currentStepIndex === 0 && <button onClick={() => onCaptureInitial(activeFilename)} className="underline">Capture workspace as starting blocks</button>}
+          </div>
           {/* Capture the active file's solution for this step */}
           <div className="bg-slate-50 rounded-xl p-3 border border-slate-200 space-y-2">
             <p className="text-xs font-bold text-slate-700">
@@ -254,6 +261,13 @@ function StepPanel({
             </p>
           </div>
 
+          {activeExpected && <div className="space-y-2 text-xs">
+            <button className="underline" onClick={() => onCapture(activeFilename)}>Recapture edited solution</button>
+            <label className="font-bold">Validation tests (JSON)</label>
+            <p>Use [] for code equality. Flexible example: {JSON.stringify([{type:'htmlText',selector:'h1',value:'Welcome',message:'Add a Welcome heading'}])}</p>
+            <textarea aria-label="Validation tests" rows={7} className="w-full border p-2 font-mono" value={testsText} onChange={e => setTestsText(e.target.value)} />
+            <button className="underline" onClick={() => { try { onSetTests(activeFilename, JSON.parse(testsText)); toast.success('Tests applied') } catch (e) { toast.error(e.message) } }}>Apply tests</button>
+          </div>}
           {/* Status checklist across all files */}
           {files.length > 1 && (
             <div className="space-y-1.5">
@@ -333,11 +347,11 @@ export default function TutorialBuilderPage({ context = "teacher" }) {
 
   // Reload workspace + recompute preview code whenever step or active file changes
   useEffect(() => {
-    if (builder.loading || !activeFilename) return
+    if (builder.loading || !activeFilename || !workspace.isInitialized) return
     builder.loadFileIntoWorkspace(activeFilename, builder.currentStepIndex)
     setFilesWithCode(builder.getFilesWithCodeForStep(builder.currentStepIndex))
     defineFileReferenceBlocks(builder.files.map((f) => ({ id: f.filename, filename: f.filename })))
-  }, [builder.currentStepIndex, activeFilename, builder.loading])
+  }, [builder.currentStepIndex, activeFilename, builder.loading, workspace.isInitialized])
 
   // Default preview file to first html file
   useEffect(() => {
@@ -375,8 +389,8 @@ export default function TutorialBuilderPage({ context = "teacher" }) {
     toast.success(`Captured ${filename} for this step`)
   }, [builder])
 
-  const handleClearCapture = useCallback((filename) => {
-    builder.clearCapture(filename)
+  const handleClearCapture = useCallback(async (filename) => {
+    try { await builder.clearCapture(filename) } catch (e) { toast.error(e.message); return }
     if (filename === activeFilename) builder.loadFileIntoWorkspace(filename, builder.currentStepIndex)
     setFilesWithCode(builder.getFilesWithCodeForStep(builder.currentStepIndex))
   }, [builder, activeFilename])
@@ -384,7 +398,7 @@ export default function TutorialBuilderPage({ context = "teacher" }) {
   // ── Step nav ────────────────────────────────────────────────────────────
   const handleDeleteStep = useCallback((idx) => {
     if (!window.confirm('Delete this step? This cannot be undone.')) return
-    builder.deleteStepAt(idx)
+    builder.deleteStepAt(idx).catch(e => toast.error(e.message))
   }, [builder])
 
   // ── Save / Publish ──────────────────────────────────────────────────────
@@ -428,7 +442,7 @@ export default function TutorialBuilderPage({ context = "teacher" }) {
   useRemiHighlight(
     workspace.getWorkspace,
     builder.currentStep?.highlightCategoryPath,
-    builder.currentStep?.highlightBlockType
+    builder.currentStep?.highlightBlockType, workspace.isInitialized
   )
 
   return (
@@ -488,6 +502,9 @@ export default function TutorialBuilderPage({ context = "teacher" }) {
             onDeleteStep={handleDeleteStep}
             currentStep={builder.currentStep}
             onUpdateCurrentStep={builder.updateCurrentStep}
+            onCaptureInitial={builder.captureInitial}
+            onLoadInitial={builder.loadInitial}
+            onSetTests={builder.setTests}
             onCapture={handleCapture}
             onClearCapture={handleClearCapture}
             panelOpen={panelOpen} setPanelOpen={setPanelOpen}

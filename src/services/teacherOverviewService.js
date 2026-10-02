@@ -14,7 +14,7 @@ async function getClassroomLessonIds(classroomId) {
 export async function getStudentProgressList(classroomId) {
   const { data: members, error: memErr } = await supabase
     .from('classroom_members')
-    .select('student_id, enrolled_at, student:student_id ( id, username, avatar_url, email )')
+    .select('student_id, enrolled_at, student:student_id ( id, username, avatar_url, email, streak_count, last_active_date, last_login )')
     .eq('classroom_id', classroomId)
 
   if (memErr) throw memErr
@@ -58,6 +58,8 @@ export async function getStudentProgressList(classroomId) {
         username:         m.student?.username ?? 'Unknown',
         email:            m.student?.email ?? null,
         avatarUrl:        m.student?.avatar_url ?? null,
+        streakCount:      m.student?.streak_count ?? 0,
+        lastActive:       m.student?.last_active_date ?? m.student?.last_login ?? null,
         enrolledAt:       m.enrolled_at,
         completedLessons: completed,
         totalLessons,

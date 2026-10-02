@@ -153,7 +153,7 @@ export const useClassroomStore = create((set, get) => ({
   },
 
   fetchClassroomDetail: async (classroomId, currentUserId = null) => {
-    set ({ actionLoading: true, error: null })
+    set ({ detailLoading: true, error: null })
     try {
       const classroom = await getClassroomDetail(classroomId, currentUserId)
       set({ currentClassroom: classroom })
@@ -178,6 +178,17 @@ export const useClassroomStore = create((set, get) => ({
     } finally {
       set({ postsLoading: false })
     }
+  },
+
+  refreshClassroomPosts: async (classroomId) => {
+    const posts = await getClassroomPosts(classroomId, { limit: PAGE_SIZE, offset: 0 })
+    if (get().currentClassroom?.id !== classroomId) return
+    set(state => {
+      const ids = new Set(posts.map(post => post.id))
+      const merged = [...posts, ...state.classroomPosts.filter(post => !ids.has(post.id))]
+        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+      return { classroomPosts: merged, postsOffset: merged.length }
+    })
   },
 
   fetchMoreClassroomPosts: async (classroomId) => {

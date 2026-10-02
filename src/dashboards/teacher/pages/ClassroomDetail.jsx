@@ -8,19 +8,18 @@ import { useTeacherOverview } from "#hooks/useTeacherOverview";
 import { useAuthStore } from "@/store/authStore";
 import { useCopyCode } from "@/utils/copyCode";
 import { formatTimeAgo } from "@/utils/dateFormat";
-import { Activity, BookOpen, ClipboardCheck, FlaskConical, GraduationCap, Loader2, Lock, Megaphone, MonitorPlay, Plus, Users } from "lucide-react";
+import { Activity, Award, BookOpen, ClipboardCheck, FlaskConical, Loader2, Lock, Megaphone, MonitorPlay, Plus, Users } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { toast } from "sonner";
 import LessonDetailsModal from "../components/LessonDetailsModal";
 import AssignCurriculumModal from "../components/AssignCurriculumModal";
+import ClassroomBadgesPanel from '../components/ClassroomBadgesPanel';
+import PostFeed from '../../../components/shared/PostFeed';
+import useClassroomLivePosts from '../../../hooks/useClassroomLivePosts';
+import ClassroomStudentsPanel from '../components/ClassroomStudentsPanel';
+import StudentProgressModal from '../components/StudentProgressModal';
 
-const lessonIcons = {
-  lecture:    <BookOpen className="w-6 h-6" />,
-  quiz:       <ClipboardCheck className="w-6 h-6" />,
-  tutorial:   <MonitorPlay className="w-6 h-6" />,
-  laboratory: <FlaskConical className="w-6 h-6" />,
-}
 const dropdownItems = [
   {title: 'Lecture',    icon:BookOpen,        to:'/teacher/lecture/create'   },
   {title: 'Quiz',       icon:ClipboardCheck,  to:'/teacher/quiz/create'      },
@@ -29,20 +28,22 @@ const dropdownItems = [
 ]
 const tabs = [
   { id: 'activities', label: 'Activities', icon: Activity },
-  { id: 'announcements', label: 'Announcements', icon: Megaphone },
-  { id: 'grades', label: 'Grades', icon: GraduationCap },
+  { id: 'badges', label: 'Badges', icon: Award },
+  { id: 'feed', label: 'Classroom Posts', icon: Activity },
   { id: 'students', label: 'Students', icon: Users },
 ]
 export default function ClassroomDetail() {
   const navigate = useNavigate();
   const { classroomId } = useParams();
+  useClassroomLivePosts(classroomId);
   const profile = useAuthStore((s) => s.profile);
   const [activeTab, setActiveTab] = useState('activities');
   const {copied, copyCode} = useCopyCode()
   const [selectedLesson, setSelectedLesson] = useState(null)
+  const [selectedStudent, setSelectedStudent] = useState(null)
   const [showAssignModal, setShowAssignModal] = useState(false)
 
-  const { currentClassroom, detailLoading, classroomPosts, fetchClassroomDetail, fetchClassroomPosts, handleCreatePost } = useClassroom();
+  const { currentClassroom, detailLoading, classroomPosts, fetchClassroomDetail, fetchClassroomPosts, handleCreatePost, handleLikePost, handleCommentOnPost, fetchMoreClassroomPosts, handleRegenerateCode, hasMorePosts, postsLoading } = useClassroom();
 
   const { classroomCourses, topics, loading: curriculumLoading, assigning, masterCourses, fetchMasterCourses, handleAssignCourses, fetchClassroomCurriculum, handleUnlockTopic, handleCreateTopic } = useCurriculum();
 
@@ -50,7 +51,6 @@ export default function ClassroomDetail() {
 
   useEffect(() => {
     if (!classroomId) return
-    setSelectedLesson(null)
     fetchClassroomDetail(classroomId)
     fetchClassroomCurriculum(classroomId)
     fetchOverview(classroomId)
@@ -89,7 +89,6 @@ export default function ClassroomDetail() {
   }
 
   const initialLoading = detailLoading && !currentClassroom;
-  const announcements = classroomPosts.filter((p) => p.type === 'announcement');
   const recentActivity = classroomPosts.filter((p) => p.type !== 'announcement').slice(0, 4);
 
   if (initialLoading) {
@@ -155,7 +154,7 @@ export default function ClassroomDetail() {
       </section>
 
       <div className="border-b border-border">
-        <div className="flex gap-1">
+        <div className="flex gap-1 overflow-x-auto">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -197,12 +196,13 @@ export default function ClassroomDetail() {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="start" className="w-auto min-w-0">
-                    {dropdownItems.map(({ title, to, icon: Icon }) => (
-                      <DropdownMenuItem key={title} className="gap-2 hover:cursor-pointer" onClick={() => navigate(to + "?classroomId=" + encodeURIComponent(classroomId))}>
+                    {dropdownItems.map((item) => {
+                      const Icon = item.icon
+                      return <DropdownMenuItem key={item.title} className="gap-2 hover:cursor-pointer" onClick={() => navigate(item.to + "?classroomId=" + encodeURIComponent(classroomId))}>
                         <Icon className="w-4 h-4" />
-                        {title}
+                        {item.title}
                       </DropdownMenuItem>
-                    ))}
+                    })}
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
@@ -295,7 +295,7 @@ export default function ClassroomDetail() {
                                 <button
                                   type="button"
                                   aria-label={`View details for ${l.title}`}
-                                  onClick={() => setSelectedLesson({ lesson: l, topic: t })}
+                                  onClick={() => setSelectedLesson({ lesson: l, topic: t, classroomId })}
                                   key={l.id}
                                   className="flex items-center gap-3 rounded-xl border border-border bg-background/50 px-3 py-2.5 text-left hover:bg-muted focus-visible:outline-2 focus-visible:outline-primary"
                                 >
@@ -396,73 +396,14 @@ export default function ClassroomDetail() {
         </section>
       )}
  
-      {activeTab === 'announcements' && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="font-display text-xl font-semibold">Announcements</h2>
-            <Button size="sm" className="gap-2" onClick={onNewAnnouncement}>
-              <Megaphone className="w-4 h-4" />
-              New Announcement
-            </Button>
-          </div>
-          <div className="grid gap-4">
-            {announcements.length === 0 && (
-              <p className="text-sm text-muted-foreground">No announcements yet.</p>
-            )}
-            {announcements.map((post) => (
-              <div key={post.id} className="rounded-2xl border border-b-4 border-border border-b-slate-400 bg-card p-6">
-                <div className="flex items-start justify-between">
-                  <p className="text-sm text-muted-foreground">
-                    Posted by {post.author?.username ?? 'Teacher'} • {formatTimeAgo(post.created_at)}
-                  </p>
-                </div>
-                <p className="mt-3 text-sm">{post.content}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
- 
-      {activeTab === 'grades' && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="font-display text-xl font-semibold">Grades</h2>
-          </div>
-          <div className="rounded-2xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
-            Per-assessment grade breakdown (quiz-by-quiz, lab-by-lab) isn't wired up yet —
-            it needs its own reporting query on top of quiz_attempts. Ask and I'll build it next.
-          </div>
-        </div>
-      )}
- 
-      {activeTab === 'students' && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="font-display text-xl font-semibold">Students</h2>
-          </div>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {studentProgress.length === 0 && !overviewLoading && (
-              <p className="text-sm text-muted-foreground">No students enrolled yet — share the join code.</p>
-            )}
-            {studentProgress.map((s) => (
-              <div key={s.studentId} className="rounded-2xl border border-b-4 border-border border-b-slate-400 bg-card p-5">
-                <div className="flex items-center gap-4">
-                  <img src={s.avatarUrl || "/default-avatar.png"} alt="student" className="w-12 h-12 rounded-full object-cover object-center" />
-                  <div className="min-w-0 flex-1">
-                    <p className="font-semibold text-sm truncate">{s.username}</p>
-                    <p className="text-xs text-muted-foreground truncate">{s.email}</p>
-                    <div className="mt-2 flex items-center gap-2">
-                      <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs text-green-700">Level {s.currentLevel}</span>
-                      <span className="text-xs text-muted-foreground">Progress: {s.progressPct}%</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-      {selectedLesson && <LessonDetailsModal
+      {activeTab === 'badges' && <ClassroomBadgesPanel key={classroomId} classroomId={classroomId} courses={classroomCourses} topics={topics} onAwarded={() => fetchClassroomPosts(classroomId)} />}
+      {activeTab === 'feed' && <div className="space-y-4">
+        <div className="flex items-center justify-between"><h2 className="text-xl font-semibold">Classroom Posts</h2><Button size="sm" className="gap-2" onClick={onNewAnnouncement}><Megaphone size={16} />New Announcement</Button></div>
+        <PostFeed posts={classroomPosts} currentUserId={profile?.id} onLike={handleLikePost} onComment={handleCommentOnPost} onLoadMore={() => fetchMoreClassroomPosts(classroomId)} hasMore={hasMorePosts} loading={postsLoading} />
+      </div>}
+      {activeTab === 'students' && <ClassroomStudentsPanel students={studentProgress} loading={overviewLoading} onSelect={student => setSelectedStudent({ ...student, classroomId })} />}
+      {selectedStudent?.classroomId === classroomId && selectedStudent && <StudentProgressModal key={selectedStudent.studentId} classroomId={classroomId} student={selectedStudent} onClose={() => setSelectedStudent(null)} onGraded={() => fetchOverview(classroomId)} />}
+      {selectedLesson && selectedLesson.classroomId === classroomId && <LessonDetailsModal
         key={selectedLesson.lesson.id}
         classroomId={classroomId}
         lesson={selectedLesson.lesson}

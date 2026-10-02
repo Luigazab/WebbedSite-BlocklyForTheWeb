@@ -29,7 +29,7 @@ export default function RemiGuide({
 
   return (
     <div className="fixed bottom-4 right-4 z-9000 flex items-end gap-3 max-w-md">
-      <img src="/rim_white.png" alt="Remi" className="w-24 h-24 object-contain drop-shadow-lg shrink-0 animate-float" />
+      <img src="/remi.png" alt="Remi" className="w-24 h-24 object-contain drop-shadow-lg shrink-0 animate-float" />
       <div className="relative bg-white rounded-2xl shadow-2xl border-4 border-blockly-purple p-4 flex-1">
         <div className="absolute -bottom-3 left-8 w-5 h-5 bg-white border-r-4 border-b-4 border-blockly-purple rotate-45" />
         {stepLabel && <p className="text-[10px] font-black text-blockly-purple uppercase tracking-wider mb-1">{stepLabel}</p>}

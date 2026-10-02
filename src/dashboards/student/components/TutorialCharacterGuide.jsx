@@ -145,7 +145,7 @@ export default function TutorialCharacterGuide({
         )}
 
         <img
-          src="/rim_white.png"
+          src="/remi.png"
           alt="Tutorial guide"
           className="w-50 h-50 object-contain drop-shadow-lg"
           style={{ animation: 'tutorialFloat 2s ease-in-out infinite' }}

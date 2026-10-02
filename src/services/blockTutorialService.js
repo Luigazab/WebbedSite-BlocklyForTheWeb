@@ -95,7 +95,8 @@ export async function updateStep(stepId, { instruction, hint, order, highlightCa
 }
 
 export async function deleteStep(stepId) {
-  await supabase.from('block_tutorial_step_expected').delete().eq('step_id', stepId)
+  const { error: childError } = await supabase.from('block_tutorial_step_expected').delete().eq('step_id', stepId)
+  if (childError) throw childError
   const { error } = await supabase.from('block_tutorial_steps').delete().eq('id', stepId)
   if (error) throw error
 }
@@ -127,7 +128,8 @@ export async function upsertTutorialFile({ id, tutorialId, filename, fileType, i
 }
 
 export async function deleteTutorialFile(fileId) {
-  await supabase.from('block_tutorial_step_expected').delete().eq('file_id', fileId)
+  const { error: childError } = await supabase.from('block_tutorial_step_expected').delete().eq('file_id', fileId)
+  if (childError) throw childError
   const { error } = await supabase.from('block_tutorial_step_files').delete().eq('id', fileId)
   if (error) throw error
 }

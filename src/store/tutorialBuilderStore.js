@@ -27,7 +27,7 @@ export const tutorialBuilderStore = create((set) => ({
   hydrate: ({ lessonId, tutorialId, isPublished, meta, files, steps }) =>
     set({ lessonId, tutorialId, isPublished, meta, files, steps, currentStepIndex: 0, dirty: false }),
 
-  setFiles: (files) => set({ files }),
+  setFiles: (files) => set({ files, dirty: true }),
 
   addFile: (file) => set((s) => ({ files: [...s.files, file], dirty: true })),
 
@@ -60,6 +60,7 @@ export const tutorialBuilderStore = create((set) => ({
   })),
 
   setStepWorkingState: (idx, filename, blocksJson) => set((s) => ({
+    dirty: blocksJson ? true : s.dirty,
     steps: s.steps.map((step, i) =>
       i === idx
         ? { ...step, workingState: { ...step.workingState, [filename]: blocksJson } }

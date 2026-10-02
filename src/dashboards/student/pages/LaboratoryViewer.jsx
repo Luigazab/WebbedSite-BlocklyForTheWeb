@@ -5,7 +5,7 @@ import { defineFileReferenceBlocks } from "@/blockly/fileReferenceBlocks";
 import { codeGeneratorService } from "@/services/codeGenerator.service";
 import { useUIStore } from "@/store/uiStore";
 import { useAuthStore } from "@/store/authStore";
-import { xpService } from "@/services/xpService";
+import { getOwnSubmissions, saveLessonSubmission } from "@/services/studentReviewService";
 import { ArrowLeft, CheckCircle2, FlaskConical, Image, XCircle } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
@@ -24,7 +24,7 @@ const parseLabInstruction = (value) => {
 
 const sameWorkspace = (left, right) => JSON.stringify(left ?? {}) === JSON.stringify(right ?? {});
 
-const LaboratoryViewer = ({ lesson, onNext, onPrevious, navigation, preview = false }) => {
+const LaboratoryViewer = ({ lesson, onNext, navigation, preview = false }) => {
   const navigate = useNavigate();
   const addToast = useUIStore((state) => state.addToast);
   const profile = useAuthStore((state) => state.profile);
@@ -40,6 +40,9 @@ const LaboratoryViewer = ({ lesson, onNext, onPrevious, navigation, preview = fa
   const [responsive, setResponsive] = useState(true);
   const [selectedDevice, setSelectedDevice] = useState("desktop");
   const [validationState, setValidationState] = useState("idle");
+  const [submission, setSubmission] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
+  const submittingRef = useRef(false);
   const isLoadingRef = useRef(false);
 
   const workspace = BlocklyWorkspace({
@@ -55,9 +58,26 @@ const LaboratoryViewer = ({ lesson, onNext, onPrevious, navigation, preview = fa
 
   useEffect(() => {
     if (!workspace.isInitialized) return;
-    isLoadingRef.current = true;
-    starterFiles[0]?.blocks_json ? workspace.loadWorkspaceState(starterFiles[0].blocks_json) : workspace.clearWorkspace();
-    setTimeout(() => { isLoadingRef.current = false; }, 150);
+    let cancelled = false;
+    async function restore() {
+      isLoadingRef.current = true;
+      try {
+        const saved = !preview && profile?.id ? (await getOwnSubmissions(lesson.id))[0] : null;
+        if (cancelled) return;
+        if (saved) {
+          setSubmission(saved);
+          const restored = saved.files.map(file => ({ ...file, id: uid() }));
+          setFiles(restored); setActiveFileId(restored[0].id); setPreviewFileId(restored.find(file => file.filename.endsWith('.html'))?.id ?? restored[0].id);
+          setFilesWithCode(restored.map(file => ({ id: file.id, filename: file.filename, generatedCode: file.code ?? '' })));
+          restored[0].blocks_json ? workspace.loadWorkspaceState(restored[0].blocks_json) : workspace.clearWorkspace();
+        } else {
+          files[0]?.blocks_json ? workspace.loadWorkspaceState(files[0].blocks_json) : workspace.clearWorkspace();
+        }
+      } catch (error) { addToast(error.message || 'Could not restore your laboratory work.', 'error'); }
+      finally { isLoadingRef.current = false; }
+    }
+    restore();
+    return () => { cancelled = true; };
   }, [workspace.isInitialized]);
 
   useEffect(() => {
@@ -99,13 +119,28 @@ const LaboratoryViewer = ({ lesson, onNext, onPrevious, navigation, preview = fa
     setValidationState(passed ? "passed" : "failed");
     if (!preview && passed && profile?.id && lesson?.id) {
       try {
-        await xpService.completeLesson({ userId: profile.id, lessonId: lesson.id, score: 100 });
+        await submitWork();
       } catch (error) {
         addToast(error.message || "Could not award lesson XP.", "error");
         return;
       }
     }
     addToast(passed ? "Laboratory complete!" : "Not quite yet. Compare your blocks with the goal.", passed ? "success" : "error");
+  };
+
+  const submitWork = async () => {
+    if (preview || !profile?.id || submittingRef.current || submission?.graded_at) return;
+    submittingRef.current = true; setSubmitting(true);
+    try {
+      const snapshot = flushActiveFile().map(file => ({
+        filename: file.filename, blocks_json: file.blocks_json,
+        code: file.id === activeFileId && workspace.getWorkspace() ? codeGeneratorService.generateCode(workspace.getWorkspace(), file.filename) : codeGeneratorService.generateCodeFromState(file.blocks_json, file.filename),
+      }));
+      const saved = await saveLessonSubmission({ lessonId: lesson.id, files: snapshot });
+      setSubmission(saved);
+      addToast('Laboratory submitted for teacher grading.', 'success');
+    } catch (error) { addToast(error.message || 'Could not submit your laboratory.', 'error'); throw error; }
+    finally { submittingRef.current = false; setSubmitting(false); }
   };
 
   const activeFile = files.find((file) => file.id === activeFileId);
@@ -125,6 +160,7 @@ const LaboratoryViewer = ({ lesson, onNext, onPrevious, navigation, preview = fa
         <button onClick={checkWork} className="rounded-xl bg-emerald-500 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-400">
           Check Work
         </button>
+        {!preview && <button disabled={submitting || Boolean(submission?.graded_at)} onClick={() => submitWork().catch(() => {})} className="rounded-xl bg-sky-600 px-4 py-2 text-xs font-bold text-white disabled:opacity-50">{submitting ? 'Submitting…' : submission?.graded_at ? 'Graded' : submission ? 'Update submission' : 'Submit for grading'}</button>}
         <button onClick={() => onNext?.(navigation?.next ? "next" : "topic")} className="rounded-xl border px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50">
           Continue
         </button>
@@ -132,6 +168,7 @@ const LaboratoryViewer = ({ lesson, onNext, onPrevious, navigation, preview = fa
 
       <div className="flex flex-1 overflow-hidden">
         <aside className="w-80 shrink-0 overflow-y-auto border-r bg-white p-4 space-y-4">
+          {submission && <div className="rounded-xl border border-sky-200 bg-sky-50 p-4 text-sm"><p className="font-bold">{submission.graded_at ? `Teacher grade: ${submission.score}%` : 'Submitted — have yet to be graded'}</p>{submission.feedback && <p className="mt-2 whitespace-pre-wrap">{submission.feedback}</p>}</div>}
           <div className="rounded-xl border p-4">
             <div className="mb-2 flex items-center gap-2 text-sm font-bold text-slate-800">
               <FlaskConical className="size-4 text-emerald-500" /> Challenge

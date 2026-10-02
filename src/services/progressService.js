@@ -1,73 +1,13 @@
 import { supabase } from "@/supabaseClient"
+import { xpService } from './xpService'
 
-async function getLevelForXp(totalXp) {
-  const { data, error } = await supabase
-    .from('levels')
-    .select('level')
-    .lte('xp_required', totalXp)
-    .order('level', { ascending: false })
-    .limit(1)
-    .maybeSingle()
- 
+export async function completeLesson({ userId, classroomId, lessonId, topicId, score = 100 }) {
+  const completion = await xpService.completeLesson({ userId, lessonId, score })
+  if (!classroomId) return { totalXp: completion.course_total_xp, level: completion.new_level }
+  const { data: progress, error } = await supabase.from('user_progress')
+    .select('total_xp,current_level').eq('user_id', userId).eq('classroom_id', classroomId).single()
   if (error) throw error
-  return data?.level ?? 1
-}
-
-async function logXp({ userId, classroomId, courseId, sourceId, sourceType, xpEarned }) {
-  const { error } = await supabase
-    .from('user_xp_logs')
-    .insert({
-      user_id:      userId,
-      classroom_id: classroomId,
-      course_id:    courseId,
-      source_id:    sourceId,
-      source_type:  sourceType,
-      xp_earned:    xpEarned,
-    })
-  if (error) throw error
-}
-
-async function bumpUserProgress({ userId, classroomId, courseId, xpEarned }) {
-  const { data: existing, error: fetchErr } = await supabase
-    .from('user_progress')
-    .select('current_xp, total_xp')
-    .eq('user_id', userId)
-    .eq('classroom_id', classroomId)
-    .maybeSingle()
- 
-  if (fetchErr) throw fetchErr
- 
-  const newTotalXp = (existing?.total_xp ?? 0) + xpEarned
-  const newLevel = await getLevelForXp(newTotalXp)
- 
-  const { error: upsertErr } = await supabase
-    .from('user_progress')
-    .upsert({
-      user_id:       userId,
-      classroom_id:  classroomId,
-      active_course: courseId,
-      current_xp:    (existing?.current_xp ?? 0) + xpEarned,
-      total_xp:      newTotalXp,
-      current_level: newLevel,
-    })
- 
-  if (upsertErr) throw upsertErr
-  return { totalXp: newTotalXp, level: newLevel }
-}
-
-export async function completeLesson({ userId, classroomId, courseId, lessonId, topicId, baseXp }) {
-  const { error: progressErr } = await supabase
-    .from('user_lesson_progress')
-    .upsert({
-      user_id:      userId,
-      lesson_id:    lessonId,
-      is_completed: true,
-      completed_at: new Date().toISOString(),
-    })
-  if (progressErr) throw progressErr
- 
-  await logXp({ userId, classroomId, courseId, sourceId: lessonId, sourceType: 'lesson', xpEarned: baseXp })
-  const result = await bumpUserProgress({ userId, classroomId, courseId, xpEarned: baseXp })
+  const result = { totalXp: progress.total_xp, level: progress.current_level }
  
   const { error: unlockErr } = await supabase.rpc('try_auto_unlock_next_topic', { p_topic_id: topicId })
   if (unlockErr) throw unlockErr
@@ -117,7 +57,7 @@ export async function submitQuizAttempt({
   if (attemptErr) throw attemptErr
  
   if (passed) {
-    await completeLesson({ userId, classroomId, courseId, lessonId, topicId, baseXp })
+    await completeLesson({ userId, classroomId, courseId, lessonId, topicId, baseXp, score })
   }
  
   return { score, passed }
@@ -177,7 +117,7 @@ export async function recordQuizAttempt({
   }
 
   if (passed && lessonId) {
-    await completeLesson({ userId, classroomId, courseId, lessonId, topicId, baseXp })
+    await completeLesson({ userId, classroomId, courseId, lessonId, topicId, baseXp, score })
   }
 
   return attempt

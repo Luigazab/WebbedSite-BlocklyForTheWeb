@@ -1,6 +1,15 @@
 import { javascriptGenerator } from 'blockly/javascript';
+import * as Blockly from 'blockly';
 
 export const codeGeneratorService = {
+  generateCodeFromState(state, filename) {
+    if (!state) return '';
+    const workspace = new Blockly.Workspace();
+    try {
+      Blockly.serialization.workspaces.load(state, workspace);
+      return this.generateCode(workspace, filename);
+    } finally { workspace.dispose(); }
+  },
   /**
    * Generate code based on file type
    */

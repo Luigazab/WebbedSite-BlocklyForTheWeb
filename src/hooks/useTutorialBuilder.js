@@ -1,3 +1,4 @@
+import { validateTestCases, validateTutorialCode } from '../utils/validation/tutorialCodeValidation'
 import { useCallback, useEffect, useRef } from 'react'
 import * as Blockly from 'blockly/core'
 import { tutorialBuilderStore } from '@/store/tutorialBuilderStore'
@@ -13,6 +14,7 @@ import {
   deleteTutorialFile,
   upsertStepExpected,
   inferFileType,
+  deleteStepExpected,
 } from '@/services/blockTutorialService'
 import { createLessonBase, updateLessonBase } from '@/services/contentCreationService'
 
@@ -82,7 +84,7 @@ export function useTutorialBuilder({ lessonId, authorId, workspace, initialTopic
     }
   }, [lessonId, initialTopicId])
 
-  useEffect(() => { load() }, [load])
+  useEffect(() => { load().catch(error => { console.error(error); window.alert('Could not load tutorial: ' + error.message) }) }, [load])
 
   // ── Derived getters — always read fresh via getState() ───────────────────
   const resolveStateForFile = useCallback((filename, stepIndex) => {
@@ -165,13 +167,14 @@ export function useTutorialBuilder({ lessonId, authorId, workspace, initialTopic
   const deleteStepAt = useCallback(async (idx) => {
     const step = tutorialBuilderStore.getState().steps[idx]
     if (step?.id) {
-      try { await deleteStepService(step.id) } catch (e) { console.error(e) }
+      await deleteStepService(step.id)
     }
     store.removeStepAt(idx)
   }, [])
 
   // ── Files ──────────────────────────────────────────────────────────────
   const addFile = useCallback((filename) => {
+    if (!/^[\w.-]+\.(html|css|js)$/.test(filename) || tutorialBuilderStore.getState().files.some(f => f.filename === filename)) throw new Error('Use a unique HTML, CSS or JS filename')
     store.addFile({ id: null, filename, fileType: inferFileType(filename), initialContentJson: null })
   }, [])
 
@@ -179,7 +182,7 @@ export function useTutorialBuilder({ lessonId, authorId, workspace, initialTopic
     if (tutorialBuilderStore.getState().files.length <= 1) return
     const file = tutorialBuilderStore.getState().files.find((f) => f.filename === filename)
     if (file?.id) {
-      try { await deleteTutorialFile(file.id) } catch (e) { console.error(e) }
+      await deleteTutorialFile(file.id)
     }
     store.removeFile(filename)
   }, [])
@@ -202,8 +205,10 @@ export function useTutorialBuilder({ lessonId, authorId, workspace, initialTopic
     store.setStepWorkingState(currentStepIndex, filename, null)
   }, [workspace])
 
-  const clearCapture = useCallback((filename) => {
+  const clearCapture = useCallback(async (filename) => {
     const idx = tutorialBuilderStore.getState().currentStepIndex
+    const existing = tutorialBuilderStore.getState().steps[idx]?.expectedByFile[filename]
+    if (existing?.id) await deleteStepExpected(existing.id)
     store.clearStepExpected(idx, filename)
   }, [])
 
@@ -213,6 +218,9 @@ export function useTutorialBuilder({ lessonId, authorId, workspace, initialTopic
     if (!s.meta.title.trim()) throw new Error('Tutorial title is required')
     if (!s.meta.topicId) throw new Error('Select a topic')
 
+    if (!Number.isInteger(Number(s.meta.baseXp)) || Number(s.meta.baseXp) < 1) throw new Error('XP must be a positive integer')
+    for (const step of s.steps) for (const exp of Object.values(step.expectedByFile)) validateTestCases(exp.testCases ?? [])
+    if (s.steps.some(step => Object.values(step.workingState).some(Boolean))) throw new Error('Capture your edited solutions before saving')
     store.setSaving(true)
     try {
       const lesson = s.lessonId
@@ -283,6 +291,15 @@ export function useTutorialBuilder({ lessonId, authorId, workspace, initialTopic
   }, [authorId])
 
   const publish = useCallback(async () => {
+    const s = tutorialBuilderStore.getState()
+    if (!s.steps.length) throw new Error('Add at least one step')
+    for (const [i, step] of s.steps.entries()) {
+      if (!step.instruction.trim() || !Object.keys(step.expectedByFile).length) throw new Error('Step ' + (i + 1) + ' needs instructions and a captured solution')
+      for (const exp of Object.values(step.expectedByFile)) {
+        const result = validateTutorialCode(exp.code, exp.code, exp.testCases ?? [])
+        if (!result.passed) throw new Error('Step ' + (i + 1) + ' solution fails its tests: ' + result.failures.join(', '))
+      }
+    }
     const lessonId = await saveAll()
     await publishLesson(lessonId)
     store.setPublished(true)
@@ -304,6 +321,29 @@ export function useTutorialBuilder({ lessonId, authorId, workspace, initialTopic
     resolveStateForFile, loadFileIntoWorkspace, recordWorkingEdit,
     getFilesWithCodeForStep, getFileStatusForStep,
     captureActiveFile, clearCapture,
+    captureInitial: (filename) => {
+      const s = tutorialBuilderStore.getState()
+      if (s.currentStepIndex !== 0) return
+      store.setFiles(s.files.map(f => f.filename === filename ? { ...f, initialContentJson: workspace.getWorkspaceState() } : f))
+      store.setStepWorkingState(0, filename, null)
+    },
+    loadInitial: (filename) => {
+      const s = tutorialBuilderStore.getState()
+      let state = s.files.find(f => f.filename === filename)?.initialContentJson ?? null
+      for (let i = 0; i < s.currentStepIndex; i++) {
+        if (s.steps[i].expectedByFile[filename]) state = s.steps[i].expectedByFile[filename].blocksJson
+      }
+      isLoadingWsRef.current = true
+      if (state) workspace.loadWorkspaceState(state); else workspace.clearWorkspace()
+      setTimeout(() => { isLoadingWsRef.current = false }, 150)
+    },
+    setTests: (filename, tests) => {
+      validateTestCases(tests)
+      const s = tutorialBuilderStore.getState()
+      const expected = s.steps[s.currentStepIndex]?.expectedByFile[filename]
+      if (!expected) throw new Error('Capture a solution first')
+      store.setStepExpected(s.currentStepIndex, filename, { ...expected, testCases: tests })
+    },
     saveAll, publish,
   }
 }

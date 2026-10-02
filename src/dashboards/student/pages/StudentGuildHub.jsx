@@ -4,6 +4,8 @@ import { useAuthStore } from '../../../store/authStore'
 import { useClassroomStore } from '../../../store/classroomStore'
 import PageWrapper from '../../../components/layout/PageWrapper'
 import PostFeed from '../../../components/shared/PostFeed'
+import RecentActivityPanel from '../../../components/shared/RecentActivityPanel'
+import useClassroomLivePosts from '../../../hooks/useClassroomLivePosts'
 import StudentMilestonePanel from '../components/StudentMilestonePanel'
 import GuildMembersPanel from '../components/GuildMembersPanel'
 import {
@@ -152,6 +154,8 @@ function GuildSidePanel({ guild, milestones, memberCount, teacher, guildPosts, c
           ))}
         </div>
       </div>
+
+      <RecentActivityPanel posts={guildPosts.filter(post => post.type !== 'announcement').slice(0, 5)} />
 
       {/* Quick Stats */}
       <div className="bg-white rounded-2xl border border-b-8 border-slate-200 shadow-sm p-4">
@@ -323,6 +327,7 @@ function MainContent({
 // ── Main ──────────────────────────────────────────────────────────────────────
 export default function StudentGuildHub() {
   const { classroomId } = useParams()
+  useClassroomLivePosts(classroomId)
   const profile = useAuthStore((s) => s.profile)
 
   const {

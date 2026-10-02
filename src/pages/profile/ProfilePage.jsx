@@ -7,12 +7,13 @@ import ProjectDetailsModal from '../../components/shared/ProjectDetailsModal'
 import DeleteModal from '../../components/ui/DeleteModal'
 import { useLikes } from '../../hooks/useLikes'
 import {
-  Trophy, Loader2, FoldersIcon,
+  Loader2, FoldersIcon,
   Image as ImageIcon, ThumbsUp, MessageSquare,
   Mail,
   Pencil,
 } from 'lucide-react'
 import { format } from 'date-fns'
+import ProfileAchievements from '../../components/shared/ProfileAchievements'
 
 const ROLE_CONFIG = {
   student: { label: 'Student', class: 'bg-sky-100    text-sky-700'    },
@@ -252,12 +253,7 @@ export default function ProfilePage() {
           )}
 
           {activeTab === 'Achievements' && (
-            <div className="flex flex-col items-center justify-center py-20 gap-4">
-              <div className="w-16 h-16 rounded-2xl bg-yellow-100 flex items-center justify-center">
-                <Trophy className="w-8 h-8 text-yellow-600" />
-              </div>
-              <p className="text-sm text-gray-400">No achievements yet.</p>
-            </div>
+            <ProfileAchievements studentId={viewedProfile.id} />
           )}
         </div>
       </main>

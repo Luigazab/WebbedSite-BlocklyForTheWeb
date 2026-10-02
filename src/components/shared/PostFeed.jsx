@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router'
 import { toast } from 'sonner'
+import { Award } from 'lucide-react'
 
 export function ClassroomPost({ post, currentUserId, onLike, onComment, link = false }) {
   const [comment, setComment] = useState('')
@@ -14,12 +15,13 @@ export function ClassroomPost({ post, currentUserId, onLike, onComment, link = f
     catch { toast.error('Could not add your comment.') }
     finally { setBusy(false) }
   }
-  return <article className="rounded-xl border border-slate-200 bg-white p-5 space-y-4">
+  return <article className={`rounded-xl border bg-white p-5 space-y-4 ${post.type === 'badge_earned' ? 'border-amber-300' : 'border-slate-200'}`}>
+    {post.type === 'badge_earned' && <p className="flex items-center gap-2 text-sm font-bold text-amber-700"><Award size={18} /> Badge Earned</p>}
     <header><p className="font-semibold">{post.author?.username ?? 'Classroom member'}</p>
       <time className="text-xs text-slate-500">{new Date(post.created_at).toLocaleString()}</time></header>
     <p className="whitespace-pre-wrap break-words">{post.content}</p>
     {link && <Link className="text-blockly-purple underline text-sm" to={`/classroom-posts/${post.id}`}>Open post</Link>}
-    <button type="button" disabled={busy} className="block text-sm text-blockly-purple" aria-pressed={likes.some(like => like.user_id === currentUserId)}
+    <button type="button" disabled={busy} className="text-sm text-blockly-purple" aria-pressed={likes.some(like => like.user_id === currentUserId)}
       onClick={async () => { setBusy(true); try { await onLike(post.id) } catch { toast.error('Could not update your like.') } finally { setBusy(false) } }}>
       {likes.some(like => like.user_id === currentUserId) ? 'Unlike' : 'Like'} · {likes.length}
     </button>
