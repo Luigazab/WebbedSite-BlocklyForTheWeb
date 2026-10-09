@@ -1,6 +1,33 @@
 import { supabase } from '../supabaseClient'
 
 export const profileService = {
+  async getPresetAvatars() {
+    const bucket = supabase.storage.from('avatar-pool')
+    const avatars = []
+    let offset = 0
+    const limit = 100
+    while (true) {
+      const { data, error } = await bucket.list('', {
+        limit,
+        offset,
+        sortBy: { column: 'name', order: 'asc' },
+      })
+      console.log('avatar-pool list:', { data, error })
+      if (error) throw error
+      const files = data ?? []
+      avatars.push(...files
+        .filter(file => file.id && /\.(png|jpe?g|webp|gif|avif)$/i.test(file.name))
+        .map(file => ({
+          name: file.name,
+          path: file.name,
+          url: bucket.getPublicUrl(file.name).data.publicUrl,
+        })))
+      if (files.length < limit) break
+      offset += limit
+    }
+    return avatars
+  },
+
   async getProfile(userId) {
     const { data, error } = await supabase
       .from('profiles')
@@ -23,13 +50,16 @@ export const profileService = {
   },
 
   async uploadAvatar(userId, file) {
-    const ext  = file.name.split('.').pop()
-    const filename = `avatar.${ext}`
+    if (!file?.type?.startsWith('image/') || file.size > 2 * 1024 * 1024) {
+      throw new Error('Choose an image smaller than 2 MB.')
+    }
+    const ext = file.name.split('.').pop().toLowerCase().replace(/[^a-z0-9]/g, '') || 'png'
+    const filename = `${crypto.randomUUID()}.${ext}`
     const path = `${userId}/${filename}`
 
     const { error: uploadError } = await supabase.storage
       .from('avatars')
-      .upload(path, file, { upsert: true })
+      .upload(path, file, { upsert: false, contentType: file.type })
     if (uploadError) throw uploadError
 
     const { data } = supabase.storage
