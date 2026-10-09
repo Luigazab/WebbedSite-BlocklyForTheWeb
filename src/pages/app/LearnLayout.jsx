@@ -1,4 +1,4 @@
-import { Outlet, useLocation, useNavigate } from 'react-router'
+import { Outlet, useLocation } from 'react-router'
 import { useUIStore } from '../../store/uiStore'
 import { useAuth } from '../../hooks/useAuth'
 import { useCourses } from '../../hooks/useCourse'
@@ -12,7 +12,6 @@ import CourseSelectionMenu from './CourseSelectionMenu'
 
 export default function LearnLayout() {
   const { user } = useAuth();
-  const navigate = useNavigate();
   const location = useLocation();
   const {
     activeCourseProgress,     
@@ -38,26 +37,11 @@ export default function LearnLayout() {
     fetchCourses();
     fetchLevels();
 
-    if (isLoadingProgress || !user?.id || !allUserCourseProgresses) return;
-
-    const isOnboardingPath = location.pathname.includes('/welcome') || location.pathname.includes('/course-select');
-
-    if (allUserCourseProgresses.length === 0 && !isOnboardingPath) {
-      navigate('/student/welcome', { replace: true });
-    } else if (allUserCourseProgresses.length > 0 && isOnboardingPath) {
-      if (!activeCourseProgress && allUserCourseProgresses.length > 0) {
-        if (allUserCourseProgresses[0].active_course) {
-          setActiveCourse(allUserCourseProgresses[0].active_course);
-        }
-      }
-      navigate('/student/course', { replace: true }); 
+    if (isLoadingProgress || !user?.id || !allUserCourseProgresses?.length || activeCourseProgress) return;
+    if (allUserCourseProgresses[0].active_course) {
+      setActiveCourse(allUserCourseProgresses[0].active_course);
     }
-    else if (allUserCourseProgresses.length > 0 && !activeCourseProgress) {
-        if (allUserCourseProgresses[0].active_course) {
-          setActiveCourse(allUserCourseProgresses[0].active_course); 
-        }
-    }
-  }, [allUserCourseProgresses, activeCourseProgress, isLoadingProgress, location.pathname, navigate, fetchCourses, fetchLevels, setActiveCourse, user?.id]);
+  }, [allUserCourseProgresses, activeCourseProgress, isLoadingProgress, fetchCourses, fetchLevels, setActiveCourse, user?.id]);
 
   if (isLoadingProgress) {
     return <Loader/>;
