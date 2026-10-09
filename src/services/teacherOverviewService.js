@@ -98,11 +98,6 @@ export async function getLessonCompletionRates(classroomId) {
 }
 
 // ── Top-of-page stat cards ───────────────────────────────────────────────────
-// Note: "pendingSubmissions" is a proxy = quiz attempts a student started but
-// never finished (status = 'in_progress'). Your schema auto-grades quizzes on
-// submit, so there's no real "awaiting teacher grading" queue yet — if you
-// want manually-graded work (e.g. lab review), that needs a status field
-// added to laboratory_completed or similar. Flagging rather than guessing.
 export async function getClassroomOverviewStats(classroomId) {
   const [{ count: studentCount, error: studErr }, { data: topics, error: topicsErr }] = await Promise.all([
     supabase.from('classroom_members').select('student_id', { count: 'exact', head: true }).eq('classroom_id', classroomId),
@@ -114,22 +109,13 @@ export async function getClassroomOverviewStats(classroomId) {
   const totalTopics = topics?.length ?? 0
   const unlockedTopics = (topics ?? []).filter((t) => t.is_unlocked).length
 
-  const lessonIds = await getClassroomLessonIds(classroomId)
-  let pendingSubmissions = 0
-  if (lessonIds.length) {
-    const { data: quizzes, error: quizErr } = await supabase.from('quizzes').select('id').in('lesson_id', lessonIds)
-    if (quizErr) throw quizErr
-    const quizIds = (quizzes ?? []).map((q) => q.id)
-    if (quizIds.length) {
-      const { count, error: attErr } = await supabase
-        .from('quiz_attempts')
-        .select('id', { count: 'exact', head: true })
-        .in('quiz_id', quizIds)
-        .eq('status', 'in_progress')
-      if (attErr) throw attErr
-      pendingSubmissions = count ?? 0
-    }
-  }
+  const { count: pendingSubmissions, error: reviewError } = await supabase
+    .from('lesson_submissions')
+    .select('id, lessons!inner(type)', { count: 'exact', head: true })
+    .eq('classroom_id', classroomId)
+    .eq('lessons.type', 'laboratory')
+    .is('graded_at', null)
+  if (reviewError) throw reviewError
 
   const progressList = await getStudentProgressList(classroomId)
   const avgProgressPct = progressList.length
@@ -141,7 +127,7 @@ export async function getClassroomOverviewStats(classroomId) {
     avgProgressPct,
     unlockedTopics,
     totalTopics,
-    pendingSubmissions,
+    pendingSubmissions: pendingSubmissions ?? 0,
   }
 }
 // Count only current classroom members, never infer counts from rounded rates.

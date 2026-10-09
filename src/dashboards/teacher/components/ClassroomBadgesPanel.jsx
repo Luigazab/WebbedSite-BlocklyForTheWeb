@@ -1,11 +1,15 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Award, Loader2 } from 'lucide-react'
+import { Award, Loader2, Plus } from 'lucide-react'
 import { toast } from 'sonner'
 import { createClassroomBadgeRule, getBadgeLibrary, getClassroomBadgeRules, setClassroomBadgeActive } from '../../../services/classroomBadgeService'
+
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../../../components/ui/dialog'
+import { Button } from '../../../components/ui/button'
 
 const emptyForm = { name: '', description: '', image_url: '', criterion: 'topic_completed', course_id: '', topic_id: '', xp_target: '' }
 
 export default function ClassroomBadgesPanel({ classroomId, courses, topics, onAwarded }) {
+  const [showForm, setShowForm] = useState(false)
   const [rules, setRules] = useState([])
   const [library, setLibrary] = useState([])
   const [form, setForm] = useState(emptyForm)
@@ -44,6 +48,7 @@ export default function ClassroomBadgesPanel({ classroomId, courses, topics, onA
       setForm(emptyForm)
       await load()
       await onAwarded()
+      setShowForm(false)
       toast.success('Badge created. Eligible students have been awarded automatically.')
     } catch (err) { setError(err.message) }
     finally { setBusy(false) }
@@ -54,10 +59,13 @@ export default function ClassroomBadgesPanel({ classroomId, courses, topics, onA
     catch (err) { setError(err.message) }
     finally { setBusy(false) }
   }
-  return <div className="grid gap-6 lg:grid-cols-2">
-    <form onSubmit={save} className="space-y-4 rounded-2xl border border-slate-200 bg-white p-6">
-      <h2 className="flex items-center gap-2 text-lg font-bold"><Award className="text-amber-600" /> Create a Badge</h2>
-      <p className="text-sm text-slate-500">Students earn badges automatically. Students who already meet the requirement receive the badge when you create it.</p>
+  return <div className="space-y-4">
+    <header className="flex items-center justify-between gap-3"><h2 className="text-lg font-bold">Classroom Badges</h2><Button onClick={() => { setForm(emptyForm); setError(''); setShowForm(true) }}><Plus size={16} /> Create badge</Button></header>
+    {error && !showForm && <p role="alert" className="text-sm text-red-600">{error}</p>}
+    <Dialog open={showForm} onOpenChange={open => { if (!busy) setShowForm(open) }}>
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl" showCloseButton={!busy}>
+        <DialogHeader><DialogTitle>Create a badge</DialogTitle><DialogDescription>Students earn badges automatically when they meet the requirement.</DialogDescription></DialogHeader>
+    <form onSubmit={save} className="space-y-4">
       <label className="text-sm font-semibold">Badge name<input required maxLength={80} value={form.name} onChange={e => update('name', e.target.value)} className="mt-1 w-full rounded-lg border p-2" /></label>
       <label className="text-sm font-semibold">Description<textarea maxLength={500} value={form.description} onChange={e => update('description', e.target.value)} className="mt-1 w-full rounded-lg border p-2" /></label>
       <label className="text-sm font-semibold">Award for<select value={form.criterion} onChange={e => update('criterion', e.target.value)} className="mt-1 w-full rounded-lg border p-2">
@@ -80,7 +88,9 @@ export default function ClassroomBadgesPanel({ classroomId, courses, topics, onA
       {!courses.length && <p className="text-sm text-amber-700">Assign a course before creating badges.</p>}
       <button disabled={busy || !courses.length} className="btn btn-primary flex items-center gap-2 disabled:opacity-50">{busy && <Loader2 size={16} className="animate-spin" />} {busy ? 'Saving…' : 'Create Badge'}</button>
     </form>
-    <section className="space-y-4"><h2 className="text-lg font-bold">Classroom Badges</h2>
+      </DialogContent>
+    </Dialog>
+    <section className="grid gap-4 md:grid-cols-2">
       {loading && <p className="text-sm text-slate-500">Loading badges…</p>}
       {!loading && !rules.length && <p className="text-sm text-slate-500">No badges created yet.</p>}
       {rules.map(rule => <article key={rule.id} className="flex items-start gap-4 rounded-2xl border border-slate-200 bg-white p-5">

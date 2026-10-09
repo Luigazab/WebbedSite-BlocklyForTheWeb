@@ -6,9 +6,10 @@ export async function getStudentReview(classroomId, studentId) {
   return data
 }
 
-export async function saveLessonSubmission({ lessonId, files, stepId = null, finish = true }) {
-  const { data, error } = await supabase.rpc('save_lesson_submission', {
+export async function saveLessonSubmission({ lessonId, files, stepId = null, finish = true, activeSeconds = null, deviceFactor = null }) {
+  const { data, error } = await supabase.rpc('save_lesson_submission_timed', {
     p_lesson: lessonId, p_files: files, p_step: stepId, p_finish: finish,
+    p_active_seconds: activeSeconds, p_device_factor: deviceFactor,
   })
   if (error) throw error
   return Array.isArray(data) ? data[0] : data

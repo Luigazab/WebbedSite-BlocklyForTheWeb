@@ -1,5 +1,3 @@
-import { AppBreadcrumb } from "#components/common/breadcrumb";
-import { LessonChip } from "#components/common/LessonChip";
 import { Button } from "#components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "#components/ui/dropdown-menu";
 import { useClassroom } from "#hooks/useClassroom";
@@ -8,10 +6,9 @@ import { useTeacherOverview } from "#hooks/useTeacherOverview";
 import { useAuthStore } from "@/store/authStore";
 import { useCopyCode } from "@/utils/copyCode";
 import { formatTimeAgo } from "@/utils/dateFormat";
-import { Activity, Award, BookOpen, ClipboardCheck, FlaskConical, Loader2, Lock, Megaphone, MonitorPlay, Plus, Users } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { Activity, Award, BookOpen, ClipboardCheck, FlaskConical, Loader2, Megaphone, MonitorPlay, Plus, Users } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
-import { toast } from "sonner";
 import LessonDetailsModal from "../components/LessonDetailsModal";
 import AssignCurriculumModal from "../components/AssignCurriculumModal";
 import ClassroomBadgesPanel from '../components/ClassroomBadgesPanel';
@@ -19,6 +16,9 @@ import PostFeed from '../../../components/shared/PostFeed';
 import useClassroomLivePosts from '../../../hooks/useClassroomLivePosts';
 import ClassroomStudentsPanel from '../components/ClassroomStudentsPanel';
 import StudentProgressModal from '../components/StudentProgressModal';
+import ClassroomCurriculum from '../../../components/classroom/ClassroomCurriculum';
+import CourseTopicsModal from '../components/CourseTopicsModal';
+import TopicProgressionModal from '../components/TopicProgressionModal';
 
 const dropdownItems = [
   {title: 'Lecture',    icon:BookOpen,        to:'/teacher/lecture/create'   },
@@ -42,12 +42,14 @@ export default function ClassroomDetail() {
   const [selectedLesson, setSelectedLesson] = useState(null)
   const [selectedStudent, setSelectedStudent] = useState(null)
   const [showAssignModal, setShowAssignModal] = useState(false)
+  const [topicGroup, setTopicGroup] = useState(null)
+  const [progressionTopic, setProgressionTopic] = useState(null)
 
   const { currentClassroom, detailLoading, classroomPosts, fetchClassroomDetail, fetchClassroomPosts, handleCreatePost, handleLikePost, handleCommentOnPost, fetchMoreClassroomPosts, handleRegenerateCode, hasMorePosts, postsLoading } = useClassroom();
 
-  const { classroomCourses, topics, loading: curriculumLoading, assigning, masterCourses, fetchMasterCourses, handleAssignCourses, fetchClassroomCurriculum, handleUnlockTopic, handleCreateTopic } = useCurriculum();
+  const { classroomCourses, topics, loading: curriculumLoading, assigning, masterCourses, fetchMasterCourses, handleAssignCourses, fetchClassroomCurriculum, handleUnlockTopic } = useCurriculum();
 
-  const { stats, studentProgress, lessonCompletion, loading: overviewLoading, fetchOverview } = useTeacherOverview();
+  const { studentProgress, lessonCompletion, loading: overviewLoading, fetchOverview } = useTeacherOverview();
 
   useEffect(() => {
     if (!classroomId) return
@@ -58,23 +60,8 @@ export default function ClassroomDetail() {
     fetchMasterCourses()
   }, [classroomId]);
 
-  const groupedCurriculum = useMemo(() => {
-    return classroomCourses.map((cc) => ({
-      courseId: cc.course_id,
-      course: cc.courses,
-      sequenceOrder: cc.sequence_order,
-      topics: topics.filter((t) => t.courseId === cc.course_id),
-    }))
-  }, [classroomCourses, topics])
-
-  const onAddWeek = async () => {
-    if (!classroomCourses) {
-      toast.error('Assign a curriculum first before adding weeks.')
-      return
-    }
-    const title = window.prompt('Title for the new week?')
-    if (!title) return
-    await handleCreateTopic(classroomId, classroomCourses.course_id, { title, description: '' })
+  const refreshClassroom = async () => {
+    await Promise.all([fetchClassroomCurriculum(classroomId), fetchOverview(classroomId)])
   }
 
   const onAssignSubmit = async ({ course_ids }) => {
@@ -100,14 +87,7 @@ export default function ClassroomDetail() {
   }
 
   return(
-    <div className="p-6 space-y-6">
-      <AppBreadcrumb
-        items={[
-          { label: 'Home', href: '/teacher/' },
-          { label: 'Classrooms', href: '/teacher/classrooms' },
-          { label: currentClassroom?.name ?? 'Classroom', href: `/teacher/classrooms/${classroomId}` },
-        ]}
-      />
+    <div className="p-6 space-y-6 max-w-7xl mx-auto">
       <section className="relative overflow-hidden rounded-3xl border border-border border-b-4 border-b-slate-400 shadow bg-[url('/classroom_bg.png')] bg-cover p-8 text-sky-800">
         <div className="relative flex flex-wrap items-end justify-between gap-6">
           <div className="max-w-2xl">
@@ -146,12 +126,6 @@ export default function ClassroomDetail() {
         </div>
       </section>
 
-      <section className="grid gap-4 md:grid-cols-4">
-        <StatCard label="Students" value={stats?.studentCount ?? '—'} sub="enrolled" />
-        <StatCard label="AVG. Progress" value={`${stats?.avgProgressPct ?? 0}%`} sub="across topics" progress={stats?.avgProgressPct ?? 0} />
-        <StatCard label="Active Topics" value={`${stats?.unlockedTopics ?? 0}/${stats?.totalTopics ?? 0}`} sub="unlocked" />
-        <StatCard label="Pending" value={stats?.pendingSubmissions ?? 0} sub="in-progress quizzes" accent />
-      </section>
 
       <div className="border-b border-border">
         <div className="flex gap-1 overflow-x-auto">
@@ -187,7 +161,6 @@ export default function ClassroomDetail() {
             <div className="flex items-center justify-between">
               <h2 className="font-display text-xl font-semibold">Curriculum</h2>
               <div className="flex gap-2">
-                <Button variant="outline" size="sm" onClick={onAddWeek}>Add</Button>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="default" size="sm" className="gap-2">
@@ -225,126 +198,12 @@ export default function ClassroomDetail() {
               </div>
             )}
  
-            {!curriculumLoading && topics.length > 0 && (
-              <div className="space-y-8">
-                {groupedCurriculum.map((group) => (
-                  <div key={group.courseId} className="space-y-4">
-                    <div
-                      className="flex items-center gap-3 rounded-xl border border-border p-3"
-                      style={{ borderLeft: `4px solid ${group.course?.color || '#94a3b8'}` }}
-                    >
-                      {group.course?.image_src ? (
-                        <img
-                          src={group.course.image_src ? `https://ffnjdqoiaywleodqswnp.supabase.co/storage/v1/object/public/${group.course.image_src}` : '/icon.png'}
-                          alt={group.course.title}
-                          className="w-10 h-10 rounded-lg object-cover object-center"
-                        />
-                      ) : (
-                        <div
-                          className="grid size-10 place-items-center rounded-lg text-sm font-bold text-white"
-                          style={{ backgroundColor: group.course?.color || '#94a3b8' }}
-                        >
-                          {group.sequenceOrder}
-                        </div>
-                      )}
-                      <div className="min-w-0 flex-1">
-                        <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-                          Course {group.sequenceOrder}
-                        </p>
-                        <h3 className="font-display text-base font-semibold truncate">
-                          {group.course?.title ?? 'Untitled course'}
-                        </h3>
-                      </div>
-                      <span className="text-xs text-muted-foreground shrink-0">
-                        {group.topics.length} {group.topics.length === 1 ? 'week' : 'weeks'}
-                      </span>
-                    </div>
-
-                    <ol className="space-y-4">
-                      {group.topics.map((t, i) => (
-                        <li
-                          key={t.id}
-                          className={`rounded-2xl border border-b-4 p-6 transition-colors border-b-slate-400 ${
-                            t.isUnlocked
-                              ? "border-border bg-card"
-                              : "border-border bg-card/50 opacity-40"
-                          }`}
-                        >
-                          <div className="flex flex-wrap items-start justify-between gap-4">
-                            <div className="flex items-start gap-4">
-                              <div
-                                className={`grid size-10 place-items-center rounded-lg font-mono text-sm font-semibold ${
-                                  t.isUnlocked
-                                    ? "bg-primary/15 text-primary"
-                                    : "bg-muted text-muted-foreground"
-                                }`}
-                              >
-                                {t.isUnlocked ? String(i + 1).padStart(2, "0") : <Lock color="blue"/>}
-                              </div>
-                              <div>
-                                <h3 className="font-display text-lg font-semibold">{t.title}</h3>
-                                <p className="mt-1 text-sm text-muted-foreground">{t.description}</p>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="mt-5 grid gap-2 sm:grid-cols-2">
-                            {t.lessons.map((l) => {
-                              const pct = lessonCompletion[l.id] ?? 0
-                              return (
-                                <button
-                                  type="button"
-                                  aria-label={`View details for ${l.title}`}
-                                  onClick={() => setSelectedLesson({ lesson: l, topic: t, classroomId })}
-                                  key={l.id}
-                                  className="flex items-center gap-3 rounded-xl border border-border bg-background/50 px-3 py-2.5 text-left hover:bg-muted focus-visible:outline-2 focus-visible:outline-primary"
-                                >
-                                  <LessonChip type={l.type} size="sm" />
-                                  <div className="min-w-0 flex-1">
-                                    <p className="truncate text-sm font-medium">{l.title}</p>
-                                    <div className="mt-1 h-1 overflow-hidden rounded-full bg-muted">
-                                      <div className="h-full rounded-full bg-primary" style={{ width: `${pct}%` }} />
-                                    </div>
-                                  </div>
-                                  <span className="font-mono text-[10px] text-muted-foreground">{pct}%</span>
-                                  <span className="text-xs font-semibold text-primary">View</span>
-                                </button>
-                              )
-                            })}
-                          </div>
-
-                          <div className="mt-4 flex items-center justify-between border-t border-border pt-4 text-xs text-muted-foreground">
-                            <span>
-                              Class-wide unlock:{" "}
-                              <span className="text-foreground">
-                                {t.isUnlocked
-                                  ? "all lessons available"
-                                  : "waiting on students to finish previous topic"}
-                              </span>
-                            </span>
-                            {t.isUnlocked ? (
-                              <button
-                                className="rounded-md border border-border px-2 py-1 hover:bg-surface-hover"
-                                onClick={() => navigate(`/teacher/topics/${t.id}/edit`)}
-                              >
-                                Edit
-                              </button>
-                            ) : (
-                              <button
-                                className="rounded-md border border-border px-2 py-1 hover:bg-surface-hover"
-                                onClick={() => handleUnlockTopic(t.id, t.title)}
-                              >
-                                Force unlock
-                              </button>
-                            )}
-                          </div>
-                        </li>
-                      ))}
-                    </ol>
-                  </div>
-                ))}
-              </div>
-            )}
+            {!curriculumLoading && <ClassroomCurriculum
+              classroomId={classroomId} courses={classroomCourses} topics={topics} teacher
+              lessonCompletion={lessonCompletion} onEditTopics={setTopicGroup}
+              onConfigureTopic={setProgressionTopic} onUnlockTopic={handleUnlockTopic}
+              onSelectLesson={(lesson, topic) => setSelectedLesson({ lesson, topic, classroomId })}
+            />}
           </div>
           <aside className="space-y-4">
             <div className="rounded-2xl border border-b-3 shadow border-border border-b-slate-400 bg-card p-5">
@@ -411,6 +270,9 @@ export default function ClassroomDetail() {
         onClose={() => setSelectedLesson(null)}
       />}
 
+      {topicGroup && <CourseTopicsModal key={topicGroup.courseId} classroomId={classroomId} group={topicGroup} onClose={() => setTopicGroup(null)} onSaved={refreshClassroom} />}
+      {progressionTopic && <TopicProgressionModal key={progressionTopic.id} classroomId={classroomId} topic={progressionTopic} topics={topics} courses={classroomCourses} onClose={() => setProgressionTopic(null)} onSaved={refreshClassroom} />}
+
       {showAssignModal && (
         <AssignCurriculumModal
           classroom={currentClassroom}
@@ -426,31 +288,6 @@ export default function ClassroomDetail() {
   )
 }
 
-function StatCard({label, value, sub, progress, accent}){
-  return(
-    <div className={`shadow border-b-4 rounded-2xl border p-5 ${
-        accent
-          ? "border-primary/40 bg-linear-to-br from-primary/15 to-transparent"
-          : "border-border border-b-slate-400 bg-card"
-      }`}
-    >
-      <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-        {label}
-      </p>
-      <p className={`mt-2 font-display text-3xl font-black ${accent ? "text-primary-glow" : ""}`}>
-        {value}
-      </p>
-      {sub && <p className="mt-1 text-xs text-muted-foreground">{sub}</p>}
-      {typeof progress === "number" && (
-        <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-muted">
-          <div className="h-full rounded-full bg-blue-300 transition-all"
-            style={{ width: `${progress}%` }}
-          />
-        </div>
-      )}
-    </div>
-  )
-}
 function ActivityItem({ name, verb, thing, when, tone }) {
   const dot =
     tone === "success" ? "bg-green-700"

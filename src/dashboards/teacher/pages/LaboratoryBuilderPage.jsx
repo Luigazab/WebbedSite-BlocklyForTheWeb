@@ -24,6 +24,7 @@ import { Link, useNavigate, useParams, useSearchParams } from "react-router";
 import BackButton from "#components/common/BackButton";
 import SwitchButton from "#components/editor/SwitchButton";
 import { toast } from "sonner";
+import { validateWorkspaceStructure } from "@/utils/validation/workspaceStructure";
 
 const uid = () => Math.random().toString(36).slice(2, 10);
 const makeFile = (filename = "index.html", blocks_json = null) => ({ id: uid(), filename, blocks_json });
@@ -58,6 +59,10 @@ const LaboratoryBuilderPage = ({ context = "teacher" }) => {
   const [saving, setSaving] = useState(false);
   const [referenceImageUrl, setReferenceImageUrl] = useState("");
   const [expectedBlocks, setExpectedBlocks] = useState(null);
+  const [expectedFilename, setExpectedFilename] = useState(null);
+  const [requiredSelector, setRequiredSelector] = useState("");
+  const [requiredText, setRequiredText] = useState("");
+  const [requiredCode, setRequiredCode] = useState("");
   const [files, setFiles] = useState([makeFile()]);
   const [activeFileId, setActiveFileId] = useState(null);
   const [filesWithCode, setFilesWithCode] = useState([]);
@@ -117,6 +122,10 @@ const LaboratoryBuilderPage = ({ context = "teacher" }) => {
         setDescription(lab.description || "");
         setReferenceImageUrl(lab.referenceImageUrl || "");
         setExpectedBlocks(lab.expectedBlocks || null);
+        setExpectedFilename(lab.expectedFilename || loadedFiles[0]?.filename || null);
+        setRequiredSelector(lab.requiredSelector || "");
+        setRequiredText(lab.requiredText || "");
+        setRequiredCode(lab.requiredCode || "");
         setFiles(loadedFiles);
         setActiveFileId(loadedFiles[0]?.id ?? null);
         setPreviewFileId(loadedFiles.find((file) => file.filename.endsWith(".html"))?.id ?? loadedFiles[0]?.id ?? null);
@@ -201,6 +210,8 @@ const LaboratoryBuilderPage = ({ context = "teacher" }) => {
     if (!/^\d+$/.test(baseXp) || Number(baseXp) <= 0) return addToast("Base XP must be a positive whole number.", "error");
     if (!selectedTopic) return addToast("Select a topic for this laboratory.", "error");
     if (!expectedBlocks) return addToast("Capture the final expected workspace before saving.", "error");
+    if (!validateWorkspaceStructure(expectedBlocks, expectedBlocks).passed) return addToast("Capture a workspace with at least one required block.", "error");
+    if (requiredText.trim() && !requiredSelector.trim()) return addToast("Choose an HTML selector for required text.", "error");
 
     setSaving(true);
     try {
@@ -215,6 +226,10 @@ const LaboratoryBuilderPage = ({ context = "teacher" }) => {
           description,
           referenceImageUrl,
           expectedBlocks,
+          expectedFilename,
+          requiredSelector: requiredSelector.trim(),
+          requiredText: requiredText.trim(),
+          requiredCode: requiredCode.trim(),
           files: latestFiles.map(({ filename, blocks_json }) => ({ filename, blocks_json })),
         }),
       });
@@ -251,8 +266,8 @@ const LaboratoryBuilderPage = ({ context = "teacher" }) => {
           <Button variant='ghost'>
             <Sun size={20}/>Light Mode
           </Button>
-          <Button variant='secondary'>
-            Save Laboratory
+          <Button variant='secondary' onClick={handleSave} disabled={saving}>
+            {saving ? 'Saving…' : 'Save Laboratory'}
           </Button>
         </div>
       </div>
@@ -334,10 +349,17 @@ const LaboratoryBuilderPage = ({ context = "teacher" }) => {
                 </div>
                 <Button type="button" variant={expectedBlocks ? "secondary" : "primary"} className="w-full" onClick={() => {
                   setExpectedBlocks(workspace.getWorkspaceState?.());
+                  setExpectedFilename(activeFile?.filename ?? null);
                   addToast("Final validator captured.", "success");
                 }}>
                   <Check /> {expectedBlocks ? "Validator Captured" : "Capture Final Validator"}
                 </Button>
+                <div className="space-y-2 rounded-xl border p-3">
+                  <p className="text-xs font-bold text-slate-700">Optional output checks</p>
+                  <label className="block text-xs">HTML selector<input className="mt-1 w-full rounded border px-2 py-1" value={requiredSelector} onChange={event => setRequiredSelector(event.target.value)} placeholder="h1" /></label>
+                  <label className="block text-xs">Text in that element<input className="mt-1 w-full rounded border px-2 py-1" value={requiredText} onChange={event => setRequiredText(event.target.value)} placeholder="Hello World" /></label>
+                  <label className="block text-xs">Required CSS or code fragment<input className="mt-1 w-full rounded border px-2 py-1" value={requiredCode} onChange={event => setRequiredCode(event.target.value)} placeholder="text-align: center" /></label>
+                </div>
               </div>
             </div>
             )}

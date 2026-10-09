@@ -572,6 +572,9 @@ body {
     display: none !important;
     visibility: hidden !important;
 }
+summary::-webkit-details-marker {
+  display: none;
+}
 /* TIPTAP CSS */
 /* ─── TipTap lesson content renderer ─────────────────────────────────────────
    Add these rules to your index.css (or App.css).

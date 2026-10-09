@@ -1,7 +1,7 @@
 import { supabase } from "@/supabaseClient"
 import { xpService } from './xpService'
 
-export async function completeLesson({ userId, classroomId, lessonId, topicId, score = 100 }) {
+export async function completeLesson({ userId, classroomId, lessonId, score = 100 }) {
   const completion = await xpService.completeLesson({ userId, lessonId, score })
   if (!classroomId) return { totalXp: completion.course_total_xp, level: completion.new_level }
   const { data: progress, error } = await supabase.from('user_progress')
@@ -9,9 +9,8 @@ export async function completeLesson({ userId, classroomId, lessonId, topicId, s
   if (error) throw error
   const result = { totalXp: progress.total_xp, level: progress.current_level }
  
-  const { error: unlockErr } = await supabase.rpc('try_auto_unlock_next_topic', { p_topic_id: topicId })
-  if (unlockErr) throw unlockErr
- 
+  // The completion trigger evaluates required core work for every eligible
+  // class member and unlocks the next topic in the same transaction.
   return result
 }
 

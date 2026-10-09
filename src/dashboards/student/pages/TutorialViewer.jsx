@@ -1,4 +1,5 @@
 import { validateTutorialCode } from '../../../utils/validation/tutorialCodeValidation'
+import { validateWorkspaceStructure } from '../../../utils/validation/workspaceStructure'
 import { useRemiHighlight } from '../../../hooks/useRemiHighlights'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate, useParams } from 'react-router'
@@ -12,6 +13,7 @@ import { defineFileReferenceBlocks } from '../../../blockly/fileReferenceBlocks'
 import { useAuthStore } from '../../../store/authStore'
 import { useUIStore } from '../../../store/uiStore'
 import { getOwnSubmissions, saveLessonSubmission } from '../../../services/studentReviewService'
+import { useActivityTiming } from '../../../hooks/useActivityTiming'
 import { ArrowLeft, Trophy, Loader2, AlertCircle, Clock } from 'lucide-react'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -131,6 +133,7 @@ function CompletionPopup({ tutorial, badge, onContinue, onBack }) {
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 export default function TutorialViewer({ tutorialIdOverride = null, preview = false }) {
+  const getTiming = useActivityTiming()
   const { tutorialId: routeTutorialId } = useParams()
   const tutorialId = tutorialIdOverride ?? routeTutorialId
   const navigate       = useNavigate()
@@ -301,7 +304,7 @@ export default function TutorialViewer({ tutorialIdOverride = null, preview = fa
       blocks_json: file.id === activeFileId ? workspace.getWorkspaceState?.() ?? null : file.blocks_json,
       code: file.id === activeFileId && workspace.getWorkspace() ? codeGeneratorService.generateCode(workspace.getWorkspace(), file.filename) : file.blocks_json ? codeGeneratorService.generateCodeFromState(file.blocks_json, file.filename) : file.code ?? '',
     }))
-    const saved = await saveLessonSubmission({ lessonId: tutorial.lesson_id, stepId: steps[currentStep].id, files: snapshot, finish: isCompleted })
+    const saved = await saveLessonSubmission({ lessonId: tutorial.lesson_id, stepId: steps[currentStep].id, files: snapshot, finish: isCompleted, ...getTiming() })
     savedSubmissions.current = [...savedSubmissions.current.filter(item => item.id !== saved.id), saved]
   }
   // ── Step navigation ────────────────────────────────────────────────────────
@@ -315,11 +318,21 @@ export default function TutorialViewer({ tutorialIdOverride = null, preview = fa
       const filename = tutorial.block_tutorial_step_files?.find(item => item.id === solution.file_id)?.filename
       const file = stepFiles.find(file => file.filename === filename)
       if (!file) { addToast('A required file is missing.', 'error'); return false }
+      if (tutorial?.type === 'block' && solution.expected_blocks_json) {
+        const state = file.id === activeFileId ? workspace.getWorkspaceState?.() : file.blocks_json
+        const structure = validateWorkspaceStructure(state, solution.expected_blocks_json)
+        if (!structure.passed) {
+          addToast(file.filename + ': ' + structure.failures.join(' • '), 'error')
+          return false
+        }
+      }
       const code = file.id === activeFileId
         ? codeGeneratorService.generateCode(workspace.getWorkspace(), file.filename)
         : codeGeneratorService.generateCodeFromState(file.blocks_json, file.filename)
-      const result = validateTutorialCode(code, solution.expected_code, solution.test_cases ?? [])
-      if (!result.passed) { addToast(file.filename + ': ' + result.failures.join(' • '), 'error'); return false }
+      if ((solution.test_cases?.length ?? 0) > 0 || (!solution.expected_blocks_json && solution.expected_code != null)) {
+        const result = validateTutorialCode(code, solution.expected_code, solution.test_cases ?? [])
+        if (!result.passed) { addToast(file.filename + ': ' + result.failures.join(' • '), 'error'); return false }
+      }
     }
     return true
   }

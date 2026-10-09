@@ -6,6 +6,9 @@ import { codeGeneratorService } from "@/services/codeGenerator.service";
 import { useUIStore } from "@/store/uiStore";
 import { useAuthStore } from "@/store/authStore";
 import { getOwnSubmissions, saveLessonSubmission } from "@/services/studentReviewService";
+import { validateWorkspaceStructure } from "@/utils/validation/workspaceStructure";
+import { validateTutorialCode } from "@/utils/validation/tutorialCodeValidation";
+import { useActivityTiming } from "@/hooks/useActivityTiming";
 import { ArrowLeft, CheckCircle2, FlaskConical, Image, XCircle } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
@@ -22,9 +25,8 @@ const parseLabInstruction = (value) => {
   }
 };
 
-const sameWorkspace = (left, right) => JSON.stringify(left ?? {}) === JSON.stringify(right ?? {});
-
 const LaboratoryViewer = ({ lesson, onNext, navigation, preview = false }) => {
+  const getTiming = useActivityTiming();
   const navigate = useNavigate();
   const addToast = useUIStore((state) => state.addToast);
   const profile = useAuthStore((state) => state.profile);
@@ -109,13 +111,34 @@ const LaboratoryViewer = ({ lesson, onNext, navigation, preview = false }) => {
     setFilesWithCode((prev) => prev.map((item) => item.id === activeFileId ? { ...item, generatedCode: code } : item));
   };
 
+  const checkObjectives = () => {
+    const expectedFile = files.find(file => file.filename === (lab.expectedFilename || files[0]?.filename));
+    const state = expectedFile?.id === activeFileId ? workspace.getWorkspaceState?.() : expectedFile?.blocks_json;
+    const structure = validateWorkspaceStructure(state, lab.expectedBlocks);
+    if (!structure.passed) return structure;
+    const checks = [];
+    if (lab.requiredSelector) checks.push(lab.requiredText
+      ? { type: 'htmlText', selector: lab.requiredSelector, value: lab.requiredText, message: `Put “${lab.requiredText}” in ${lab.requiredSelector}.` }
+      : { type: 'htmlExists', selector: lab.requiredSelector, message: `Add a ${lab.requiredSelector} element.` });
+    if (lab.requiredCode) checks.push({ type: 'codeIncludes', value: lab.requiredCode, message: `Include ${lab.requiredCode} in the output.` });
+    if (!checks.length) return structure;
+    const outputFiles = files.map(file => ({
+      filename: file.filename,
+      generatedCode: file.id === activeFileId && workspace.getWorkspace()
+        ? codeGeneratorService.generateCode(workspace.getWorkspace(), file.filename)
+        : codeGeneratorService.generateCodeFromState(file.blocks_json, file.filename),
+    }));
+    const output = codeGeneratorService.combineFilesForPreview(outputFiles, 'index.html');
+    return validateTutorialCode(output, '', checks);
+  };
+
   const checkWork = async () => {
-    const current = workspace.getWorkspaceState?.();
     if (!lab.expectedBlocks) {
       addToast("No validator was saved for this laboratory yet.", "error");
       return;
     }
-    const passed = sameWorkspace(current, lab.expectedBlocks);
+    const result = checkObjectives();
+    const passed = result.passed;
     setValidationState(passed ? "passed" : "failed");
     if (!preview && passed && profile?.id && lesson?.id) {
       try {
@@ -125,20 +148,27 @@ const LaboratoryViewer = ({ lesson, onNext, navigation, preview = false }) => {
         return;
       }
     }
-    addToast(passed ? "Laboratory complete!" : "Not quite yet. Compare your blocks with the goal.", passed ? "success" : "error");
+    addToast(passed ? "Objective checks passed. Your teacher can now review your design." : result.failures.join(' • '), passed ? "success" : "error");
   };
 
   const submitWork = async () => {
     if (preview || !profile?.id || submittingRef.current || submission?.graded_at) return;
+    const objective = checkObjectives();
+    if (!objective.passed) {
+      setValidationState("failed");
+      addToast(objective.failures.join(' • '), 'error');
+      return;
+    }
+    setValidationState("passed");
     submittingRef.current = true; setSubmitting(true);
     try {
       const snapshot = flushActiveFile().map(file => ({
         filename: file.filename, blocks_json: file.blocks_json,
         code: file.id === activeFileId && workspace.getWorkspace() ? codeGeneratorService.generateCode(workspace.getWorkspace(), file.filename) : codeGeneratorService.generateCodeFromState(file.blocks_json, file.filename),
       }));
-      const saved = await saveLessonSubmission({ lessonId: lesson.id, files: snapshot });
+      const saved = await saveLessonSubmission({ lessonId: lesson.id, files: snapshot, ...getTiming() });
       setSubmission(saved);
-      addToast('Laboratory submitted for teacher grading.', 'success');
+      addToast('Core work complete. Teacher review is pending for your grade.', 'success');
     } catch (error) { addToast(error.message || 'Could not submit your laboratory.', 'error'); throw error; }
     finally { submittingRef.current = false; setSubmitting(false); }
   };
@@ -168,7 +198,7 @@ const LaboratoryViewer = ({ lesson, onNext, navigation, preview = false }) => {
 
       <div className="flex flex-1 overflow-hidden">
         <aside className="w-80 shrink-0 overflow-y-auto border-r bg-white p-4 space-y-4">
-          {submission && <div className="rounded-xl border border-sky-200 bg-sky-50 p-4 text-sm"><p className="font-bold">{submission.graded_at ? `Teacher grade: ${submission.score}%` : 'Submitted — have yet to be graded'}</p>{submission.feedback && <p className="mt-2 whitespace-pre-wrap">{submission.feedback}</p>}</div>}
+          {submission && <div className="rounded-xl border border-sky-200 bg-sky-50 p-4 text-sm"><p className="font-bold">{submission.graded_at ? `Teacher grade: ${submission.score}%` : 'Core work complete · Awaiting teacher review'}</p>{submission.feedback && <p className="mt-2 whitespace-pre-wrap">{submission.feedback}</p>}</div>}
           <div className="rounded-xl border p-4">
             <div className="mb-2 flex items-center gap-2 text-sm font-bold text-slate-800">
               <FlaskConical className="size-4 text-emerald-500" /> Challenge

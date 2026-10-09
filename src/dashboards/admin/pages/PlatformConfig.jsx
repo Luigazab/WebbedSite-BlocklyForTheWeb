@@ -89,21 +89,20 @@ function AvatarPresetsTab() {
   const [deleting, setDeleting] = useState(null)
   const [error, setError] = useState('')
 
-  const BUCKET = 'avatars'
-  const FOLDER = 'presets'
+  const BUCKET = 'avatar-pool'
 
   const load = useCallback(async () => {
     setLoading(true); setError('')
     try {
-      const { data, error } = await supabase.storage.from(BUCKET).list(FOLDER, {
+      const { data, error } = await supabase.storage.from(BUCKET).list('', {
         sortBy: { column: 'created_at', order: 'asc' }
       })
       if (error) throw error
       const files = (data || []).filter(f => f.name !== '.emptyFolderPlaceholder')
       setAvatars(files.map(f => ({
         name: f.name,
-        url: supabase.storage.from(BUCKET).getPublicUrl(`${FOLDER}/${f.name}`).data.publicUrl,
-        path: `${FOLDER}/${f.name}`,
+        url: supabase.storage.from(BUCKET).getPublicUrl(f.name).data.publicUrl,
+        path: f.name,
       })))
     } catch (e) {
       setError(e.message)
@@ -117,7 +116,7 @@ function AvatarPresetsTab() {
     try {
       for (const file of files) {
         const ext = file.name.split('.').pop()
-        const path = `${FOLDER}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`
+        const path = `${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`
         const { error } = await supabase.storage.from(BUCKET).upload(path, file, { upsert: false })
         if (error) throw error
       }
@@ -146,8 +145,8 @@ function AvatarPresetsTab() {
         <div>
           <p className="text-sm font-semibold text-amber-800">Preset Avatar Pool</p>
           <p className="text-xs text-amber-700 mt-0.5">
-            Images stored here are randomly assigned to new users at sign-up.
-            The assignment logic reads from the <code className="bg-amber-100 px-1 rounded">avatars/presets/</code> folder.
+            Students can choose from these images during profile setup.
+            The avatar picker reads from the <code className="bg-amber-100 px-1 rounded">avatar-pool</code> bucket.
             Minimum recommended: 10–20 images for variety.
           </p>
         </div>
@@ -752,7 +751,7 @@ function LearnCategoriesTab() {
 // MAIN PAGE
 // ═══════════════════════════════════════════════════════════════════════════════
 const TABS = [
-  { key: 'avatars',     label: 'Avatar Presets',    icon: User,        desc: 'Default avatars for new users' },
+  { key: 'avatars',     label: 'Avatar Presets',    icon: User,        desc: 'Avatars students can choose during setup' },
   { key: 'badges',      label: 'Badge Library',     icon: Award,       desc: 'Preset images for teacher badges' },
   { key: 'categories',  label: 'Learn Categories',  icon: BookOpen,    desc: 'Organize the student learn page' },
 ]

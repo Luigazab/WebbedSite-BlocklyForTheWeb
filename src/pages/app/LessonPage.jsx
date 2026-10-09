@@ -3,14 +3,16 @@ import LectureContent from "./LectureContent";
 import QuizContent from "./QuizContent";
 import TutorialViewer from "../../dashboards/student/pages/TutorialViewer";
 import LaboratoryViewer from "../../dashboards/student/pages/LaboratoryViewer";
-import { useNavigate, useParams } from "react-router";
+import { useNavigate, useParams, useSearchParams } from "react-router";
 import { useLesson } from "../../hooks/useLesson";
 
 const LessonPage = ({ preview = false }) => {
   const { lesson, navigation, isLoading, error } = useLesson({ masterOnly: preview });
   const navigate    = useNavigate();
   const { courseSlug, id } = useParams();
-  const coursePath = preview ? `/teacher/courses/${id}` : `/student/learn/${courseSlug}`;
+  const [searchParams] = useSearchParams();
+  const classroomId = searchParams.get('classroomId');
+  const coursePath = preview ? `/teacher/courses/${id}` : classroomId ? `/student/classrooms/${classroomId}` : `/student/learn/${courseSlug}`;
   const lessonPath = (path) => preview ? path.replace(`/student/learn/${courseSlug}`, `/teacher/courses/${id}/view/${courseSlug}`) : path;
 
   if (isLoading) return <Loader />;

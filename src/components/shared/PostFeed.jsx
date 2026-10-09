@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router'
 import { toast } from 'sonner'
-import { Award } from 'lucide-react'
+import { Award, ThumbsUp } from 'lucide-react'
 
 export function ClassroomPost({ post, currentUserId, onLike, onComment, link = false }) {
   const [comment, setComment] = useState('')
@@ -15,15 +15,27 @@ export function ClassroomPost({ post, currentUserId, onLike, onComment, link = f
     catch { toast.error('Could not add your comment.') }
     finally { setBusy(false) }
   }
-  return <article className={`rounded-xl border bg-white p-5 space-y-4 ${post.type === 'badge_earned' ? 'border-amber-300' : 'border-slate-200'}`}>
+  return <article className={`rounded-xl border bg-white p-5 ${post.type === 'badge_earned' ? 'border-amber-300' : 'border-slate-200'}`}>
     {post.type === 'badge_earned' && <p className="flex items-center gap-2 text-sm font-bold text-amber-700"><Award size={18} /> Badge Earned</p>}
-    <header><p className="font-semibold">{post.author?.username ?? 'Classroom member'}</p>
-      <time className="text-xs text-slate-500">{new Date(post.created_at).toLocaleString()}</time></header>
-    <p className="whitespace-pre-wrap break-words">{post.content}</p>
-    {link && <Link className="text-blockly-purple underline text-sm" to={`/classroom-posts/${post.id}`}>Open post</Link>}
-    <button type="button" disabled={busy} className="text-sm text-blockly-purple" aria-pressed={likes.some(like => like.user_id === currentUserId)}
+    <header>
+      <div className='flex gap-2 items-center'>
+        <img src={post.author?.avatar_url ?? '/default-avatar.png'} alt="profile image" className="w-10 h-10 rounded-full object-cover object-center"/>
+        <span className='leading-tight'>
+          <p className="font-semibold">{post.author?.username ?? 'Classroom member'}</p>
+          <time className="text-xs text-slate-500">{new Date(post.created_at).toLocaleString()}</time>
+        </span>
+      </div>
+    </header>
+    <p className="whitespace-pre-wrap break-words m-4">{post.content}</p>
+    {/* {link && <Link className="text-blockly-purple underline text-sm" to={`/classroom-posts/${post.id}`}>Open post</Link>} */}
+    <button type="button" disabled={busy} 
+      className={`flex items-center gap-2 px-3 py-2 rounded text-sm font-semibold transition-colors
+        ${likes.some(like => like.user_id === currentUserId)
+          ? 'bg-blue-500 text-white hover:bg-blue-600'
+          : 'bg-none text-blue-600 hover:bg-blue-200'}
+      `} aria-pressed={likes.some(like => like.user_id === currentUserId)}
       onClick={async () => { setBusy(true); try { await onLike(post.id) } catch { toast.error('Could not update your like.') } finally { setBusy(false) } }}>
-      {likes.some(like => like.user_id === currentUserId) ? 'Unlike' : 'Like'} · {likes.length}
+      <ThumbsUp className="w-4 h-4" />{likes.length}
     </button>
     <ul className="space-y-2">{(post.comments ?? []).map(item => <li key={item.id} className="rounded-lg bg-slate-50 p-3 text-sm">
       <span className="font-semibold">{item.author?.username ?? 'Classroom member'}: </span><span className="whitespace-pre-wrap break-words">{item.content}</span>

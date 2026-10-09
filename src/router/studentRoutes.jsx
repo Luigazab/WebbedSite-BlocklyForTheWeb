@@ -19,7 +19,7 @@ import LearnLayout from '../pages/app/LearnLayout'
 import TopicsPage from '../pages/app/TopicsPage'
 import LecturePage from '../pages/app/LecturePage'
 import LessonPage from '../pages/app/LessonPage'
-import StudentGuildHub from '@/dashboards/student/pages/StudentGuildHub'
+import StudentClassroomHub from '@/dashboards/student/pages/StudentClassroomHub'
 import StudentClassrooms from '@/dashboards/student/pages/StudentClassrooms'
 
 
@@ -31,7 +31,7 @@ export const studentRoutes = [
       { index: true,                                        element: <StudentHome />              },
       { path: 'projects',                                   element: <ProjectsPage />             },
       { path: 'classrooms',                                 element: <StudentClassrooms />        },
-      { path: 'classrooms/:classroomId',                    element: <StudentGuildHub />   },
+      { path: 'classrooms/:classroomId',                    element: <StudentClassroomHub /> },
       { path: 'quiz',                                       element: <QuizAssessment />           },
       { path: 'quiz/result',                                element: <QuizResult />               },
       { path: 'docs',                                       element: <Documentation />            },
@@ -64,8 +64,8 @@ export const studentRoutes = [
     children: [
       { path: 'editor',                                     element: <BlockEditor />              },
       { path: 'editor/:id',                                 element: <BlockEditor />              },
-      { path: 'learn/:courseSlug/tutorial-:slug',element: <TutorialViewer />           },
-      { path: 'learn/:courseSlug/lab-:slug',     element: <TutorialViewer />           },
+      { path: 'learn/:courseSlug/tutorial-:slug',           element: <TutorialViewer />           },
+      { path: 'learn/:courseSlug/lab-:slug',                element: <TutorialViewer />           },
     ]
   }
 ]

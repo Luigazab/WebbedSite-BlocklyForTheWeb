@@ -61,9 +61,12 @@ export function normalizeTopic(row) {
     title:       row.title,
     description: row.description,
     order:       row.order,
+    isPublished: row.is_published,
     isUnlocked:  row.is_unlocked,
     unlockedAt:  row.unlocked_at,
     unlockedBy:  row.unlocked_by, // null = auto (class finished), else teacher id
+    courseSlug: row.courses?.slug,
+    courseTitle: row.courses?.title,
     lessons: (row.lessons ?? []).slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0)),
   }
 }
@@ -72,8 +75,9 @@ export async function getClassroomTopics(classroomId) {
   const { data, error } = await supabase
     .from('topics')
     .select(`
-      id, course_id, title, description, "order", is_unlocked, unlocked_at, unlocked_by,
-      lessons ( id, title, type, "order", is_published, base_xp, slug )
+      id, course_id, title, description, "order", is_published, is_unlocked, unlocked_at, unlocked_by,
+      courses:course_id ( slug, title ),
+      lessons ( id, title, type, "order", is_published, base_xp, slug, topic_track, required_for_topic, expected_minutes )
     `)
     .eq('classroom_id', classroomId)
     .eq('lessons.classroom_id', classroomId)
@@ -185,5 +189,17 @@ export async function createTopic(classroomId, courseId, { title, description })
 
 export async function teacherUnlockTopic(topicId) {
   const { error } = await supabase.rpc('teacher_unlock_topic', { p_topic_id: topicId })
+  if (error) throw error
+}
+
+export async function saveCourseTopics(classroomId, courseId, topics) {
+  const { error } = await supabase.rpc('configure_classroom_course_topics', {
+    p_classroom_id: classroomId,
+    p_course_id: courseId,
+    p_topics: topics.map(topic => ({
+      id: topic.id || null, title: topic.title.trim(), description: topic.description.trim(),
+      is_published: topic.isPublished,
+    })),
+  })
   if (error) throw error
 }

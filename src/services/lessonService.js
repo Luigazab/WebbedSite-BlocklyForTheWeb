@@ -21,6 +21,7 @@
   );
  */
 import { supabase } from "../supabaseClient";
+import { getClassroomTopicFlow } from './classroomFlowService';
 
 const slugify = (value) =>
   value
@@ -89,12 +90,12 @@ export const removeLessonById = async (lessonId) => {
  * Old one, format url to use slug and not id I think
  */
 
-const formatLessonUrl = (lesson, courseSlug) => {
+const formatLessonUrl = (lesson, courseSlug, classroomId = null) => {
   if (!lesson) return null;
-  return `/student/learn/${courseSlug}/${lesson.slug}`;
+  return `/student/learn/${courseSlug}/${lesson.slug}${classroomId ? `?classroomId=${encodeURIComponent(classroomId)}` : ''}`;
 };
 
-export const getLessonDetails = async (courseSlug, lessonSlug, { masterOnly = false } = {}) => {
+export const getLessonDetails = async (courseSlug, lessonSlug, { masterOnly = false, classroomId = null } = {}) => {
   const { data: course, error: courseError } = await supabase
     .from('courses')
     .select('id')
@@ -108,7 +109,7 @@ export const getLessonDetails = async (courseSlug, lessonSlug, { masterOnly = fa
     .from('lessons')
     .select(`
       id, title, created_at, slug, order, type,
-      topics!inner ( id, title, description, slug, course_id ),
+      topics!inner ( id, title, description, slug, course_id, classroom_id, is_unlocked ),
       lectures ( content, video_src, file_url ),
       quizzes (
         id, time_limit, passing_score,
@@ -122,7 +123,9 @@ export const getLessonDetails = async (courseSlug, lessonSlug, { masterOnly = fa
       author:profiles!lessons_author_fkey ( username, avatar_url )
     `)
     .eq('slug', lessonSlug);
-  if (masterOnly) lessonQuery = lessonQuery.is('classroom_id', null).is('topics.classroom_id', null);
+  if (masterOnly || !classroomId) lessonQuery = lessonQuery.is('classroom_id', null).is('topics.classroom_id', null);
+  else lessonQuery = lessonQuery.eq('classroom_id', classroomId).eq('topics.classroom_id', classroomId);
+  if (!masterOnly) lessonQuery = lessonQuery.eq('is_published', true);
   const { data: lessonData, error: lessonError } = await lessonQuery.single();
 
   if (lessonError) throw lessonError;
@@ -131,16 +134,23 @@ export const getLessonDetails = async (courseSlug, lessonSlug, { masterOnly = fa
   if (lessonData.topics.course_id !== course.id) {
     throw new Error(`Lesson "${lessonSlug}" does not belong to course "${courseSlug}".`);
   }
+  if (!masterOnly && lessonData.topics.classroom_id) {
+    await getClassroomTopicFlow(lessonData.topics.classroom_id);
+    if (!lessonData.topics.is_unlocked) throw new Error('This class topic has not opened yet.');
+  }
   const courseId = lessonData.topics.course_id;
 
   let navigationQuery = supabase
     .from('lessons')
-    .select('slug, type, topics!inner(slug, course_id)')
+    .select('slug, type, topics!inner(slug, course_id, is_unlocked)')
     .eq('topics.course_id', courseId)
     .order('order', { foreignTable: 'topics', ascending: true })
     .order('order', { ascending: true });
 
   if (masterOnly) navigationQuery = navigationQuery.is('classroom_id', null).is('topics.classroom_id', null);
+  else if (lessonData.topics.classroom_id) navigationQuery = navigationQuery
+    .eq('classroom_id', lessonData.topics.classroom_id).eq('topics.is_unlocked', true).eq('is_published', true);
+  else navigationQuery = navigationQuery.is('classroom_id', null).eq('is_published', true);
   const { data: allCourseLessons, error: allLessonsError } = await navigationQuery;
   if (allLessonsError) throw allLessonsError;
 
@@ -165,8 +175,8 @@ export const getLessonDetails = async (courseSlug, lessonSlug, { masterOnly = fa
       author:     lessonData.author,
     },
     navigation: {
-      previous: formatLessonUrl(prevLesson, courseSlug),
-      next:     formatLessonUrl(nextLesson, courseSlug),
+      previous: formatLessonUrl(prevLesson, courseSlug, classroomId),
+      next:     formatLessonUrl(nextLesson, courseSlug, classroomId),
     },
   };
 };

@@ -15,7 +15,7 @@ export default function AssignCurriculumModal({
   handleRegenerate,
 }) {
   const [selectedCourses, setSelectedCourses] = useState(
-    assignedCourses.map(course => course.id)
+    assignedCourses.filter(Boolean).map(course => course.id)
   )
 
   const [error, setError] = useState('')
@@ -32,10 +32,14 @@ export default function AssignCurriculumModal({
 
     setError('')
 
-    await onSubmit({
-      classroom_id: classroom.id,
-      course_ids: selectedCourses,
-    })
+    try {
+      await onSubmit({
+        classroom_id: classroom.id,
+        course_ids: selectedCourses,
+      })
+    } catch (cause) {
+      setError(cause.message || 'Could not save the course order.')
+    }
   }
 
   return (
@@ -51,11 +55,11 @@ export default function AssignCurriculumModal({
 
             <div>
               <h2 className="text-base font-bold text-slate-800">
-                Assign Curriculum
+                Manage Courses
               </h2>
 
               <p className="text-xs text-slate-400">
-                Assign courses to this classroom
+                Select courses and arrange their teaching order
               </p>
             </div>
           </div>
@@ -158,6 +162,7 @@ export default function AssignCurriculumModal({
             selected={selectedCourses}
             onChange={setSelectedCourses}
             maxCourses={4}
+            disabled={loading}
           />
 
           {/* Error */}
@@ -187,7 +192,7 @@ export default function AssignCurriculumModal({
               {loading ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
-                'Assign Curriculum'
+                'Save courses'
               )}
             </Button>
           </div>

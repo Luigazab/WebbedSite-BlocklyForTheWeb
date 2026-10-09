@@ -6,6 +6,7 @@ export default function CourseAssign({
   selected = [],
   onChange,
   maxCourses = 4,
+  disabled = false,
 }) {
   const selectedCourses = useMemo(
     () =>
@@ -71,6 +72,7 @@ export default function CourseAssign({
             <button
               key={course.id}
               type="button"
+              disabled={disabled}
               onClick={() => toggleCourse(course.id)}
               className={`flex items-start gap-3 rounded-xl border px-3 py-3 text-left transition-colors ${
                 active
@@ -124,7 +126,7 @@ export default function CourseAssign({
                 <button
                   type="button"
                   onClick={() => moveCourse(index, -1)}
-                  disabled={index === 0}
+                  disabled={disabled || index === 0}
                   className="grid size-6 place-items-center rounded-md border border-slate-200 text-xs text-slate-600 disabled:opacity-30"
                   aria-label={`Move ${course.title} up`}
                 >
@@ -134,7 +136,7 @@ export default function CourseAssign({
                 <button
                   type="button"
                   onClick={() => moveCourse(index, 1)}
-                  disabled={index === selectedCourses.length - 1}
+                  disabled={disabled || index === selectedCourses.length - 1}
                   className="grid size-6 place-items-center rounded-md border border-slate-200 text-xs text-slate-600 disabled:opacity-30"
                   aria-label={`Move ${course.title} down`}
                 >

@@ -41,3 +41,14 @@ export function LessonTypeBadge({ type }) {
     </div>
   );
 }
+
+export function LessonPlainChip({ type }) {
+  const meta = lessonTypeMeta[type];
+  return (
+    <div
+      className={`place-items-center font-mono text-[10px] font-bold uppercase tracking-widest`}
+    >
+      {lessonIcons[type]}
+    </div>
+  );
+}
