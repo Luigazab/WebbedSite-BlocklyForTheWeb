@@ -3,7 +3,7 @@ import { authService } from '../services/auth.service'
 
 export const useAuthStore = create((set) => ({
   user: null,
-  profile: null,   // { id, username, email, role, bio, avatar_url, last_login }
+  profile: null,   // { id, username, firstname, lastname, email, role, avatar_url, onboarding_completed_at, ... }
   loading: true,
   // inside create((set) => ({
   setProfile: (profile) => set({ profile }),
