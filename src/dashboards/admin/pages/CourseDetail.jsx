@@ -7,6 +7,7 @@ import { Plus, ChevronDown } from "lucide-react";
 import { LessonTypeBadge } from "#components/common/LessonChip";
 import { lessonTypeMeta } from "#lib/lesson-type";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "#components/ui/dropdown-menu";
+import { coursePreviewPath } from '@/utils/lessonRoutes';
 
 
 export default function CourseDetail({ readOnly = false }) {
@@ -349,7 +350,7 @@ export default function CourseDetail({ readOnly = false }) {
                     <div className="flex gap-2">
                       <button 
                         className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-                        onClick={() => navigate(readOnly ? `/teacher/courses/${id}/view/${course.slug}/${l.slug}` : `/admin/${l.type}/edit/${l.id}`)}
+                        onClick={() => navigate(readOnly ? coursePreviewPath(id, course.slug, l.slug) : `/admin/${l.type}/edit/${l.id}`)}
                       >
                         {readOnly ? "View" : "Edit"}
                       </button>

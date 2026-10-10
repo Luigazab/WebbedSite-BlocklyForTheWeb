@@ -20,6 +20,8 @@ import ExercisePage from '@/pages/editor/ExercisePage'
 import CoursesLibrary from '@/dashboards/admin/pages/CoursesLibrary'
 import CourseDetail from '@/dashboards/admin/pages/CourseDetail'
 import LessonPage from '@/pages/app/LessonPage'
+import LessonLayout from '../components/layout/LessonLayout'
+import LegacyLessonRedirect from '../components/layout/LegacyLessonRedirect'
 
 export const teacherRoutes = [
   {
@@ -27,7 +29,6 @@ export const teacherRoutes = [
     children: [
       { path: 'courses', element: <CoursesLibrary readOnly /> },
       { path: 'courses/:id', element: <CourseDetail readOnly /> },
-      { path: 'courses/:id/view/:courseSlug/:slug', element: <LessonPage preview /> },
       { index: true,                                       element: <TeacherHome /> },
       { path: 'projects',                                  element: <ProjectsPage /> },
       { path: 'content',                                   element: <ContentManagement /> },
@@ -43,6 +44,13 @@ export const teacherRoutes = [
 //       { path: 'settings',                                  element: <SettingsPage /> },
     ]
   },
+  {
+    element: <LessonLayout />,
+    children: [
+      { path: 'lessons/:id/:courseSlug/:slug', element: <LessonPage preview /> },
+    ],
+  },
+  { path: 'courses/:id/view/:courseSlug/:slug', element: <LegacyLessonRedirect preview /> },
   {
     element: <EditorLayout />,
     children: [

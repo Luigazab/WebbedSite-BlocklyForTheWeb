@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router'
 import { getClassroomTopics, teacherUnlockTopic } from '../../services/curriculumService'
 import { getClassroomTopicFlow, setClassroomLessonRule, setClassroomLessonTargetMinutes, setClassroomTopicExemption } from '../../services/classroomFlowService'
+import { lessonPath } from '../../utils/lessonRoutes'
 
 const TRACKS = ['core', 'beginner', 'intermediate', 'advanced']
 const label = value => value ? value[0].toUpperCase() + value.slice(1).replaceAll('_', ' ') : 'Unclassified'
@@ -90,7 +91,7 @@ export default function ClassroomTopicFlow({ classroomId, teacher = false, curri
                     <select aria-label={`Track for ${lesson.title}`} disabled={busy} value={lesson.topic_track || 'core'} onChange={event => act(() => setClassroomLessonRule(lesson.id, event.target.value, event.target.value === 'core' && Boolean(lesson.required_for_topic)))} className="rounded border px-1 py-1 text-xs">{TRACKS.map(value => <option key={value} value={value}>{label(value)}</option>)}</select>
                     {track === 'core' && <label className="flex items-center gap-1 text-xs"><input type="checkbox" checked={Boolean(lesson.required_for_topic)} disabled={busy} onChange={event => act(() => setClassroomLessonRule(lesson.id, 'core', event.target.checked))} /> Required</label>}
                     <label className="flex items-center gap-1 text-xs">Target min <input type="number" min="1" max="240" defaultValue={lesson.expected_minutes ?? 20} key={`${lesson.id}:${lesson.expected_minutes}`} disabled={busy} className="w-14 rounded border px-1 py-1" onBlur={event => { const value = Number(event.target.value); if (value !== lesson.expected_minutes) act(() => setClassroomLessonTargetMinutes(lesson.id, value)) }} /></label>
-                  </span> : topic.is_unlocked && curriculumTopic.courseSlug ? <Link className="font-semibold text-primary underline" to={`/student/learn/${curriculumTopic.courseSlug}/${lesson.slug}?classroomId=${encodeURIComponent(classroomId)}`}>Open</Link> : <span className="text-xs text-muted-foreground">Locked</span>}
+                  </span> : topic.is_unlocked && curriculumTopic.courseSlug ? <Link className="font-semibold text-primary underline" to={lessonPath(curriculumTopic.courseSlug, lesson.slug, classroomId)}>Open</Link> : <span className="text-xs text-muted-foreground">Locked</span>}
                 </li>)}</ul>
               </div>
             })}

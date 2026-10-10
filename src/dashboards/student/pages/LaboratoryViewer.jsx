@@ -25,7 +25,7 @@ const parseLabInstruction = (value) => {
   }
 };
 
-const LaboratoryViewer = ({ lesson, onNext, navigation, preview = false }) => {
+const LaboratoryViewer = ({ lesson, onNext, onBack, navigation, preview = false }) => {
   const getTiming = useActivityTiming();
   const navigate = useNavigate();
   const addToast = useUIStore((state) => state.addToast);
@@ -179,10 +179,11 @@ const LaboratoryViewer = ({ lesson, onNext, navigation, preview = false }) => {
   return (
     <div className="h-screen bg-slate-100 flex flex-col overflow-hidden">
       <header className="shrink-0 flex items-center gap-3 border-b bg-white px-4 py-2.5">
-        <button onClick={() => navigate(-1)} className="flex items-center gap-1.5 text-sm font-semibold text-slate-500 hover:text-slate-800">
+        <button onClick={onBack ?? (() => navigate(-1))} className="flex items-center gap-1.5 text-sm font-semibold text-slate-500 hover:text-slate-800">
           <ArrowLeft className="size-4" /> Back
         </button>
         <span className="text-slate-300">|</span>
+        {preview && <span className="text-xs text-amber-700">Preview · Progress is not saved</span>}
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-black text-slate-800">{lesson?.title || "Laboratory"}</p>
           <p className="truncate text-xs text-slate-400">{lesson?.topic?.title}</p>

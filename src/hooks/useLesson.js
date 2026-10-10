@@ -3,9 +3,9 @@ import { useParams, useSearchParams } from 'react-router';
 import { useLessonStore } from '../store/lessonStore';
 
 export const useLesson = ({ masterOnly = false } = {}) => {
-  const { courseSlug, slug } = useParams();
+  const { courseSlug, slug, classroomId: routeClassroomId } = useParams();
   const [searchParams] = useSearchParams();
-  const classroomId = searchParams.get('classroomId');
+  const classroomId = routeClassroomId ?? searchParams.get('classroomId');
   const { lesson, navigation, isLoading, error, fetchLessonData, reset } = useLessonStore();
 
   useEffect(() => {

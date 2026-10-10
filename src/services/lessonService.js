@@ -22,6 +22,7 @@
  */
 import { supabase } from "../supabaseClient";
 import { getClassroomTopicFlow } from './classroomFlowService';
+import { lessonPath } from '../utils/lessonRoutes';
 
 const slugify = (value) =>
   value
@@ -86,13 +87,9 @@ export const removeLessonById = async (lessonId) => {
   if (error) throw error;
 };
 
-/**
- * Old one, format url to use slug and not id I think
- */
-
 const formatLessonUrl = (lesson, courseSlug, classroomId = null) => {
   if (!lesson) return null;
-  return `/student/learn/${courseSlug}/${lesson.slug}${classroomId ? `?classroomId=${encodeURIComponent(classroomId)}` : ''}`;
+  return lessonPath(courseSlug, lesson.slug, classroomId);
 };
 
 export const getLessonDetails = async (courseSlug, lessonSlug, { masterOnly = false, classroomId = null } = {}) => {

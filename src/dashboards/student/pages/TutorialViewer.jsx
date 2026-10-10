@@ -132,11 +132,12 @@ function CompletionPopup({ tutorial, badge, onContinue, onBack }) {
 }
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
-export default function TutorialViewer({ tutorialIdOverride = null, preview = false }) {
+export default function TutorialViewer({ tutorialIdOverride = null, preview = false, onBack }) {
   const getTiming = useActivityTiming()
   const { tutorialId: routeTutorialId } = useParams()
   const tutorialId = tutorialIdOverride ?? routeTutorialId
   const navigate       = useNavigate()
+  const handleBack     = onBack ?? (() => navigate(-1))
   const profile        = useAuthStore((s) => s.profile)
   const addToast       = useUIStore((s) => s.addToast)
 
@@ -415,7 +416,7 @@ export default function TutorialViewer({ tutorialIdOverride = null, preview = fa
           <AlertCircle className="w-8 h-8 text-red-400" />
           <p className="text-gray-600 font-semibold">Tutorial not found.</p>
           <button
-            onClick={() => navigate(-1)}
+            onClick={handleBack}
             className="text-sm text-blockly-purple hover:underline font-medium"
           >
             ← Go back
@@ -426,13 +427,14 @@ export default function TutorialViewer({ tutorialIdOverride = null, preview = fa
       {/* ── Top bar ──────────────────────────────────────────────────── */}
       <div className="shrink-0 flex items-center gap-3 px-4 py-2.5 bg-white border-b border-gray-200 shadow-sm z-10">
         <button
-          onClick={() => navigate(-1)}
+          onClick={handleBack}
           className="flex items-center gap-1.5 text-sm font-semibold text-gray-500 hover:text-gray-800 transition-colors"
         >
           <ArrowLeft size={16} /> Back
         </button>
 
         <span className="text-gray-300 select-none">|</span>
+        {preview && <span className="text-xs text-amber-700">Preview · Progress is not saved</span>}
 
         <div className="flex items-center gap-2 flex-1 min-w-0">
           <span className="text-sm font-black text-gray-800 truncate">
@@ -519,7 +521,7 @@ export default function TutorialViewer({ tutorialIdOverride = null, preview = fa
           tutorial={tutorial}
           badge={badge}
           onContinue={() => setShowComplete(false)}
-          onBack={() => navigate(-1)}
+          onBack={handleBack}
         />
       )}
     </div>

@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { Globe, CodeXml, BookOpenText, LandPlot, EarthLockIcon, Loader2 } from 'lucide-react'
 import RecentProjectCard from '../components/RecentProjectCard'
 import ProjectCard from '../components/ProjectCard'
-import { Divider } from '../../../components/public/Divider'
 import { useNavigate } from 'react-router'
 import { useTour } from '../../../components/tour/TourProvider'
 import TourSpotlight from '../../../components/tour/TourSpotlight'
@@ -19,7 +18,7 @@ const StudentHome = () => {
 
   const projectTypes = [
     { icon: CodeXml, title: 'Create', color: 'bg-blockly-blue/90', to: 'editor', tourId: 'create-button' },
-    { icon: BookOpenText, title: 'Learn', color: 'bg-blockly-red/90', to: 'learn', tourId: 'learn-button' },
+    { icon: BookOpenText, title: 'Lessons', color: 'bg-blockly-red/90', to: 'classrooms', tourId: 'learn-button' },
     { icon: LandPlot, title: 'Explore', color: 'bg-blockly-green/90', to: 'docs', tourId: 'explore-button' },
     { icon: EarthLockIcon, title: 'Join', color: 'bg-blockly-purple/90', to: 'classrooms', tourId: 'join-button' },
   ]
@@ -72,8 +71,8 @@ const StudentHome = () => {
               Kickstart your web development journey with fun, interactive building blocks! 
               Learn the essentials of HTML, CSS, and JavaScript in a playful, hands-on way that makes coding click.
             </p>
-            <button onClick={() => navigate('learn')} className="btn btn-accent w-full sm:w-auto px-8">
-              Get Started
+            <button onClick={() => navigate('classrooms')} className="btn btn-accent w-full sm:w-auto px-8">
+              Open Classrooms
             </button>
           </div>
         </div>

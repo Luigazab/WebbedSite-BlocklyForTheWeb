@@ -9,7 +9,6 @@ import { useState } from 'react'
 const links = [
   { to: '/student',             label: 'Home',        icon: (props) => <img src="/svghome.svg" alt="" {...props} />        },
   { to: '/student/projects',    label: 'Projects',    icon: (props) => <img src="/svgfolder.svg" alt="" {...props} />  },
-  { to: '/student/learn',       label: 'Learn',       icon: (props) => <img src="/svgbook.svg" alt="" {...props} />    },
   { to: '/student/classrooms',  label: 'Classroom',  icon: (props) => <img src="/svgclass.svg" alt="" {...props} />  },
   // { to: '/student/docs',        label: 'Documentation',     icon: (props) => <img src="/library.svg" alt="" {...props} />    },
   { to: '/student/profile',     label: 'Profile',     icon: (props) => <img src="/svgprofile.svg" alt="" {...props} /> },
@@ -31,7 +30,6 @@ export default function StudentSidebar() {
     if (path === '/student') return 'home'
     if (path.includes('/projects')) return 'projects'
     if (path.includes('/classrooms')) return 'classrooms'
-    if (path.includes('/learn')) return 'learn'
     if (path.includes('/docs')) return 'docs'
     if (path.includes('/tutorials')) return 'tutorials'
     if (path.includes('/editor')) return 'editor'
@@ -61,7 +59,7 @@ export default function StudentSidebar() {
       </div>
 
       <nav className="flex-1 px-2 flex flex-col gap-1">
-        {links.map(({ to, label, icon: Icon }) => (
+        {links.map(({ to, label, icon }) => (
           <NavLink
             key={to}
             to={to}
@@ -73,7 +71,7 @@ export default function StudentSidebar() {
               }`
             }
           >
-            <span className=""><Icon className="w-10 h-10 shrink-0 min-w-10 min-h-10 object-contain" /></span>
+            <span>{icon({ className: 'w-10 h-10 shrink-0 min-w-10 min-h-10 object-contain' })}</span>
             {sidebarOpen && <span>{label}</span>}
           </NavLink>
         ))}

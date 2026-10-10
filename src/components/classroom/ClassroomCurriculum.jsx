@@ -3,6 +3,7 @@ import { ChevronDown, Lock, Settings2 } from 'lucide-react'
 import { LessonPlainChip } from '../common/LessonChip'
 import { Button } from '../ui/button'
 import { groupClassroomCurriculum, lessonTrackLabel, visibleTopicLessons } from '../../utils/classroomCurriculum'
+import { lessonPath } from '../../utils/lessonRoutes'
 
 export default function ClassroomCurriculum({
   classroomId, courses = [], topics = [], teacher = false, flow = null,
@@ -68,7 +69,7 @@ export default function ClassroomCurriculum({
                   {teacher ? <><span className="font-mono text-xs">{lessonCompletion[lesson.id] ?? 0}%</span><span className="text-xs font-semibold text-primary">View</span></> : <span className="text-xs font-semibold text-primary">{topic.isUnlocked ? 'Open' : 'Locked'}</span>}</>
                 const className = 'flex w-full items-center gap-3 px-10 py-3 text-left hover:bg-muted'
                 return <li key={lesson.id}>{teacher ? <button type="button" className={className} onClick={() => onSelectLesson(lesson, topic)}>{content}</button>
-                  : topic.isUnlocked && topic.courseSlug ? <Link className={className} to={`/student/learn/${topic.courseSlug}/${lesson.slug}?classroomId=${encodeURIComponent(classroomId)}`}>{content}</Link>
+                  : topic.isUnlocked && topic.courseSlug ? <Link className={className} to={lessonPath(topic.courseSlug, lesson.slug, classroomId)}>{content}</Link>
                     : <div className={className}>{content}</div>}</li>
               })}</ul>
             </details>

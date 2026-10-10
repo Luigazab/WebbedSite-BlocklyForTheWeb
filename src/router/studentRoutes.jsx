@@ -7,18 +7,15 @@ import ProfilePage from '../pages/profile/ProfilePage'
 import EditorLayout from '../components/layout/EditorLayout'
 import BlockEditor from '../components/shared/BlockEditor'
 import Documentation from '../components/shared/Documentation'
-import TutorialViewer from '../dashboards/student/pages/TutorialViewer'
 import QuizAssessment from '../dashboards/student/pages/QuizAssessment'
 import QuizResult from '../dashboards/student/pages/QuizResult'
 import Loader from '../components/layout/Loader'
-import CourseSelection from '../dashboards/student/pages/CourseSelection'
 import WelcomeOnboarding from '../dashboards/student/pages/WelcomeOnboarding'
 import Background from '../components/layout/Background'
-import Course from '../pages/app/Course'
-import LearnLayout from '../pages/app/LearnLayout'
-import TopicsPage from '../pages/app/TopicsPage'
-import LecturePage from '../pages/app/LecturePage'
 import LessonPage from '../pages/app/LessonPage'
+import LessonLayout from '../components/layout/LessonLayout'
+import LegacyLessonRedirect from '../components/layout/LegacyLessonRedirect'
+import { Navigate } from 'react-router'
 import StudentClassroomHub from '@/dashboards/student/pages/StudentClassroomHub'
 import StudentClassrooms from '@/dashboards/student/pages/StudentClassrooms'
 
@@ -35,27 +32,27 @@ export const studentRoutes = [
       { path: 'quiz',                                       element: <QuizAssessment />           },
       { path: 'quiz/result',                                element: <QuizResult />               },
       { path: 'docs',                                       element: <Documentation />            },
-      // { path: 'lessons',                                    element: <LessonPage />               },
       { path: 'feedback',                                   element: <FeedbackPage />             },
       { path: 'profile',                                    element: <ProfilePage />              },
       { path: 'settings',                                   element: <SettingsPage />             },
     ]
   },
   {
-    element: <LearnLayout/>,
+    element: <LessonLayout />,
     children: [
-      { path: 'learn',                                      element: <Course />                   },
-      { path: 'learn/:courseSlug',                          element: <TopicsPage />               },
-      { path: 'learn/:courseSlug/:slug',                    element: <LessonPage />              },
-      { path: 'learn/:courseSlug/quiz-:slug',               element: <QuizAssessment />              },
-      { path: 'lessonviewer',                               element: <LecturePage />              },
+      { path: 'classrooms/:classroomId/lessons/:courseSlug/:slug', element: <LessonPage /> },
     ]
   },
+  { path: 'learn', element: <Navigate to="/student/classrooms" replace /> },
+  { path: 'learn/:courseSlug', element: <LegacyLessonRedirect /> },
+  { path: 'learn/:courseSlug/:slug', element: <LegacyLessonRedirect /> },
+  { path: 'lessons/:courseSlug/:slug', element: <LegacyLessonRedirect /> },
+  { path: 'lessonviewer', element: <Navigate to="/student/classrooms" replace /> },
+  { path: 'course-select', element: <Navigate to="/student/classrooms" replace /> },
   {
     element: <Background />,
     children: [
       { path: 'loader',                                     element: <Loader />                   },
-      { path: 'course-select',                              element: <CourseSelection />          },
       { path: 'welcome',                                    element: <WelcomeOnboarding />        },
     ]
   },
@@ -64,8 +61,6 @@ export const studentRoutes = [
     children: [
       { path: 'editor',                                     element: <BlockEditor />              },
       { path: 'editor/:id',                                 element: <BlockEditor />              },
-      { path: 'learn/:courseSlug/tutorial-:slug',           element: <TutorialViewer />           },
-      { path: 'learn/:courseSlug/lab-:slug',                element: <TutorialViewer />           },
     ]
   }
 ]

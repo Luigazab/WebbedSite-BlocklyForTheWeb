@@ -11,8 +11,8 @@ export const homeTourSteps = [
   },
   {
     target: '[data-tour="learn-button"]',
-    title: 'Learn the Basics',
-    content: 'Access lessons created by your teachers. Learn HTML, CSS, and JavaScript fundamentals step by step.',
+    title: 'Classroom Lessons',
+    content: 'Open your classroom to access assigned lessons, tutorials, laboratories, and optional practice tracks.',
   },
   {
     target: '[data-tour="explore-button"]',
