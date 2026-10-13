@@ -185,19 +185,20 @@ test('authoring sends one complete definition, regenerates references, and rejec
 
 test('registration carries a permitted role and works before email confirmation without a public profile insert', async () => {
   const calls = []
-  globalThis.__tutorialAuthClient = { auth: { signUp: async args => { calls.push(args); return { data: { user: { id: 'new-user' }, session: null }, error: null } } }, from: () => { throw new Error('Profile insertion must be server-owned') } }
+  globalThis.__tutorialAuthClient = { auth: { signUp: async args => { calls.push(args); return { data: { user: { id: 'new-user' }, session: null }, error: null } } }, functions: { invoke: async () => ({ data: { valid: true }, error: null }) }, from: () => { throw new Error('Profile insertion must be server-owned') } }
+  globalThis.window = { location: { origin: 'https://webbedsite.fun' } }
   await build({ entryPoints: ['src/services/auth.service.js'], bundle: true, format: 'esm', platform: 'neutral', packages: 'external', outfile: 'node_modules/.cache/tutorial-tests/auth.mjs', plugins: [{ name: 'auth-test-client', setup(builder) {
     builder.onResolve({ filter: /supabaseClient$/ }, () => ({ path: 'auth-client', namespace: 'test-client' }))
-    builder.onLoad({ filter: /.*/, namespace: 'test-client' }, () => ({ contents: 'export const supabase = globalThis.__tutorialAuthClient' }))
+    builder.onLoad({ filter: /.*/, namespace: 'test-client' }, () => ({ contents: 'export const supabase = globalThis.__tutorialAuthClient; export const authStorage = {}; export const recoveryAccessToken = null; export const createLoginClient = () => { throw new Error("Unexpected login attempt") }' }))
   } }] })
   try {
     const { authService } = await import('../node_modules/.cache/tutorial-tests/auth.mjs')
     await assert.rejects(authService.signUp('test@example.invalid', 'password', 'Test', 'admin'), /student or teacher/)
     assert.equal(calls.length, 0)
     for (const role of ['student', 'teacher']) {
-      const result = await authService.signUp('test@example.invalid', 'password', 'Test', role)
+      const result = await authService.signUp('test@example.invalid', 'a long test passphrase', 'Test', role)
       assert.equal(result.session, null)
       assert.deepEqual(calls.at(-1).options.data, { username: 'Test', role })
     }
-  } finally { delete globalThis.__tutorialAuthClient }
+  } finally { delete globalThis.__tutorialAuthClient; delete globalThis.window }
 })

@@ -104,7 +104,7 @@ export const teacherService = {
       .from('classroom_posts')
       .select(`
         *,
-        author:profiles!classroom_posts_author_id_fkey (
+        author:profile_directory!classroom_posts_author_id_fkey (
           username
         )
       `)
@@ -171,7 +171,7 @@ export const teacherService = {
     // Get author names separately
     const authorIds = [...new Set(posts.map(p => p.author_id))];
     const { data: authors, error: authorsError } = await supabase
-      .from('profiles')
+      .from('profile_directory')
       .select('id, username')
       .in('id', authorIds);
 

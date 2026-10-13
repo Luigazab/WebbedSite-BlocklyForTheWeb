@@ -2,9 +2,10 @@ import { useState } from 'react'
 import { profileService } from '../services/profile.service'
 import { useAuthStore } from '../store/authStore'
 import { useUIStore } from '../store/uiStore'
+import { passwordValidationError } from '../lib/passwordPolicy'
 
 export function useProfile() {
-  const { profile, user }  = useAuthStore()
+  const { profile }  = useAuthStore()
   const setProfile         = useAuthStore((s) => s.setProfile)
   const addToast           = useUIStore((s) => s.addToast)
   const [saving, setSaving]  = useState(false)
@@ -44,21 +45,21 @@ export function useProfile() {
     }
   }
 
-  const handleUpdatePassword = async (newPassword, confirmPassword) => {
+  const handleUpdatePassword = async (newPassword, confirmPassword, currentPassword) => {
     if (newPassword !== confirmPassword) {
       addToast('Passwords do not match.', 'error')
-      return
+      return false
     }
-    if (newPassword.length < 8) {
-      addToast('Password must be at least 8 characters.', 'error')
-      return
-    }
+    const validationError = passwordValidationError(newPassword)
+    if (validationError) { addToast(validationError, 'error'); return false }
     setSaving(true)
     try {
-      await profileService.updatePassword(newPassword)
+      await profileService.updatePassword(newPassword, currentPassword)
       addToast('Password updated successfully!', 'success')
+      return true
     } catch (err) {
       addToast(err.message || 'Failed to update password.', 'error')
+      return false
     } finally {
       setSaving(false)
     }

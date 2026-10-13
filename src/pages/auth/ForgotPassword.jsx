@@ -36,7 +36,7 @@ const ForgotPassword = () => {
         {isSubmitted ? (
           <div className="flex flex-col items-center text-center gap-4 w-full">
             <div className="p-4 bg-green-50 text-green-700 rounded-lg w-full">
-              Reset link sent to <strong>{email}</strong>
+              If an account exists for <strong>{email}</strong>, a reset link will be sent.
             </div>
             <p className="text-sm text-gray-500">Please check your spam folder if you don't see it.</p>
             <Link to="/login" className="text-blockly-purple underline mt-4">
@@ -46,10 +46,10 @@ const ForgotPassword = () => {
         ) : (
           <form onSubmit={handleSubmit} className="flex flex-col gap-5 w-full">
             <div className="relative">
-              <input required autoComplete="off" type="email"
+              <input id="forgot-email" required autoComplete="email" type="email"
                 value={email} onChange={(e) => setEmail(e.target.value)}
                 className={inputClass} />
-              <label className={floatingLabel}>Email</label>
+              <label htmlFor="forgot-email" className={floatingLabel}>Email</label>
             </div>
 
             <button className="btn btn-secondary" disabled={loading}>

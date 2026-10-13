@@ -19,7 +19,7 @@ export const lessonService = {
       .from('lessons')
       .select(`
         *,
-        teacher:profiles!lessons_teacher_id_fkey(id, username, avatar_url),
+        teacher:profile_directory!lessons_teacher_id_fkey(id, username, avatar_url),
         lesson_attachments(*),
         lesson_quizzes(
           id,
@@ -178,7 +178,7 @@ export const lessonService = {
         *,
         lesson:lessons(
           id, title, content, thumbnail_url, estimated_duration, created_at, updated_at, is_published,
-          teacher:profiles!lessons_teacher_id_fkey(id, username, avatar_url),
+          teacher:profile_directory!lessons_teacher_id_fkey(id, username, avatar_url),
           lesson_attachments(id, file_name, file_url, file_type, file_size),
           lesson_quizzes(
             id,

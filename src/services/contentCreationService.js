@@ -71,7 +71,7 @@ export const fetchTeacherContentTree = async (teacherId) => {
           is_published,
           author,
           updated_at,
-          profiles!lessons_author_fkey (username)
+          profiles:profile_directory!lessons_author_fkey (username)
         )
       )
     `)

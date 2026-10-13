@@ -3,15 +3,16 @@ import { authService } from '../services/auth.service'
 import { useAuthStore } from '../store/authStore'
 import { useLocation, useNavigate } from 'react-router'
 import { notificationReturnPath } from '../lib/notificationLinks'
+import { passwordValidationError } from '../lib/passwordPolicy'
 
 export function useAuth() {
   const { signIn, signUp, signOut, user, profile, loading } = useAuthStore()
   const navigate = useNavigate()
   const location = useLocation()
 
-  const handleSignIn = async (email, password) => {
+  const handleSignIn = async (email, password, rememberMe) => {
     try {
-      const profile = await signIn(email, password)
+      const profile = await signIn(email, password, rememberMe)
       toast.success(`Welcome back, ${profile.username}!`)
 
       const returnTo = notificationReturnPath(location.search)
@@ -33,6 +34,8 @@ export function useAuth() {
       toast.error('Username must be at least 3 characters.')
       return false;
     }
+    const passwordError = passwordValidationError(password)
+    if (passwordError) { toast.error(passwordError); return false }
     try {
       await signUp(email, password, username, role)
       return true;
@@ -49,6 +52,7 @@ export function useAuth() {
       navigate('/login')
     } catch (err) {
       toast.error(err.message || 'Failed to sign out.')
+      navigate('/login', { replace: true })
     }
   }
 
@@ -74,10 +78,14 @@ export function useAuth() {
   const handlePasswordUpdate = async (newPassword) => {
     try {
       await authService.updatePassword(newPassword);
-      toast.success('Password updated successfully.');
-      navigate('/login');
+      try { await signOut() } catch (error) { toast.warning(error.message) }
+      toast.success('Password updated. Please sign in with your new password.');
+      navigate('/login', { replace: true });
+      return true;
     } catch (err) {
       toast.error(err.message || 'Failed to update password.');
+      if (!useAuthStore.getState().user) navigate('/login', { replace: true });
+      return false;
     }
   };
 

@@ -107,7 +107,7 @@ export const fetchLectureForStudent = async (lessonId) => {
       base_xp,
       topics_id,
       classroom_id,
-      profiles!lessons_author_fkey ( username, avatar_url ),
+      profiles:profile_directory!lessons_author_fkey ( username, avatar_url ),
       topics ( id, course_id, classroom_id ),
       lectures ( content, video_src, file_url )
     `)

@@ -6,11 +6,11 @@ import { useAuthStore } from './store/authStore'
 import { TourProvider } from './components/tour/TourProvider'
 
 export default function App() {
-  const initialize = useAuthStore((state) => state.initialize)
+  const startAuth = useAuthStore((state) => state.start)
 
   useEffect(() => {
-    initialize()
-  }, [])
+    return startAuth()
+  }, [startAuth])
 
   return (
     <TourProvider>

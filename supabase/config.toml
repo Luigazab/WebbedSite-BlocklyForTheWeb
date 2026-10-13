@@ -1,3 +1,12 @@
 [functions.deliver-notification-emails]
 # The function verifies a random scheduler token through a service-only RPC.
 verify_jwt = false
+
+[functions.admin-auth]
+# The function verifies the JWT with auth.getUser and checks the stored admin
+# role itself, supporting both legacy and asymmetric project signing keys.
+verify_jwt = false
+
+[functions.password-policy]
+# Validates a project publishable API key; signup callers have no user JWT yet.
+verify_jwt = false

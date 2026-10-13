@@ -34,7 +34,7 @@ export async function createClassroom({ teacherId, name, description = '' }) {
     .insert({ teacher_id: teacherId, name, description, join_code, is_active: true })
     .select(`
       *,
-      profiles:teacher_id ( id, username, avatar_url, email ),
+      profiles:profile_directory!teacher_id ( id, username, avatar_url ),
       classroom_members ( classroom_id, student_id, enrolled_at )
     `)
     .single()
@@ -48,7 +48,7 @@ export async function getTeacherGuilds(teacherId) {
     .from('classrooms')
     .select(`
       *,
-      profiles:teacher_id ( id, username, avatar_url, email ),
+      profiles:profile_directory!teacher_id ( id, username, avatar_url ),
       classroom_members ( classroom_id, student_id, enrolled_at,
         student:student_id ( id, username, avatar_url, email )
       ),
@@ -98,19 +98,19 @@ export async function getGuildDetail(classroomId, currentUserId = null) {
     .from('classrooms')
     .select(`
       *,
-      profiles:teacher_id ( id, username, avatar_url, email ),
+      profiles:profile_directory!teacher_id ( id, username, avatar_url ),
       classroom_members (
         classroom_id, student_id, enrolled_at,
-        student:student_id ( id, username, avatar_url, email )
+        student:profile_directory!student_id ( id, username, avatar_url )
       ),
       classroom_milestones ( id, title, target_score, current_score ),
       classroom_posts (
         id, type, content, created_at, project_id, author_id,
-        author:author_id ( id, username, avatar_url ),
+        author:profile_directory!author_id ( id, username, avatar_url ),
         classroom_post_likes ( user_id ),
         comments (
           id, content, created_at,
-          author:author_id ( id, username, avatar_url )
+          author:profile_directory!author_id ( id, username, avatar_url )
         )
       )
     `)
@@ -122,33 +122,13 @@ export async function getGuildDetail(classroomId, currentUserId = null) {
 }
 
 export async function joinClassroom(studentId, joinCode) {
-  const { data: existing, error: memberErr } = await supabase
-    .from('classroom_members')
-    .select('classroom_id')
-    .eq('student_id', studentId)
-    .maybeSingle()
-
-  if (memberErr) throw memberErr
-  if (existing) throw new Error('You already belong to a classroom.')
-
-  const { data: classroom, error: codeErr } = await supabase
-    .from('classrooms')
-    .select('id, is_active')
-    .eq('join_code', joinCode.trim().toUpperCase())
-    .maybeSingle()
-
-  if (codeErr) throw codeErr
-  if (!classroom) throw new Error('Invalid join code. Please check and try again.')
-  if (!classroom.is_active) throw new Error('This classroom is no longer active.')
-
-  const { error: insertErr } = await supabase
-    .from('classroom_members')
-    .insert({ classroom_id: classroom.id, student_id: studentId })
-
-  if (insertErr) throw insertErr
-  return classroom.id
+  if (!studentId) throw new Error('A student account is required.')
+  const { data, error } = await supabase.rpc('join_classroom_by_code', {
+    p_join_code: joinCode.trim().toUpperCase(),
+  })
+  if (error) throw error
+  return data
 }
-
 export async function leaveClassroom(studentId, classroomId) {
   const { error } = await supabase
     .from('classroom_members')
@@ -187,11 +167,11 @@ export async function getGuildPosts(classroomId, { limit = 20, offset = 0 } = {}
     .from('classroom_posts')
     .select(`
       id, type, content, created_at, project_id, author_id,
-      author:author_id ( id, username, avatar_url ),
+      author:profile_directory!author_id ( id, username, avatar_url ),
       classroom_post_likes ( user_id ),
       comments (
         id, content, created_at,
-        author:author_id ( id, username, avatar_url )
+        author:profile_directory!author_id ( id, username, avatar_url )
       )
     `)
     .eq('classroom_id', classroomId)
@@ -214,9 +194,9 @@ export async function createGuildPost({ classroomId, authorId, type, content, pr
     })
     .select(`
       id, type, content, created_at, project_id, author_id,
-      author:author_id ( id, username, avatar_url ),
+      author:profile_directory!author_id ( id, username, avatar_url ),
       classroom_post_likes ( user_id ),
-      comments ( id, content, created_at, author:author_id ( id, username, avatar_url ) )
+      comments ( id, content, created_at, author:profile_directory!author_id ( id, username, avatar_url ) )
     `)
     .single()
 
@@ -255,7 +235,7 @@ export async function commentOnGuildPost(postId, authorId, content) {
     .insert({ post_id: postId, author_id: authorId, content })
     .select(`
       id, content, created_at,
-      author:author_id ( id, username, avatar_url )
+      author:profile_directory!author_id ( id, username, avatar_url )
     `)
     .single()
 

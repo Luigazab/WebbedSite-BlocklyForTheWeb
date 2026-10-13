@@ -1,4 +1,5 @@
-import { supabase } from '../supabaseClient'
+import { supabase, createLoginClient } from '../supabaseClient'
+import { validateNewPassword } from './passwordPolicy.service'
 
 export const profileService = {
   async getPresetAvatars() {
@@ -88,8 +89,19 @@ export const profileService = {
     await profileService.updateProfile(userId, { avatar_url: null })
   },
 
-  async updatePassword(newPassword) {
-    const { error } = await supabase.auth.updateUser({ password: newPassword })
-    if (error) throw error
+  async updatePassword(newPassword, currentPassword) {
+    if (!currentPassword) throw new Error('Enter your current password.')
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    if (userError || !user?.email) throw new Error('Please sign in again before changing your password.')
+    const verifier = createLoginClient()
+    const { data, error: verificationError } = await verifier.auth.signInWithPassword({ email: user.email, password: currentPassword })
+    if (verificationError || data.user?.id !== user.id) throw new Error('Your current password is incorrect.')
+    try {
+      await validateNewPassword(newPassword)
+      const { error } = await supabase.auth.updateUser({ password: newPassword, current_password: currentPassword })
+      if (error) throw error
+    } finally {
+      await verifier.auth.signOut({ scope: 'local' })
+    }
   },
 }

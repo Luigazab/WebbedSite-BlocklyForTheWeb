@@ -25,7 +25,7 @@ export const fetchLearnTopics = async () => {
       prerequisite_topic, created_at,
       lesson:lessons(
         id, title, content, estimated_duration, thumbnail_url, base_xp,
-        teacher:profiles!lessons_teacher_id_fkey(id, username, avatar_url),
+        teacher:profile_directory!lessons_teacher_id_fkey(id, username, avatar_url),
         lesson_attachments(*),
         lesson_quizzes(
           id,
@@ -65,7 +65,7 @@ export const fetchLearnTopicById = async (topicId) => {
       prerequisite_topic, created_at,
       lesson:lessons(
         id, title, content, estimated_duration, thumbnail_url, created_at, base_xp,
-        teacher:profiles!lessons_teacher_id_fkey(id, username, avatar_url),
+        teacher:profile_directory!lessons_teacher_id_fkey(id, username, avatar_url),
         lesson_attachments(*),
         lesson_quizzes(
           id,
@@ -296,7 +296,7 @@ export const fetchLearnTopicsForManagement = async () => {
     .select(`
       id, category_id, title, description, estimated_duration,
       prerequisite_topic, created_at, lesson_id,
-      lesson:lessons(id, title, teacher:profiles!lessons_teacher_id_fkey(id, username))
+      lesson:lessons(id, title, teacher:profile_directory!lessons_teacher_id_fkey(id, username))
     `)
     .order('category_id')
     .order('order_index')
@@ -312,7 +312,7 @@ export const fetchTopicStudentProgress = async (topicId) => {
     .from('learn_topic_progress')
     .select(`
       id, student_id, progress_percentage, completed_at, last_accessed,
-      student:profiles(id, username, avatar_url)
+      student:profile_directory(id, username, avatar_url)
     `)
     .eq('topic_id', topicId)
     .order('last_accessed', { ascending: false })
@@ -386,7 +386,7 @@ export const fetchClassroomStudentLearnProgress = async (classroomId) => {
   // Get enrolled students
   const { data: enrollments, error: eErr } = await supabase
     .from('classroom_enrollments')
-    .select('student_id, student:profiles(id, username, avatar_url)')
+    .select('student_id, student:profile_directory(id, username, avatar_url)')
     .eq('classroom_id', classroomId)
     .eq('status', 'active')
   if (eErr) throw eErr

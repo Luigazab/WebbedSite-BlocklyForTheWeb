@@ -11,6 +11,7 @@ import {
   MessageSquare, Bug, BookOpen, HelpCircle,
 } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
+import { MIN_PASSWORD_LENGTH, MAX_PASSWORD_LENGTH, PASSWORD_HELP } from '../../lib/passwordPolicy'
 
 const TABS = ['Profile Info', 'Security', 'Submit Feedback', 'My Reports']
 
@@ -225,10 +226,10 @@ function SecurityTab() {
   })
   const [showPasswords, setShowPasswords] = useState(false)
 
-  const onSave = (e) => {
+  const onSave = async (e) => {
     e.preventDefault()
-    handleUpdatePassword(passwords.newPassword, passwords.confirmPassword)
-    setPasswords({ oldPassword: '', newPassword: '', confirmPassword: '' })
+    const success = await handleUpdatePassword(passwords.newPassword, passwords.confirmPassword, passwords.oldPassword)
+    if (success) setPasswords({ oldPassword: '', newPassword: '', confirmPassword: '' })
   }
 
   const allFilled = passwords.oldPassword && passwords.newPassword && passwords.confirmPassword
@@ -238,7 +239,7 @@ function SecurityTab() {
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden w-full">
       <div className="px-6 py-4 border-b border-gray-50">
         <h3 className="font-bold text-gray-800">Change Password</h3>
-        <p className="text-xs text-gray-400 mt-0.5">Must be at least 8 characters</p>
+        <p className="text-xs text-gray-400 mt-0.5">{PASSWORD_HELP}</p>
       </div>
 
       <form onSubmit={onSave} className="p-6 flex flex-col gap-5">
@@ -248,9 +249,13 @@ function SecurityTab() {
           { key: 'confirmPassword', label: 'Confirm New Password' },
         ].map(({ key, label }) => (
           <div key={key} className="flex flex-col gap-1.5">
-            <label className="text-sm font-semibold text-gray-700">{label}</label>
+            <label htmlFor={`settings-${key}`} className="text-sm font-semibold text-gray-700">{label}</label>
             <div className="relative">
               <input
+                id={`settings-${key}`}
+                autoComplete={key === 'oldPassword' ? 'current-password' : 'new-password'}
+                minLength={key === 'oldPassword' ? undefined : MIN_PASSWORD_LENGTH}
+                maxLength={key === 'oldPassword' ? undefined : MAX_PASSWORD_LENGTH}
                 type={showPasswords ? 'text' : 'password'}
                 value={passwords[key]}
                 onChange={(e) => setPasswords((p) => ({ ...p, [key]: e.target.value }))}

@@ -6,7 +6,7 @@ export const notificationService = {
       .from('notifications')
       .select(`
         *,
-        from_user:profiles!notifications_from_user_id_fkey(username, avatar_url)
+        from_user:profile_directory!notifications_from_user_id_fkey(username, avatar_url)
       `)
       .eq('user_id', userId)
       .order('created_at', { ascending: false })

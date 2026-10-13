@@ -1,31 +1,27 @@
 import { createClient } from '@supabase/supabase-js'
-
-const customStorage = {
-  getItem: (key) => localStorage.getItem(key) ?? sessionStorage.getItem(key),
-  setItem: (key, value) => {
-    const remember = localStorage.getItem('remember-me') === 'true'
-    if (remember) {
-      localStorage.setItem(key, value)
-      sessionStorage.removeItem(key)
-    } else {
-      sessionStorage.setItem(key, value)
-      localStorage.removeItem(key)
-    }
-  },
-  removeItem: (key) => {
-    localStorage.removeItem(key)
-    sessionStorage.removeItem(key)
-  },
-}
+import { createAuthStorage } from './lib/authStorage'
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+const storageKey = `sb-${new URL(supabaseUrl).hostname.split('.')[0]}-auth-token`
+export const authStorage = createAuthStorage(localStorage, sessionStorage, storageKey)
+const recoveryParams = new URLSearchParams(window.location.hash.slice(1))
+export const recoveryAccessToken = recoveryParams.get('type') === 'recovery' ? recoveryParams.get('access_token') : null
+if (recoveryAccessToken) authStorage.setPersistence(false)
+
+// Login/reauthentication attempts cannot replace a working session on failure,
+// leak an unchecked login into localStorage, or broadcast temporary credentials.
+export function createLoginClient() {
+  return createClient(supabaseUrl, supabaseAnonKey, {
+    auth: { storageKey: `webbed-attempt-${crypto.randomUUID()}`, persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+  })
+}
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
-    storage: customStorage,
+    storageKey,
+    storage: authStorage.storage,
     persistSession: true,
     autoRefreshToken: true,
-    lock: async (name, acquireTimeout, fn) => fn(),
   }
 })

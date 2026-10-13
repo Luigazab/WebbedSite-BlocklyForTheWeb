@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { X, UserPlus, Mail, User, Lock, Loader2 } from "lucide-react";
-import { supabase } from "../../../supabaseClient";
+import { adminAuthService } from '../../../services/adminAuth.service';
+import { MIN_PASSWORD_LENGTH, MAX_PASSWORD_LENGTH, PASSWORD_HELP } from '../../../lib/passwordPolicy';
 import { Input } from "#components/ui/input";
 import { Label } from "#components/ui/label";
 import { Button } from "#components/ui/button";
@@ -25,21 +26,7 @@ const CreateUserModal = ({ onClose, onCreated }) => {
     setLoading(true); 
     setError("");
     try {
-      const { data, error: authErr } = await supabase.auth.admin.createUser({
-        email: form.email,
-        password: form.password,
-        email_confirm: true,
-        user_metadata: { username: form.username },
-      });
-      if (authErr) throw authErr;
-
-      const { error: profileErr } = await supabase.from("profiles").upsert({
-        id: data.user.id,
-        email: form.email,
-        username: form.username,
-        role: form.role,
-      });
-      if (profileErr) throw profileErr;
+      await adminAuthService.createUser(form);
 
       onCreated();
       onClose();
@@ -99,7 +86,8 @@ const CreateUserModal = ({ onClose, onCreated }) => {
             </Label>
             <div className="relative">
               <Lock size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-              <Input id="password" type="password" placeholder="••••••••" value={form.password} onChange={set("password")} className="pl-9"/>
+              <Input id="password" type="password" autoComplete="new-password" minLength={MIN_PASSWORD_LENGTH} maxLength={MAX_PASSWORD_LENGTH} placeholder="••••••••" value={form.password} onChange={set("password")} className="pl-9"/>
+              <p className="text-xs text-slate-500">{PASSWORD_HELP}</p>
             </div>
           </div>
 

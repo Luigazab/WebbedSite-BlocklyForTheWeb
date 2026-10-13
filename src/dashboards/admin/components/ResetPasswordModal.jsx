@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { X, Check, Loader2, KeyRound, Lock } from "lucide-react";
-import { supabase } from "../../../supabaseClient";
+import { adminAuthService } from '../../../services/adminAuth.service';
+import { MIN_PASSWORD_LENGTH, MAX_PASSWORD_LENGTH, PASSWORD_HELP, passwordValidationError } from '../../../lib/passwordPolicy';
 import { Input } from "#components/ui/input";
 import { Label } from "#components/ui/label";
 import { Button } from "#components/ui/button";
@@ -9,15 +10,18 @@ const ResetPasswordModal = ({ user, onClose }) => {
   const [pw, setPw] = useState("");
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
+  const [error, setError] = useState('');
 
   const handleReset = async () => {
-    if (!pw || pw.length < 6) return;
+    const validationError = passwordValidationError(pw);
+    if (validationError) { setError(validationError); return; }
+    setError('');
     setLoading(true);
     try {
-      await supabase.auth.admin.updateUserById(user.id, { password: pw });
+      await adminAuthService.resetPassword(user.id, pw);
       setDone(true);
     } catch (error) {
-      console.error("Error resetting password:", error);
+      setError(error.message || 'The password could not be reset.');
     } finally {
       setLoading(false);
     }
@@ -47,6 +51,7 @@ const ResetPasswordModal = ({ user, onClose }) => {
           </div>
         ) : (
           <>
+            {error && <p role="alert" className="text-red-600">{error}</p>}
             <p className="text-slate-600 mb-4">
               Setting new password for <span className="text-black">@{user.username}</span>
             </p>
@@ -57,16 +62,16 @@ const ResetPasswordModal = ({ user, onClose }) => {
               </Label>
               <div className="relative">
                 <Lock size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                <Input id="password" type="password" placeholder="••••••••" value={pw} onChange={(e) => setPw(e.target.value)} className="pl-9"/>
+                <Input id="password" type="password" autoComplete="new-password" minLength={MIN_PASSWORD_LENGTH} maxLength={MAX_PASSWORD_LENGTH} placeholder="••••••••" value={pw} onChange={(e) => setPw(e.target.value)} className="pl-9"/>
               </div>
-              <p className="text-[10px] text-slate-500 mt-1">Minimum 6 characters</p>
+              <p className="text-xs text-slate-500 mt-1">{PASSWORD_HELP}</p>
             </div>
 
             <div className="flex gap-2 mt-4">
               <Button variant="formalPlain" onClick={onClose} className="flex-1 px-0">
                 Cancel
               </Button>
-              <Button onClick={handleReset} disabled={loading || pw.length < 6} variant="formalPrimary" className="flex-1">
+              <Button onClick={handleReset} disabled={loading || !!passwordValidationError(pw)} variant="formalPrimary" className="flex-1">
                 {loading ? <Loader2 size={15} className="animate-spin" /> : <KeyRound size={15} />}
                 Reset
               </Button>

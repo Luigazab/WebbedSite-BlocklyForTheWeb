@@ -53,7 +53,7 @@ export const quizService = {
       .select(`
         *,
         questions:quiz_questions(*),
-        teacher:profiles!quizzes_teacher_id_fkey(id, username, avatar_url)
+        teacher:profile_directory!quizzes_teacher_id_fkey(id, username, avatar_url)
       `)
       .eq('id', quizId)
       .single()

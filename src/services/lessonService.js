@@ -58,7 +58,7 @@ export const fetchTeacherContentTree = async (teacherId) => {
           is_published,
           author,
           updated_at,
-          profiles!lessons_author_fkey (username)
+          profiles:profile_directory!lessons_author_fkey (username)
         )
       )
     `)
@@ -117,7 +117,7 @@ export const getLessonDetails = async (courseSlug, lessonSlug, { masterOnly = fa
       ),
       laboratories ( id, instruction ),
       tutorials ( id, type ),
-      author:profiles!lessons_author_fkey ( username, avatar_url )
+      author:profile_directory!lessons_author_fkey ( username, avatar_url )
     `)
     .eq('slug', lessonSlug);
   if (masterOnly || !classroomId) lessonQuery = lessonQuery.is('classroom_id', null).is('topics.classroom_id', null);

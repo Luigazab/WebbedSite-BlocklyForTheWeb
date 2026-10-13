@@ -33,7 +33,9 @@ const router = createBrowserRouter([
       ]
     },
   ]},
-  { path: '/update-password', element: <Auth><UpdatePassword /></Auth>, errorElement: <ErrorPage/>},
+  { element: <Auth />, errorElement: <ErrorPage />, children: [
+    { path: '/update-password', element: <UpdatePassword /> },
+  ] },
   { path: '/remi-demo', element: <RemiDemo />, errorElement: <ErrorPage /> },
   {
     path: '/student',

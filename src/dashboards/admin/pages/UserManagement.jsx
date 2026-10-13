@@ -8,6 +8,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import DeleteModal from "#components/ui/DeleteModal";
 import ResetPasswordModal from "../components/ResetPasswordModal";
 import CreateUserModal from "../components/CreateUserModal";
+import { adminAuthService } from '../../../services/adminAuth.service';
+import { toast } from 'sonner';
 
 // ── Main ───────────────────────────────────────────────────────────────────────
 const PAGE_SIZE = 15;
@@ -38,8 +40,11 @@ export default function UserManagement() {
 
       const { data, count, error } = await q;
       if (error) throw error;
-      setUsers(data || []);
+      const statuses = await adminAuthService.getUserStatuses((data || []).map(user => user.id));
+      setUsers((data || []).map(user => ({ ...user, ...statuses[user.id] })));
       setTotal(count || 0);
+    } catch (error) {
+      toast.error(error.message || 'Could not load users.');
     } finally {
       setLoading(false);
     }
@@ -48,25 +53,24 @@ export default function UserManagement() {
   useEffect(() => { fetchUsers(); }, [fetchUsers]);
 
   const handleBan = async (user) => {
-    // Toggle banned state via user_metadata (Supabase Auth Admin API)
-    await supabase.auth.admin.updateUserById(user.id, {
-      ban_duration: user.is_banned ? "none" : "876600h",
-    });
-    fetchUsers();
+    try { await adminAuthService.setBanned(user.id, !user.is_banned); await fetchUsers(); }
+    catch (error) { toast.error(error.message || 'Could not change account status.'); }
   };
 
   const handleRoleChange = async (user, newRole) => {
-    await supabase.from("profiles").update({ role: newRole }).eq("id", user.id);
-    fetchUsers();
+    try { await adminAuthService.setRole(user.id, newRole); await fetchUsers(); }
+    catch (error) { toast.error(error.message || 'Could not change account role.'); }
   };
 
   const handleDelete = async () => {
     if (!deleteUser) return;
     setDeleteLoading(true);
     try {
-      await supabase.auth.admin.deleteUser(deleteUser.id);
+      await adminAuthService.deleteUser(deleteUser.id);
       setDeleteUser(null);
-      fetchUsers();
+      await fetchUsers();
+    } catch (error) {
+      toast.error(error.message || 'Could not delete the account.');
     } finally {
       setDeleteLoading(false);
     }

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../../hooks/useAuth';
+import { MIN_PASSWORD_LENGTH, MAX_PASSWORD_LENGTH, PASSWORD_HELP } from '../../lib/passwordPolicy';
 
 const SignUp = ({ role }) => {
   const { handleSignUp, handleResendConfirmation } = useAuth();
@@ -54,33 +55,34 @@ const SignUp = ({ role }) => {
     <div>
       <form onSubmit={handleSubmit} className="flex flex-col gap-5 min-w-xs">
         <div className="relative">
-          <input required autoComplete="off" type="text"
+          <input id="signup-username" required autoComplete="nickname" minLength={3} maxLength={80} type="text"
             value={username} onChange={(e) => setUsername(e.target.value)}
             className={inputClass} />
-          <label className={floatingLabel}>Username</label>
+          <label htmlFor="signup-username" className={floatingLabel}>Username</label>
         </div>
 
         <div className="relative">
-          <input required autoComplete="off" type="email"
+          <input id="signup-email" required autoComplete="email" type="email"
             value={email} onChange={(e) => setEmail(e.target.value)}
             className={inputClass} />
-          <label className={floatingLabel}>Email</label>
+          <label htmlFor="signup-email" className={floatingLabel}>Email</label>
         </div>
 
         <div className="relative">
-          <input required autoComplete="off" type="password"
+          <input id="signup-password" required autoComplete="new-password" minLength={MIN_PASSWORD_LENGTH} maxLength={MAX_PASSWORD_LENGTH} aria-describedby="signup-password-help" type="password"
             value={password} onChange={(e) => setPassword(e.target.value)}
             className={inputClass} />
-          <label className={floatingLabel}>Password</label>
+          <label htmlFor="signup-password" className={floatingLabel}>Password</label>
         </div>
 
         <div className="relative">
-          <input required autoComplete="off" type="password"
+          <input id="signup-confirm-password" required autoComplete="new-password" minLength={MIN_PASSWORD_LENGTH} maxLength={MAX_PASSWORD_LENGTH} type="password"
             value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)}
             className={inputClass} />
-          <label className={floatingLabel}>Confirm Password</label>
+          <label htmlFor="signup-confirm-password" className={floatingLabel}>Confirm Password</label>
         </div>
 
+        <p id="signup-password-help" className="text-sm text-slate-500">{PASSWORD_HELP}</p>
         <button className="btn" disabled={loading}>
           {loading ? 'Creating account...' : 'Create my account'}
         </button>
