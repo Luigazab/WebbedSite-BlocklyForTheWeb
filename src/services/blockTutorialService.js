@@ -4,7 +4,7 @@ export async function fetchBlockTutorialByLessonId(lessonId) {
   const { data, error } = await supabase
     .from('lessons')
     .select(`
-      id, title, topics_id, base_xp, is_published,
+      id, title, topics_id, base_xp, is_published, updated_at,
       tutorials (
         id, type,
         block_tutorial_steps ( id, instruction, hint, order, highlight_category_path, highlight_block_type ),
@@ -26,7 +26,7 @@ export async function fetchBlockTutorialByLessonId(lessonId) {
   if (stepIds.length) {
     const { data: expData, error: expError } = await supabase
       .from('block_tutorial_step_expected')
-      .select('id, step_id, file_id, expected_code, expected_blocks_json, test_cases')
+      .select('id, step_id, file_id, expected_code, expected_blocks_json, test_cases, require_block_structure')
       .in('step_id', stepIds)
     if (expError) throw expError
     expected = expData ?? []
@@ -39,6 +39,7 @@ export async function fetchBlockTutorialByLessonId(lessonId) {
       topicsId: data.topics_id,
       baseXp: data.base_xp,
       isPublished: data.is_published,
+      revision: data.updated_at,
     },
     tutorial: tutorial ? { id: tutorial.id, type: tutorial.type } : null,
     steps,

@@ -1,0 +1,10 @@
+{
+  "imports": {
+    "blockly/core": "npm:blockly@12.3.1/core",
+    "blockly/javascript": "npm:blockly@12.3.1/javascript",
+    "blockly": "npm:blockly@12.3.1",
+    "@blockly/field-colour": "npm:@blockly/field-colour@6.0.11",
+    "@blockly/block-plus-minus": "npm:@blockly/block-plus-minus@9.0.9",
+    "linkedom": "npm:linkedom@0.18.12"
+  }
+}

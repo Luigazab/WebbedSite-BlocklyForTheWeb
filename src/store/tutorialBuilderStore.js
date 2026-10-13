@@ -5,6 +5,7 @@ const emptyMeta = { title: '', topicId: '', baseXp: '50' }
 export const tutorialBuilderStore = create((set) => ({
   lessonId: null,
   tutorialId: null,
+  revision: null,
   isPublished: false,
 
   meta: emptyMeta,
@@ -18,14 +19,15 @@ export const tutorialBuilderStore = create((set) => ({
 
   setLessonId:   (id) => set({ lessonId: id }),
   setTutorialId: (id) => set({ tutorialId: id }),
+  setRevision: (revision) => set({ revision }),
   setPublished:  (v) => set({ isPublished: v }),
   setMeta:    (patch) => set((s) => ({ meta: { ...s.meta, ...patch }, dirty: true })),
   setLoading: (v) => set({ loading: v }),
   setSaving:  (v) => set({ saving: v }),
   markSaved:  () => set({ dirty: false }),
 
-  hydrate: ({ lessonId, tutorialId, isPublished, meta, files, steps }) =>
-    set({ lessonId, tutorialId, isPublished, meta, files, steps, currentStepIndex: 0, dirty: false }),
+  hydrate: ({ lessonId, tutorialId, revision = null, isPublished, meta, files, steps }) =>
+    set({ lessonId, tutorialId, revision, isPublished, meta, files, steps, currentStepIndex: 0, dirty: false }),
 
   setFiles: (files) => set({ files, dirty: true }),
 
@@ -36,9 +38,11 @@ export const tutorialBuilderStore = create((set) => ({
     steps: s.steps.map((step) => {
       const expectedByFile = { ...step.expectedByFile }
       const workingState = { ...step.workingState }
+      const testDraftByFile = { ...step.testDraftByFile }
       delete expectedByFile[filename]
       delete workingState[filename]
-      return { ...step, expectedByFile, workingState }
+      delete testDraftByFile[filename]
+      return { ...step, expectedByFile, workingState, testDraftByFile }
     }),
     dirty: true,
   })),
@@ -56,6 +60,11 @@ export const tutorialBuilderStore = create((set) => ({
 
   updateStepFields: (idx, patch) => set((s) => ({
     steps: s.steps.map((step, i) => (i === idx ? { ...step, ...patch } : step)),
+    dirty: true,
+  })),
+
+  setTestsDraft: (idx, filename, text) => set(s => ({
+    steps: s.steps.map((step, i) => i === idx ? { ...step, testDraftByFile: { ...step.testDraftByFile, [filename]: text } } : step),
     dirty: true,
   })),
 
@@ -81,8 +90,10 @@ export const tutorialBuilderStore = create((set) => ({
     steps: s.steps.map((step, i) => {
       if (i !== idx) return step
       const expectedByFile = { ...step.expectedByFile }
+      const testDraftByFile = { ...step.testDraftByFile }
       delete expectedByFile[filename]
-      return { ...step, expectedByFile }
+      delete testDraftByFile[filename]
+      return { ...step, expectedByFile, testDraftByFile }
     }),
     dirty: true,
   })),
@@ -92,7 +103,7 @@ export const tutorialBuilderStore = create((set) => ({
   })),
 
   reset: () => set({
-    lessonId: null, tutorialId: null, isPublished: false, meta: emptyMeta,
+    lessonId: null, tutorialId: null, revision: null, isPublished: false, meta: emptyMeta,
     files: [], steps: [], currentStepIndex: 0,
     loading: false, saving: false, dirty: false,
   }),

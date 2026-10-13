@@ -1,5 +1,5 @@
-import { validateTutorialCode } from '../../../utils/validation/tutorialCodeValidation'
-import { validateWorkspaceStructure } from '../../../utils/validation/workspaceStructure'
+import { validateTutorialStep } from '../../../utils/validation/tutorialStepValidation'
+import { resolveStudentStepFiles } from '../../../utils/tutorialSteps'
 import { useRemiHighlight } from '../../../hooks/useRemiHighlights'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate, useParams } from 'react-router'
@@ -12,7 +12,8 @@ import { fetchTutorialById } from '../../../services/tutorial.service'
 import { defineFileReferenceBlocks } from '../../../blockly/fileReferenceBlocks'
 import { useAuthStore } from '../../../store/authStore'
 import { useUIStore } from '../../../store/uiStore'
-import { getOwnSubmissions, saveLessonSubmission } from '../../../services/studentReviewService'
+import { getOwnSubmissions } from '../../../services/studentReviewService'
+import { saveTutorialSubmission, tutorialAction } from '../../../services/tutorialSubmissionService'
 import { useActivityTiming } from '../../../hooks/useActivityTiming'
 import { ArrowLeft, Trophy, Loader2, AlertCircle, Clock } from 'lucide-react'
 
@@ -143,12 +144,14 @@ export default function TutorialViewer({ tutorialIdOverride = null, preview = fa
 
   const [tutorial,       setTutorial]       = useState(null)
   const [steps,          setSteps]          = useState([])
+  const stepsRef = useRef([])
   const [loading,        setLoading]        = useState(true)
   const [loadError,      setLoadError]      = useState(false)
 
   const [currentStep,    setCurrentStep]    = useState(0)
   const [showComplete,   setShowComplete]   = useState(false)
   const savedSubmissions = useRef([])
+  const stepDrafts = useRef(new Map())
   const savingSubmission = useRef(false)
 
   const [stepFiles,      setStepFiles]      = useState([])
@@ -206,20 +209,23 @@ export default function TutorialViewer({ tutorialIdOverride = null, preview = fa
       setLoadError(false)
       try {
         const tut = await fetchTutorialById(tutorialId)
+        savedSubmissions.current = []
+        stepDrafts.current.clear()
         setTutorial(tut)
 
         const sorted = (tut.tutorial_steps || []).sort(
           (a, b) => (a.order_index ?? a.step_order ?? 0) - (b.order_index ?? b.step_order ?? 0)
         )
         setSteps(sorted)
+        stepsRef.current = sorted
 
         let startStep = 0
         if (!preview && profile?.id) {
           savedSubmissions.current = await getOwnSubmissions(tut.lesson_id)
-          const latest = savedSubmissions.current.at(-1)
-          if (latest && !savedSubmissions.current.some(submission => submission.is_final)) {
-            const savedIndex = sorted.findIndex(step => step.id === latest.step_key)
-            startStep = Math.min(savedIndex + 1, sorted.length - 1)
+          if (!savedSubmissions.current.some(submission => submission.is_final)) {
+            // Resume at the first unsaved step, independent of resubmission timestamps.
+            const nextIndex = sorted.findIndex(step => !savedSubmissions.current.some(item => item.step_key === step.id && item.validation_digest === step.validation_revision))
+            startStep = nextIndex < 0 ? Math.max(0, sorted.length - 1) : nextIndex
           }
         }
 
@@ -259,8 +265,9 @@ export default function TutorialViewer({ tutorialIdOverride = null, preview = fa
   const applyStepFiles = useCallback((step) => {
     if (!step) return
 
-    const saved = savedSubmissions.current.find(submission => submission.step_key === step.id)
-    const files = (saved?.files ?? step.tutorial_step_files ?? [])
+    const rawFiles = resolveStudentStepFiles(step, stepsRef.current, savedSubmissions.current, stepDrafts.current)
+    defineFileReferenceBlocks(rawFiles)
+    const files = rawFiles
       .sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0))
       .map(file => dbFileToTab({ ...file, id: file.id ?? `${step.id}-${file.filename}` }))
 
@@ -280,9 +287,19 @@ export default function TutorialViewer({ tutorialIdOverride = null, preview = fa
   }, [])
 
   // ── File tab switch ────────────────────────────────────────────────────────
+  const snapshotFiles = () => stepFiles.map(file => ({
+    ...file,
+    blocks_json: tutorial?.type === 'text' ? null : file.id === activeFileId ? workspace.getWorkspaceState?.() ?? null : file.blocks_json ?? { blocks: { blocks: [] } },
+    code: tutorial?.type === 'text' ? file.code ?? '' : file.id === activeFileId && workspace.getWorkspace() ? codeGeneratorService.generateCode(workspace.getWorkspace(), file.filename) : file.blocks_json ? codeGeneratorService.generateCodeFromState(file.blocks_json, file.filename) : '',
+  }))
+
+  const rememberDraft = () => {
+    if (steps[currentStep]) stepDrafts.current.set(steps[currentStep].id, snapshotFiles())
+  }
+
   const handleFileChange = (fileId) => {
     if (fileId === activeFileId) return
-    const flushed = stepFiles.map(file => file.id === activeFileId ? { ...file, blocks_json: workspace.getWorkspaceState?.() ?? null } : file)
+    const flushed = snapshotFiles()
     setStepFiles(flushed)
     setActiveFileId(fileId)
     const file = flushed.find((f) => f.id === fileId)
@@ -299,43 +316,30 @@ export default function TutorialViewer({ tutorialIdOverride = null, preview = fa
 
   // ── Progress persistence ───────────────────────────────────────────────────
   const saveProgress = async (isCompleted = false) => {
-    if (preview || !profile?.id) return
-    const snapshot = stepFiles.map(file => ({
-      filename: file.filename,
-      blocks_json: file.id === activeFileId ? workspace.getWorkspaceState?.() ?? null : file.blocks_json,
-      code: file.id === activeFileId && workspace.getWorkspace() ? codeGeneratorService.generateCode(workspace.getWorkspace(), file.filename) : file.blocks_json ? codeGeneratorService.generateCodeFromState(file.blocks_json, file.filename) : file.code ?? '',
-    }))
-    const saved = await saveLessonSubmission({ lessonId: tutorial.lesson_id, stepId: steps[currentStep].id, files: snapshot, finish: isCompleted, ...getTiming() })
+    rememberDraft()
+    if (preview) {
+      await tutorialAction({ action: 'check', lessonId: tutorial.lesson_id, stepId: steps[currentStep].id, files: snapshotFiles() })
+      return
+    }
+    if (!profile?.id) throw new Error('Sign in to submit your tutorial.')
+    const snapshot = snapshotFiles().map(({ filename, code, blocks_json }) => ({ filename, code, blocks_json }))
+    const saved = await saveTutorialSubmission({ lessonId: tutorial.lesson_id, stepId: steps[currentStep].id, files: snapshot, finish: isCompleted, ...getTiming() })
     savedSubmissions.current = [...savedSubmissions.current.filter(item => item.id !== saved.id), saved]
+    stepDrafts.current.set(steps[currentStep].id, saved.files)
   }
   // ── Step navigation ────────────────────────────────────────────────────────
   const validateCurrentStep = () => {
-    const expected = steps[currentStep]?.expected ?? []
-    if (tutorial?.type === 'block' && !expected.length) {
-      addToast('This step has no validation configured. Please contact your teacher.', 'error')
+    try {
+      const expected = (steps[currentStep]?.expected ?? []).map(solution => tutorial?.type !== 'block' || solution.expected_blocks_json == null ? solution : {
+        ...solution, expected_code: codeGeneratorService.generateCodeFromState(solution.expected_blocks_json, solution.filename),
+      })
+      const result = validateTutorialStep({ files: snapshotFiles(), expected, mode: tutorial?.type, fileDefinitions: tutorial?.type === 'text' ? tutorial.text_tutorial_step_files ?? [] : tutorial?.block_tutorial_step_files ?? [] })
+      if (!result.passed) addToast(result.failures.join(' • '), 'error')
+      return result.passed
+    } catch (error) {
+      addToast(error.message || 'Could not read the current workspace.', 'error')
       return false
     }
-    for (const solution of expected) {
-      const filename = tutorial.block_tutorial_step_files?.find(item => item.id === solution.file_id)?.filename
-      const file = stepFiles.find(file => file.filename === filename)
-      if (!file) { addToast('A required file is missing.', 'error'); return false }
-      if (tutorial?.type === 'block' && solution.expected_blocks_json) {
-        const state = file.id === activeFileId ? workspace.getWorkspaceState?.() : file.blocks_json
-        const structure = validateWorkspaceStructure(state, solution.expected_blocks_json)
-        if (!structure.passed) {
-          addToast(file.filename + ': ' + structure.failures.join(' • '), 'error')
-          return false
-        }
-      }
-      const code = file.id === activeFileId
-        ? codeGeneratorService.generateCode(workspace.getWorkspace(), file.filename)
-        : codeGeneratorService.generateCodeFromState(file.blocks_json, file.filename)
-      if ((solution.test_cases?.length ?? 0) > 0 || (!solution.expected_blocks_json && solution.expected_code != null)) {
-        const result = validateTutorialCode(code, solution.expected_code, solution.test_cases ?? [])
-        if (!result.passed) { addToast(file.filename + ': ' + result.failures.join(' • '), 'error'); return false }
-      }
-    }
-    return true
   }
 
   const handleNext = async () => {
@@ -355,6 +359,7 @@ export default function TutorialViewer({ tutorialIdOverride = null, preview = fa
     if (savingSubmission.current) return
     const prev = currentStep - 1
     if (prev < 0) return
+    rememberDraft()
     setCurrentStep(prev)
     applyStepFiles(steps[prev])
   }
@@ -370,6 +375,7 @@ export default function TutorialViewer({ tutorialIdOverride = null, preview = fa
   }
   // ── Preview helpers ────────────────────────────────────────────────────────
   const runCode = () => {
+    if (tutorial?.type === 'text') return
     const file = stepFiles.find((f) => f.id === activeFileId)
     if (file && workspace.getWorkspace()) {
       const code = codeGeneratorService.generateCode(workspace.getWorkspace(), file.filename)
@@ -479,7 +485,12 @@ export default function TutorialViewer({ tutorialIdOverride = null, preview = fa
             onFileDelete={() => {}}
           />
           {/* ⚠️ This div is what Blockly injects into. Always render it. */}
-          <div ref={workspace.blocklyDiv} className="blocklyDiv flex-1" />
+          <div ref={workspace.blocklyDiv} className={`blocklyDiv flex-1 ${tutorial?.type === 'text' ? 'hidden' : ''}`} />
+          {tutorial?.type === 'text' && <textarea aria-label={`Code for ${getCurrentFileName()}`} spellCheck={false} className="flex-1 resize-none p-4 font-mono text-sm" value={stepFiles.find(file => file.id === activeFileId)?.code ?? ''} onChange={event => {
+            const code = event.target.value
+            setStepFiles(files => files.map(file => file.id === activeFileId ? { ...file, code } : file))
+            setFilesWithCode(files => files.map(file => file.id === activeFileId ? { ...file, generatedCode: code } : file))
+          }} />}
         </div>
 
         {/* Preview pane */}

@@ -24,3 +24,6 @@ dist-ssr
 *.sw?
 
 .env
+
+# Rebuilt from the app sources before testing/deploying the tutorial Edge Function.
+supabase/functions/_shared/tutorial-runtime.generated.js

@@ -1,5 +1,5 @@
 import { supabase } from '../supabaseClient'
-import { buildStudentSteps } from '../utils/tutorialSteps'
+import { buildStudentSteps, buildTextStudentSteps } from '../utils/tutorialSteps'
 
 // ─── Tutorials ────────────────────────────────────────────────────────────────
 
@@ -14,27 +14,10 @@ export async function fetchTeacherTutorials(teacherId) {
 }
 
 export async function fetchTutorialById(id) {
-  const { data, error } = await supabase
-    .from('tutorials')
-    .select(`
-      *,
-      lesson:lesson_id ( id, title ),
-      block_tutorial_step_files ( * ),
-      block_tutorial_steps ( *, block_tutorial_step_expected ( * ) ),
-      text_tutorial_steps ( *, text_tutorial_step_files ( * ) )
-    `)
-    .eq('id', id)
-    .single()
+  const { data, error } = await supabase.rpc('get_tutorial_view', { p_tutorial: id })
   if (error) throw error
   if (data.type === 'block') return { ...data, title: data.lesson?.title, badges: [], tutorial_steps: buildStudentSteps(data.block_tutorial_steps ?? [], data.block_tutorial_step_files ?? []) }
-  const steps = data.type === 'block' ? data.block_tutorial_steps : data.text_tutorial_steps
-  return { ...data, title: data.lesson?.title, badges: [], tutorial_steps: (steps ?? []).map(step => ({
-    ...step, instruction_text: step.instruction, order_index: step.order,
-    expected_blocks_exact: step.block_tutorial_step_expected?.[0]?.expected_blocks_json ?? null,
-    tutorial_step_files: (step.block_tutorial_step_files ?? step.text_tutorial_step_files ?? []).map(file => ({
-      ...file, blocks_json: file.initial_content_json ?? null, code: file.initial_content ?? '',
-    })),
-  })).sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0)) }
+  return { ...data, title: data.lesson?.title, badges: [], tutorial_steps: buildTextStudentSteps(data.text_tutorial_steps ?? [], data.text_tutorial_step_files ?? []) }
 }
 
 export async function createTutorial(payload) {

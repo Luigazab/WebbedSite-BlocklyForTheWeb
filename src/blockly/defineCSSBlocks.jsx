@@ -1,4 +1,4 @@
-import * as Blockly from 'blockly/core';
+import { Blockly } from './core.js';
 import "@blockly/block-plus-minus";
 
 export const defineCSSBlocks = () => {

@@ -1,4 +1,4 @@
-import * as Blockly from 'blockly/core';
+import { Blockly } from './core.js';
 import { javascriptGenerator } from 'blockly/javascript';
 
 export function defineFileReferenceBlocks(projectFiles = []) {

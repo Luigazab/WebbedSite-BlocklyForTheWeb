@@ -1,4 +1,5 @@
 import { X } from 'lucide-react';
+import { PREVIEW_SANDBOX } from '../../utils/previewSecurity';
 
 const DevicePreviewModal = ({ isOpen, device, deviceSizes, generatedCode, onClose }) => {
   if (!isOpen || !device) return null;
@@ -35,7 +36,7 @@ const DevicePreviewModal = ({ isOpen, device, deviceSizes, generatedCode, onClos
               srcDoc={generatedCode}
               className="border-0"
               title="device-preview"
-              sandbox="allow-scripts allow-same-origin"
+              sandbox={PREVIEW_SANDBOX}
               style={{
                 transform: `scale(${deviceConfig.scale})`,
                 transformOrigin: 'top left',

@@ -1,5 +1,5 @@
 import { javascriptGenerator } from 'blockly/javascript';
-import * as Blockly from 'blockly';
+import { Blockly } from '../blockly/core.js';
 
 export const codeGeneratorService = {
   generateCodeFromState(state, filename) {
@@ -24,9 +24,9 @@ export const codeGeneratorService = {
       case 'html':
         return code;
       case 'css':
-        return code.replace(/<[^>]*>/g, '').trim();
+        return code.replace(/^[\t ]*<\/?style\b[^>\r\n]*>[\t ]*$/gim, '').trim();
       case 'js':
-        return code.replace(/<[^>]*>/g, '').trim();
+        return code.replace(/^[\t ]*<\/?script\b[^>\r\n]*>[\t ]*$/gim, '').trim();
       default:
         return code;
     }
@@ -64,19 +64,21 @@ export const codeGeneratorService = {
     
     // Replace CSS file references
     cssFiles.forEach(css => {
-      const linkPattern = new RegExp(`<link[^>]*href="${css.filename}"[^>]*>`, 'g');
+      const escaped = css.filename.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const linkPattern = new RegExp(`<link\\b[^>]*href=["'](?:\\./)?${escaped}["'][^>]*>`, 'gi');
       if (htmlCode.match(linkPattern)) {
         const styleTag = `<style>\n${css.generatedCode || ''}\n</style>`;
-        htmlCode = htmlCode.replace(linkPattern, styleTag);
+        htmlCode = htmlCode.replace(linkPattern, () => styleTag);
       }
     });
 
     // Replace JS file references
     jsFiles.forEach(js => {
-      const scriptPattern = new RegExp(`<script[^>]*src="${js.filename}"[^>]*></script>`, 'g');
+      const escaped = js.filename.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const scriptPattern = new RegExp(`<script\\b[^>]*src=["'](?:\\./)?${escaped}["'][^>]*>\\s*</script>`, 'gi');
       if (htmlCode.match(scriptPattern)) {
         const scriptTag = `<script>\n${js.generatedCode || ''}\n</script>`;
-        htmlCode = htmlCode.replace(scriptPattern, scriptTag);
+        htmlCode = htmlCode.replace(scriptPattern, () => scriptTag);
       }
     });
 

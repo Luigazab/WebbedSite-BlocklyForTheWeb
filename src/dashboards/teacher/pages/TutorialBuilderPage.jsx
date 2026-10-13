@@ -33,13 +33,12 @@ function StepPanel({
   files, activeFilename, getFileStatusForStep, currentStepIndex,
   steps, onGoToStep, onAddStep, onDeleteStep,
   currentStep, onUpdateCurrentStep,
-  onCapture, onClearCapture, onCaptureInitial, onLoadInitial, onSetTests,
+  onCapture, onClearCapture, onCaptureInitial, onLoadInitial, onSetTests, onDraftTests, onSetStructure,
   panelOpen, setPanelOpen,
 }) {
-  const [testsText, setTestsText] = useState('[]')
   const [metaOpen, setMetaOpen] = useState(true)
   const activeExpected = currentStep?.expectedByFile[activeFilename]
-  useEffect(() => { setTestsText(JSON.stringify(activeExpected?.testCases ?? [], null, 2)) }, [activeExpected, activeFilename, currentStepIndex])
+  const testsText = currentStep?.testDraftByFile?.[activeFilename] ?? JSON.stringify(activeExpected?.testCases ?? [], null, 2)
   const selectedCategory = CATEGORY_OPTIONS.find(
     (c) => JSON.stringify(c.path) === JSON.stringify(currentStep?.highlightCategoryPath ?? [])
   )
@@ -264,9 +263,11 @@ function StepPanel({
           {activeExpected && <div className="space-y-2 text-xs">
             <button className="underline" onClick={() => onCapture(activeFilename)}>Recapture edited solution</button>
             <label className="font-bold">Validation tests (JSON)</label>
-            <p>Use [] for code equality. Flexible example: {JSON.stringify([{type:'htmlText',selector:'h1',value:'Welcome',message:'Add a Welcome heading'}])}</p>
-            <textarea aria-label="Validation tests" rows={7} className="w-full border p-2 font-mono" value={testsText} onChange={e => setTestsText(e.target.value)} />
+            <p>Use [] for source-code equality. Flexible example: {JSON.stringify([{type:'htmlText',selector:'h1',value:'Welcome',message:'Add a Welcome heading'}])}</p>
+            <textarea aria-label="Validation tests" rows={7} className="w-full border p-2 font-mono" value={testsText} onChange={e => onDraftTests(activeFilename, e.target.value)} />
+            <p className="text-slate-500">Save and Publish also apply your edited tests.</p>
             <button className="underline" onClick={() => { try { onSetTests(activeFilename, JSON.parse(testsText)); toast.success('Tests applied') } catch (e) { toast.error(e.message) } }}>Apply tests</button>
+            <label className="flex items-start gap-2"><input type="checkbox" checked={activeExpected.requireStructure === true} onChange={e => onSetStructure(activeFilename, e.target.checked)} /><span>Also require the captured block types and nesting</span></label>
           </div>}
           {/* Status checklist across all files */}
           {files.length > 1 && (
@@ -397,7 +398,7 @@ export default function TutorialBuilderPage({ context = "teacher" }) {
 
   // ── Step nav ────────────────────────────────────────────────────────────
   const handleDeleteStep = useCallback((idx) => {
-    if (!window.confirm('Delete this step? This cannot be undone.')) return
+    if (!window.confirm('Remove this step from the draft? The removal is applied when you save.')) return
     builder.deleteStepAt(idx).catch(e => toast.error(e.message))
   }, [builder])
 
@@ -408,7 +409,7 @@ export default function TutorialBuilderPage({ context = "teacher" }) {
     try {
       const lessonId = await builder.saveAll()
       if (!isEdit) navigate(`/${isAdmin ? "admin" : "teacher"}/tutorial/edit/${lessonId}`, { replace: true })
-      toast.success('Tutorial saved!')
+      toast.success('Draft saved. Publish when it is ready for students.')
     } catch (err) {
       toast.error(err.message || 'Save failed')
     }
@@ -446,7 +447,7 @@ export default function TutorialBuilderPage({ context = "teacher" }) {
   )
 
   return (
-    <div className="relative flex flex-col h-screen bg-gray-100">
+    <div className="relative flex flex-col h-screen bg-gray-100" inert={builder.saving ? true : undefined}>
       {builder.loading && (
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-white/95 backdrop-blur-sm">
           <div className="flex flex-col items-center gap-3">
@@ -480,7 +481,7 @@ export default function TutorialBuilderPage({ context = "teacher" }) {
         <div className="ml-auto flex gap-1.5">
           <Button variant="ghost"><Sun size={20} />Light Mode</Button>
           <Button variant="secondary" onClick={handleSave} disabled={builder.saving}>
-            {builder.saving ? 'Saving…' : 'Save Tutorial'}
+            {builder.saving ? 'Saving…' : 'Save Draft'}
           </Button>
           <Button variant="primary" onClick={handlePublish} disabled={builder.saving}>
             Publish
@@ -505,6 +506,8 @@ export default function TutorialBuilderPage({ context = "teacher" }) {
             onCaptureInitial={builder.captureInitial}
             onLoadInitial={builder.loadInitial}
             onSetTests={builder.setTests}
+            onDraftTests={builder.setTestsDraft}
+            onSetStructure={builder.setStructureRequirement}
             onCapture={handleCapture}
             onClearCapture={handleClearCapture}
             panelOpen={panelOpen} setPanelOpen={setPanelOpen}

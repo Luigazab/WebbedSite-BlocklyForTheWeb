@@ -16,6 +16,7 @@ import UpdatePassword from '../pages/auth/UpdatePassword'
 import ForgotPassword from '../pages/auth/ForgotPassword'
 import NotificationEntry from '../pages/app/NotificationEntry'
 import ClassroomPostPage from '../pages/app/ClassroomPostPage'
+import RemiDemo from '../pages/public/RemiDemo'
 
 const router = createBrowserRouter([
   { path: '/notifications/:notificationId', element: <NotificationEntry />, errorElement: <ErrorPage /> },
@@ -33,6 +34,7 @@ const router = createBrowserRouter([
     },
   ]},
   { path: '/update-password', element: <Auth><UpdatePassword /></Auth>, errorElement: <ErrorPage/>},
+  { path: '/remi-demo', element: <RemiDemo />, errorElement: <ErrorPage /> },
   {
     path: '/student',
     element: <ProtectedRoute allowedRole="student" />,

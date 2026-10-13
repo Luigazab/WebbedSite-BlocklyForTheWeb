@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { PREVIEW_SANDBOX, validPreviewMessage } from '../../utils/previewSecurity';
 import { Play, Eye, Terminal, MonitorSmartphone, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
 import DeviceSelector from './DeviceSelector';
 import DevicePreviewModal from './DevicePreviewModal';
@@ -23,7 +24,14 @@ const PreviewPane = ({
   
   // --- New State for Console and Bottom Panel ---
   const [activeBottomPanel, setActiveBottomPanel] = useState('devices'); // 'devices' or 'console'
-  const [logs, setLogs] = useState([]);
+  const [logState, setLogState] = useState({ revision: null, entries: [] });
+  const previewRevision = useMemo(() => ({ code: generatedCode, file: previewFileName }), [generatedCode, previewFileName]);
+  const logs = logState.revision === previewRevision ? logState.entries : [];
+  const setLogs = useCallback(update => setLogState(previous => ({
+    revision: previewRevision,
+    entries: typeof update === 'function' ? update(previous.revision === previewRevision ? previous.entries : []) : update,
+  })), [previewRevision]);
+  const previewRef = useRef(null);
 
   const handleDeviceSelect = (device) => {
     onSelectDevice(device);
@@ -33,12 +41,13 @@ const PreviewPane = ({
   // Listen for messages from the iframe (Navigation & Console Logs)
   useEffect(() => {
     const handleMessage = (event) => {
+      if (!validPreviewMessage(event, previewRef.current?.contentWindow)) return;
       if (event.data?.type === 'NAVIGATE_TO_FILE') {
         onNavigateToFile?.(event.data.filename);
       }
       
       if (event.data?.type === 'CONSOLE_MESSAGE') {
-        setLogs(prev => [...prev, { 
+        setLogs(prev => [...prev.slice(-199), {
           type: event.data.logType, 
           message: event.data.message, 
           time: new Date().toLocaleTimeString([], { hour12: false }) 
@@ -48,7 +57,7 @@ const PreviewPane = ({
 
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
-  }, [onNavigateToFile]);
+  }, [onNavigateToFile, setLogs]);
 
   const handleToggle = () => {
     if (activeTab === "preview") {
@@ -58,11 +67,6 @@ const PreviewPane = ({
       setActiveTab("preview");
     }
   };
-
-  // Clear logs automatically when the preview code completely changes
-  useEffect(() => {
-    setLogs([]);
-  }, [generatedCode, previewFileName]);
 
   // Inject console interceptor AND navigation handler BEFORE the generated code
   // This ensures the console is hijacked before the user's code executes
@@ -185,10 +189,11 @@ const PreviewPane = ({
                   <span className="w-3 h-3 rounded-full bg-blockly-green"></span>
               </div>
               <iframe 
+                ref={previewRef}
                 srcDoc={previewCode} 
                 className="w-full h-full border-0" 
                 title="preview" 
-                sandbox="allow-scripts allow-same-origin"
+                sandbox={PREVIEW_SANDBOX}
               />
             </div>
           )}

@@ -22,20 +22,10 @@ export const authService = {
   },
 
   async signUp(email, password, username, role) {
-    const { data, error } = await supabase.auth.signUp({ email, password, options: { data: { username } } })
+    if (!['student', 'teacher'].includes(role)) throw new Error('Choose a student or teacher account')
+    const { data, error } = await supabase.auth.signUp({ email, password, options: { data: { username, role } } })
     if (error) throw error
-
-    const { error: profileError } = await supabase
-      .from('profiles')
-      .insert({
-        id: data.user.id,
-        email,
-        username,
-        role,
-        created_at: new Date().toISOString(),
-      })
-    if (profileError) throw profileError
-
+    // The auth signup trigger creates the profile before email confirmation.
     return data
   },
 

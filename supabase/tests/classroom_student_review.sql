@@ -3,7 +3,7 @@ begin;
 do $$
 declare teacher uuid; student uuid; outsider uuid; course uuid; classroom uuid; topic uuid;
  lab uuid; tutorial_lesson uuid; quiz_lesson uuid; tutorial uuid; step1 uuid; step2 uuid; tutorial_file uuid; quiz uuid;
- submitted public.lesson_submissions; review jsonb; amount integer;
+ submitted public.lesson_submissions; review jsonb; definition jsonb; amount integer;
 begin
  select id into teacher from public.profiles where role='teacher' limit 1;
  select id into student from public.profiles where role='student' limit 1;
@@ -39,9 +39,24 @@ begin
  begin
    perform public.save_lesson_submission(tutorial_lesson,'[{"filename":"index.html","code":"wrong"}]'::jsonb,step1,false); raise exception 'Wrong legacy tutorial code accepted';
  exception when raise_exception then if sqlerrm='Wrong legacy tutorial code accepted' then raise; end if; end;
- perform public.save_lesson_submission(tutorial_lesson,'[{"filename":"index.html","code":"first"}]'::jsonb,step1,false);
+ -- Accepted tutorial submissions now arrive through the trusted Edge validator.
+ reset role;
+ perform set_config('request.jwt.claims','{"role":"service_role"}',true);
+ perform set_config('request.jwt.claim.sub','',true);
+ definition := public.get_tutorial_validation_definition(student,tutorial_lesson,step1);
+ perform public.save_validated_tutorial_submission(student,tutorial_lesson,step1,'[{"filename":"index.html","code":"first"}]'::jsonb,false,definition->>'revision');
+ perform set_config('request.jwt.claims',jsonb_build_object('sub',student,'role','authenticated')::text,true);
+ perform set_config('request.jwt.claim.sub',student::text,true);
+ set local role authenticated;
  if exists(select 1 from public.user_lesson_progress where user_id=student and lesson_id=tutorial_lesson and is_completed) then raise exception 'Partial tutorial marked complete.'; end if;
- perform public.save_lesson_submission(tutorial_lesson,'[{"filename":"index.html","code":"second"}]'::jsonb,step2,true);
+ reset role;
+ perform set_config('request.jwt.claims','{"role":"service_role"}',true);
+ perform set_config('request.jwt.claim.sub','',true);
+ definition := public.get_tutorial_validation_definition(student,tutorial_lesson,step2);
+ perform public.save_validated_tutorial_submission(student,tutorial_lesson,step2,'[{"filename":"index.html","code":"second"}]'::jsonb,true,definition->>'revision');
+ perform set_config('request.jwt.claims',jsonb_build_object('sub',student,'role','authenticated')::text,true);
+ perform set_config('request.jwt.claim.sub',student::text,true);
+ set local role authenticated;
  if not exists(select 1 from public.block_step_completed where user_id=student and step_id=step2) then raise exception 'Tutorial step not saved.'; end if;
  insert into public.quiz_attempts(user_id,quiz_id,score,status) values(student,quiz,87,'passed'),(student,quiz,0,'failed');
  begin
