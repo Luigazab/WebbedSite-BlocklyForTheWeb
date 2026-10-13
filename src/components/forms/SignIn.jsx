@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useAuth } from '../../hooks/useAuth'
+import { Link } from 'react-router'
 
 const SignIn = () => {
   const { handleSignIn } = useAuth()
@@ -57,7 +58,7 @@ const SignIn = () => {
             <input id="remember-me" className='accent-yellow-500/70 w-4 h-4' type="checkbox" checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)}/>
             <label htmlFor="remember-me">Remember me</label>
           </div>
-          <a href='/forgot-password' className='text-sm! hover:underline hover:text-blockly-purple'>I forgot my password</a>
+          <Link to='/forgot-password' className='text-sm! hover:underline hover:text-blockly-purple'>I forgot my password</Link>
         </div>
 
         <button className="btn" disabled={loading}>

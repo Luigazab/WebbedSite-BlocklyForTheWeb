@@ -45,7 +45,7 @@ const Register = () => {
           </Link>
         </div>
       </div>
-      <a href='/login' className='mt-12 text-2xl font-bold text-blockly-light btn btn-secondary'>I already have an account</a>
+      <Link to='/login' className='mt-12 text-2xl font-bold text-blockly-light btn btn-secondary'>I already have an account</Link>
     </div>
   )
 }
