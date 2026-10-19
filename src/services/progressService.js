@@ -26,23 +26,10 @@ export async function submitQuizAttempt({attemptId,answers}) {
   return {...data,score:Math.round(100*data.score/data.score_total),passed:data.score>=data.passing_count}
 }
 
-export async function getAllQuizAttempts(userId, quizId) {
-  const { data, error } = await supabase
-    .from('quiz_attempts')
-    .select(`
-      id, quiz_id, score, status, started_at, finished_at, score_total, passing_count,
-      quiz_answers ( question_id, options_id, is_correct )
-    `)
-    .eq('user_id', userId)
-    .eq('quiz_id', quizId)
-    .not('finished_at','is',null)
-    .order('started_at', { ascending: true })
-
-  if (error) throw error
-  return (data ?? []).map((attempt) => ({
-    ...attempt,
-    answers: attempt.quiz_answers ?? [],
-  }))
+export async function getAllQuizAttempts(_userId, quizId) {
+  const {data,error}=await supabase.rpc('assessed_quiz_history',{p_quiz:quizId})
+  if(error)throw error
+  return data ?? []
 }
 
 export async function recordQuizAttempt({ attemptId, answers }) {

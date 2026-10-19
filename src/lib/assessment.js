@@ -15,6 +15,7 @@ export function rubricTotal(rubric, scores) {
 }
 export function quizPercent(attempt, quiz) {
   if (attempt?.score == null || !attempt.finished_at) return null
+  if (attempt.percentage != null) return Math.round(Number(attempt.percentage))
   return (attempt.score_total || quiz?.question_count) ? Math.round(100 * attempt.score / (attempt.score_total || quiz.question_count)) : Number(attempt.score)
 }
 export function bestQuiz(attempts = [], quiz) {

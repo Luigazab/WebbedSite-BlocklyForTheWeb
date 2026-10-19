@@ -7,7 +7,7 @@ import { getStudentReview } from '../../../services/studentReviewService'
 
 const tabs = [{ id: 'activities', label: 'Activities', icon: BookOpen }, { id: 'quizzes', label: 'Quizzes', icon: ClipboardList }, { id: 'submissions', label: 'Submissions', icon: FileCode }]
 const date = value => value ? new Date(value).toLocaleString() : '—'
-const attemptScore = (attempt, quiz) => attempt.score == null ? 'No score yet' : attempt.status === 'completed' && (attempt.score_total || quiz?.question_count) ? `${attempt.score} / ${attempt.score_total || quiz.question_count} correct` : `${attempt.score}%`
+const attemptScore = (attempt, quiz) => attempt.score == null ? 'No score yet' : attempt.percentage != null ? `${Math.round(attempt.percentage)}%` : (attempt.score_total || quiz?.question_count) ? `${attempt.score} / ${attempt.score_total || quiz.question_count} correct` : `${attempt.score}%`
 
 export default function StudentProgressModal({ classroomId, student, onClose, onGraded }) {
   const [review, setReview] = useState(null)

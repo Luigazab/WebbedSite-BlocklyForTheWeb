@@ -106,6 +106,13 @@ begin
  if exists(select 1 from public.submission_history where submission_id=s.id) then raise exception 'Outsider accessed submission history.'; end if;
  begin perform public.classroom_gradebook(classroom);raise exception 'Outsider opened gradebook';exception when raise_exception then if sqlerrm='Outsider opened gradebook' then raise;end if;end;
  reset role;
+ insert into public.quiz_attempts(user_id,quiz_id,score,status,finished_at) values(student,quiz,1,'failed',now()) returning * into a;
+ insert into public.quiz_answers(attempt_id,question_id,options_id,is_correct) values(a.id,question,correct_option,true);
+ if private.quiz_attempt_percent(a)<>100 then raise exception 'Historical raw-count attempt displayed as a percentage.';end if;
+ a.score:=95;
+ if private.quiz_attempt_percent(a)<>95 then raise exception 'Historical percentage grade was rescaled.';end if;
+ a.score:=1;a.score_total:=2;
+ if private.quiz_attempt_percent(a)<>50 then raise exception 'Published quiz denominator was ignored.';end if;
  update auth.users set banned_until=now()+interval '1 day' where id=student;
  perform set_config('request.jwt.claims',jsonb_build_object('sub',student,'role','authenticated')::text,true);set local role authenticated;
  if exists(select 1 from public.lessons where classroom_id=classroom) then raise exception 'Disabled account retained classroom access.';end if;

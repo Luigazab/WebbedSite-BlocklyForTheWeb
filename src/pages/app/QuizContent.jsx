@@ -26,6 +26,8 @@ const attemptToResult = (attempt, questions) => {
 
   return {
     score: attempt.score,
+    percentage: attempt.percentage,
+    scoreLabel: !attempt.score_total && attempt.percentage === attempt.score ? `${attempt.percentage}%` : `${attempt.score} / ${attempt.score_total || questions.length}`,
     total: attempt.score_total || questions.length,
     timeTaken,
     startedAt,
@@ -92,7 +94,7 @@ const QuizContent = ({ lessonId, onNext, navigation, preview = false }) => {
 
   // Once attempts load, jump straight to the best one instead of "start"
   if (phase === "start" && attempts.length > 0 && currentResult === null) {
-    const bestIdx = attempts.reduce((bi, a, i) => (a.score > attempts[bi].score ? i : bi), 0);
+    const bestIdx = attempts.reduce((bi, a, i) => ((a.percentage ?? 100*a.score/(a.score_total || total)) > (attempts[bi].percentage ?? 100*attempts[bi].score/(attempts[bi].score_total || total)) ? i : bi), 0);
     setActiveAttemptIdx(bestIdx);
     setCurrentResult(attemptToResult(attempts[bestIdx], questions));
     setPhase("result");
@@ -176,7 +178,7 @@ const QuizContent = ({ lessonId, onNext, navigation, preview = false }) => {
         onSubmitToTopic={handleToTopic}
         onSubmitToNext={navigation?.next ? handleToNext : handleToTopic}
         title="Quiz Complete!"
-        message={`You scored ${currentResult?.score ?? 0} / ${total}. ${
+        message={`You scored ${currentResult?.scoreLabel ?? `${currentResult?.score ?? 0} / ${total}`}. ${
           preview ? "Preview only." : "Attempt saved!"
         }`}
       />

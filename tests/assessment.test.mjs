@@ -9,6 +9,8 @@ test('rubric scoring validates all criterion limits and totals',()=>{
 test('only completed quiz evidence contributes and raw counts become percentages',()=>{
  assert.equal(bestQuiz([{score:100,status:'in_progress'},{score:3,status:'completed',finished_at:'2026-10-18',score_total:4},{score:1,status:'completed',finished_at:'2026-10-18',score_total:4}],{question_count:4}),75)
  assert.equal(bestQuiz([],{question_count:4}),null)
+ assert.equal(bestQuiz([{score:3,status:'failed',finished_at:'2026-10-18',percentage:30}],{question_count:10}),30)
+ assert.equal(bestQuiz([{score:95,status:'failed',finished_at:'2026-10-18',percentage:95}],{question_count:10}),95)
 })
 test('pending labs are unscored and lecture completion is not a grade',()=>{
  assert.deepEqual(lessonResult({id:'l',type:'laboratory'},[{lesson_id:'l',is_final:true,score:null,review_status:'submitted'}]),{score:null,status:'Awaiting review'})

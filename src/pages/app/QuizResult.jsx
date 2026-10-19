@@ -23,7 +23,7 @@ const QuizResult = ({
 
   const { score, total, timeTaken, answers: rawAnswers = [] } = result
   const answers = rawAnswers.map(normaliseAnswer)
-  const percentage = total > 0 ? Math.round((score / total) * 100) : 0
+  const percentage = result.percentage != null ? Math.round(result.percentage) : total > 0 ? Math.round((score / total) * 100) : 0
   const questions = lesson.quiz?.questions || []
 
   const [progress, setProgress] = useState(0)
