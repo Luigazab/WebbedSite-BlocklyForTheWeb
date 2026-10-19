@@ -34,9 +34,11 @@ Record date, role, classroom, observed result and evidence for each journey. Dat
 | Teacher creates a reusable block, student reopens and submits it | Runtime/version policies verified; browser acceptance pending |
 | Reports, screenshot access, status history and dashboard reconciliation | Report/history/screenshot permissions verified with two teachers, separate students and an admin; live browser acceptance pending |
 | Password-recovery delivery, link, password change and old-password rejection | Delivery and password form confirmed by inbox owner; password change/old-password/used-link checks pending |
-| Disabled accounts and direct-route protection | Automated authorization checks; live browser acceptance pending |
+| Disabled accounts and direct-route protection | Automated authorization checks; signed-in student redirected away from admin and teacher pages; disabled-account browser check pending |
 
 Read-only browser checks on 19 October used the owner's existing administrator and teacher accounts. Admin Overview, Course Templates (including the JavaScript sequence), Reports, Analytics and Account Settings loaded. Teacher Home, classroom Students, Gradebook, student attempt history and My Projects loaded. Counts reconciled with stored records. The legacy quiz normalization preserves a stored correct-answer count of 3 and shows 30% for its ten-question quiz. Saved project details open with HTML/JavaScript tabs. These checks do not establish draft recovery, lab revision, export, account provisioning or complete cross-role journeys.
+
+The existing student account was also checked in ICT A. Home, My Classrooms, published/locked content messages, the lecture viewer, quiz results and both saved attempts, My Progress, project filters/details, Help/report history and profile/security settings loaded. My Progress and quiz history agree with the teacher's 30% summary. The completed lecture remains unscored, and courses without checkpoints display Not yet assessed. Existing classroom copies still contain their older content; new master lessons were not inserted into them silently. No new assessment attempt, completion, grade or project was created during these checks.
 
 ## Rollback and recovery
 
