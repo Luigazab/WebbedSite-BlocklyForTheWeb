@@ -12,7 +12,7 @@ The initial deployment preserved 6 profiles, 5 projects, 7 quiz attempts, 8 less
 
 ## Verification evidence
 
-- `npm test`: 106 tests passed, including HTML/CSS/JavaScript reference regeneration, interactive JavaScript examples, reusable composition output, authentication behavior, tutorial validation and previews.
+- `npm test`: 111 tests passed, including HTML/CSS/JavaScript reference regeneration, interactive JavaScript examples, reusable composition output, authentication behavior, tutorial validation and previews.
 - `npm run build:tutorial-runtime`: generated the deployable worker from the browser's generator and validation sources.
 - `npm run build`: passes. The initial entry JavaScript is approximately 544 KB (162 KB gzip), compared with approximately 4.35 MB before route splitting. Editor/authoring chunks still produce size warnings.
 - `supabase/tests/completion_release.sql` and `supabase/tests/report_and_role_isolation.sql`: rollback-only tests pass against the deployed schema. They cover signup metadata, teacher password enforcement, server quiz scoring, hidden answer keys, lab drafts/submission/revision, rubric freezing, stale reviews, duplicate XP/projects/badges, checkpoint proficiency, gradebook access and independent template imports. Synthetic accounts do not survive.

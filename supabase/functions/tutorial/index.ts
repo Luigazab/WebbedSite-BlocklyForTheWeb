@@ -1,6 +1,7 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.94.0'
 import { canonicalTutorialFiles, validateTutorialStep, validateTutorialReference, validateTestCases } from '../_shared/tutorial-runtime.generated.js'
 import { createTutorialHandler } from './handler.js'
+import { authenticateActiveAccount } from '../_shared/active-account.js'
 
 const db = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!, { auth: { persistSession: false, autoRefreshToken: false } })
 async function rpc(name: string, args: Record<string, unknown>) {
@@ -9,10 +10,7 @@ async function rpc(name: string, args: Record<string, unknown>) {
   return data
 }
 Deno.serve(createTutorialHandler({
-  authenticate: async (token: string) => {
-    const { data, error } = await db.auth.getUser(token)
-    return error ? null : data.user
-  },
+  authenticate: (token: string) => authenticateActiveAccount(db, token),
   loadDefinition: (userId: string, lessonId: string, stepId: string, preview: boolean) => rpc('get_tutorial_validation_definition', { p_user: userId, p_lesson: lessonId, p_step: stepId, p_preview: preview }),
   saveSubmission: (userId: string, body: Record<string, unknown>) => rpc('save_validated_tutorial_submission', {
     p_user: userId, p_lesson: body.lessonId, p_step: body.stepId, p_files: body.files,

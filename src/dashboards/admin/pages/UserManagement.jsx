@@ -17,6 +17,7 @@ const PAGE_SIZE = 15;
 export default function UserManagement() {
   const [users, setUsers] = useState([]);
   const [total, setTotal] = useState(0);
+  const [counts, setCounts] = useState(null);
   const [page, setPage] = useState(0);
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
@@ -40,6 +41,14 @@ export default function UserManagement() {
 
       const { data, count, error } = await q;
       if (error) throw error;
+      const countResults = await Promise.all(['all','student','teacher','admin'].map(role => {
+        let query = supabase.from('profiles').select('id',{count:'exact',head:true});
+        if (role !== 'all') query = query.eq('role',role);
+        return query;
+      }));
+      const countError = countResults.find(result => result.error)?.error;
+      if (countError) throw countError;
+      setCounts(countResults.map(result => result.count));
       const statuses = await adminAuthService.getUserStatuses((data || []).map(user => user.id));
       setUsers((data || []).map(user => ({ ...user, ...statuses[user.id] })));
       setTotal(count || 0);
@@ -101,15 +110,14 @@ export default function UserManagement() {
           <p className="mt-1 text-sm text-muted-foreground">View and manage user accounts.</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="formalPlain">Import CSV</Button>
-          <Button onClick={() => setShowCreate(true)} variant="formalPrimary"><UserPlus size={20}/>Invite User</Button>
+          <Button onClick={() => setShowCreate(true)} variant="formalPrimary"><UserPlus size={20}/>Create account</Button>
         </div>
       </div>
       <section className="grid gap-4 md:grid-cols-4">
-        <AdminStat label="Total Users" value="5" icon={Users} sub="registered"/>
-        <AdminStat label="Students" value="3" icon={GraduationCap} sub="active"/>
-        <AdminStat label="Teachers" value="2" icon={School} sub="active"/>
-        <AdminStat label="Admins" value="1" icon={ShieldUser} sub="active" accent/>
+        <AdminStat label="Total Users" value={counts?.[0] ?? '—'} icon={Users} sub="all accounts"/>
+        <AdminStat label="Students" value={counts?.[1] ?? '—'} icon={GraduationCap} sub="accounts"/>
+        <AdminStat label="Teachers" value={counts?.[2] ?? '—'} icon={School} sub="accounts"/>
+        <AdminStat label="Admins" value={counts?.[3] ?? '—'} icon={ShieldUser} sub="accounts" accent/>
       </section>
       {/* Toolbar */}
       <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-6">

@@ -33,11 +33,11 @@ AS $function$BEGIN
   DROP TABLE IF EXISTS pg_temp._block_file_map;
   CREATE TEMP TABLE _block_file_map (old_id uuid, new_id uuid) ON COMMIT DROP;
   TRUNCATE _block_file_map;
- 
+
   INSERT INTO public.classroom_courses (classroom_id, course_id)
   VALUES (p_classroom_id, p_course_id)
   ON CONFLICT DO NOTHING;
- 
+
   -- clone topics
   WITH src AS (
     SELECT t.*, gen_random_uuid() AS new_id
@@ -55,7 +55,7 @@ AS $function$BEGIN
     RETURNING id
   )
   INSERT INTO _topic_map (old_id, new_id) SELECT id, new_id FROM src;
- 
+
   -- clone lessons, repointed at the new topic ids
   WITH src AS (
     SELECT l.*, tm.new_id AS new_topic_id, gen_random_uuid() AS new_id
@@ -72,13 +72,13 @@ AS $function$BEGIN
     RETURNING id
   )
   INSERT INTO _lesson_map (old_id, new_id) SELECT id, new_id FROM src;
- 
+
   -- clone lectures (1:1 with lesson, simplest case)
   INSERT INTO public.lectures (id, content, video_src, file_url, lesson_id)
   SELECT gen_random_uuid(), lec.content, lec.video_src, lec.file_url, lm.new_id
   FROM public.lectures lec
   JOIN _lesson_map lm ON lm.old_id = lec.lesson_id;
- 
+
   -- clone quizzes
   WITH src AS (
     SELECT q.*, lm.new_id AS new_lesson_id, gen_random_uuid() AS new_id
@@ -90,7 +90,7 @@ AS $function$BEGIN
     RETURNING id
   )
   INSERT INTO _quiz_map (old_id, new_id) SELECT id, new_id FROM src;
- 
+
   -- clone questions
   WITH src AS (
     SELECT q.*, qm.new_id AS new_quiz_id, gen_random_uuid() AS new_id
@@ -102,13 +102,13 @@ AS $function$BEGIN
     RETURNING id
   )
   INSERT INTO _question_map (old_id, new_id) SELECT id, new_id FROM src;
- 
+
   -- clone options
   INSERT INTO public.options (id, question_id, text, is_correct, image_src)
   SELECT gen_random_uuid(), qm.new_id, o.text, o.is_correct, o.image_src
   FROM public.options o
   JOIN _question_map qm ON qm.old_id = o.question_id;
- 
+
   -- clone laboratories + files
   WITH src AS (
     SELECT lab.*, lm.new_id AS new_lesson_id, gen_random_uuid() AS new_id
@@ -128,7 +128,7 @@ AS $function$BEGIN
          lf.intial_code, lf.intial_blockly_code, lf.expected_code, lf.test_cases
   FROM public.laboratory_files lf
   JOIN lab_map labmap ON labmap.old_id = lf.laboratory_id;
- 
+
   -- clone tutorials (1:1 with lesson)
   WITH src AS (
     SELECT tu.*, lm.new_id AS new_lesson_id, gen_random_uuid() AS new_id
@@ -140,7 +140,7 @@ AS $function$BEGIN
     RETURNING id
   )
   INSERT INTO _tutorial_map (old_id, new_id) SELECT id, new_id FROM src;
- 
+
   -- clone text tutorial steps
   WITH src AS (
     SELECT s.*, tm.new_id AS new_tutorial_id, gen_random_uuid() AS new_id
@@ -152,7 +152,7 @@ AS $function$BEGIN
     RETURNING id
   )
   INSERT INTO _text_step_map (old_id, new_id) SELECT id, new_id FROM src;
- 
+
   -- clone text tutorial step files (linked to tutorial, not step)
   WITH src AS (
     SELECT f.*, tm.new_id AS new_tutorial_id, gen_random_uuid() AS new_id
@@ -164,14 +164,14 @@ AS $function$BEGIN
     RETURNING id
   )
   INSERT INTO _text_file_map (old_id, new_id) SELECT id, new_id FROM src;
- 
+
   -- clone text tutorial step expected (links a step + a file)
   INSERT INTO public.text_tutorial_step_expected (id, step_id, file_id, expected_code, test_cases)
   SELECT gen_random_uuid(), sm.new_id, fm.new_id, e.expected_code, e.test_cases
   FROM public.text_tutorial_step_expected e
   JOIN _text_step_map sm ON sm.old_id = e.step_id
   JOIN _text_file_map fm ON fm.old_id = e.file_id;
- 
+
   -- clone block tutorial steps
   WITH src AS (
     SELECT s.*, tm.new_id AS new_tutorial_id, gen_random_uuid() AS new_id
@@ -183,7 +183,7 @@ AS $function$BEGIN
     RETURNING id
   )
   INSERT INTO _block_step_map (old_id, new_id) SELECT id, new_id FROM src;
- 
+
   -- clone block tutorial step files (linked to tutorial, not step)
   WITH src AS (
     SELECT f.*, tm.new_id AS new_tutorial_id, gen_random_uuid() AS new_id
@@ -195,7 +195,7 @@ AS $function$BEGIN
     RETURNING id
   )
   INSERT INTO _block_file_map (old_id, new_id) SELECT id, new_id FROM src;
- 
+
   -- clone block tutorial step expected (links a step + a file)
   INSERT INTO public.block_tutorial_step_expected (id, step_id, file_id, expected_code, test_cases)
   SELECT gen_random_uuid(), sm.new_id, fm.new_id, e.expected_code, e.test_cases
@@ -302,4 +302,3 @@ begin
  where id=p_submission returning * into submission;
  return submission;
 end $function$;
-

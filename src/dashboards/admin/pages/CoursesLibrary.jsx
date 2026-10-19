@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious, } from "#components/ui/pagination";
 import DeleteModal from "#components/ui/DeleteModal";
 import { formatDate } from "@/utils/dateFormat";
+import { supabase } from '@/supabaseClient';
 
 export default function CoursesLibrary({ readOnly = false }) {
   const basePath = readOnly ? "/teacher" : "/admin";
@@ -44,9 +45,10 @@ export default function CoursesLibrary({ readOnly = false }) {
   const fetchCourses = async (page) => {
     setLoading(true);
     try {
-      const data = await handleGet(page, pageSize);
+      const [data, totals] = await Promise.all([handleGet(page, pageSize), supabase.from('courses').select('id',{count:'exact',head:true})]);
+      if (totals.error) throw totals.error;
       setCourses(data);
-      setTotalCourses(100);
+      setTotalCourses(totals.count ?? 0);
     } catch (error) {
       toast.error("Failed to fetch courses:", error);
     } finally {

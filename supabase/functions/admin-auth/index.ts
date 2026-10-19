@@ -1,15 +1,13 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.94.0'
 import { createAdminAuthHandler } from './handler.js'
 import { checkPassword } from '../_shared/password-policy.js'
+import { authenticateActiveAccount } from '../_shared/active-account.js'
 
 const db = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!, {
   auth: { persistSession: false, autoRefreshToken: false },
 })
 Deno.serve(createAdminAuthHandler({
-  authenticate: async (token: string) => {
-    const { data, error } = await db.auth.getUser(token)
-    return error ? null : data.user
-  },
+  authenticate: (token: string) => authenticateActiveAccount(db, token),
   getRole: async (id: string) => {
     const { data, error } = await db.from('profiles').select('role').eq('id', id).single()
     if (error) throw error

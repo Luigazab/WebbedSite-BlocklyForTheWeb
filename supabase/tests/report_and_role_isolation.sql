@@ -31,5 +31,10 @@ begin
  if (select count(*) from public.feedback_history where feedback_id=report)<>3 then raise exception 'Report status history incorrect.';end if;
  if not exists(select 1 from storage.objects where bucket_id='report-screenshots' and name=student_a||'/fixture.png') then raise exception 'Administrator cannot review screenshot.';end if;
  reset role;
+ update auth.users set banned_until=now()+interval '1 day' where id=teacher_b;
+ perform set_config('request.jwt.claims',jsonb_build_object('sub',teacher_b,'role','authenticated')::text,true);set local role authenticated;
+ begin perform public.classroom_gradebook(class_b);raise exception 'Disabled teacher opened gradebook';exception when raise_exception then if sqlerrm='Disabled teacher opened gradebook' then raise;end if;end;
+ if exists(select 1 from public.profiles where id<>teacher_b) then raise exception 'Disabled teacher read other private profiles.';end if;
+ reset role;
 end $test$;
 rollback;

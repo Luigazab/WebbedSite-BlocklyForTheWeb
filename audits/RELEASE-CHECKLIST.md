@@ -1,6 +1,6 @@
 # WebbedSite completion release
 
-Updated 19 October 2026. Existing uncommitted editor/JavaScript work was preserved in a pre-change temporary backup and incorporated into the release. Baseline: 87 automated tests and a passing build. Current: 106 automated tests, passing production build and shared runtime packaging; database role/assessment/report tests pass using rollback-only fixtures.
+Updated 19 October 2026. Existing uncommitted editor/JavaScript work was preserved in a pre-change temporary backup and incorporated into the release. Baseline: 87 automated tests and a passing build. Current: 111 automated tests, passing production build and shared runtime packaging; database role/assessment/report tests pass using rollback-only fixtures.
 
 ## Feature status
 
@@ -20,7 +20,7 @@ Updated 19 October 2026. Existing uncommitted editor/JavaScript work was preserv
 | Reports, status history, private screenshots | Working in database permission tests | Two teachers, separate students and administrator; broad storage policies cannot bypass screenshot ownership |
 | Disabled accounts and private-record boundaries | Working in database/auth tests | Banned-account rejection, cross-classroom access denial and directory-field checks |
 | Route splitting and runtime deployment | Working build; deployed functions verified | Entry about 544 KB vs 4.35 MB before; large editor chunks remain |
-| Frontend deployment and complete browser acceptance | In progress | Public smoke checks plus full authenticated multi-role journeys required |
+| Frontend deployment and complete browser acceptance | Deployed; acceptance in progress | Release marker and teacher-registration redirect verified; admin Overview/Analytics load real data; other role journeys pending |
 | Setup, deployment and defense documentation | Prepared | README, docs/RELEASE.md, DEFENSE-DEMO.md and THESIS-ALIGNMENT.md |
 | Native manuscript edits | Not applied | Drive edit request declined; proposed wording/diagrams saved locally |
 
