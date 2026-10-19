@@ -15,6 +15,7 @@ The initial deployment preserved 6 profiles, 5 projects, 7 quiz attempts, 8 less
 - `npm test`: 111 tests passed, including HTML/CSS/JavaScript reference regeneration, interactive JavaScript examples, reusable composition output, authentication behavior, tutorial validation and previews.
 - `npm run build:tutorial-runtime`: generated the deployable worker from the browser's generator and validation sources.
 - `npm run build`: passes. The initial entry JavaScript is approximately 544 KB (162 KB gzip), compared with approximately 4.35 MB before route splitting. Editor/authoring chunks still produce size warnings.
+- `node scripts/verify-deployment.mjs`: anonymous production check on 19 October measured 543,964 decoded entry bytes with Brotli response encoding and the expected release marker. This measures the entry module, not all later lazy-loaded editor assets.
 - `supabase/tests/completion_release.sql` and `supabase/tests/report_and_role_isolation.sql`: rollback-only tests pass against the deployed schema. They cover signup metadata, teacher password enforcement, server quiz scoring, hidden answer keys, lab drafts/submission/revision, rubric freezing, stale reviews, duplicate XP/projects/badges, checkpoint proficiency, gradebook access and independent template imports. Synthetic accounts do not survive.
 - Security advisor: the course-count view now follows caller permissions; mutable function paths and anonymous privileged-function warnings were addressed. The display directory deliberately remains a narrow owner-executed view of names and avatars, preserving existing API foreign-key joins; it exposes no email, role or activity fields. Its advisor finding is documented and intentional. The remaining private notification queue intentionally has no client policies. The platform uses its existing application password-breach screening; Supabase's separate built-in leaked-password setting remains disabled.
 
@@ -34,6 +35,8 @@ Record date, role, classroom, observed result and evidence for each journey. Dat
 | Reports, screenshot access, status history and dashboard reconciliation | Report/history/screenshot permissions verified with two teachers, separate students and an admin; live browser acceptance pending |
 | Password-recovery delivery, link, password change and old-password rejection | Delivery and password form confirmed by inbox owner; password change/old-password/used-link checks pending |
 | Disabled accounts and direct-route protection | Automated authorization checks; live browser acceptance pending |
+
+Read-only browser checks on 19 October used the owner's existing administrator and teacher accounts. Admin Overview, Course Templates (including the JavaScript sequence), Reports, Analytics and Account Settings loaded. Teacher Home, classroom Students, Gradebook, student attempt history and My Projects loaded. Counts reconciled with stored records. The legacy quiz normalization preserves a stored correct-answer count of 3 and shows 30% for its ten-question quiz. Saved project details open with HTML/JavaScript tabs. These checks do not establish draft recovery, lab revision, export, account provisioning or complete cross-role journeys.
 
 ## Rollback and recovery
 

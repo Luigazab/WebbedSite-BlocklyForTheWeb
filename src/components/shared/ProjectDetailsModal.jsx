@@ -180,6 +180,7 @@ export default function ProjectDetailsModal({ project, onClose, onDelete, onTogg
             </button>
             <button
               onClick={onClose}
+              aria-label="Close project details"
               className="p-1.5 rounded-lg hover:bg-slate-300 transition-colors"
             >
               <X className="w-5 h-5 text-slate-500" />
@@ -240,7 +241,7 @@ export default function ProjectDetailsModal({ project, onClose, onDelete, onTogg
               <div data-tour="details-preview-area" className="flex-1 border-2 border-slate-600 bg-white overflow-hidden shadow rounded-tr-xl">
                 <div className="flex items-center justify-between gap-2 px-3 py-1.5 border-b border-slate-600 bg-gray-100">
                   <span className="text-xs text-gray-500 font-mono truncate">
-                    {activeFile ? activeFile : "Untitled"}
+                    {files.find(file => file.id === activeFile)?.filename || 'Untitled'}
                   </span>
                   <div className='flex gap-2'>
                     <span className="w-3 h-3 rounded-full bg-blockly-red"></span>
