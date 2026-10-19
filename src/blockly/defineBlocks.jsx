@@ -334,6 +334,7 @@ export const defineBlocks = () => {
   
   Blockly.Blocks['form'] = {
     init: function() {
+      this.appendDummyInput().appendField('validate with JavaScript').appendField(new Blockly.FieldCheckbox('FALSE'),'NOVALIDATE');
       this.appendValueInput('attributes')
           .appendField('<form')
           .setCheck('attributes');
@@ -352,6 +353,7 @@ export const defineBlocks = () => {
 
   Blockly.Blocks['label'] = {
     init: function() {
+      this.appendDummyInput().appendField('for').appendField(new Blockly.FieldTextInput(''), 'FOR');
       this.appendValueInput('attributes')
           .appendField('<label')
           .setCheck('attributes');
@@ -368,6 +370,7 @@ export const defineBlocks = () => {
 
   Blockly.Blocks['input'] = {
     init: function() {
+      this.appendDummyInput().appendField('name').appendField(new Blockly.FieldTextInput(''), 'NAME').appendField('required').appendField(new Blockly.FieldCheckbox('FALSE'),'REQUIRED');
       this.appendValueInput('attributes')
           .appendField('<input type="')
           .appendField(new Blockly.FieldDropdown([
@@ -394,6 +397,7 @@ export const defineBlocks = () => {
 
   Blockly.Blocks['textarea'] = {
     init: function() {
+      this.appendDummyInput().appendField('name').appendField(new Blockly.FieldTextInput(''), 'NAME');
       this.appendValueInput('attributes')
           .appendField('<textarea rows="')
           .appendField(new Blockly.FieldNumber(4, 1, 20), 'ROWS')
@@ -414,6 +418,7 @@ export const defineBlocks = () => {
 
   Blockly.Blocks['button'] = {
     init: function() {
+      this.appendDummyInput().appendField('type').appendField(new Blockly.FieldDropdown([['browser default','default'],['button','button'],['submit','submit'],['reset','reset']]),'TYPE');
       this.appendValueInput('attributes')
           .appendField('<button')
           .setCheck('attributes');

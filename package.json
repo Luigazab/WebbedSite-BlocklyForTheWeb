@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "test": "node --test tests/*.test.mjs",
+    "build:curriculum": "node scripts/build-release-curriculum.mjs",
     "build:tutorial-runtime": "node scripts/build-tutorial-runtime.mjs",
     "dev": "vite",
     "build": "vite build",
@@ -51,6 +52,7 @@
     "@tiptap/pm": "^3.20.1",
     "@tiptap/react": "^3.20.1",
     "@tiptap/starter-kit": "^3.20.1",
+    "acorn": "8.15.0",
     "blockly": "^12.3.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

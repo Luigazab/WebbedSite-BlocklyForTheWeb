@@ -6,6 +6,7 @@ import {
   createProjectFile 
 } from "../services/projectfiles.service";
 import { localProjectFilesService } from "../services/localProjectFiles.service";
+import { migrateProjectFiles } from '../services/projectFileMigration';
 
 export const useProjectFilesStore = create((set, get) => ({
   files: [],
@@ -64,8 +65,8 @@ export const useProjectFilesStore = create((set, get) => ({
     const file = get().files.find(f => f.id === fileId);
     if (!file) return;
     
-    await saveProjectFile(projectId, file.filename, blocksJson, fileId);
-    await get().loadFiles(projectId);
+    const saved = await saveProjectFile(projectId, file.filename, blocksJson, fileId);
+    set(state => ({ files: state.files.map(row => row.id === fileId ? saved : row) }));
   },
 
   deleteFile: async (fileId, projectId) => {
@@ -93,9 +94,7 @@ export const useProjectFilesStore = create((set, get) => ({
   migrateLocalFilesToDb: async (projectId) => {
     const localFiles = localProjectFilesService.getLocalFiles();
     
-    for (const localFile of localFiles) {
-      await createProjectFile(projectId, localFile.filename, localFile.blocks_json);
-    }
+    await migrateProjectFiles({projectId,files:localFiles,readFiles:getProjectFiles,saveFile:saveProjectFile,createFile:createProjectFile,deleteFile:deleteProjectFile});
     
     localProjectFilesService.clearLocalFiles();
     

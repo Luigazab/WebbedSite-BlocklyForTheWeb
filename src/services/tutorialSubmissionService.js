@@ -12,7 +12,9 @@ export async function tutorialAction(body) {
 }
 
 export async function saveTutorialSubmission(body) {
-  return (await tutorialAction({ ...body, action: 'submit' })).submission
+  const submission = (await tutorialAction({ ...body, action: 'submit' })).submission
+  if (body.finish) { const { error } = await supabase.rpc('copy_learning_project',{p_lesson:body.lessonId}); if(error) console.error('Tutorial submitted, but project copy could not be saved:',error.message) }
+  return submission
 }
 
 export async function saveTutorialDefinition(definition, publish = false) {

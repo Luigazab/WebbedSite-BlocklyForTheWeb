@@ -16,7 +16,7 @@ const Auth = () => {
           fill="white"
         />
       </svg>
-      <div className="relative h-full w-full bg-black/1">
+      <div className="relative h-full w-full">
         <Header/>
         <main>
             <Outlet/>

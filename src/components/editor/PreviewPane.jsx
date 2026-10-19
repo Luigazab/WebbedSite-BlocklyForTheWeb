@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { buildPreviewDocument, readPracticeStorage, savePracticeStorage } from '../../utils/previewRuntime';
 import { PREVIEW_SANDBOX, validPreviewMessage } from '../../utils/previewSecurity';
 import { Play, Eye, Terminal, MonitorSmartphone, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
 import DeviceSelector from './DeviceSelector';
@@ -16,7 +17,8 @@ const PreviewPane = ({
   responsive, 
   selectedDevice, 
   onToggleResponsive, 
-  onSelectDevice 
+  onSelectDevice,
+  storageScope = 'scratch',
 }) => {
   const [activeTab, setActiveTab] = useState('preview');
   const [showDeviceModal, setShowDeviceModal] = useState(false);
@@ -32,6 +34,10 @@ const PreviewPane = ({
     entries: typeof update === 'function' ? update(previous.revision === previewRevision ? previous.entries : []) : update,
   })), [previewRevision]);
   const previewRef = useRef(null);
+  const practiceRef = useRef({ scope: storageScope, ...readPracticeStorage(storageScope) });
+  if (practiceRef.current.scope !== storageScope) practiceRef.current = { scope: storageScope, ...readPracticeStorage(storageScope) };
+  const [runRevision, setRunRevision] = useState(0);
+  const [stopped, setStopped] = useState(false);
 
   const handleDeviceSelect = (device) => {
     onSelectDevice(device);
@@ -46,6 +52,10 @@ const PreviewPane = ({
         onNavigateToFile?.(event.data.filename);
       }
       
+      if (event.data?.type === 'PREVIEW_STORAGE') {
+        practiceRef.current = { scope: storageScope, local: event.data.local, session: event.data.session };
+        savePracticeStorage(storageScope, practiceRef.current);
+      }
       if (event.data?.type === 'CONSOLE_MESSAGE') {
         setLogs(prev => [...prev.slice(-199), {
           type: event.data.logType, 
@@ -57,7 +67,7 @@ const PreviewPane = ({
 
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
-  }, [onNavigateToFile, setLogs]);
+  }, [onNavigateToFile, setLogs, storageScope]);
 
   const handleToggle = () => {
     if (activeTab === "preview") {
@@ -68,74 +78,13 @@ const PreviewPane = ({
     }
   };
 
-  // Inject console interceptor AND navigation handler BEFORE the generated code
-  // This ensures the console is hijacked before the user's code executes
-  const interceptorScript = `
-    <script>
-      (function() {
-        // --- 1. Console Intercept Logic ---
-        const originalLog = console.log;
-        const originalWarn = console.warn;
-        const originalError = console.error;
-        const originalInfo = console.info;
-
-        function postLog(type, args) {
-          const message = Array.from(args).map(arg => {
-            if (arg === null) return 'null';
-            if (arg === undefined) return 'undefined';
-            if (typeof arg === 'object') {
-              try { return JSON.stringify(arg, null, 2); } catch(e) { return '[Object]'; }
-            }
-            return String(arg);
-          }).join(' ');
-          
-          window.parent.postMessage({ type: 'CONSOLE_MESSAGE', logType: type, message: message }, '*');
-        }
-
-        console.log = function(...args) { postLog('log', args); originalLog.apply(console, args); };
-        console.warn = function(...args) { postLog('warn', args); originalWarn.apply(console, args); };
-        console.error = function(...args) { postLog('error', args); originalError.apply(console, args); };
-        console.info = function(...args) { postLog('info', args); originalInfo.apply(console, args); };
-        
-        window.onerror = function(message, source, lineno, colno, error) {
-          window.parent.postMessage({ type: 'CONSOLE_MESSAGE', logType: 'error', message: message + ' (Line: ' + lineno + ')' }, '*');
-        };
-
-        // --- 2. Navigation Logic ---
-        document.addEventListener('click', function(e) {
-          let target = e.target;
-          
-          while (target && target.tagName !== 'A') {
-            target = target.parentElement;
-          }
-          
-          if (target && target.tagName === 'A') {
-            const dataPage = target.getAttribute('data-page');
-            if (dataPage) {
-              e.preventDefault();
-              window.parent.postMessage({ type: 'NAVIGATE_TO_FILE', filename: dataPage }, '*');
-              return;
-            }
-            
-            const href = target.getAttribute('href');
-            if (href && href.endsWith('.html')) {
-              e.preventDefault();
-              window.parent.postMessage({ type: 'NAVIGATE_TO_FILE', filename: href }, '*');
-              return;
-            }
-          }
-        });
-      })();
-    </script>
-  `;
-
-  // Prepend the script instead of appending it
-  const previewCode = interceptorScript + generatedCode;
+  const previewCode = useMemo(() => buildPreviewDocument(generatedCode, practiceRef.current), [generatedCode, storageScope, runRevision]);
 
   return (
     <div className='w-full h-full relative flex flex-col border border-border rounded shadow gap-2'>
       <div id="outputPanel" className="flex-1 flex flex-col bg-slate-200 relative overflow-hidden rounded">
         <div className='flex items-center justify-between p-1'>
+          <div className="flex items-center gap-2"><button className="rounded bg-emerald-700 px-2 py-1 text-xs text-white" onClick={() => { onRunCode?.(); setStopped(false); setRunRevision(value => value + 1); }}>Run</button><button className="rounded bg-slate-700 px-2 py-1 text-xs text-white" onClick={() => setStopped(true)}>Stop</button></div>
           <h4 className="font-bold tracking-wider shrink-0">
             Preview
           </h4>
@@ -190,7 +139,8 @@ const PreviewPane = ({
               </div>
               <iframe 
                 ref={previewRef}
-                srcDoc={previewCode} 
+                key={runRevision}
+                srcDoc={stopped ? '<p>Preview stopped. Press Run to restart.</p>' : previewCode}
                 className="w-full h-full border-0" 
                 title="preview" 
                 sandbox={PREVIEW_SANDBOX}
@@ -343,7 +293,7 @@ const PreviewPane = ({
         isOpen={showDeviceModal}
         device={selectedDevice}
         deviceSizes={deviceSizes}
-        generatedCode={generatedCode}
+        generatedCode={previewCode}
         onClose={() => setShowDeviceModal(false)}
       />
     </div>

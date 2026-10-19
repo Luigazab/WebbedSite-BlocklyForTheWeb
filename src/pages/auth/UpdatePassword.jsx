@@ -45,8 +45,8 @@ const UpdatePassword = () => {
       {user ? <button className="btn" onClick={async () => {
         try { await signOut() } catch { /* local session is still cleared */ }
         navigate('/forgot-password', { replace: true });
-      }}>Request a new link</button> : <Link className="btn" to="/forgot-password">Request a new link</Link>}
-      <Link className="flex justify-center text-slate-700 underline" to="/login">Return to login</Link>
+      }}>Request a new link</button> : <Link className="btn btn-secondary" to="/forgot-password">Request a new link</Link>}
+      <Link className="flex justify-center text-slate-700 underline pt-4" to="/login">Return to login</Link>
     </div>
   );
 

@@ -38,5 +38,12 @@ function OpenNotification({ role }) {
     return () => { active = false }
   }, [notificationId, role, navigate])
   if (!message) return <Loader />
-  return <main className="max-w-xl mx-auto p-8"><p role="status">{message}</p><Link className="underline" to={`/${role || 'student'}`}>Back to dashboard</Link></main>
+  return (
+    <main className="max-w-xl mx-auto p-8">
+      <p role="status semi-bold">{message}</p>
+      <Link className="underline" to={`/${role || "student"}`}>
+        Back to dashboard
+      </Link>
+    </main>
+  );
 }

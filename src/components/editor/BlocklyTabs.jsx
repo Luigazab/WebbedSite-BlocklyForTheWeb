@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
 import * as Blockly from "blockly/core";
-import "blockly/blocks"; 
-import "blockly/javascript";
+import { javascriptGenerator } from 'blockly/javascript';
+import { toolboxConfig } from '../../blockly/toolboxConfig';
+import { buildPreviewDocument } from '../../utils/previewRuntime';
+import { PREVIEW_SANDBOX } from '../../utils/previewSecurity';
 
 export default function BlocklyTabs() {
   const [files, setFiles] = useState([
@@ -21,7 +23,7 @@ export default function BlocklyTabs() {
 
         workspace.addChangeListener(() => {
           if (file.id === activeFile) {
-            const generated = Blockly.JavaScript.workspaceToCode(workspace);
+            const generated = javascriptGenerator.workspaceToCode(workspace);
             setCode(generated);
           }
         });
@@ -40,7 +42,7 @@ export default function BlocklyTabs() {
     setActiveFile(id);
     const file = files.find((f) => f.id === id);
     if (file?.workspace) {
-      const generated = Blockly.JavaScript.workspaceToCode(file.workspace);
+      const generated = javascriptGenerator.workspaceToCode(file.workspace);
       setCode(generated);
     }
   }
@@ -85,7 +87,8 @@ export default function BlocklyTabs() {
         <iframe
           title="preview"
           style={{ width: "100%", height: "100%" }}
-          srcDoc={`<script>${code}</script>`}
+          sandbox={PREVIEW_SANDBOX}
+          srcDoc={buildPreviewDocument(code)}
         />
       </div>
     </div>

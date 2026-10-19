@@ -14,63 +14,28 @@ export async function completeLesson({ userId, classroomId, lessonId, score = 10
   return result
 }
 
-export async function startQuizAttempt(userId, quizId) {
-  const { data, error } = await supabase
-    .from('quiz_attempts')
-    .insert({ user_id: userId, quiz_id: quizId, status: 'in_progress' })
-    .select('*')
-    .single()
- 
-  if (error) throw error
+export async function startQuizAttempt(_userId, quizId) {
+  const {data,error}=await supabase.rpc('begin_assessed_quiz',{p_quiz:quizId})
+  if(error)throw error
   return data
 }
 
-export async function submitQuizAttempt({
-  attemptId, answers, userId, classroomId, courseId, lessonId, topicId, baseXp, passingScore,
-}) {
-  const optionIds = answers.map((a) => a.optionId)
-  const { data: options, error: optErr } = await supabase
-    .from('options')
-    .select('id, is_correct')
-    .in('id', optionIds)
-  if (optErr) throw optErr
- 
-  const correctById = new Map(options.map((o) => [o.id, o.is_correct]))
-  const rows = answers.map((a) => ({
-    attempt_id:  attemptId,
-    question_id: a.questionId,
-    options_id:  a.optionId,
-    is_correct:  correctById.get(a.optionId) ?? false,
-  }))
- 
-  const { error: answersErr } = await supabase.from('quiz_answers').insert(rows)
-  if (answersErr) throw answersErr
- 
-  const score = rows.length ? Math.round((rows.filter((r) => r.is_correct).length / rows.length) * 100) : 0
-  const passed = passingScore == null || score >= passingScore
- 
-  const { error: attemptErr } = await supabase
-    .from('quiz_attempts')
-    .update({ score, status: passed ? 'passed' : 'failed', finished_at: new Date().toISOString() })
-    .eq('id', attemptId)
-  if (attemptErr) throw attemptErr
- 
-  if (passed) {
-    await completeLesson({ userId, classroomId, courseId, lessonId, topicId, baseXp, score })
-  }
- 
-  return { score, passed }
+export async function submitQuizAttempt({attemptId,answers}) {
+  const {data,error}=await supabase.rpc('finish_assessed_quiz',{p_attempt:attemptId,p_answers:answers.map(a=>({questionId:a.questionId,selectedOptionId:a.selectedOptionId??a.optionId}))})
+  if(error)throw error
+  return {...data,score:Math.round(100*data.score/data.score_total),passed:data.score>=data.passing_count}
 }
 
 export async function getAllQuizAttempts(userId, quizId) {
   const { data, error } = await supabase
     .from('quiz_attempts')
     .select(`
-      id, quiz_id, score, status, started_at, finished_at,
+      id, quiz_id, score, status, started_at, finished_at, score_total, passing_count,
       quiz_answers ( question_id, options_id, is_correct )
     `)
     .eq('user_id', userId)
     .eq('quiz_id', quizId)
+    .not('finished_at','is',null)
     .order('started_at', { ascending: true })
 
   if (error) throw error
@@ -80,46 +45,10 @@ export async function getAllQuizAttempts(userId, quizId) {
   }))
 }
 
-export async function recordQuizAttempt({
-  userId, quizId, score, startedAt, answers,
-  lessonId, classroomId, courseId, topicId, baseXp, passingScore,
-}) {
-  const passed = passingScore == null || score >= passingScore
-
-  const { data: attempt, error: attemptErr } = await supabase
-    .from('quiz_attempts')
-    .insert({
-      user_id:     userId,
-      quiz_id:     quizId,
-      score,
-      status:      passed ? 'passed' : 'failed',
-      started_at:  startedAt ? new Date(startedAt).toISOString() : new Date().toISOString(),
-      finished_at: new Date().toISOString(),
-    })
-    .select()
-    .single()
-  if (attemptErr) throw attemptErr
-
-  // quiz_answers.options_id is NOT NULL, so unanswered questions are simply omitted.
-  const rows = answers
-    .filter((a) => a.selectedOptionId)
-    .map((a) => ({
-      attempt_id:  attempt.id,
-      question_id: a.questionId,
-      options_id:  a.selectedOptionId,
-      is_correct:  a.isCorrect,
-    }))
-
-  if (rows.length > 0) {
-    const { error: answersErr } = await supabase.from('quiz_answers').insert(rows)
-    if (answersErr) throw answersErr
-  }
-
-  if (passed && lessonId) {
-    await completeLesson({ userId, classroomId, courseId, lessonId, topicId, baseXp, score })
-  }
-
-  return attempt
+export async function recordQuizAttempt({ attemptId, answers }) {
+ const {data,error}=await supabase.rpc('finish_assessed_quiz',{p_attempt:attemptId,p_answers:answers.map(a=>({questionId:a.questionId,selectedOptionId:a.selectedOptionId}))})
+ if(error)throw error
+ return data
 }
 
 export async function completeLaboratory({ userId, classroomId, courseId, laboratoryId, lessonId, topicId, baseXp }) {

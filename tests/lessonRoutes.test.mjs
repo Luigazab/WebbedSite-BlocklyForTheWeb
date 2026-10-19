@@ -48,25 +48,37 @@ async function loadRoutes(name) {
   }
 }
 
+// Resolve lazy imports before inspecting the stub component identity.
+async function componentName(type) {
+  if (type?.name) return type.name;
+  const payload = type?._payload;
+  if (!payload) return undefined;
+  const loaded = typeof payload._result === 'function' ? await payload._result() : await payload._result;
+  return loaded.default.name;
+}
+async function routeNames(matches) {
+  return Promise.all(matches.filter(match => match.route.element).map(match => componentName(match.route.element.type)));
+}
+
 test('student lesson viewers match a dedicated layout outside the dashboard', async () => {
   const routes = [{ path: '/student', children: await loadRoutes('student') }];
   for (const slug of ['lecture', 'quiz', 'tutorial', 'laboratory']) {
     const matches = matchRoutes(routes, `/student/classrooms/class-a/lessons/html/${slug}`);
-    assert.deepEqual(matches.filter(match => match.route.element).map(match => match.route.element.type.name), ['LessonLayout', 'LessonPage']);
+    assert.deepEqual(await routeNames(matches), ['LessonLayout', 'LessonPage']);
     assert.equal(matches.at(-1).params.classroomId, 'class-a');
     assert.equal(matches.at(-1).params.slug, slug);
   }
-  assert.deepEqual(matchRoutes(routes, '/student/classrooms/class-a').filter(match => match.route.element).map(match => match.route.element.type.name), ['StudentLayout', 'StudentClassroomHub']);
+  assert.deepEqual(await routeNames(matchRoutes(routes, '/student/classrooms/class-a')), ['StudentLayout', 'StudentClassroomHub']);
   assert.equal(matchRoutes(routes, '/student/learn').at(-1).route.element.props.to, '/student/classrooms');
-  assert.equal(matchRoutes(routes, '/student/learn/html/heading').at(-1).route.element.type.name, 'LegacyLessonRedirect');
+  assert.equal(await componentName(matchRoutes(routes, '/student/learn/html/heading').at(-1).route.element.type), 'LegacyLessonRedirect');
 });
 
 test('teacher previews also match a dedicated layout and old URLs redirect', async () => {
   const routes = [{ path: '/teacher', children: await loadRoutes('teacher') }];
   const matches = matchRoutes(routes, '/teacher/lessons/course-a/html/heading');
-  assert.deepEqual(matches.filter(match => match.route.element).map(match => match.route.element.type.name), ['LessonLayout', 'LessonPage']);
+  assert.deepEqual(await routeNames(matches), ['LessonLayout', 'LessonPage']);
   assert.equal(matches.at(-1).route.element.props.preview, true);
   const old = matchRoutes(routes, '/teacher/courses/course-a/view/html/heading');
-  assert.equal(old.at(-1).route.element.type.name, 'LegacyLessonRedirect');
+  assert.equal(await componentName(old.at(-1).route.element.type), 'LegacyLessonRedirect');
   assert.equal(old.at(-1).route.element.props.preview, true);
 });

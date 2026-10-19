@@ -1,4 +1,6 @@
+const escapeAttribute = value => String(value ?? '').replaceAll('&','&amp;').replaceAll('\"','&quot;').replaceAll('<','&lt;');
 import { javascriptGenerator } from 'blockly/javascript';
+import { inlineScript } from './jsSupport.js';
 
 const I  = '  '   // one level of indent
 const II = '    ' // two levels
@@ -134,20 +136,20 @@ export const defineGenerators = () => {
   javascriptGenerator.forBlock['form'] = function(block) {
     const attributes = javascriptGenerator.valueToCode(block, 'attributes', 0) || '';
     const content = javascriptGenerator.statementToCode(block, 'CONTENT');
-    return `${INDENT}<form${attributes}>\n${content}${INDENT}</form>\n`;
+    return `${INDENT}<form${block.getFieldValue('NOVALIDATE') === 'TRUE' ? ' novalidate' : ''}${attributes}>\n${content}${INDENT}</form>\n`;
   };
 
   javascriptGenerator.forBlock['label'] = function(block) {
     const attributes = javascriptGenerator.valueToCode(block, 'attributes', 0) || '';
     const text = block.getFieldValue('TEXT');
-    return `${INDENT}${INDENT}<label${attributes}>${text}</label>\n`;
+    return `${INDENT}${INDENT}<label${block.getFieldValue('FOR') ? ` for="${escapeAttribute(block.getFieldValue('FOR'))}"` : ''}${attributes}>${text}</label>\n`;
   };
 
   javascriptGenerator.forBlock['input'] = function(block) {
     const attributes = javascriptGenerator.valueToCode(block, 'attributes', 0) || '';
     const type = block.getFieldValue('TYPE');
     const placeholder = block.getFieldValue('PLACEHOLDER');
-    return `${INDENT}${INDENT}<input type="${type}" placeholder="${placeholder}"${attributes}>\n`;
+    return `${INDENT}${INDENT}<input${block.getFieldValue('NAME') ? ` name="${escapeAttribute(block.getFieldValue('NAME'))}"` : ''}${block.getFieldValue('REQUIRED') === 'TRUE' ? ' required' : ''} type="${type}" placeholder="${placeholder}"${attributes}>\n`;
   };
 
   javascriptGenerator.forBlock['textarea'] = function(block) {
@@ -155,13 +157,13 @@ export const defineGenerators = () => {
     const rows = block.getFieldValue('ROWS');
     const cols = block.getFieldValue('COLS');
     const text = block.getFieldValue('TEXT');
-    return `${INDENT}${INDENT}<textarea rows="${rows}" cols="${cols}"${attributes}>${text}</textarea>\n`;
+    return `${INDENT}${INDENT}<textarea${block.getFieldValue('NAME') ? ` name="${escapeAttribute(block.getFieldValue('NAME'))}"` : ''} rows="${rows}" cols="${cols}"${attributes}>${text}</textarea>\n`;
   };
 
   javascriptGenerator.forBlock['button'] = function(block) {
     const attributes = javascriptGenerator.valueToCode(block, 'attributes', 0) || '';
     const text = block.getFieldValue('TEXT');
-    return `${INDENT}${INDENT}<button${attributes}>${text}</button>\n`;
+    return `${INDENT}${INDENT}<button${block.getFieldValue('TYPE') && block.getFieldValue('TYPE') !== 'default' ? ` type="${escapeAttribute(block.getFieldValue('TYPE'))}"` : ''}${attributes}>${text}</button>\n`;
   };
 
   // =============================================================================
@@ -297,7 +299,7 @@ export const defineGenerators = () => {
  
   javascriptGenerator.forBlock['html_script_inline'] = (block) => {
     const content = javascriptGenerator.statementToCode(block, 'CONTENT')
-    return `${I}<script>\n${content}${I}</script>\n`
+    return `${I}<script>\n${inlineScript(content)}${I}</script>\n`
   }
  
   // ── INLINE TEXT ──────────────────────────────────────────────────────────

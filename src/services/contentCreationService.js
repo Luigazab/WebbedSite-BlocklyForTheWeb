@@ -325,10 +325,10 @@ export const fetchLaboratoryEditorData = async (lessonId) => {
       id,
       title,
       topics_id,
-      type,
+      type, base_xp, is_published,
       laboratories (
         id,
-        instruction
+        instruction, rubric, passing_score, rubric_version
       )
     `)
     .eq("id", lessonId)
@@ -342,7 +342,7 @@ export const fetchLaboratoryEditorData = async (lessonId) => {
   };
 };
 
-export const upsertLaboratoryContent = async ({ lessonId, instruction }) => {
+export const upsertLaboratoryContent = async ({ lessonId, instruction, rubric, passingScore }) => {
   const { data: existing, error: existingError } = await supabase
     .from("laboratories")
     .select("id")
@@ -354,7 +354,7 @@ export const upsertLaboratoryContent = async ({ lessonId, instruction }) => {
   if (existing?.id) {
     const { data, error } = await supabase
       .from("laboratories")
-      .update({ instruction })
+      .update({ instruction, ...(rubric ? { rubric, passing_score: passingScore } : {}) })
       .eq("id", existing.id)
       .select()
       .single();
@@ -365,7 +365,7 @@ export const upsertLaboratoryContent = async ({ lessonId, instruction }) => {
 
   const { data, error } = await supabase
     .from("laboratories")
-    .insert({ lesson_id: lessonId, instruction })
+    .insert({ lesson_id: lessonId, instruction, ...(rubric ? { rubric, passing_score: passingScore } : {}) })
     .select()
     .single();
 
@@ -422,6 +422,12 @@ export const upsertQuizContent = async ({ lessonId, timeLimit, passingScore, que
     .maybeSingle();
 
   if (existingQuizError) throw existingQuizError;
+
+  if (existingQuiz?.id) {
+    const { count, error } = await supabase.from('quiz_attempts').select('id',{count:'exact',head:true}).eq('quiz_id',existingQuiz.id);
+    if (error) throw error;
+    if (count) throw new Error('This quiz has assessment records. Create a new quiz lesson to change its questions and preserve earlier attempts.');
+  }
 
   let quizId = existingQuiz?.id;
   if (quizId) {

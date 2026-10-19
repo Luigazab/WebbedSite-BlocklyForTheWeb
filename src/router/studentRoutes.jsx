@@ -1,26 +1,25 @@
-import StudentLayout from '../dashboards/student/StudentLayout'
-import StudentHome from '../dashboards/student/pages/StudentHome'
-import FeedbackPage from '../dashboards/student/pages/FeedbackPage'
-import ProjectsPage from '../components/shared/ProjectsPage'
-import SettingsPage from '../components/shared/SettingsPage'
-import ProfilePage from '../pages/profile/ProfilePage'
-import EditorLayout from '../components/layout/EditorLayout'
-import BlockEditor from '../components/shared/BlockEditor'
-import Documentation from '../components/shared/Documentation'
-import QuizAssessment from '../dashboards/student/pages/QuizAssessment'
-import QuizResult from '../dashboards/student/pages/QuizResult'
+import { lazy } from 'react'
+const ReportsPage = lazy(() => import('../components/shared/ReportsPage'))
+const StudentLayout = lazy(() => import('../dashboards/student/StudentLayout'))
+const StudentHome = lazy(() => import('../dashboards/student/pages/StudentHome'))
+const FeedbackPage = lazy(() => import('../dashboards/student/pages/FeedbackPage'))
+const ProjectsPage = lazy(() => import('../components/shared/ProjectsPage'))
+const SettingsPage = lazy(() => import('../components/shared/SettingsPage'))
+const ProfilePage = lazy(() => import('../pages/profile/ProfilePage'))
+const EditorLayout = lazy(() => import('../components/layout/EditorLayout'))
+const BlockEditor = lazy(() => import('../components/shared/BlockEditor'))
+const Documentation = lazy(() => import('../components/shared/Documentation'))
+const QuizAssessment = lazy(() => import('../dashboards/student/pages/QuizAssessment'))
+const QuizResult = lazy(() => import('../dashboards/student/pages/QuizResult'))
 import Loader from '../components/layout/Loader'
-import WelcomeOnboarding from '../dashboards/student/pages/WelcomeOnboarding'
-import Background from '../components/layout/Background'
-import LessonPage from '../pages/app/LessonPage'
-import LessonLayout from '../components/layout/LessonLayout'
-import LegacyLessonRedirect from '../components/layout/LegacyLessonRedirect'
+const WelcomeOnboarding = lazy(() => import('../dashboards/student/pages/WelcomeOnboarding'))
+const Background = lazy(() => import('../components/layout/Background'))
+const LessonPage = lazy(() => import('../pages/app/LessonPage'))
+const LessonLayout = lazy(() => import('../components/layout/LessonLayout'))
+const LegacyLessonRedirect = lazy(() => import('../components/layout/LegacyLessonRedirect'))
 import { Navigate } from 'react-router'
-import StudentClassroomHub from '@/dashboards/student/pages/StudentClassroomHub'
-import StudentClassrooms from '@/dashboards/student/pages/StudentClassrooms'
-
-
-
+const StudentClassroomHub = lazy(() => import('@/dashboards/student/pages/StudentClassroomHub'))
+const StudentClassrooms = lazy(() => import('@/dashboards/student/pages/StudentClassrooms'))
 export const studentRoutes = [
   {
     element: <StudentLayout />,
@@ -29,10 +28,11 @@ export const studentRoutes = [
       { path: 'projects',                                   element: <ProjectsPage />             },
       { path: 'classrooms',                                 element: <StudentClassrooms />        },
       { path: 'classrooms/:classroomId',                    element: <StudentClassroomHub /> },
-      { path: 'quiz',                                       element: <QuizAssessment />           },
-      { path: 'quiz/result',                                element: <QuizResult />               },
+      { path: 'quiz', element: <Navigate to="/student/classrooms" replace /> },
+      { path: 'quiz/result', element: <Navigate to="/student/classrooms" replace /> },
       { path: 'docs',                                       element: <Documentation />            },
-      { path: 'feedback',                                   element: <FeedbackPage />             },
+      { path: 'feedback', element: <Navigate to="/student/help" replace /> },
+      { path: 'help', element: <ReportsPage /> },
       { path: 'profile',                                    element: <ProfilePage />              },
       { path: 'settings',                                   element: <SettingsPage />             },
     ]

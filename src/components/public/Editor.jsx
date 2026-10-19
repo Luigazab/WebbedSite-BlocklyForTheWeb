@@ -1,7 +1,8 @@
+import WorkspaceTools from '@/components/editor/WorkspaceTools'
 // Editor.jsx
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router';
-import { javascriptGenerator } from 'blockly/javascript';
+import { codeGeneratorService } from '../../services/codeGenerator.service';
 import BlocklyWorkspace from '../editor/BlocklyWorkspace';
 import PreviewPane from '../editor/PreviewPane';
 import { useProjectDatabase } from '../../hooks/useProjectDatabase';
@@ -36,9 +37,10 @@ const Editor = () => {
 
   // Initialize Blockly workspace
   const workspace = BlocklyWorkspace({
+    filename: 'index.html',
     initialWorkspaceState,
     onWorkspaceChange: (workspaceRef) => {
-      const code = javascriptGenerator.workspaceToCode(workspaceRef);
+      const code = codeGeneratorService.generateCode(workspaceRef, 'index.html');
       setGeneratedCode(code);
     },
     onWorkspaceLoad: () => {
@@ -180,6 +182,7 @@ const Editor = () => {
       
         {/* Blockly Workspace */}
         <div className="flex w-2/3 h-full md:overflow-hidden border-4 rounded-xl border-gray-600 relative bg-white">
+          <WorkspaceTools workspace={workspace} />
           <div ref={workspace.blocklyDiv} className="blocklyDiv flex-1 z-0" />
         </div>
         

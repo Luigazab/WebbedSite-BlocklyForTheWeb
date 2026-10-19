@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { Menu, Home, FolderOpen, University, BookOpen, UserSquare2, Settings, Plus, Save, Download } from 'lucide-react'
+import { Menu, Home, FolderOpen, University, Settings, Plus, Save, Download } from 'lucide-react'
 import { Link, useNavigate } from 'react-router'
 import { useAuthStore } from '../../store/authStore'
 import { TourHelpButton } from '../tour/EditorTour'
@@ -16,8 +16,6 @@ const EditorHeader = ({ onNew, onSave, onLoad, projectTitle }) => {
     { icon: Home,        label: 'Home',       href: `/${profile?.role}`            },
     { icon: FolderOpen,  label: 'Projects',   href: `/${profile?.role}/projects`   },
     { icon: University,  label: 'Classrooms', href: `/${profile?.role}/classrooms` },
-    { icon: BookOpen,    label: 'Learn',      href: `/${profile?.role}/lessons`    },
-    { icon: UserSquare2, label: 'Profile',    href: `/${profile?.role}/profile`    },
     { icon: Settings,    label: 'Settings',   href: `/${profile?.role}/settings`   },
   ]
 

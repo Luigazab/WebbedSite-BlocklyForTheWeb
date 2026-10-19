@@ -322,7 +322,7 @@ test('the reset route has Auth layout ancestry and a real outlet child', async (
     '../pages/auth/Login': 'export default () => null', '../pages/auth/Register': 'export default () => null',
     '../pages/auth/StudentRegister': 'export default () => null', '../pages/auth/TeacherRegister': 'export default () => null',
     '../pages/auth/ForgotPassword': 'export default () => null', '../pages/public/NotFound': 'export default () => null',
-    '../pages/public/ErrorPage': 'export default () => null', '../components/editor/BlocklyTabs': 'export default () => null',
+    '../pages/public/ErrorPage': 'export default () => null', '../pages/public/JavaScriptPractice': 'export default () => null',
     '../pages/app/NotificationEntry': 'export default () => null', '../pages/app/ClassroomPostPage': 'export default () => null',
     '../pages/public/RemiDemo': 'export default () => null',
   })

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { X, HelpCircle, ThumbsUp, MessageSquare, Monitor, Code, FileCode, Palette, Code2Icon, NotebookText, Eye, EyeOff, Trash2 } from 'lucide-react'
 import * as Blockly from 'blockly/core'
 import 'blockly/blocks'
@@ -12,12 +12,16 @@ import { useLikes } from '../../hooks/useLikes'
 import { useTour } from '../tour/TourProvider'
 import TourSpotlight from '../tour/TourSpotlight'
 import { projectDetailsTourSteps, PROJECT_DETAILS_TOUR_ID } from '../tour/projectDetailsTour'
+import { initBlockly } from '../../blockly/initBlockly'
+import { PREVIEW_SANDBOX } from '../../utils/previewSecurity'
+import { buildPreviewDocument } from '../../utils/previewRuntime'
+import { Link } from 'react-router'
 
-export default function ProjectDetailsModal({ project, onClose, onDelete, onToggleVisibility }) {
+initBlockly()
+
+export default function ProjectDetailsModal({ project, onClose, onDelete, onToggleVisibility, onLikeToggled, onCommentsCountChanged }) {
   const [comment, setComment] = useState('')
   const [viewMode, setViewMode] = useState('preview') 
-  const [filesWithCode, setFilesWithCode] = useState([])
-  const [generatedCode, setGeneratedCode] = useState('')
 
   const [likesCount, setLikesCount] = useState(project.likes_count || 0)
   const { isLiked, toggleLike } = useLikes([project.id])
@@ -31,83 +35,7 @@ export default function ProjectDetailsModal({ project, onClose, onDelete, onTogg
 
   const { activeTour, isVisible, startTour } = useTour()
 
-  useEffect(() => {
-    loadComments(project.id)
-  }, [project.id])
-
-  useEffect(() => {
-    setLikesCount(project.likes_count || 0)
-  }, [project.likes_count])
-
-  useEffect(() => {
-    if (files.length > 0) {
-      const filesWithGeneratedCode = files.map(file => {
-        let code = ''
-        try {
-          const tempDiv = document.createElement('div')
-          tempDiv.style.display = 'none'
-          document.body.appendChild(tempDiv)
-          
-          const tempWorkspace = Blockly.inject(tempDiv, { readOnly: true })
-          
-          if (file.blocks_json) {
-            Blockly.serialization.workspaces.load(file.blocks_json, tempWorkspace)
-            code = codeGeneratorService.generateCode(tempWorkspace, file.filename)
-          }
-          
-          tempWorkspace.dispose()
-          document.body.removeChild(tempDiv)
-        } catch (error) {
-          console.error('Error generating code for', file.filename, error)
-        }
-
-        return {
-          ...file,
-          generatedCode: code
-        }
-      })
-
-      setFilesWithCode(filesWithGeneratedCode)
-
-      if (!activeFile && files.length > 0) {
-        const indexFile = files.find(f => f.filename === 'index.html')
-        const firstHtmlFile = files.find(f => f.filename.endsWith('.html'))
-        const firstFile = indexFile || firstHtmlFile || files[0]
-        setActiveFile(firstFile.id)
-      }
-    }
-  }, [files])
-
-  useEffect(() => {
-    if (filesWithCode.length > 0 && activeFile) {
-      const activeFileData = files.find(f => f.id === activeFile)
-      if (activeFileData) {
-        const combined = codeGeneratorService.combineFilesForPreview(
-          filesWithCode,
-          activeFileData.filename
-        )
-        setGeneratedCode(combined)
-      }
-    }
-  }, [filesWithCode, activeFile, files])
-
-  useEffect(() => {
-    if (viewMode === 'blocks' && activeFile && blocklyDivRef.current) {
-      const file = files.find(f => f.id === activeFile)
-      if (file?.blocks_json) {
-        renderBlocklyWorkspace(file.blocks_json)
-      }
-    }
-
-    return () => {
-      if (workspaceRef.current) {
-        workspaceRef.current.dispose()
-        workspaceRef.current = null
-      }
-    }
-  }, [viewMode, activeFile, files])
-
-  const renderBlocklyWorkspace = (blocksJson) => {
+  function renderBlocklyWorkspace(blocksJson) {
     if (!blocklyDivRef.current || !blocksJson) return
 
     try {
@@ -145,6 +73,35 @@ export default function ProjectDetailsModal({ project, onClose, onDelete, onTogg
       console.error('Error rendering Blockly workspace:', error)
     }
   }
+
+
+  useEffect(() => {
+    loadComments(project.id)
+  }, [project.id])
+
+  const filesWithCode = useMemo(() => files.map(file => {
+    let code = file.code || ''
+    try { if (file.blocks_json) code = codeGeneratorService.generateCodeFromState(file.blocks_json,file.filename) }
+    catch (error) { console.error('Could not generate saved project file',file.filename,error) }
+    return {...file,generatedCode:code}
+  }),[files])
+  const generatedCode = useMemo(() => codeGeneratorService.combineFilesForPreview(filesWithCode,files.find(file=>file.id===activeFile)?.filename),[filesWithCode,files,activeFile])
+
+  useEffect(() => {
+    if (viewMode === 'blocks' && activeFile && blocklyDivRef.current) {
+      const file = files.find(f => f.id === activeFile)
+      if (file?.blocks_json) {
+        renderBlocklyWorkspace(file.blocks_json)
+      }
+    }
+
+    return () => {
+      if (workspaceRef.current) {
+        workspaceRef.current.dispose()
+        workspaceRef.current = null
+      }
+    }
+  }, [viewMode, activeFile, files])
 
   const handleLike = async () => {
     try {
@@ -196,7 +153,7 @@ export default function ProjectDetailsModal({ project, onClose, onDelete, onTogg
   const formatDate = (dateString) => {
     try {
       return formatDistanceToNow(new Date(dateString), { addSuffix: true })
-    } catch (error) {
+    } catch {
       return 'recently'
     }
   }
@@ -299,9 +256,9 @@ export default function ProjectDetailsModal({ project, onClose, onDelete, onTogg
                   generatedCode ? (
                     <iframe
                       key={`${activeFile}-${generatedCode.substring(0, 100)}`}
-                      srcDoc={generatedCode}
+                      srcDoc={buildPreviewDocument(generatedCode)}
                       title={`Preview of ${project.title}`}
-                      sandbox="allow-scripts"
+                      sandbox={PREVIEW_SANDBOX}
                       className="w-full h-full border-0"
                     />
                   ) : (
@@ -333,6 +290,8 @@ export default function ProjectDetailsModal({ project, onClose, onDelete, onTogg
 
           {/* Right: Stats & Comments */}
           <div className="w-80 flex flex-col gap-4">
+            {project.source_classroom_id && <Link onClick={onClose} className="rounded-lg border p-3 text-sm text-sky-800 underline" to={`/${profile.role}/classrooms/${project.source_classroom_id}`}>Open source classroom · {project.source_kind}</Link>}
+            {profile.role==='student' && project.source_lesson?.slug && project.source_lesson?.topic?.course?.slug && <Link onClick={onClose} className="text-sm text-sky-800 underline" to={`/student/classrooms/${project.source_classroom_id}/lessons/${project.source_lesson.topic.course.slug}/${project.source_lesson.slug}`}>Open source lesson</Link>}
             <div className="flex items-center gap-3">
               <button data-tour="details-like-btn"
                 onClick={handleLike}

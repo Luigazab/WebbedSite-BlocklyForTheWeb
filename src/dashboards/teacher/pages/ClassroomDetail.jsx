@@ -1,3 +1,4 @@
+import Gradebook from '../../../components/classroom/Gradebook'
 import { Button } from "#components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "#components/ui/dropdown-menu";
 import { useClassroom } from "#hooks/useClassroom";
@@ -30,6 +31,7 @@ const tabs = [
   { id: 'activities', label: 'Activities', icon: Activity },
   { id: 'badges', label: 'Badges', icon: Award },
   { id: 'feed', label: 'Classroom Posts', icon: Activity },
+  { id: 'gradebook', label: 'Gradebook', icon: ClipboardCheck },
   { id: 'students', label: 'Students', icon: Users },
 ]
 export default function ClassroomDetail() {
@@ -37,7 +39,7 @@ export default function ClassroomDetail() {
   const { classroomId } = useParams();
   useClassroomLivePosts(classroomId);
   const profile = useAuthStore((s) => s.profile);
-  const [activeTab, setActiveTab] = useState('activities');
+  const [activeTab, setActiveTab] = useState(() => new URLSearchParams(window.location.search).get('tab') || 'activities');
   const {copied, copyCode} = useCopyCode()
   const [selectedLesson, setSelectedLesson] = useState(null)
   const [selectedStudent, setSelectedStudent] = useState(null)
@@ -260,6 +262,7 @@ export default function ClassroomDetail() {
         <div className="flex items-center justify-between"><h2 className="text-xl font-semibold">Classroom Posts</h2><Button size="sm" className="gap-2" onClick={onNewAnnouncement}><Megaphone size={16} />New Announcement</Button></div>
         <PostFeed posts={classroomPosts} currentUserId={profile?.id} onLike={handleLikePost} onComment={handleCommentOnPost} onLoadMore={() => fetchMoreClassroomPosts(classroomId)} hasMore={hasMorePosts} loading={postsLoading} />
       </div>}
+      {activeTab === 'gradebook' && <Gradebook classroomId={classroomId} />}
       {activeTab === 'students' && <ClassroomStudentsPanel students={studentProgress} loading={overviewLoading} onSelect={student => setSelectedStudent({ ...student, classroomId })} />}
       {selectedStudent?.classroomId === classroomId && selectedStudent && <StudentProgressModal key={selectedStudent.studentId} classroomId={classroomId} student={selectedStudent} onClose={() => setSelectedStudent(null)} onGraded={() => fetchOverview(classroomId)} />}
       {selectedLesson && selectedLesson.classroomId === classroomId && <LessonDetailsModal

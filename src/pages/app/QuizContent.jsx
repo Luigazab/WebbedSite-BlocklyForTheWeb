@@ -1,6 +1,8 @@
+import { supabase } from '../../supabaseClient'
+import { toast } from 'sonner'
 import { useState, Fragment } from "react";
 import { Dialog, Transition } from "@headlessui/react";
-import { Clock, Trophy, RotateCcw } from "lucide-react";
+import { Clock } from "lucide-react";
 import { useQuizViewer } from "@/hooks/useQuizViewer";
 import QuizAssessment from "./QuizAssessment";
 import QuizResult from "./QuizResult";
@@ -24,7 +26,7 @@ const attemptToResult = (attempt, questions) => {
 
   return {
     score: attempt.score,
-    total: questions.length,
+    total: attempt.score_total || questions.length,
     timeTaken,
     startedAt,
     answers: normaliseDbAnswers(attempt.answers ?? [], questions),
@@ -75,51 +77,18 @@ function StartQuizDialog({ isOpen, onConfirm, onCancel, quiz }) {
   );
 }
 
-function PerfectRetakeDialog({ isOpen, onConfirm, onCancel }) {
-  return (
-    <Transition appear show={isOpen} as={Fragment}>
-      <Dialog as="div" className="relative z-60" onClose={onCancel}>
-        <Transition.Child as={Fragment} enter="ease-out duration-200" enterFrom="opacity-0" enterTo="opacity-100" leave="ease-in duration-150" leaveFrom="opacity-100" leaveTo="opacity-0">
-          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" />
-        </Transition.Child>
-        <div className="fixed inset-0 flex items-center justify-center p-4">
-          <Transition.Child as={Fragment} enter="ease-out duration-200" enterFrom="opacity-0 scale-95" enterTo="opacity-100 scale-100" leave="ease-in duration-150" leaveFrom="opacity-100 scale-100" leaveTo="opacity-0 scale-95">
-            <Dialog.Panel className="w-full max-w-md bg-white rounded-2xl shadow-2xl p-8 flex flex-col items-center gap-5 text-center">
-              <div className="w-16 h-16 bg-yellow-100 rounded-2xl flex items-center justify-center">
-                <Trophy className="w-8 h-8 text-yellow-500" />
-              </div>
-              <Dialog.Title className="text-2xl font-black text-slate-800">You already aced this!</Dialog.Title>
-              <p className="text-slate-500 leading-relaxed">
-                You've already gotten a <span className="font-bold text-emerald-600">perfect score</span> on this quiz. Retaking it won't save a new attempt, it's for review only.
-              </p>
-              <div className="flex flex-col gap-3 w-full pt-1">
-                <button onClick={onConfirm} className="flex-1 btn py-2.5 bg-violet-600 text-white font-bold rounded-xl hover:bg-violet-700 transition-colors flex items-center justify-center gap-2">
-                  <RotateCcw size={15} /> Review anyway
-                </button>
-                <button onClick={onCancel} className="flex-1 btn py-2.5 bg-slate-100 text-slate-600 font-semibold rounded-xl hover:bg-slate-200 transition-colors">Stay here</button>
-              </div>
-            </Dialog.Panel>
-          </Transition.Child>
-        </div>
-      </Dialog>
-    </Transition>
-  );
-}
-
 const QuizContent = ({ lessonId, onNext, navigation, preview = false }) => {
   const { lessonQuiz, loading, attempts, submitting, finishAttempt } = useQuizViewer(lessonId, { preview });
   const quiz = lessonQuiz?.quiz;
   const questions = quiz?.questions ?? [];
   const total = questions.length;
 
+  const [assessedAttempt,setAssessedAttempt]=useState(null);
   const [phase, setPhase] = useState("start");
   const [activeAttemptIdx, setActiveAttemptIdx] = useState(0);
   const [currentResult, setCurrentResult] = useState(null);
   const [showCompleteModal, setShowCompleteModal] = useState(false);
-  const [showPerfectDialog, setShowPerfectDialog] = useState(false);
-  const [reviewOnly, setReviewOnly] = useState(false);
 
-  const hasPerfectAttempt = attempts.some((a) => a.score === total && total > 0);
 
   // Once attempts load, jump straight to the best one instead of "start"
   if (phase === "start" && attempts.length > 0 && currentResult === null) {
@@ -131,25 +100,25 @@ const QuizContent = ({ lessonId, onNext, navigation, preview = false }) => {
 
   if (loading || !lessonQuiz) return <Loader />;
 
-  const handleStartConfirm = () => { setReviewOnly(false); setPhase("taking"); };
-
-  const handleRetakeClick = () => {
-    if (hasPerfectAttempt) setShowPerfectDialog(true);
-    else { setReviewOnly(false); setPhase("taking"); }
+  const handleStartConfirm = async () => {
+    if (!preview) {
+      const {data,error}=await supabase.rpc('begin_assessed_quiz',{p_quiz:quiz.id});
+      if(error){toast.error(error.message);return;}
+      setAssessedAttempt(data);
+    }
+    setPhase('taking');
   };
 
-  const handlePerfectRetakeConfirm = () => {
-    setShowPerfectDialog(false);
-    setReviewOnly(true); // won't be saved
-    setPhase("taking");
-  };
+  const handleRetakeClick = () => handleStartConfirm();
 
   const handleQuizComplete = async (result) => {
     const displayResult = { ...result, total };
     setCurrentResult(displayResult);
 
-    if (!preview && !reviewOnly) {
-      const attempt = await finishAttempt(result);
+    if (!preview) {
+      const attempt = await finishAttempt({...result,attemptId:assessedAttempt?.id});
+      if(!attempt) return;
+      setCurrentResult(attemptToResult(attempt,questions));
       if (attempt) setActiveAttemptIdx(attempts.length); // newest attempt lands at the end
     }
 
@@ -167,7 +136,7 @@ const QuizContent = ({ lessonId, onNext, navigation, preview = false }) => {
   const handleToNext = () => { setShowCompleteModal(false); onNext?.("next"); };
 
   if (phase === "taking") {
-    return <QuizAssessment lesson={{ id: lessonQuiz.id, title: lessonQuiz.title, quiz }} onComplete={handleQuizComplete} />;
+    return <QuizAssessment lesson={{ id: lessonQuiz.id, title: lessonQuiz.title, quiz }} onComplete={handleQuizComplete} deadline={!preview ? assessedAttempt?.deadline : null} />;
   }
 
   if (phase === "start") {
@@ -200,12 +169,6 @@ const QuizContent = ({ lessonId, onNext, navigation, preview = false }) => {
         onSelectAttempt={handleSelectAttempt}
       />
 
-      <PerfectRetakeDialog
-        isOpen={showPerfectDialog}
-        onConfirm={handlePerfectRetakeConfirm}
-        onCancel={() => setShowPerfectDialog(false)}
-      />
-
       <CompleteSuccessModal
         isOpen={showCompleteModal}
         onClose={handleRemain}
@@ -214,7 +177,7 @@ const QuizContent = ({ lessonId, onNext, navigation, preview = false }) => {
         onSubmitToNext={navigation?.next ? handleToNext : handleToTopic}
         title="Quiz Complete!"
         message={`You scored ${currentResult?.score ?? 0} / ${total}. ${
-          reviewOnly ? "Review mode — no new attempt saved." : "Progress saved!"
+          preview ? "Preview only." : "Attempt saved!"
         }`}
       />
     </>

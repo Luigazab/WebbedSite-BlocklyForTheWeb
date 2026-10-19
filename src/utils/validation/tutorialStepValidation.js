@@ -1,5 +1,6 @@
 import { validateTutorialCode, validateTestCases } from './tutorialCodeValidation.js'
 import { validateWorkspaceStructure } from './workspaceStructure.js'
+import { sourceDiagnostics } from '../javascriptSource.js'
 
 export function validateTutorialStep({ files, expected, mode = 'block', fileDefinitions = [] }) {
   if (!['block', 'text'].includes(mode)) return { passed: false, failures: ['Unsupported tutorial mode.'] }
@@ -10,6 +11,7 @@ export function validateTutorialStep({ files, expected, mode = 'block', fileDefi
     const matches = files.filter(file => file.filename === filename)
     if (!filename || matches.length !== 1) { failures.push('A required file is missing or duplicated.'); continue }
     const file = matches[0]
+    failures.push(...sourceDiagnostics(file.code ?? '', filename).map(issue => issue.message))
     // Learner DTOs contain objective metadata, never the reference answer.
     // The submission service checks these objectives against the private definition.
     if (solution.server_only) continue

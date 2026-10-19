@@ -1,3 +1,4 @@
+import AssessmentSettings from '@/components/shared/AssessmentSettings'
 import { AppBreadcrumb } from "#components/common/breadcrumb";
 import { Button } from "#components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "#components/ui/card";
@@ -232,6 +233,7 @@ const QuizPage = ({ context = "teacher" }) => {
         <div className="top-1 sticky shrink-0 flex items-center gap-3 px-4 py-2.5 ">
           <Link to="/"><img src="/icon.png" alt="icon image" className='w-8 h-8' /></Link>
           <BackButton />
+          {editLessonId && <details className="max-h-96 overflow-auto rounded-lg border bg-white p-2"><summary>Assessment settings</summary><AssessmentSettings lessonId={editLessonId} /></details>}
           {!isAdmin && !isEditMode && !new URLSearchParams(location.search).get("classroomId") && <p className="text-sm text-muted-foreground">Open a classroom to create a lesson for its topics. <Link to="/teacher/classrooms" className="underline">Choose classroom</Link></p>}
           <span className="text-slate-500">/</span>
           <span className="font-bold text-slate-700 truncate max-w-xs">

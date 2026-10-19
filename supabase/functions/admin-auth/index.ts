@@ -21,12 +21,14 @@ Deno.serve(createAdminAuthHandler({
     return data.user!
   },
   setRole: async (id: string, role: string) => {
-    const { data, error } = await db.from('profiles').update({ role }).eq('id', id).select('id').single()
+    const { data, error } = await db.from('profiles').update({ role, ...(role === 'teacher' ? { must_change_password: true } : {}) }).eq('id', id).select('id').single()
     if (error || !data) throw error || new Error('The account role could not be saved.')
   },
   resetPassword: async (id: string, password: string) => {
     const { error } = await db.auth.admin.updateUserById(id, { password })
     if (error) throw error
+    const { error: requirementError } = await db.from('profiles').update({ must_change_password: true }).eq('id', id).eq('role', 'teacher')
+    if (requirementError) throw requirementError
   },
   getUserStatus: async (id: string) => {
     const { data, error } = await db.auth.admin.getUserById(id)

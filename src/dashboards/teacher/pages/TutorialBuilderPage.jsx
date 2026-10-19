@@ -1,3 +1,4 @@
+import WorkspaceTools from '@/components/editor/WorkspaceTools'
 import { useState, useEffect, useCallback } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router'
 import { useAuth } from '../../../hooks/useAuth'
@@ -316,6 +317,7 @@ export default function TutorialBuilderPage({ context = "teacher" }) {
   const [remiMinimized, setRemiMinimized] = useState(false)
 
   const workspace = BlocklyWorkspace({
+    filename: activeFilename || 'index.html',
     onWorkspaceChange: () => {
       if (builder.isLoadingWsRef.current || !activeFilename) return
       builder.recordWorkingEdit(activeFilename)
@@ -523,11 +525,13 @@ export default function TutorialBuilderPage({ context = "teacher" }) {
             onFileCreate={handleCreateFile}
             onFileDelete={handleDeleteFile}
           />
+          <WorkspaceTools workspace={workspace} />
           <div ref={workspace.blocklyDiv} className="blocklyDiv flex-1 relative" />
         </div>
 
         <div className="w-1/4 h-full overflow-hidden">
           <PreviewPane
+            storageScope={`tutorial-author:${id || 'draft'}`}
             generatedCode={generatedCode}
             currentFileCode={currentFileCode}
             currentFileName={activeFilename || ''}

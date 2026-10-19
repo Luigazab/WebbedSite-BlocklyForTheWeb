@@ -114,6 +114,7 @@ export async function getClassroomOverviewStats(classroomId) {
     .select('id, lessons!inner(type)', { count: 'exact', head: true })
     .eq('classroom_id', classroomId)
     .eq('lessons.type', 'laboratory')
+    .eq('is_final',true)
     .is('graded_at', null)
   if (reviewError) throw reviewError
 

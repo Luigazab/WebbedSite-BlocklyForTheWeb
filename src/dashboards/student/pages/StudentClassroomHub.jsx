@@ -1,3 +1,4 @@
+import MyProgress from '../../../components/classroom/MyProgress'
 import { createElement, useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router'
 import { Activity, ArrowLeft, BookOpen, Loader2, Users } from 'lucide-react'
@@ -13,6 +14,7 @@ import { Button } from '#components/ui/button'
 
 const tabs = [
   { id: 'learning', label: 'Learning', icon: BookOpen },
+  { id: 'progress', label: 'My Progress', icon: Activity },
   { id: 'activity', label: 'Activity', icon: Activity },
   { id: 'classmates', label: 'Classmates', icon: Users },
 ]
@@ -93,7 +95,8 @@ export default function StudentClassroomHub() {
       </button>)}
     </div>
 
-    {activeTab === 'learning' && <StudentClassroomActivities classroomId={classroomId} />}
+    {activeTab === 'progress' && <MyProgress classroomId={classroomId} />}
+      {activeTab === 'learning' && <StudentClassroomActivities classroomId={classroomId} />}
     {activeTab === 'activity' && <section aria-label="Classroom activity" className="rounded-2xl p-5">
       {postsError && <p role="alert" className="mb-4 text-sm text-red-700">{postsError}</p>}
       <PostFeed posts={classroomPosts} currentUserId={profile.id}

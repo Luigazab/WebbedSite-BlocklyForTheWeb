@@ -14,7 +14,7 @@ const shuffleArray = (array) => {
   return shuffled
 }
 
-const QuizAssessment = ({ lesson, onComplete }) => {
+const QuizAssessment = ({ lesson, onComplete, deadline = null }) => {
   const quiz = lesson.quiz;
   const [questions] = useState(() =>
     shuffleArray(
@@ -27,11 +27,12 @@ const QuizAssessment = ({ lesson, onComplete }) => {
   const totalQuestions = questions.length;
   const timeLimit = quiz?.time_limit || 300;
 
+  const submittedRef = useRef(false);
   const startedAtRef = useRef(new Date()); 
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState({});  
-  const [timeLeft, setTimeLeft] = useState(timeLimit);
+  const [timeLeft, setTimeLeft] = useState(() => deadline ? Math.max(0,Math.ceil((Date.parse(deadline)-Date.now())/1000)) : timeLimit);
   const [showQuestions, setShowQuestions] = useState(false);
 
   const currentQuestion = questions[currentIndex];
@@ -42,7 +43,7 @@ const QuizAssessment = ({ lesson, onComplete }) => {
       handleSubmit();
       return;
     }
-    const timer = setInterval(() => setTimeLeft((t) => t - 1), 1000);
+    const timer = setInterval(() => setTimeLeft((t) => deadline ? Math.max(0,Math.ceil((Date.parse(deadline)-Date.now())/1000)) : t - 1), 1000);
     return () => clearInterval(timer);
   }, [timeLeft]);
 
@@ -56,7 +57,9 @@ const QuizAssessment = ({ lesson, onComplete }) => {
     setAnswers((prev) => ({ ...prev, [currentQuestion.id]: optionId }));
   };
 
-  const handleSubmit = useCallback(() => {
+  const handleSubmit = useCallback(async () => {
+    if (submittedRef.current) return;
+    submittedRef.current=true;
     const answerList = questions.map((q) => {
       const selectedOptionId = answers[q.id] || null;
       const selectedOption = q.options?.find((o) => o.id === selectedOptionId);
@@ -69,14 +72,14 @@ const QuizAssessment = ({ lesson, onComplete }) => {
 
     const score = answerList.filter((a) => a.isCorrect).length;
 
-    onComplete({
+    try { await onComplete({
       score,
       total:      totalQuestions,
       timeTaken:  timeLimit - timeLeft,
       startedAt:  startedAtRef.current,  
       quizId:     quiz?.id,         
       answers:    answerList,
-    });
+    }); } finally { submittedRef.current=false; }
   }, [answers, questions, timeLeft, timeLimit, quiz?.id, onComplete]);
 
   const handleNext = () => {

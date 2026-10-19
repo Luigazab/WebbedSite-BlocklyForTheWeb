@@ -208,8 +208,8 @@ const QuizResult = ({
               </h1>
               <div className="space-y-4 pt-4">
                 {reviewQuestion?.options?.map((option) => {
-                  const isCorrect  = option.is_correct
                   const wasSelected = reviewAnswer?.selectedOptionId === option.id
+                  const isCorrect = option.is_correct === true || (wasSelected && reviewAnswer?.isCorrect)
 
                   let style = 'border-slate-200'
                   let label = null

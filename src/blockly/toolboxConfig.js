@@ -1,5 +1,7 @@
 
-export const toolboxConfig = {
+import { createLearningToolbox } from './learningToolbox.js'
+
+export const legacyToolboxConfig = {
   kind: 'categoryToolbox',
   contents: [
     // ========== HTML SECTION ==========
@@ -976,6 +978,8 @@ export const toolboxConfig = {
     },
   ]
 };
+
+export const toolboxConfig = createLearningToolbox(legacyToolboxConfig, { level: 'full' })
 
 // export const toolboxConfig = {
 //   kind: 'categoryToolbox',

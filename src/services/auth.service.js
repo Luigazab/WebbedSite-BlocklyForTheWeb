@@ -39,7 +39,8 @@ export const authService = {
   },
 
   async signUp(email, password, username, role) {
-    if (!['student', 'teacher'].includes(role)) throw new Error('Choose a student or teacher account')
+    if (role && role !== 'student') throw new Error('Teacher accounts are created by your administrator.')
+    role = 'student'
     if (username.trim().length < 3 || username.trim().length > 80) throw new Error('Username must be 3–80 characters.')
     await validateNewPassword(password)
     const { data, error } = await supabase.auth.signUp({ email: email.trim(), password, options: { emailRedirectTo: `${window.location.origin}/login`, data: { username: username.trim(), role } } })

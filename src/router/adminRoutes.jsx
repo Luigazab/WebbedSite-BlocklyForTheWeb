@@ -1,21 +1,23 @@
-import AdminLayout from '../dashboards/admin/AdminLayout'
-import AdminHome from '../dashboards/admin/pages/AdminHome'
-import UserManagement from '../dashboards/admin/pages/UserManagement'
-import UserEngagement from '../dashboards/admin/pages/UserEngagement'
-import ReportsAndFeedback from '../dashboards/admin/pages/ReportsAndFeedback'
-import AdminProfile from '../dashboards/admin/pages/AdminProfile'
-import ProfilePage from '../dashboards/admin/pages/AdminProfile'
-import SettingsPage from '../components/shared/SettingsPage'
-import ContentManagement from '../dashboards/admin/pages/ContentManagement'
-import PlatformConfig from '../dashboards/admin/pages/PlatformConfig'
-import CoursesLibrary from '@/dashboards/admin/pages/CoursesLibrary'
-import CourseDetail from '@/dashboards/admin/pages/CourseDetail'
-import Analytics from '@/dashboards/admin/pages/Analytics'
-import LecturePage from '@/dashboards/teacher/pages/LecturePage'
-import QuizPage from '@/dashboards/teacher/pages/QuizPage'
-import TutorialBuilderPage from '@/dashboards/teacher/pages/TutorialBuilderPage'
-import LaboratoryBuilderPage from '@/dashboards/teacher/pages/LaboratoryBuilderPage'
-
+import { lazy } from 'react'
+const ReportsPage = lazy(() => import('../components/shared/ReportsPage'))
+import { Navigate } from 'react-router'
+const AdminLayout = lazy(() => import('../dashboards/admin/AdminLayout'))
+const AdminHome = lazy(() => import('../dashboards/admin/pages/AdminHome'))
+const UserManagement = lazy(() => import('../dashboards/admin/pages/UserManagement'))
+const UserEngagement = lazy(() => import('../dashboards/admin/pages/UserEngagement'))
+const ReportsAndFeedback = lazy(() => import('../dashboards/admin/pages/ReportsAndFeedback'))
+const AdminProfile = lazy(() => import('../dashboards/admin/pages/AdminProfile'))
+const ProfilePage = lazy(() => import('../dashboards/admin/pages/AdminProfile'))
+const SettingsPage = lazy(() => import('../components/shared/SettingsPage'))
+const ContentManagement = lazy(() => import('../dashboards/admin/pages/ContentManagement'))
+const PlatformConfig = lazy(() => import('../dashboards/admin/pages/PlatformConfig'))
+const CoursesLibrary = lazy(() => import('@/dashboards/admin/pages/CoursesLibrary'))
+const CourseDetail = lazy(() => import('@/dashboards/admin/pages/CourseDetail'))
+const Analytics = lazy(() => import('@/dashboards/admin/pages/Analytics'))
+const LecturePage = lazy(() => import('@/dashboards/teacher/pages/LecturePage'))
+const QuizPage = lazy(() => import('@/dashboards/teacher/pages/QuizPage'))
+const TutorialBuilderPage = lazy(() => import('@/dashboards/teacher/pages/TutorialBuilderPage'))
+const LaboratoryBuilderPage = lazy(() => import('@/dashboards/teacher/pages/LaboratoryBuilderPage'))
 export const adminRoutes = [
   {
     element: <AdminLayout />,
@@ -29,7 +31,8 @@ export const adminRoutes = [
       { path: 'reports', element: <ReportsAndFeedback /> },
       { path: 'contents', element: <ContentManagement /> },
       { path: 'config', element: <PlatformConfig/> },
-      { path: 'profile', element: <ProfilePage /> },
+      { path: 'profile', element: <Navigate to="/admin/settings" replace /> },
+      { path: 'help', element: <ReportsPage /> },
       { path: 'settings', element: <SettingsPage /> },
     ]
   },

@@ -186,10 +186,13 @@ export default function CourseDetail({ readOnly = false }) {
   const publishChanges = async () => {
     try {
       setIsPublishing(true);
+      const { error } = await supabase.rpc('publish_course_template', { p_course: id });
+      if (error) throw error;
       await refreshCourse();
       alert('Changes published successfully!');
     } catch (error) {
       console.error('Error publishing changes:', error);
+      alert(error.message || 'Could not publish this template.');
     } finally {
       setIsPublishing(false);
     }

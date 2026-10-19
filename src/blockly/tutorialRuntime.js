@@ -1,17 +1,14 @@
+import { expandReusableState } from './reusableBlocks.js'
 import { Blockly } from './core.js'
-import * as ColourModule from '@blockly/field-colour'
 import { DOMParser } from 'linkedom'
-import { defineBlocks } from './defineBlocks.jsx'
-import { defineGenerators } from './defineGenerators.jsx'
-import { defineCSSBlocks } from './defineCSSBlocks.jsx'
-import { defineCSSGenerators } from './defineCSSGenerators.jsx'
-import { defineJSBlocks } from './defineJSBlocks.js'
-import { defineJSGenerators } from './defineJSGenerators.js'
+import { registerBlocklyBlocks } from './registerBlocks.js'
+import { assertValidSource } from '../utils/javascriptSource.js'
+import { workspaceDiagnostics } from './workspaceDiagnostics.js'
+import { isIdentifier, validNameField } from './jsSupport.js'
 import { defineFileReferenceBlocks } from './fileReferenceBlocks.js'
 import { codeGeneratorService } from '../services/codeGenerator.service.js'
 
 let initialized = false
-const FieldColour = ColourModule.FieldColour ?? ColourModule.default?.FieldColour
 export function initializeTutorialRuntime() {
   if (initialized) return
   initialized = true
@@ -22,8 +19,7 @@ export function initializeTutorialRuntime() {
     DOMParser,
     XMLSerializer: class { serializeToString(node) { return node.toString() } },
   })
-  if (!Blockly.registry.hasItem(Blockly.registry.Type.FIELD, 'field_colour')) Blockly.fieldRegistry.register('field_colour', FieldColour)
-  defineBlocks(); defineGenerators(); defineCSSBlocks(); defineCSSGenerators(); defineJSBlocks(); defineJSGenerators()
+  registerBlocklyBlocks()
 }
 
 function checkWorkspaceLimits(state) {
@@ -32,6 +28,11 @@ function checkWorkspaceLimits(state) {
     if (depth > 100) throw new Error('Workspace nesting exceeds the limit')
     if (value && typeof value === 'object') {
       if (typeof value.type === 'string' && ++count > 5000) throw new Error('Workspace exceeds the block limit')
+      if (value.type?.startsWith('js_') && value.fields) {
+        for (const name of ['NAME', 'VAR', 'ERR', 'RESULT']) if (typeof value.fields[name] === 'string' && !validNameField(value.type, name, value.fields[name])) throw new Error(`Invalid ${name.toLowerCase()}: ${value.fields[name]}`)
+        if (typeof value.fields.PARAMS === 'string' && value.fields.PARAMS.trim() && !value.fields.PARAMS.split(',').every(name => isIdentifier(name.trim()))) throw new Error('Function parameters must be valid names.')
+        if (['js_new_instance', 'js_instanceof'].includes(value.type) && typeof value.fields.CLASS === 'string' && !value.fields.CLASS.split('.').every(isIdentifier)) throw new Error('Constructor names must be valid names.')
+      }
       for (const child of Object.values(value)) visit(child, depth + 1)
     }
   }
@@ -50,10 +51,19 @@ export function canonicalTutorialFiles(files, mode, fileDefinitions) {
     filenames.add(file.filename)
     if (mode === 'text') {
       if (typeof file.code !== 'string') throw new Error('Text files must include source code')
+      assertValidSource(file.code, file.filename)
       return { filename: file.filename, code: file.code, blocks_json: null }
     }
     if (!file.blocks_json || typeof file.blocks_json !== 'object' || Array.isArray(file.blocks_json)) throw new Error('Block files must include a workspace')
-    checkWorkspaceLimits(file.blocks_json)
-    return { filename: file.filename, blocks_json: file.blocks_json, code: codeGeneratorService.generateCodeFromState(file.blocks_json, file.filename) }
+    checkWorkspaceLimits(expandReusableState(file.blocks_json))
+    const workspace = new Blockly.Workspace()
+    try {
+      Blockly.serialization.workspaces.load(expandReusableState(file.blocks_json), workspace)
+      const issues = workspaceDiagnostics(workspace, file.filename).filter(issue => issue.severity !== 'hint')
+      if (issues.length) throw new Error(issues.map(issue => issue.message).join(' • '))
+      const code = codeGeneratorService.generateCode(workspace, file.filename)
+      assertValidSource(code, file.filename)
+      return { filename: file.filename, blocks_json: file.blocks_json, code }
+    } finally { workspace.dispose() }
   })
 }

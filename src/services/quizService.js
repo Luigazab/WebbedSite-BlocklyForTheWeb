@@ -52,32 +52,7 @@
 import { supabase } from "../supabaseClient";
 
 export const fetchQuizEditorData = async (lessonId) => {
-  const { data, error } = await supabase
-    .from("lessons")
-    .select(`
-      id,
-      title,
-      topics_id,
-      type,
-      base_xp,
-      quizzes (
-        id,
-        time_limit,
-        passing_score,
-        questions (
-          id,
-          text,
-          order,
-          options (
-            id,
-            text,
-            is_correct
-          )
-        )
-      )
-    `)
-    .eq("id", lessonId)
-    .single();
+  const { data, error } = await supabase.rpc('quiz_editor_data',{p_lesson:lessonId});
 
   if (error) throw error;
 
@@ -143,6 +118,12 @@ export const upsertQuizContent = async ({ lessonId, timeLimit, passingScore, que
 
   if (existingQuizError) throw existingQuizError;
 
+  if (existingQuiz?.id) {
+    const { count, error } = await supabase.from('quiz_attempts').select('id',{count:'exact',head:true}).eq('quiz_id',existingQuiz.id);
+    if (error) throw error;
+    if (count) throw new Error('This quiz has assessment records. Create a new quiz lesson to change its questions and preserve earlier attempts.');
+  }
+
   let quizId = existingQuiz?.id;
   if (quizId) {
     const { error } = await supabase
@@ -204,6 +185,16 @@ export const upsertQuizContent = async ({ lessonId, timeLimit, passingScore, que
 
 //student view
 export const fetchQuizForStudent = async (lessonId) => {
+  const {data:{user}}=await supabase.auth.getUser();
+  if(user){
+    const {data:profile}=await supabase.from('profiles').select('role').eq('id',user.id).single();
+    if(profile?.role==='teacher'||profile?.role==='admin'){
+      const {data,error}=await supabase.rpc('quiz_editor_data',{p_lesson:lessonId});
+      if(error)throw error;
+      return {id:data.id,title:data.title,quiz:data.quizzes?.[0]??null};
+    }
+  }
+
   const { data, error } = await supabase
     .from("lessons")
     .select(`
@@ -219,7 +210,7 @@ export const fetchQuizForStudent = async (lessonId) => {
         passing_score,
         questions (
           id, text, order,
-          options ( id, text, is_correct )
+          options ( id, text )
         )
       )
     `)

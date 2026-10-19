@@ -16,7 +16,7 @@ import {
 import { useLikes } from '../../hooks/useLikes'
 import { PageHeader } from '#components/common/PageHeader'
 
-const FILTERS      = ['All', 'Public', 'Private']
+const FILTERS      = ['All', 'Personal', 'Tutorial', 'Laboratory', 'Public', 'Private']
 const SORT_OPTIONS = ['Recent', 'Name', 'Most Liked']
 
 

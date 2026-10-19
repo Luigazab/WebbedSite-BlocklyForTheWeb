@@ -29,7 +29,14 @@ export function useRemiHighlight(getWorkspace, categoryPath, blockType, ready = 
     let target = null
     for (let i = 0; i < categoryPath.length; i++) {
       target = items.find((it) => it.getName?.() === categoryPath[i])
-      if (!target) break
+      if (!target) {
+        const javascript = toolbox.getToolboxItems?.().find(item => item.getName?.() === 'JavaScript')
+        const children = javascript?.getChildToolboxItems?.() ?? []
+        const aliases = { Script: 'Events & Forms', Variables: 'Values & Variables', 'Data Types': 'Lists & Objects', Operators: 'Conditions', 'Control Flow': 'Conditions', Console: 'Debugging', Math: 'Text & Numbers', Strings: 'Text & Numbers', Arrays: 'Lists & Objects', DOM: 'Page Elements', Events: 'Events & Forms', Timers: 'Timers & Animation', 'Fetch & JSON': 'Data & APIs', Storage: 'Data & APIs', Misc: 'Advanced' }
+        target = children.find(item => item.getName?.() === (blockType ? 'This Lesson' : aliases[categoryPath[i]]))
+        if (target) javascript.setExpanded?.(true)
+        break
+      }
       const isLast = i === categoryPath.length - 1
       if (!isLast) {
         target.setExpanded?.(true)

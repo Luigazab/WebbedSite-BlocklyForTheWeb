@@ -112,10 +112,10 @@ export const getLessonDetails = async (courseSlug, lessonSlug, { masterOnly = fa
         id, time_limit, passing_score,
         questions (
           id, text, order,
-          options ( id, text, is_correct, image_src )
+          options ( id, text, image_src )
         )
       ),
-      laboratories ( id, instruction ),
+      laboratories ( id, instruction, rubric, passing_score, rubric_version ),
       tutorials ( id, type ),
       author:profile_directory!lessons_author_fkey ( username, avatar_url )
     `)

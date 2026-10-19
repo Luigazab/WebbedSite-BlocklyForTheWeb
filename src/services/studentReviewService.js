@@ -32,3 +32,19 @@ export async function getOwnSubmissions(lessonId) {
   if (error) throw error
   return data ?? []
 }
+
+export async function submitLaboratory({ lessonId, files, requestKey, draft = false }) {
+ const {data,error}=await supabase.rpc('submit_laboratory',{p_lesson:lessonId,p_files:files,p_request:requestKey,p_draft:draft})
+ if(error)throw error
+ return Array.isArray(data)?data[0]:data
+}
+export async function gradeLabRubric(submission, scores, feedback) {
+ const {data,error}=await supabase.rpc('grade_lab_rubric',{p_submission:submission.id,p_scores:scores,p_feedback:feedback,p_revision:submission.revision})
+ if(error)throw error
+ return Array.isArray(data)?data[0]:data
+}
+export async function copyLearningProject(lessonId) {
+ const {data,error}=await supabase.rpc('copy_learning_project',{p_lesson:lessonId})
+ if(error)throw error
+ return data
+}

@@ -193,9 +193,10 @@ test('registration carries a permitted role and works before email confirmation 
   } }] })
   try {
     const { authService } = await import('../node_modules/.cache/tutorial-tests/auth.mjs')
-    await assert.rejects(authService.signUp('test@example.invalid', 'password', 'Test', 'admin'), /student or teacher/)
+    await assert.rejects(authService.signUp('test@example.invalid', 'password', 'Test', 'admin'), /administrator/)
     assert.equal(calls.length, 0)
-    for (const role of ['student', 'teacher']) {
+    await assert.rejects(authService.signUp('teacher@example.invalid', 'a long test passphrase', 'Teacher', 'teacher'), /administrator/)
+    for (const role of ['student']) {
       const result = await authService.signUp('test@example.invalid', 'a long test passphrase', 'Test', role)
       assert.equal(result.session, null)
       assert.deepEqual(calls.at(-1).options.data, { username: 'Test', role })

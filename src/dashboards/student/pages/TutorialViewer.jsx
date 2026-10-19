@@ -1,8 +1,10 @@
+import { lessonBlockTypes } from '@/blockly/learningToolbox'
+import WorkspaceTools from '@/components/editor/WorkspaceTools'
 import { validateTutorialStep } from '../../../utils/validation/tutorialStepValidation'
 import { resolveStudentStepFiles } from '../../../utils/tutorialSteps'
 import { useRemiHighlight } from '../../../hooks/useRemiHighlights'
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { useNavigate, useParams } from 'react-router'
+import { Link, useNavigate, useParams } from 'react-router'
 import BlocklyWorkspace from '../../../components/editor/BlocklyWorkspace'
 import PreviewPane from '../../../components/editor/PreviewPane'
 import FileTabs from '../../../components/editor/FileTabs'
@@ -16,6 +18,7 @@ import { getOwnSubmissions } from '../../../services/studentReviewService'
 import { saveTutorialSubmission, tutorialAction } from '../../../services/tutorialSubmissionService'
 import { useActivityTiming } from '../../../hooks/useActivityTiming'
 import { ArrowLeft, Trophy, Loader2, AlertCircle, Clock } from 'lucide-react'
+import BackButton from '#components/common/BackButton'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -169,6 +172,9 @@ export default function TutorialViewer({ tutorialIdOverride = null, preview = fa
 
   // ── Workspace hook — ALWAYS called, never conditionally ───────────────────
   const workspace = BlocklyWorkspace({
+    filename: stepFiles.find(f => f.id === activeFileId)?.filename || 'index.html',
+    initialPalette: 'lesson',
+    lessonBlocks: lessonBlockTypes(steps[currentStep]),
     onWorkspaceChange: (wsRef) => {
       if (isLoadingRef.current) return
       const file = stepFiles.find((f) => f.id === activeFileId)
@@ -398,13 +404,13 @@ export default function TutorialViewer({ tutorialIdOverride = null, preview = fa
   // ═══════════════════════════════════════════════════════════════════════════
   // RENDER
   //
-  // ⚠️  NEVER early-return before the <div ref={workspace.blocklyDiv}>.
+  // Keep the workspace div mounted while lesson data loads.
   //     Blockly.inject() fires once on mount into that div. If the div is not
   //     in the DOM at that point, the workspace never initialises.
   //     Use position:absolute overlays for loading / error states instead.
   // ═══════════════════════════════════════════════════════════════════════════
   return (
-    <div className="relative flex flex-col h-screen bg-slate-100 overflow-hidden">
+    <div className="relative flex flex-col h-screen bg-gray-100 overflow-hidden">
 
       {/* ── Loading overlay (sits on top, never unmounts the editor) ─── */}
       {loading && (
@@ -425,19 +431,15 @@ export default function TutorialViewer({ tutorialIdOverride = null, preview = fa
             onClick={handleBack}
             className="text-sm text-blockly-purple hover:underline font-medium"
           >
-            ← Go back
+            Go back
           </button>
         </div>
       )}
 
       {/* ── Top bar ──────────────────────────────────────────────────── */}
-      <div className="shrink-0 flex items-center gap-3 px-4 py-2.5 bg-white border-b border-gray-200 shadow-sm z-10">
-        <button
-          onClick={handleBack}
-          className="flex items-center gap-1.5 text-sm font-semibold text-gray-500 hover:text-gray-800 transition-colors"
-        >
-          <ArrowLeft size={16} /> Back
-        </button>
+      <div className="shrink-0 flex items-center gap-3 px-4 py-2.5 ">
+        <Link to="/"><img src="/icon.png" alt="icon" className="w-8 h-8" /></Link>
+        <BackButton />
 
         <span className="text-gray-300 select-none">|</span>
         {preview && <span className="text-xs text-amber-700">Preview · Progress is not saved</span>}
@@ -472,10 +474,10 @@ export default function TutorialViewer({ tutorialIdOverride = null, preview = fa
       </div>
 
       {/* ── Editor body ──────────────────────────────────────────────── */}
-      <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
+      <div className="flex flex-col md:flex-row flex-1 overflow-hidden px-3 gap-1.5 mb-4">
 
         {/* Blockly workspace — blocklyDiv MUST always be in the DOM */}
-        <div className="flex flex-col md:w-2/3 h-full border border-gray-600 bg-white overflow-hidden">
+        <div className="flex flex-col md:w-2/3 h-full overflow-hidden bg-white rounded shadow border border-border">
           <FileTabs
             files={stepFiles}
             activeFile={activeFileId}
@@ -485,6 +487,7 @@ export default function TutorialViewer({ tutorialIdOverride = null, preview = fa
             onFileDelete={() => {}}
           />
           {/* ⚠️ This div is what Blockly injects into. Always render it. */}
+          {tutorial?.type !== 'text' && <WorkspaceTools workspace={workspace} />}
           <div ref={workspace.blocklyDiv} className={`blocklyDiv flex-1 ${tutorial?.type === 'text' ? 'hidden' : ''}`} />
           {tutorial?.type === 'text' && <textarea aria-label={`Code for ${getCurrentFileName()}`} spellCheck={false} className="flex-1 resize-none p-4 font-mono text-sm" value={stepFiles.find(file => file.id === activeFileId)?.code ?? ''} onChange={event => {
             const code = event.target.value
@@ -496,6 +499,7 @@ export default function TutorialViewer({ tutorialIdOverride = null, preview = fa
         {/* Preview pane */}
         <div className="flex-1 h-full overflow-hidden">
           <PreviewPane
+            storageScope={`tutorial:${tutorial?.id || 'preview'}`}
             generatedCode={generatedCode}
             currentFileCode={getCurrentFileCode()}
             currentFileName={getCurrentFileName()}

@@ -1,6 +1,7 @@
 import { Navigate, Outlet, useLocation } from 'react-router'
 import { useAuthStore } from '../../store/authStore'
 import Loader from './Loader'
+import FirstPasswordChange from '../../pages/auth/FirstPasswordChange'
 import AccountLoadError from './AccountLoadError'
 
 const ROLE_HOME = {
@@ -28,5 +29,6 @@ export function ProtectedRoute({ allowedRole }) {
   if (allowedRole === 'student' && profile.onboarding_completed_at && location.pathname === '/student/welcome') {
     return <Navigate to="/student" replace />
   }
+  if (profile?.must_change_password) return <FirstPasswordChange />
   return <Outlet />
 }

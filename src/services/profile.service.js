@@ -13,7 +13,6 @@ export const profileService = {
         offset,
         sortBy: { column: 'name', order: 'asc' },
       })
-      console.log('avatar-pool list:', { data, error })
       if (error) throw error
       const files = data ?? []
       avatars.push(...files

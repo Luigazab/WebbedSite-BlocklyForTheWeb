@@ -1,6 +1,6 @@
 import * as Blockly from 'blockly';
 import React from 'react'; 
-import { FileText, Type, Image, File, Blocks, Plus, Form, List, Table2Icon, Palette, Monitor, Space, Wallpaper, SquareRoundCorner } from 'lucide-react'; 
+import { FileText, Type, Image, File, Blocks, Plus, Form, List, Table2Icon, Monitor, Space, Wallpaper, SquareRoundCorner, Braces, Variable, GitBranch, Repeat, Code, Calculator, Database, MousePointer, Terminal, Timer, Globe, Wrench } from 'lucide-react';
 import { createRoot } from 'react-dom/client';
 
 
@@ -108,6 +108,20 @@ class CustomCategory extends Blockly.ToolboxCategory {
 
     let IconComponent;
     switch (this.toolboxItemDef_.name) {
+      case 'JavaScript': IconComponent = Braces; break;
+      case 'This Lesson': IconComponent = Blocks; break;
+      case 'Values & Variables': IconComponent = Variable; break;
+      case 'Conditions': IconComponent = GitBranch; break;
+      case 'Loops': IconComponent = Repeat; break;
+      case 'Functions': IconComponent = Code; break;
+      case 'Text & Numbers': IconComponent = Calculator; break;
+      case 'Lists & Objects': IconComponent = Database; break;
+      case 'Page Elements': IconComponent = Monitor; break;
+      case 'Events & Forms': IconComponent = MousePointer; break;
+      case 'Debugging': IconComponent = Terminal; break;
+      case 'Timers & Animation': IconComponent = Timer; break;
+      case 'Data & APIs': IconComponent = Globe; break;
+      case 'Advanced': IconComponent = Wrench; break;
       case 'Page':
         IconComponent = File;
         break;

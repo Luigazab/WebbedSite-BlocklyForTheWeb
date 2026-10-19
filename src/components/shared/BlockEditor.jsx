@@ -1,3 +1,5 @@
+import { supabase } from '../../supabaseClient'
+import WorkspaceTools from '@/components/editor/WorkspaceTools'
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useParams, useLocation } from 'react-router'
 import BlocklyWorkspace from '../editor/BlocklyWorkspace'
@@ -13,7 +15,6 @@ import SaveModal from '../editor/SaveModal'
 import LoadModal from '../editor/LoadModal'
 import EditorHeader from '../layout/EditorHeader'
 import { useAuthStore } from '../../store/authStore'
-import { useUIStore } from '../../store/uiStore'
 import { useBlocklyThumbnail } from '../../hooks/useBlocklyThumbnail'
 import { projectService } from '../../services/project.service'
 import EditorTour, { useAutoStartEditorTour } from '../tour/EditorTour'
@@ -23,10 +24,9 @@ const BlockEditor = () => {
   const { id } = useParams()
   const navigate = useNavigate()
   const profile = useAuthStore((s) => s.profile)
-  const addToast = useUIStore((s) => s.addToast)
   const location = useLocation()
   const fileInputRef = useRef(null)
-  const [isMobilePreviewOpen, setIsMobilePreviewOpen] = useState(false);
+  const pendingProjectRef = useRef(null)
 
   const [projectTitle, setProjectTitle] = useState(location.state?.projectTitle ?? 'Untitled')
   const [generatedCode, setGeneratedCode] = useState('')
@@ -38,22 +38,24 @@ const BlockEditor = () => {
   const [selectedDevice, setSelectedDevice] = useState('desktop')
   const [initialWorkspaceState, setInitialWorkspaceState] = useState(null)
   const [filesWithCode, setFilesWithCode] = useState([])
+  const [textDrafts,setTextDrafts] = useState({})
   const [activePreviewFile, setActivePreviewFile] = useState(null)
   
   const isLoadingRef = useRef(false)
   const lastSavedHtmlRef = useRef('');
-  const { saveThumbnail, loading: thumbnailLoading, error: thumbnailError } = useBlocklyThumbnail();
+  const { saveThumbnail } = useBlocklyThumbnail();
   
-  const { projects, currentProjects, fetchProjects,fetchProject, handleCreateProject, handleUpdateProject, handleDeleteProject: removeProjectFromDb, } = useProject()
+  const { projects, fetchProjects,fetchProject, handleCreateProject, handleUpdateProject, handleDeleteProject: removeProjectFromDb, } = useProject()
   const { files, activeFile, isLocal, saveFile, deleteFile, setActiveFile, createFile, migrateLocalFilesToDb } = useProjectFiles(id || currentProjectId)
 
   const workspace = BlocklyWorkspace({
+    filename: files.find(f => f.id === activeFile)?.filename || 'index.html',
     initialWorkspaceState,
     onWorkspaceChange: (workspaceRef) => {
       if (isLoadingRef.current) return
       
       const file = files.find(f => f.id === activeFile)
-      if (!file) return
+      if (!file || (file.blocks_json == null && file.code != null)) return
       
       const code = codeGeneratorService.generateCode(workspaceRef, file.filename)
       updateFileCode(activeFile, code)
@@ -106,7 +108,8 @@ const BlockEditor = () => {
     if (!activeFile || !workspace.isInitialized || files.length === 0) return
     
     const file = files.find(f => f.id === activeFile)
-    if (!file || !file.blocks_json) return
+    if (!file) return
+    if (file.blocks_json == null && file.code != null) { updateFileCode(file.id,textDrafts[file.id] ?? file.code); return }
 
     isLoadingRef.current = true
 
@@ -133,7 +136,7 @@ const BlockEditor = () => {
       const updated = files.map(file => ({
         id: file.id,
         filename: file.filename,
-        generatedCode: prev.find(f => f.id === file.id)?.generatedCode || ''
+        generatedCode: prev.find(f => f.id === file.id)?.generatedCode ?? (file.blocks_json ? codeGeneratorService.generateCodeFromState(file.blocks_json,file.filename) : file.code ?? '')
       }));
       return updated;
     });
@@ -185,8 +188,18 @@ const BlockEditor = () => {
     })
   }
 
+  const saveActiveFile = async () => {
+    const file = files.find(f => f.id === activeFile)
+    if (!file) return
+    if (file.blocks_json == null && file.code != null) {
+      const {error}=await supabase.from('project_files').update({code:textDrafts[file.id] ?? file.code}).eq('id',file.id)
+      if(error)throw error
+    } else await saveFile(currentProjectId,activeFile,workspace.getWorkspaceState())
+  }
+
   const runCode = () => {
     const file = files.find(f => f.id === activeFile)
+    if (file && file.blocks_json == null && file.code != null) { updateFileCode(file.id,textDrafts[file.id] ?? file.code); return }
     if (file && workspace.getWorkspace()) {
       const code = codeGeneratorService.generateCode(workspace.getWorkspace(), file.filename)
       updateFileCode(activeFile, code)
@@ -199,8 +212,7 @@ const BlockEditor = () => {
 
     try {
       // Save current file
-      const workspaceState = workspace.getWorkspaceState()
-      await saveFile(currentProjectId, activeFile, workspaceState)
+      await saveActiveFile()
       
       // Switch to new file (this will trigger the load effect)
       setActiveFile(fileId)
@@ -213,13 +225,12 @@ const BlockEditor = () => {
   const handleCreateFile = async (filename) => {
     try {
       if (activeFile) {
-        const workspaceState = workspace.getWorkspaceState()
-        await saveFile(currentProjectId, activeFile, workspaceState)
+        await saveActiveFile()
       }
       await createFile(currentProjectId, filename)
       toast.success(`Created ${filename}`)
     } catch (error) {
-      toast.error('Error creating file')
+      toast.error(error.message || 'Error creating file')
     }
   }
 
@@ -229,31 +240,32 @@ const BlockEditor = () => {
       setFilesWithCode(prev => prev.filter(f => f.id !== fileId))
       toast.info('File deleted')
     } catch (error) {
-      toast.error('Error deleting file')
+      toast.error(error.message || 'Error deleting file')
     }
   }
 
   const handleSaveToAccount = async ({ title, description }) => {
     try {
       if (activeFile) {
-        const workspaceState = workspace.getWorkspaceState()
-        await saveFile(currentProjectId, activeFile, workspaceState)
+        await saveActiveFile()
       }
 
       let projectIdToUse = currentProjectId
 
       if (!currentProjectId) {
-        const savedProject = await handleCreateProject({ title, description, type: 'block' })
-
-        setCurrentProjectId(savedProject.id)
-        setProjectTitle(title)
-        setProjectDescription(description)
+        const savedProject = pendingProjectRef.current ?? await handleCreateProject({ title, description, type: 'block' })
+        pendingProjectRef.current = savedProject
         projectIdToUse = savedProject.id
 
         if (isLocal) {
           await migrateLocalFilesToDb(savedProject.id)
           toast.success('Local files migrated to your account')
         }
+
+        setCurrentProjectId(savedProject.id)
+        setProjectTitle(title)
+        setProjectDescription(description)
+        pendingProjectRef.current = null
 
         navigate(`/${profile?.role}/editor/${savedProject.id}`, { replace: true })
       } else {
@@ -289,7 +301,7 @@ const BlockEditor = () => {
       await zipExportService.exportProjectAsZip(projectTitle, projectDescription, filesWithCode)
       toast.success('Project exported as ZIP!')
     } catch (error) {
-      toast.error('Failed to export ZIP')
+      toast.error(error.message || 'Failed to export ZIP')
     }
   }
 
@@ -349,7 +361,7 @@ const BlockEditor = () => {
         setInitialWorkspaceState(data.blocks_json)
         toast.success(`Loaded "${data.title || 'project'}" from device`)
       } catch (error) {
-        toast.error('Failed to parse project file')
+        toast.error(error.message || 'Failed to parse project file')
       }
     }
     reader.readAsText(file)
@@ -371,6 +383,7 @@ const BlockEditor = () => {
       if (currentProjectId === projectId) handleCreateNew()
       fetchProjects()
     } catch (error) {
+      toast.error(error.message || 'Could not delete project')
     }
   }
 
@@ -424,13 +437,7 @@ const BlockEditor = () => {
     const file = files.find(f => f.id === activePreviewFile)
     return file?.filename || ''
   }
-  useAutoStartEditorTour
-  useEffect(() => {
-    const hasSeenTour = localStorage.getItem('tour_editor_completed')
-    if (!hasSeenTour) {
-      setTimeout(() => startTour('editor'), 500)
-    }
-  }, [])
+  useAutoStartEditorTour()
 
   return (
     <div className="flex flex-col h-screen">
@@ -451,11 +458,14 @@ const BlockEditor = () => {
             onFileCreate={handleCreateFile}
             onFileDelete={handleDeleteFile}
           />
-          <div ref={workspace.blocklyDiv} className="blocklyDiv flex-1" />
+          {!(files.find(f=>f.id===activeFile)?.blocks_json == null && files.find(f=>f.id===activeFile)?.code != null) && <WorkspaceTools workspace={workspace} />}
+          <div ref={workspace.blocklyDiv} className={`blocklyDiv flex-1 ${files.find(f=>f.id===activeFile)?.blocks_json == null && files.find(f=>f.id===activeFile)?.code != null ? 'hidden' : ''}`} />
+          {files.find(f=>f.id===activeFile)?.blocks_json == null && files.find(f=>f.id===activeFile)?.code != null && <textarea aria-label={`Source for ${getCurrentFileName()}`} spellCheck={false} className="flex-1 resize-none p-4 font-mono text-sm" value={textDrafts[activeFile] ?? files.find(f=>f.id===activeFile)?.code ?? ''} onChange={e=>{setTextDrafts(previous=>({...previous,[activeFile]:e.target.value}));updateFileCode(activeFile,e.target.value)}}/>}
         </div>
         
         <div className="flex-1 h-full overflow-hidden"> 
           <PreviewPane
+            storageScope={id || currentProjectId || 'scratch'}
             generatedCode={generatedCode}
             currentFileCode={getCurrentFileCode()}
             currentFileName={getCurrentFileName()}

@@ -1,8 +1,9 @@
 import { javascriptGenerator, Order } from 'blockly/javascript'
+import { quoteJS, templateText, inlineScript, memberAccess } from './jsSupport.js'
 
 // Helper to safely get a value input (returns '' if nothing connected)
 const val = (block, name) =>
-  javascriptGenerator.valueToCode(block, name, Order.ATOMIC) || 'null'
+  javascriptGenerator.valueToCode(block, name, Order.ATOMIC) || 'undefined'
 
 // Helper to safely get a statement input (returns '' if nothing inside)
 const stmts = (block, name) =>
@@ -16,12 +17,12 @@ export const defineJSGenerators = () => {
 
   javascriptGenerator.forBlock['js_script_body'] = (block) => {
     const content = stmts(block, 'CONTENT')
-    return `<script>\n${content}</script>\n`
+    return `<script>\n${inlineScript(content)}</script>\n`
   }
 
   javascriptGenerator.forBlock['js_script_head'] = (block) => {
     const content = stmts(block, 'CONTENT')
-    return `<script>\n${content}</script>\n`
+    return `<script>\n${inlineScript(content)}</script>\n`
   }
 
   // ════════════════════════════════════════════════════════════════════════
@@ -81,12 +82,13 @@ export const defineJSGenerators = () => {
   // ════════════════════════════════════════════════════════════════════════
 
   javascriptGenerator.forBlock['js_string_val'] = (block) => {
-    const text = block.getFieldValue('VALUE').replace(/\\/g, '\\\\').replace(/'/g, "\\'")
-    return [`'${text}'`, Order.ATOMIC]
+    const text = block.getFieldValue('VALUE')
+    return [`${quoteJS(text)}`, Order.ATOMIC]
   }
 
   javascriptGenerator.forBlock['js_number_val'] = (block) => {
-    return [String(block.getFieldValue('VALUE')), Order.ATOMIC]
+    const value = Number(block.getFieldValue('VALUE'))
+    return [String(value), value < 0 ? Order.UNARY_NEGATION : Order.ATOMIC]
   }
 
   javascriptGenerator.forBlock['js_boolean_val'] = (block) => {
@@ -98,9 +100,9 @@ export const defineJSGenerators = () => {
   javascriptGenerator.forBlock['js_undefined'] = () => ['undefined', Order.ATOMIC]
 
   javascriptGenerator.forBlock['js_template_literal'] = (block) => {
-    const before = block.getFieldValue('BEFORE')
+    const before = templateText(block.getFieldValue('BEFORE'))
     const expr   = val(block, 'EXPR')
-    const after  = block.getFieldValue('AFTER')
+    const after  = templateText(block.getFieldValue('AFTER'))
     return [`\`${before}\${${expr}}${after}\``, Order.ATOMIC]
   }
 
@@ -120,20 +122,20 @@ export const defineJSGenerators = () => {
     const v0 = block.getFieldValue('VAL0')
     const k1 = block.getFieldValue('KEY1')
     const v1 = block.getFieldValue('VAL1')
-    return [`{ ${k0}: '${v0}', ${k1}: '${v1}' }`, Order.ATOMIC]
+    return [`({ ${quoteJS(k0)}: ${quoteJS(v0)}, ${quoteJS(k1)}: ${quoteJS(v1)} })`, Order.ATOMIC]
   }
 
   javascriptGenerator.forBlock['js_property_get'] = (block) => {
     const obj  = val(block, 'OBJ')
     const prop = block.getFieldValue('PROP')
-    return [`${obj}.${prop}`, Order.MEMBER]
+    return [memberAccess(obj, prop), Order.MEMBER]
   }
 
   javascriptGenerator.forBlock['js_property_set'] = (block) => {
     const obj   = val(block, 'OBJ')
     const prop  = block.getFieldValue('PROP')
     const value = val(block, 'VALUE')
-    return `${obj}.${prop} = ${value};\n`
+    return `${memberAccess(obj, prop)} = ${value};\n`
   }
 
   javascriptGenerator.forBlock['js_bracket_get'] = (block) => {
@@ -290,7 +292,7 @@ export const defineJSGenerators = () => {
     const case1   = block.getFieldValue('CASE1')
     const body1   = stmts(block, 'BODY1')
     const def     = stmts(block, 'DEFAULT')
-    return `switch (${expr}) {\n  case '${case0}':\n${body0}    break;\n  case '${case1}':\n${body1}    break;\n  default:\n${def}}\n`
+    return `switch (${expr}) {\n  case ${quoteJS(case0)}:\n${body0}    break;\n  case ${quoteJS(case1)}:\n${body1}    break;\n  default:\n${def}}\n`
   }
 
   javascriptGenerator.forBlock['js_try_catch'] = (block) => {
@@ -309,8 +311,8 @@ export const defineJSGenerators = () => {
   }
 
   javascriptGenerator.forBlock['js_throw'] = (block) => {
-    const msg = block.getFieldValue('MSG').replace(/'/g, "\\'")
-    return `throw new Error('${msg}');\n`
+    const msg = block.getFieldValue('MSG')
+    return `throw new Error(${quoteJS(msg)});\n`
   }
 
   // ════════════════════════════════════════════════════════════════════════
@@ -392,10 +394,10 @@ export const defineJSGenerators = () => {
   }
 
   javascriptGenerator.forBlock['js_prompt'] = (block) => {
-    const msg  = block.getFieldValue('MSG').replace(/'/g, "\\'")
-    const def  = block.getFieldValue('DEFAULT').replace(/'/g, "\\'")
-    const dflt = def ? `, '${def}'` : ''
-    return [`prompt('${msg}'${dflt})`, Order.FUNCTION_CALL]
+    const msg  = block.getFieldValue('MSG')
+    const def  = block.getFieldValue('DEFAULT')
+    const dflt = def ? `, ${quoteJS(def)}` : ''
+    return [`prompt(${quoteJS(msg)}${dflt})`, Order.FUNCTION_CALL]
   }
 
   // ════════════════════════════════════════════════════════════════════════
@@ -427,10 +429,14 @@ export const defineJSGenerators = () => {
   javascriptGenerator.forBlock['js_math_random_int'] = (block) => {
     const min = val(block, 'MIN')
     const max = val(block, 'MAX')
-    return [
-      `Math.floor(Math.random() * (${max} - ${min} + 1)) + ${min}`,
-      Order.ADDITION,
-    ]
+    const helper = javascriptGenerator.provideFunction_('__webbedRandomInteger', [
+      `function ${javascriptGenerator.FUNCTION_NAME_PLACEHOLDER_}(min, max) {`,
+      '  min = Math.ceil(min); max = Math.floor(max);',
+      '  if (max < min) throw new Error("The maximum must be at least the minimum.");',
+      '  return Math.floor(Math.random() * (max - min + 1)) + min;',
+      '}',
+    ])
+    return [`${helper}(${min}, ${max})`, Order.FUNCTION_CALL]
   }
 
   javascriptGenerator.forBlock['js_parse_number'] = (block) => {
@@ -487,8 +493,8 @@ export const defineJSGenerators = () => {
   javascriptGenerator.forBlock['js_string_slice'] = (block) => {
     const str   = val(block, 'STR')
     const start = val(block, 'START')
-    const end   = val(block, 'END')
-    return [`${str}.slice(${start}, ${end})`, Order.FUNCTION_CALL]
+    const end   = javascriptGenerator.valueToCode(block, 'END', Order.COMMA)
+    return [`${str}.slice(${start}${end ? `, ${end}` : ''})`, Order.FUNCTION_CALL]
   }
 
   javascriptGenerator.forBlock['js_string_replace'] = (block) => {
@@ -519,7 +525,7 @@ export const defineJSGenerators = () => {
   javascriptGenerator.forBlock['js_string_char_at'] = (block) => {
     const str   = val(block, 'STR')
     const index = val(block, 'INDEX')
-    return [`${str}[${index}]`, Order.MEMBER]
+    return [`${str}.charAt(${index})`, Order.FUNCTION_CALL]
   }
 
   // ════════════════════════════════════════════════════════════════════════
@@ -593,8 +599,8 @@ export const defineJSGenerators = () => {
   javascriptGenerator.forBlock['js_array_slice'] = (block) => {
     const arr   = val(block, 'ARR')
     const start = val(block, 'START')
-    const end   = val(block, 'END')
-    return [`${arr}.slice(${start}, ${end})`, Order.FUNCTION_CALL]
+    const end   = javascriptGenerator.valueToCode(block, 'END', Order.COMMA)
+    return [`${arr}.slice(${start}${end ? `, ${end}` : ''})`, Order.FUNCTION_CALL]
   }
 
   javascriptGenerator.forBlock['js_array_splice'] = (block) => {
@@ -616,22 +622,22 @@ export const defineJSGenerators = () => {
 
   javascriptGenerator.forBlock['js_get_by_id'] = (block) => {
     const id = block.getFieldValue('ID')
-    return [`document.getElementById('${id}')`, Order.FUNCTION_CALL]
+    return [`document.getElementById(${quoteJS(id)})`, Order.FUNCTION_CALL]
   }
 
   javascriptGenerator.forBlock['js_query_selector'] = (block) => {
-    const sel = block.getFieldValue('SEL').replace(/'/g, "\\'")
-    return [`document.querySelector('${sel}')`, Order.FUNCTION_CALL]
+    const sel = block.getFieldValue('SEL')
+    return [`document.querySelector(${quoteJS(sel)})`, Order.FUNCTION_CALL]
   }
 
   javascriptGenerator.forBlock['js_query_selector_all'] = (block) => {
-    const sel = block.getFieldValue('SEL').replace(/'/g, "\\'")
-    return [`document.querySelectorAll('${sel}')`, Order.FUNCTION_CALL]
+    const sel = block.getFieldValue('SEL')
+    return [`document.querySelectorAll(${quoteJS(sel)})`, Order.FUNCTION_CALL]
   }
 
   javascriptGenerator.forBlock['js_create_element'] = (block) => {
     const tag = block.getFieldValue('TAG')
-    return [`document.createElement('${tag}')`, Order.FUNCTION_CALL]
+    return [`document.createElement(${quoteJS(tag)})`, Order.FUNCTION_CALL]
   }
 
   javascriptGenerator.forBlock['js_append_child'] = (block) => {
@@ -648,14 +654,14 @@ export const defineJSGenerators = () => {
   javascriptGenerator.forBlock['js_set_attribute'] = (block) => {
     const elem  = val(block, 'ELEM')
     const attr  = block.getFieldValue('ATTR')
-    const value = block.getFieldValue('VALUE').replace(/'/g, "\\'")
-    return `${elem}.setAttribute('${attr}', '${value}');\n`
+    const value = block.getFieldValue('VALUE')
+    return `${elem}.setAttribute(${quoteJS(attr)}, ${quoteJS(value)});\n`
   }
 
   javascriptGenerator.forBlock['js_get_attribute'] = (block) => {
     const elem = val(block, 'ELEM')
-    const attr = block.getFieldValue('ATTR').replace(/'/g, "\\'")
-    return [`${elem}.getAttribute('${attr}')`, Order.FUNCTION_CALL]
+    const attr = block.getFieldValue('ATTR')
+    return [`${elem}.getAttribute(${quoteJS(attr)})`, Order.FUNCTION_CALL]
   }
 
   javascriptGenerator.forBlock['js_set_inner_html'] = (block) => {
@@ -694,27 +700,27 @@ export const defineJSGenerators = () => {
   javascriptGenerator.forBlock['js_class_list'] = (block) => {
     const elem   = val(block, 'ELEM')
     const method = block.getFieldValue('METHOD')
-    const cls    = block.getFieldValue('CLASS').replace(/'/g, "\\'")
-    return `${elem}.classList.${method}('${cls}');\n`
+    const cls    = block.getFieldValue('CLASS')
+    return `${elem}.classList.${method}(${quoteJS(cls)});\n`
   }
 
   javascriptGenerator.forBlock['js_class_list_contains'] = (block) => {
     const elem = val(block, 'ELEM')
-    const cls  = block.getFieldValue('CLASS').replace(/'/g, "\\'")
-    return [`${elem}.classList.contains('${cls}')`, Order.FUNCTION_CALL]
+    const cls  = block.getFieldValue('CLASS')
+    return [`${elem}.classList.contains(${quoteJS(cls)})`, Order.FUNCTION_CALL]
   }
 
   javascriptGenerator.forBlock['js_set_style'] = (block) => {
     const elem  = val(block, 'ELEM')
     const prop  = block.getFieldValue('PROP')
-    const value = block.getFieldValue('VALUE').replace(/'/g, "\\'")
-    return `${elem}.style.${prop} = '${value}';\n`
+    const value = block.getFieldValue('VALUE')
+    return `${memberAccess(`${elem}.style`, prop)} = ${quoteJS(value)};\n`
   }
 
   javascriptGenerator.forBlock['js_get_style'] = (block) => {
     const elem = val(block, 'ELEM')
     const prop = block.getFieldValue('PROP')
-    return [`${elem}.style.${prop}`, Order.MEMBER]
+    return [memberAccess(`${elem}.style`, prop), Order.MEMBER]
   }
 
   javascriptGenerator.forBlock['js_document_title'] = (block) => {
@@ -733,13 +739,13 @@ export const defineJSGenerators = () => {
     const elem    = val(block, 'ELEM')
     const event   = block.getFieldValue('EVENT')
     const handler = stmts(block, 'HANDLER')
-    return `${elem}.addEventListener('${event}', function(event) {\n${handler}});\n`
+    return `${elem}.addEventListener(${quoteJS(event)}, function(event) {\n${handler}});\n`
   }
 
   javascriptGenerator.forBlock['js_window_event'] = (block) => {
     const event   = block.getFieldValue('EVENT')
     const handler = stmts(block, 'HANDLER')
-    return `window.addEventListener('${event}', function(event) {\n${handler}});\n`
+    return `window.addEventListener(${quoteJS(event)}, function(event) {\n${handler}});\n`
   }
 
   javascriptGenerator.forBlock['js_dom_content_loaded'] = (block) => {
@@ -807,13 +813,14 @@ export const defineJSGenerators = () => {
   // ════════════════════════════════════════════════════════════════════════
 
   javascriptGenerator.forBlock['js_fetch_get'] = (block) => {
-    const url  = block.getFieldValue('URL').replace(/'/g, "\\'")
+    const url  = block.getFieldValue('URL')
     const body = stmts(block, 'BODY')
     return (
       `(async () => {\n` +
       `  try {\n` +
-      `    const response = await fetch('${url}');\n` +
-      `    const data = await response.json();\n` +
+      `    const response = await fetch(${quoteJS(url)});\n` +
+      `    if (!response.ok) throw new Error('HTTP ' + response.status);\n` +
+      `    const data = response.status === 204 ? null : await response.json();\n` +
       `${body}` +
       `  } catch (err) {\n` +
       `    console.error('Fetch error:', err);\n` +
@@ -823,18 +830,19 @@ export const defineJSGenerators = () => {
   }
 
   javascriptGenerator.forBlock['js_fetch_post'] = (block) => {
-    const url      = block.getFieldValue('URL').replace(/'/g, "\\'")
+    const url      = block.getFieldValue('URL')
     const bodyData = val(block, 'BODY_DATA')
     const handler  = stmts(block, 'HANDLER')
     return (
       `(async () => {\n` +
       `  try {\n` +
-      `    const response = await fetch('${url}', {\n` +
+      `    const response = await fetch(${quoteJS(url)}, {\n` +
       `      method: 'POST',\n` +
       `      headers: { 'Content-Type': 'application/json' },\n` +
       `      body: JSON.stringify(${bodyData}),\n` +
       `    });\n` +
-      `    const result = await response.json();\n` +
+      `    if (!response.ok) throw new Error('HTTP ' + response.status);\n` +
+      `    const result = response.status === 204 ? null : await response.json();\n` +
       `${handler}` +
       `  } catch (err) {\n` +
       `    console.error('Fetch error:', err);\n` +
@@ -858,33 +866,33 @@ export const defineJSGenerators = () => {
   // ════════════════════════════════════════════════════════════════════════
 
   javascriptGenerator.forBlock['js_local_storage_set'] = (block) => {
-    const key   = block.getFieldValue('KEY').replace(/'/g, "\\'")
+    const key   = block.getFieldValue('KEY')
     const value = val(block, 'VALUE')
-    return `localStorage.setItem('${key}', ${value});\n`
+    return `localStorage.setItem(${quoteJS(key)}, ${value});\n`
   }
 
   javascriptGenerator.forBlock['js_local_storage_get'] = (block) => {
-    const key = block.getFieldValue('KEY').replace(/'/g, "\\'")
-    return [`localStorage.getItem('${key}')`, Order.FUNCTION_CALL]
+    const key = block.getFieldValue('KEY')
+    return [`localStorage.getItem(${quoteJS(key)})`, Order.FUNCTION_CALL]
   }
 
   javascriptGenerator.forBlock['js_local_storage_remove'] = (block) => {
-    const key = block.getFieldValue('KEY').replace(/'/g, "\\'")
-    return `localStorage.removeItem('${key}');\n`
+    const key = block.getFieldValue('KEY')
+    return `localStorage.removeItem(${quoteJS(key)});\n`
   }
 
   javascriptGenerator.forBlock['js_local_storage_clear'] = () =>
     'localStorage.clear();\n'
 
   javascriptGenerator.forBlock['js_session_storage_set'] = (block) => {
-    const key   = block.getFieldValue('KEY').replace(/'/g, "\\'")
+    const key   = block.getFieldValue('KEY')
     const value = val(block, 'VALUE')
-    return `sessionStorage.setItem('${key}', ${value});\n`
+    return `sessionStorage.setItem(${quoteJS(key)}, ${value});\n`
   }
 
   javascriptGenerator.forBlock['js_session_storage_get'] = (block) => {
-    const key = block.getFieldValue('KEY').replace(/'/g, "\\'")
-    return [`sessionStorage.getItem('${key}')`, Order.FUNCTION_CALL]
+    const key = block.getFieldValue('KEY')
+    return [`sessionStorage.getItem(${quoteJS(key)})`, Order.FUNCTION_CALL]
   }
 
   // ════════════════════════════════════════════════════════════════════════
@@ -893,12 +901,12 @@ export const defineJSGenerators = () => {
 
   javascriptGenerator.forBlock['js_comment'] = (block) => {
     const text = block.getFieldValue('TEXT')
-    return `// ${text}\n`
+    return `// ${text.replace(/[\r\n\u2028\u2029]+/g, '\n// ')}\n`
   }
 
   javascriptGenerator.forBlock['js_block_comment'] = (block) => {
     const text = block.getFieldValue('TEXT')
-    return `/* ${text} */\n`
+    return `/* ${text.replace(/\*\//g, '* /')} */\n`
   }
 
   javascriptGenerator.forBlock['js_use_strict'] = () => '"use strict";\n'
@@ -906,8 +914,8 @@ export const defineJSGenerators = () => {
   javascriptGenerator.forBlock['js_debugger'] = () => 'debugger;\n'
 
   javascriptGenerator.forBlock['js_window_location'] = (block) => {
-    const url = block.getFieldValue('URL').replace(/'/g, "\\'")
-    return `window.location.href = '${url}';\n`
+    const url = block.getFieldValue('URL')
+    return `window.location.href = ${quoteJS(url)};\n`
   }
 
   javascriptGenerator.forBlock['js_window_location_get'] = () =>

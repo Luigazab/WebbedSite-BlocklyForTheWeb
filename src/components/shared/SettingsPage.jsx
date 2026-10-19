@@ -1,3 +1,5 @@
+import { supabase } from '../../supabaseClient'
+import { Link } from 'react-router'
 import { useState, useRef } from 'react'
 import { useProfile }     from '../../hooks/useProfile'
 import { useFeedback }    from '../../hooks/useFeedback'
@@ -13,7 +15,7 @@ import {
 import { formatDistanceToNow } from 'date-fns'
 import { MIN_PASSWORD_LENGTH, MAX_PASSWORD_LENGTH, PASSWORD_HELP } from '../../lib/passwordPolicy'
 
-const TABS = ['Profile Info', 'Security', 'Submit Feedback', 'My Reports']
+const TABS = ['Profile Info', 'Security']
 
 const CATEGORIES = [
   { value: 'general',  label: 'General',         icon: MessageSquare },
@@ -90,6 +92,8 @@ function ProfileInfoTab() {
     username: profile?.username ?? '',
     bio:      profile?.bio      ?? '',
   })
+  const [email, setEmail] = useState(profile?.email ?? "")
+  const [emailMessage, setEmailMessage] = useState("")
   const fileRef = useRef(null)
 
   const roleConfig = ROLE_CONFIG[profile?.role] ?? ROLE_CONFIG.student
@@ -155,7 +159,7 @@ function ProfileInfoTab() {
         <div className="flex flex-col gap-1.5">
           <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
             <User className="w-4 h-4 text-gray-400" />
-            Name
+            Name *
           </label>
           <input
             type="text"
@@ -172,16 +176,19 @@ function ProfileInfoTab() {
           <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
             <Mail className="w-4 h-4 text-gray-400" />
             Email
-            <span className="text-xs text-gray-400 font-normal">(cannot be changed)</span>
+            <span className="text-xs text-gray-400 font-normal">(confirmation required)</span>
           </label>
           <input
             type="email"
-            value={profile?.email ?? ''}
-            readOnly
-            className="w-full border border-gray-100 rounded-lg px-4 py-2.5 text-sm bg-gray-50 text-gray-400 cursor-not-allowed"
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            className="w-full border border-gray-100 rounded-lg px-4 py-2.5 text-sm bg-gray-50 text-slate-800"
           />
         </div>
 
+        <button type="button" className="text-left text-sm underline" onClick={async () => { setEmailMessage(''); const {error}=await supabase.auth.updateUser({email:email.trim()},{emailRedirectTo:`${window.location.origin}/login`}); setEmailMessage(error?.message || 'Check your email to confirm the change. Your current address stays active until confirmation.'); }}>Request email change</button>
+        {emailMessage && <p role="status" className="text-sm">{emailMessage}</p>}
+        <Link to={`/${profile.role}/help`} className="text-sm underline">Help and my reports</Link>
         {/* Bio */}
         <div className="flex flex-col gap-1.5">
           <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">

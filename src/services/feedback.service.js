@@ -8,26 +8,26 @@ export const feedbackService = {
     const { data, error } = await supabase
       .from('feedback')
       .insert({
-        student_id: payload.sender_id,
+        user_id: payload.sender_id,
         title:      payload.title,
         message:    payload.message,
-        category:   payload.category,
+        type:       payload.category,
         status:     'open',
       })
       .select()
       .single()
     if (error) throw error
-    return data
+    return Array.isArray(data) ? data.map(row => ({ ...row, category: row.type })) : data
   },
 
   async getMyFeedback(userId) {
     const { data, error } = await supabase
       .from('feedback')
       .select('*')
-      .eq('student_id', userId)
+      .eq('user_id', userId)
       .order('created_at', { ascending: false })
     if (error) throw error
-    return data
+    return Array.isArray(data) ? data.map(row => ({ ...row, category: row.type })) : data
   },
 
   // ─── Admin ────────────────────────────────────────────
@@ -37,16 +37,16 @@ export const feedbackService = {
       .from('feedback')
       .select(`
         *,
-        sender:profiles!feedback_student_id_fkey(id, username, email, avatar_url, role)
+        sender:profiles!feedback_user_id_fkey(id, username, email, avatar_url, role)
       `)
       .order('created_at', { ascending: false })
 
     if (filters.status)   query = query.eq('status', filters.status)
-    if (filters.category) query = query.eq('category', filters.category)
+    if (filters.category) query = query.eq('type', filters.category)
 
     const { data, error } = await query
     if (error) throw error
-    return data
+    return Array.isArray(data) ? data.map(row => ({ ...row, category: row.type })) : data
   },
 
   async updateFeedbackStatus(feedbackId, status) {
@@ -57,7 +57,7 @@ export const feedbackService = {
       .select()
       .single()
     if (error) throw error
-    return data
+    return Array.isArray(data) ? data.map(row => ({ ...row, category: row.type })) : data
   },
 
   async deleteFeedback(feedbackId) {

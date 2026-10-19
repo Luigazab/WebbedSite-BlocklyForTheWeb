@@ -10,10 +10,11 @@ export const projectService = {
       .from('projects')
       .select(`
         id, title, description, thumbnail_url, is_public, type,
-        created_at, updated_at, likes_count, views_count
+        created_at, updated_at, likes_count, views_count, source_kind, source_lesson_id, source_classroom_id, source_lesson:source_lesson_id(slug, topic:topics_id(course:course_id(slug)))
       `)
       .eq('user_id', user.id)
 
+    if (['Personal','Tutorial','Laboratory'].includes(filter)) query = query.eq('source_kind',filter.toLowerCase())
     if (filter === 'Public')  query = query.eq('is_public', true)
     if (filter === 'Private') query = query.eq('is_public', false)
 
@@ -29,7 +30,7 @@ export const projectService = {
   async getProjectById(projectId) {
     const { data, error } = await supabase
       .from('projects')
-      .select('*')
+      .select('*, source_lesson:source_lesson_id(slug, topic:topics_id(course:course_id(slug)))')
       .eq('id', projectId)
       .single()
     if (error) throw error

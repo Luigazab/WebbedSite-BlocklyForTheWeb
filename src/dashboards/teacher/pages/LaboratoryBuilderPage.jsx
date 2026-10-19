@@ -1,3 +1,7 @@
+import AssessmentSettings from '@/components/shared/AssessmentSettings'
+import RubricEditor from '@/components/shared/RubricEditor'
+import { DEFAULT_RUBRIC } from '@/lib/assessment'
+import WorkspaceTools from '@/components/editor/WorkspaceTools'
 import { AppBreadcrumb } from "#components/common/breadcrumb";
 import { Button } from "#components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "#components/ui/card";
@@ -49,6 +53,8 @@ const LaboratoryBuilderPage = ({ context = "teacher" }) => {
   const addToast = useUIStore((state) => state.addToast);
   const isEditMode = Boolean(id);
   const [lessonId, setLessonId] = useState(id || null);
+  const [rubric, setRubric] = useState(DEFAULT_RUBRIC);
+  const [passingScore, setPassingScore] = useState(75);
   const [title, setTitle] = useState("");
   const [baseXp, setBaseXp] = useState("50");
   const [description, setDescription] = useState("");
@@ -76,6 +82,7 @@ const LaboratoryBuilderPage = ({ context = "teacher" }) => {
   const isLoadingRef = useRef(false);
 
   const workspace = BlocklyWorkspace({
+    filename: files.find(f => f.id === activeFileId)?.filename || 'index.html',
     onWorkspaceChange: (wsRef) => {
       if (isLoadingRef.current) return;
       const file = files.find((item) => item.id === activeFileId);
@@ -116,6 +123,8 @@ const LaboratoryBuilderPage = ({ context = "teacher" }) => {
           blocks_json: file.blocks_json ?? null,
         })) : [makeFile()];
         setLessonId(data.id);
+        setRubric(data.laboratory?.rubric || DEFAULT_RUBRIC);
+        setPassingScore(data.laboratory?.passing_score || 75);
         setTitle(data.title || "");
         setBaseXp((data.base_xp ?? 50).toString());
         setSelectedTopicId(data.topics_id || "");
@@ -209,8 +218,8 @@ const LaboratoryBuilderPage = ({ context = "teacher" }) => {
     if (!title.trim()) return addToast("Laboratory title is required.", "error");
     if (!/^\d+$/.test(baseXp) || Number(baseXp) <= 0) return addToast("Base XP must be a positive whole number.", "error");
     if (!selectedTopic) return addToast("Select a topic for this laboratory.", "error");
-    if (!expectedBlocks) return addToast("Capture the final expected workspace before saving.", "error");
-    if (!validateWorkspaceStructure(expectedBlocks, expectedBlocks).passed) return addToast("Capture a workspace with at least one required block.", "error");
+    if (rubric.reduce((sum,c)=>sum+Number(c.max),0)!==100) return addToast("Rubric points must total 100.", "error");
+    if (expectedBlocks && !validateWorkspaceStructure(expectedBlocks, expectedBlocks).passed) return addToast("Capture a workspace with at least one required block.", "error");
     if (requiredText.trim() && !requiredSelector.trim()) return addToast("Choose an HTML selector for required text.", "error");
 
     setSaving(true);
@@ -221,7 +230,7 @@ const LaboratoryBuilderPage = ({ context = "teacher" }) => {
         : await createLessonBase({ topicId: selectedTopicId, authorId: user.id, title, type: "laboratory", baseXp: Number(baseXp) });
       setLessonId(lesson.id);
       await upsertLaboratoryContent({
-        lessonId: lesson.id,
+        lessonId: lesson.id, rubric, passingScore,
         instruction: JSON.stringify({
           description,
           referenceImageUrl,
@@ -234,7 +243,7 @@ const LaboratoryBuilderPage = ({ context = "teacher" }) => {
         }),
       });
       addToast(isEditMode ? "Laboratory updated successfully." : "Laboratory saved successfully.", "success");
-      if (!isEditMode) navigate(`/teacher/laboratory/edit/${lesson.id}`, { replace: true });
+      if (!isEditMode) navigate(`/${context}/laboratory/edit/${lesson.id}`, { replace: true });
     } catch (error) {
       addToast(error.message || "Failed to save laboratory.", "error");
     } finally {
@@ -250,6 +259,7 @@ const LaboratoryBuilderPage = ({ context = "teacher" }) => {
       <div className="shrink-0 flex items-center gap-3 px-4 py-2.5 ">
         <Link to="/"><img src="/icon.png" alt="icon image" className='w-8 h-8' /></Link>
         <BackButton />
+        {lessonId && <details className="max-h-96 overflow-auto rounded-lg border bg-white p-2"><summary>Assessment settings</summary><AssessmentSettings lessonId={lessonId} /></details>}
         {!isAdmin && !isEditMode && !classroomId && <p className="text-sm text-muted-foreground">Open a classroom to create a lesson for its topics. <Link to="/teacher/classrooms" className="underline">Choose classroom</Link></p>}
         <span className="text-slate-500">/</span>
         <span className="font-bold text-slate-700 truncate max-w-xs">
@@ -355,7 +365,8 @@ const LaboratoryBuilderPage = ({ context = "teacher" }) => {
                   <Check /> {expectedBlocks ? "Validator Captured" : "Capture Final Validator"}
                 </Button>
                 <div className="space-y-2 rounded-xl border p-3">
-                  <p className="text-xs font-bold text-slate-700">Optional output checks</p>
+                  <RubricEditor rubric={rubric} setRubric={setRubric} passing={passingScore} setPassing={setPassingScore} />
+                  <p className="text-xs font-bold text-slate-700">Optional output checks (feedback only)</p>
                   <label className="block text-xs">HTML selector<input className="mt-1 w-full rounded border px-2 py-1" value={requiredSelector} onChange={event => setRequiredSelector(event.target.value)} placeholder="h1" /></label>
                   <label className="block text-xs">Text in that element<input className="mt-1 w-full rounded border px-2 py-1" value={requiredText} onChange={event => setRequiredText(event.target.value)} placeholder="Hello World" /></label>
                   <label className="block text-xs">Required CSS or code fragment<input className="mt-1 w-full rounded border px-2 py-1" value={requiredCode} onChange={event => setRequiredCode(event.target.value)} placeholder="text-align: center" /></label>
@@ -368,13 +379,15 @@ const LaboratoryBuilderPage = ({ context = "teacher" }) => {
         <main className="flex flex-1 overflow-hidden gap-1.5">
           <section className="flex flex-col flex-1 bg-white border border-border rounded">
             <FileTabs files={files} activeFile={activeFileId} isLocal onFileChange={handleFileChange} onFileCreate={handleCreateFile} onFileDelete={handleDeleteFile} />
-            <div ref={workspace.blocklyDiv} className="blocklyDiv flex-1 relative">
+            <WorkspaceTools workspace={workspace} />
+          <div ref={workspace.blocklyDiv} className="blocklyDiv flex-1 relative">
               <SwitchButton activeTab={activeTab} setActiveTab={setActiveTab}/>
             </div>
           </section>
           <section className="w-1/3 overflow-hidden">
             <PreviewPane
-              generatedCode={generatedCode}
+              storageScope={`laboratory-author:${id || 'draft'}`}
+            generatedCode={generatedCode}
               currentFileCode={filesWithCode.find((file) => file.id === activeFileId)?.generatedCode || ""}
               currentFileName={activeFile?.filename || ""}
               previewFileName={files.find((file) => file.id === previewFileId)?.filename || ""}

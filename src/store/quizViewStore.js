@@ -37,6 +37,7 @@ export const useQuizViewStore = create((set) => ({
     set({ submitting: true });
     try {
       const attempt = await recordQuizAttempt({
+        attemptId: result.attemptId,
         userId,
         quizId: lessonMeta.quiz.id,
         score: result.score,

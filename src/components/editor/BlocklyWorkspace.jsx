@@ -3,25 +3,30 @@ import { useRef, useEffect, useState, useCallback } from 'react';
 import * as Blockly from 'blockly/core';
 import Theme from '@blockly/theme-modern';
 import { javascriptGenerator } from 'blockly/javascript';
-import { defineBlocks } from '../../blockly/defineBlocks';
-import { defineGenerators } from '../../blockly/defineGenerators';
-import { registerToolboxLabel } from '../../blockly/toolboxLabel';
-import { registerCustomCategory } from '../../blockly/customCategory';
-import { FieldColour } from '@blockly/field-colour';
-import { toolboxConfig } from '../../blockly/toolboxConfig';
-import "@blockly/block-plus-minus";
+import { legacyToolboxConfig } from '../../blockly/toolboxConfig';
+import { createLearningToolbox } from '../../blockly/learningToolbox';
+import { showWorkspaceDiagnostics } from '../../blockly/workspaceDiagnostics';
+import { sourceDiagnostics } from '../../utils/javascriptSource';
+import { codeGeneratorService } from '../../services/codeGenerator.service';
+import { initBlockly } from '../../blockly/initBlockly';
+import { propagateNameChange } from '../../blockly/jsSupport';
 import '../../blockly/custom';
-import { defineCSSBlocks } from '../../blockly/defineCSSBlocks';
-import { defineCSSGenerators } from '../../blockly/defineCSSGenerators';
 
 const BlocklyWorkspace = ({ 
   onWorkspaceChange, 
   onWorkspaceLoad,
-  initialWorkspaceState 
+  initialWorkspaceState,
+  filename = 'index.html',
+  lessonBlocks = [],
+  initialPalette = 'beginner',
 }) => {
   const blocklyDiv = useRef(null);
   const workspace = useRef(null);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [palette, setPalette] = useState(initialPalette);
+  const [issues, setIssues] = useState([]);
+  const filenameRef = useRef(filename);
+  filenameRef.current = filename;
   const initialStateLoaded = useRef(false);
   
   const onWorkspaceChangeRef = useRef(onWorkspaceChange);
@@ -45,13 +50,14 @@ const BlocklyWorkspace = ({
         console.error('Error loading workspace state:', error);
       }
     }
-  }, [initialWorkspaceState]);
+  }, [initialWorkspaceState, isInitialized]);
 
   useEffect(() => {
     if (blocklyDiv.current && !workspace.current) {
+      initBlockly();
       
       workspace.current = Blockly.inject(blocklyDiv.current, {
-        toolbox: toolboxConfig,
+        toolbox: createLearningToolbox(legacyToolboxConfig, { filename, level: palette, lessonBlocks }),
         theme: Theme,
         renderer: 'custom_renderer',
         zoom: {
@@ -78,7 +84,19 @@ const BlocklyWorkspace = ({
       const toolboxEl = blocklyDiv.current?.querySelector('.blocklyToolbox')
       if (toolboxEl) toolboxEl.setAttribute('data-tour', 'toolbox')
 
-      workspace.current.addChangeListener(() => {
+      let diagnosticTimer;
+      workspace.current.addChangeListener(event => {
+        if (event.isUiEvent) return;
+        propagateNameChange(workspace.current, event);
+        clearTimeout(diagnosticTimer);
+        diagnosticTimer = setTimeout(() => {
+          if (!workspace.current) return;
+          const warnings = showWorkspaceDiagnostics(workspace.current, filenameRef.current);
+          try {
+            const code = codeGeneratorService.generateCode(workspace.current, filenameRef.current);
+            setIssues([...warnings, ...sourceDiagnostics(code, filenameRef.current)]);
+          } catch (error) { setIssues([...warnings, { message: error.message }]); }
+        }, 120);
         if (onWorkspaceChangeRef.current && workspace.current) {
           onWorkspaceChangeRef.current(workspace.current);
         }
@@ -91,6 +109,7 @@ const BlocklyWorkspace = ({
       }
 
       return () => {
+        clearTimeout(diagnosticTimer);
         if (workspace.current) {
           workspace.current.dispose();
           workspace.current = null;
@@ -100,6 +119,18 @@ const BlocklyWorkspace = ({
       };
     }
   },[]);
+
+  useEffect(() => {
+    if (!workspace.current) return;
+    workspace.current.updateToolbox(createLearningToolbox(legacyToolboxConfig, { filename, level: palette, lessonBlocks }));
+    const resizeFrame = requestAnimationFrame(() => {
+      if (!workspace.current) return;
+      workspace.current.getToolbox()?.position();
+      Blockly.svgResize(workspace.current);
+    });
+    setIssues(showWorkspaceDiagnostics(workspace.current, filename));
+    return () => cancelAnimationFrame(resizeFrame);
+  }, [filename, palette, JSON.stringify(lessonBlocks), isInitialized]);
 
   const toggleToolbox = useCallback((visible) => {
     if (!workspace.current) return;
@@ -118,6 +149,22 @@ const BlocklyWorkspace = ({
   }, []);
 
   const getWorkspace = useCallback(() => workspace.current, []);
+  const fitBlocks = useCallback(() => {
+    if (!workspace.current) return;
+    workspace.current.getToolbox()?.position();
+    Blockly.svgResize(workspace.current);
+    workspace.current.zoomToFit();
+    const current = workspace.current;
+    const frame = current.getParentSvg().getBoundingClientRect();
+    const toolbox = current.getToolbox()?.getDiv().getBoundingClientRect();
+    const left = (toolbox?.right ?? frame.left) + 20;
+    const right = frame.right - 24;
+    let bounds = current.getCanvas().getBoundingClientRect();
+    if (!bounds.width || right <= left) return;
+    current.setScale(current.scale * Math.min(1, (right - left) / bounds.width));
+    bounds = current.getCanvas().getBoundingClientRect();
+    current.scroll(current.scrollX + left - bounds.left, current.scrollY + frame.top + 24 - bounds.top);
+  }, []);
   
   const getWorkspaceState = useCallback(() => workspace.current ? 
     Blockly.serialization.workspaces.save(workspace.current) : null, []);
@@ -156,6 +203,7 @@ const BlocklyWorkspace = ({
   }, []);
 
   return {
+    filename,
     blocklyDiv,
     getWorkspace,
     getWorkspaceState,
@@ -163,7 +211,8 @@ const BlocklyWorkspace = ({
     clearWorkspace,
     getGeneratedCode,
     toggleToolbox,
-    isInitialized
+    isInitialized,
+    palette, setPalette, issues, fitBlocks, hasLessonPalette: lessonBlocks.length > 0,
   };
 };
 

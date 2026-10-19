@@ -10,8 +10,7 @@ const LectureContent = ({ lessonId, onNext, onPrevious, navigation, preview = fa
 
   const handleFinishClick = async () => {
     if (preview) { onNext?.("next"); return; }
-    await finishLecture();
-    setShowModal(true);
+    if (await finishLecture()) setShowModal(true);
   };
 
   const handleRemain = () => setShowModal(false);
@@ -68,7 +67,7 @@ const LectureContent = ({ lessonId, onNext, onPrevious, navigation, preview = fa
             <ChevronRight className="w-4 h-4 transition-transform group-open:rotate-90" />
           </summary>
           <div className="mt-4 w-full aspect-4/3 rounded-2xl shadow">
-            <iframe src={lecture.lecture.file_url} className="w-full h-full rounded-2xl" frameBorder="0" />
+            <iframe title="Attached lecture document" src={lecture.lecture.file_url} className="w-full h-full rounded-2xl" frameBorder="0" />
           </div>
         </details>
       )}
@@ -86,7 +85,7 @@ const LectureContent = ({ lessonId, onNext, onPrevious, navigation, preview = fa
           disabled={completing}
           className="btn px-10 btn-primary flex items-center gap-2 disabled:opacity-60"
         >
-          {completing ? "Saving…" : navigation?.next ? "Next Lesson" : "Finish Topic"}
+          {completing ? "Saving…" : navigation?.next ? "Mark complete & continue" : "Mark lecture complete"}
           {!completing && <ChevronRight className="w-4 h-4" />}
         </button>
       </div>

@@ -1,3 +1,4 @@
+import AssessmentSettings from '../../../components/shared/AssessmentSettings'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
@@ -21,7 +22,7 @@ export default function LessonDetailsModal({ classroomId, lesson, topic, onClose
   const canEdit = ['lecture', 'quiz', 'tutorial', 'laboratory'].includes(lesson.type)
   return (
     <Dialog open onOpenChange={(open) => { if (!open) onClose() }}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>{lesson.title}</DialogTitle>
           <DialogDescription>Lesson details for this classroom.</DialogDescription>
@@ -38,6 +39,7 @@ export default function LessonDetailsModal({ classroomId, lesson, topic, onClose
             {error && <Button variant="outline" className="mt-2" onClick={() => { setError(false); setRetry((value) => value + 1) }}>Retry</Button>}
           </div>
         </dl>
+        <AssessmentSettings lessonId={lesson.id} />
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>Close</Button>
           <Button disabled={!canEdit} onClick={() => navigate(`/teacher/${lesson.type}/edit/${lesson.id}?classroomId=${encodeURIComponent(classroomId)}`)}>Edit lesson</Button>
