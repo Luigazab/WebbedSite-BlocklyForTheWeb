@@ -44,6 +44,8 @@ On 20 October, the owner authorized changing the unused Miss Ali account from te
 
 Teacher authoring then captured `Counter page` v1 for HTML and `Counter interaction` v1 for JavaScript. Both are scoped to Release verification, and the JavaScript reference preview changed the visible counter from 0 to 1. The corresponding student save/reopen/submission/export journey remains pending.
 
+After the frontend deployment, the teacher classroom list reported Release verification as 0 students, 0% complete and 0 pending reviews, while ICT A reported 2 students, 17% complete and 0 pending reviews. These values now come from published lesson completion and final ungraded laboratory submissions; the former hardcoded 20% card value was removed.
+
 ## Rollback and recovery
 
 Keep the pre-change working tree backup and previous frontend deployment. Prefer a forward fix for application regressions. A frontend rollback must remain compatible with server scoring and restricted answer-key access; the older client expected access to quiz answer keys and is not fully compatible. Do not drop new columns/tables, delete student work, replay old migrations, or restore an older database snapshot over newer student activity. Disable affected authoring actions temporarily if necessary while retaining read access to saved work.
