@@ -86,6 +86,26 @@ export async function getTeacherClassrooms(teacherId) {
   return (data ?? []).map((row) => normalizeClassroom(row))
 }
 
+export async function getClassroomListMetrics(classroomIds) {
+  if (!classroomIds.length) return {}
+  const [dashboard, submissions] = await Promise.all([
+    supabase.rpc('release_dashboard'),
+    supabase.from('lesson_submissions').select('classroom_id, lessons!inner(type)')
+      .in('classroom_id', classroomIds).eq('lessons.type', 'laboratory')
+      .eq('is_final', true).is('graded_at', null),
+  ])
+  if (dashboard.error) throw dashboard.error
+  if (submissions.error) throw submissions.error
+  const pending = new Map()
+  for (const row of submissions.data ?? []) pending.set(row.classroom_id, (pending.get(row.classroom_id) ?? 0) + 1)
+  return Object.fromEntries((dashboard.data?.classrooms ?? [])
+    .filter(row => classroomIds.includes(row.id))
+    .map(row => [row.id, {
+      averageProgress: row.possible ? Math.round(100 * row.completed / row.possible) : 0,
+      pendingSubmissions: pending.get(row.id) ?? 0,
+    }]))
+}
+
   export async function updateClassroom(classroomId, updates) {
     const { data, error } = await supabase
       .from('classrooms')
@@ -357,7 +377,7 @@ async function getStudentClassroomId(studentId) {
   return data?.classroom_id ?? null
 }
 
-export async function onLessonComplete({ studentId, lessonTitle, lessonId }) {
+export async function onLessonComplete({ studentId, lessonTitle }) {
   const classroomId = await getStudentClassroomId(studentId)
   if (!classroomId) return
 
@@ -369,7 +389,7 @@ export async function onLessonComplete({ studentId, lessonTitle, lessonId }) {
   })
 }
 
-export async function onQuizComplete({ studentId, quizId, lessonTitle, score }) {
+export async function onQuizComplete({ studentId, lessonTitle, score }) {
   const classroomId = await getStudentClassroomId(studentId)
   if (!classroomId) return
 
@@ -381,7 +401,7 @@ export async function onQuizComplete({ studentId, quizId, lessonTitle, score }) 
   })
 }
 
-export async function onLabComplete({ studentId, labId, lessonTitle }) {
+export async function onLabComplete({ studentId, lessonTitle }) {
   const classroomId = await getStudentClassroomId(studentId)
   if (!classroomId) return
 

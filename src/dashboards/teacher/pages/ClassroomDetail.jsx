@@ -47,7 +47,7 @@ export default function ClassroomDetail() {
   const [topicGroup, setTopicGroup] = useState(null)
   const [progressionTopic, setProgressionTopic] = useState(null)
 
-  const { currentClassroom, detailLoading, classroomPosts, fetchClassroomDetail, fetchClassroomPosts, handleCreatePost, handleLikePost, handleCommentOnPost, fetchMoreClassroomPosts, handleRegenerateCode, hasMorePosts, postsLoading } = useClassroom();
+  const { currentClassroom, detailLoading, error: classroomError, classroomPosts, fetchClassroomDetail, fetchClassroomPosts, handleCreatePost, handleLikePost, handleCommentOnPost, fetchMoreClassroomPosts, handleRegenerateCode, hasMorePosts, postsLoading } = useClassroom();
 
   const { classroomCourses, topics, loading: curriculumLoading, assigning, masterCourses, fetchMasterCourses, handleAssignCourses, fetchClassroomCurriculum, handleUnlockTopic } = useCurriculum();
 
@@ -77,8 +77,12 @@ export default function ClassroomDetail() {
     await handleCreatePost({ classroomId, type: 'announcement', content })
   }
 
-  const initialLoading = detailLoading && !currentClassroom;
+  const initialLoading = detailLoading || curriculumLoading || overviewLoading || currentClassroom?.id !== classroomId;
   const recentActivity = classroomPosts.filter((p) => p.type !== 'announcement').slice(0, 4);
+
+  if (classroomError && !detailLoading && currentClassroom?.id !== classroomId) {
+    return <div className="p-6" role="alert">This classroom is unavailable. <button className="underline" onClick={() => fetchClassroomDetail(classroomId)}>Retry</button></div>
+  }
 
   if (initialLoading) {
     return (

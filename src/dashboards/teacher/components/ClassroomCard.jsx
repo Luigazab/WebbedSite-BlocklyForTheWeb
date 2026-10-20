@@ -2,7 +2,7 @@ import { useCopyCode } from "@/utils/copyCode";
 import { Archive, Pencil } from "lucide-react";
 import { useNavigate } from "react-router";
 
-export default function ClassroomCard({ classroom, onArchive, averageProgress, pendingSubmissions = 0, onEdit }) {
+export default function ClassroomCard({ classroom, onArchive, averageProgress, pendingSubmissions, onEdit }) {
   const navigate = useNavigate();
   const {copied, copyCode} = useCopyCode()
 
@@ -34,10 +34,10 @@ export default function ClassroomCard({ classroom, onArchive, averageProgress, p
           }
           
           <span className="text-xs text-muted-foreground">
-            <button onClick={handleEdit} className="p-1.5 rounded-md bg-background hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors!" title="Edit course">
+            <button onClick={handleEdit} className="p-1.5 rounded-md bg-background hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors!" title="Edit classroom">
               <Pencil size={16} />
             </button>
-            <button onClick={handleArchive} className="p-1.5 rounded-md bg-background hover:bg-red-100 text-muted-foreground hover:text-red-600 transition-colors!" title="Delete course">
+            <button onClick={handleArchive} className="p-1.5 rounded-md bg-background hover:bg-red-100 text-muted-foreground hover:text-red-600 transition-colors!" title="Archive classroom">
               <Archive size={16} />
             </button>
           </span>
@@ -57,7 +57,7 @@ export default function ClassroomCard({ classroom, onArchive, averageProgress, p
             {classroom.member_count || 0} students
           </span>
           <span className="font-mono text-primary">
-            {averageProgress || 0}%
+            {averageProgress == null ? '—' : `${averageProgress}%`}
           </span>
         </div>
 
@@ -97,7 +97,7 @@ export default function ClassroomCard({ classroom, onArchive, averageProgress, p
             )}
           </div>
           <span className="text-xs text-warning">
-            {pendingSubmissions} pending
+            {pendingSubmissions == null ? '— pending' : `${pendingSubmissions} pending`}
           </span>
         </div>
       </div>

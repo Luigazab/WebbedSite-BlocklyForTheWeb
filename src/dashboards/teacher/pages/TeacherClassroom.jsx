@@ -10,11 +10,15 @@ import { AppBreadcrumb } from '#components/common/breadcrumb'
 import { Button } from '#components/ui/button'
 import { useClassroom } from '#hooks/useClassroom'
 import ClassroomCard from '../components/ClassroomCard'
+import { getClassroomListMetrics } from '../../../services/classroomService'
 
 export default function TeacherClassrooms() {
   const [showCreate, setShowCreate] = useState(false)
   const [showEdit, setShowEdit] = useState(false)
   const [selectedClassroom, setSelectedClassroom] = useState(null)
+  const [metrics, setMetrics] = useState({})
+  const [metricsError, setMetricsError] = useState('')
+  const [metricsRetry, setMetricsRetry] = useState(0)
 
   const profile = useAuthStore((s) => s.profile)
   const { teacherClassrooms, loading, actionLoading, fetchTeacherClassrooms, handleCreateClassroom, handleArchiveClassroom, handleRegenerateCode, handleUpdateClassroom } = useClassroom()
@@ -22,6 +26,14 @@ export default function TeacherClassrooms() {
   useEffect(() => {
     if (profile?.id) fetchTeacherClassrooms()
   }, [profile?.id])
+
+  useEffect(() => {
+    let active = true
+    getClassroomListMetrics(teacherClassrooms.map(classroom => classroom.id))
+      .then(data => { if (active) { setMetrics(data); setMetricsError('') } })
+      .catch(error => { if (active) { setMetrics({}); setMetricsError(error.message) } })
+    return () => { active = false }
+  }, [teacherClassrooms, metricsRetry])
 
   const onCreateSubmit = async (formData) => {
     await handleCreateClassroom(formData)
@@ -38,8 +50,8 @@ export default function TeacherClassrooms() {
     <div className='p-6 space-y-6'>
       <AppBreadcrumb
         items={[
-          { label: 'Home', href: '/teachers/' },
-          { label: 'Classrooms', href: '/teachers/classrooms' },
+          { label: 'Home', href: '/teacher' },
+          { label: 'Classrooms', href: '/teacher/classrooms' },
         ]}
       />
       <div className="flex items-center justify-between">
@@ -52,7 +64,8 @@ export default function TeacherClassrooms() {
           New Classroom
         </Button>
       </div>
-    
+      <p className="text-sm text-muted-foreground">Progress measures completed published activities across current classroom members.</p>
+      {metricsError && <p role="alert" className="text-sm text-red-700">Could not load classroom progress: {metricsError} <button className="underline" onClick={() => setMetricsRetry(value => value + 1)}>Retry</button></p>}
       {loading ? (
         <div className="flex justify-center py-24">
           <Loader2 className="w-6 h-6 animate-spin text-gray-300" />
@@ -78,7 +91,8 @@ export default function TeacherClassrooms() {
             <ClassroomCard 
               key={classroom.id}
               classroom={classroom} 
-              averageProgress={20}
+              averageProgress={metrics[classroom.id]?.averageProgress}
+              pendingSubmissions={metrics[classroom.id]?.pendingSubmissions}
               onArchive={() => handleArchiveClassroom(classroom.id, classroom.name)}
               onEdit={() => {
                 setSelectedClassroom(classroom)

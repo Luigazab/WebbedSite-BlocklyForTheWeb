@@ -26,7 +26,6 @@ import { BookOpen, Camera, Check, ChevronDown, ChevronLeft, ChevronRight, FlaskC
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router";
 import BackButton from "#components/common/BackButton";
-import SwitchButton from "#components/editor/SwitchButton";
 import { toast } from "sonner";
 import { validateWorkspaceStructure } from "@/utils/validation/workspaceStructure";
 
@@ -76,7 +75,6 @@ const LaboratoryBuilderPage = ({ context = "teacher" }) => {
   const [previewFileId, setPreviewFileId] = useState(null);
   const [responsive, setResponsive] = useState(true);
   const [selectedDevice, setSelectedDevice] = useState();
-  const [activeTab, setActiveTab] = useState("initial");
   const [panelOpen, setPanelOpen] = useState(true);
   const [metaOpen, setMetaOpen] = useState(true);
   const isLoadingRef = useRef(false);
@@ -380,9 +378,7 @@ const LaboratoryBuilderPage = ({ context = "teacher" }) => {
           <section className="flex flex-col flex-1 bg-white border border-border rounded">
             <FileTabs files={files} activeFile={activeFileId} isLocal onFileChange={handleFileChange} onFileCreate={handleCreateFile} onFileDelete={handleDeleteFile} />
             <WorkspaceTools workspace={workspace} />
-          <div ref={workspace.blocklyDiv} className="blocklyDiv flex-1 relative">
-              <SwitchButton activeTab={activeTab} setActiveTab={setActiveTab}/>
-            </div>
+            <div ref={workspace.blocklyDiv} className="blocklyDiv flex-1 relative" />
           </section>
           <section className="w-1/3 overflow-hidden">
             <PreviewPane

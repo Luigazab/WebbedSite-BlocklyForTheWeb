@@ -156,7 +156,7 @@ const BlocklyWorkspace = ({
     workspace.current.zoomToFit();
     const current = workspace.current;
     const frame = current.getParentSvg().getBoundingClientRect();
-    const toolbox = current.getToolbox()?.getDiv().getBoundingClientRect();
+    const toolbox = current.getToolbox()?.HtmlDiv?.getBoundingClientRect();
     const left = (toolbox?.right ?? frame.left) + 20;
     const right = frame.right - 24;
     let bounds = current.getCanvas().getBoundingClientRect();
