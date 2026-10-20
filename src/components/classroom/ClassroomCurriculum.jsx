@@ -31,6 +31,15 @@ export default function ClassroomCurriculum({
           const progress = flowById.get(topic.id)
           const own = progress?.students?.[0]
           const percent = progress?.eligible > 0 ? Math.round(progress.completed / progress.eligible * 100) : 0
+          const classProgressLabel = !progress
+            ? 'Loading progress…'
+            : progress.eligible > 0
+              ? `${progress.completed} of ${progress.eligible} eligible students complete`
+              : own?.late_joiner
+                ? own.status === 'completed'
+                  ? 'Your work is complete · joined after topic unlock'
+                  : 'Joined after topic unlock · not counted in class progression'
+                : 'No eligible students in class progression'
           const lessons = visibleTopicLessons(topic, teacher)
           return <li key={topic.id} className="overflow-hidden rounded-xl border border-b-4 border-slate-200 bg-card">
             <div className='p-4 space-y-2'>
@@ -43,7 +52,7 @@ export default function ClassroomCurriculum({
                 </div>
                 {teacher ? <span className="text-xs text-muted-foreground">{topic.isUnlocked ? 'Open to students' : 'Locked'}</span>
                   : <div className="w-40 max-w-full text-xs" aria-label="Class topic progress">
-                    <p className="mb-1 text-muted-foreground">{progress ? `${progress.completed} of ${progress.eligible} students complete` : 'Loading progress…'}</p>
+                    <p className="mb-1 text-muted-foreground">{classProgressLabel}</p>
                     <div role="progressbar" aria-label={`Class completion for ${topic.title}`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={percent} className="h-2 overflow-hidden rounded-full bg-slate-100"><div className="h-full bg-emerald-500 transition-all" style={{ width: `${percent}%` }} /></div>
                   </div>}
               </div>
