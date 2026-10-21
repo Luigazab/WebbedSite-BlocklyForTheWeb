@@ -14,8 +14,11 @@ begin
  if private.account_ready() then raise exception 'Temporary password account can access classroom data.';end if;
  begin update public.profiles set must_change_password=false where id=teacher;if exists(select 1 from public.profiles where id=teacher and not must_change_password) then raise exception 'Teacher bypassed password requirement';end if;exception when raise_exception then if sqlerrm='Teacher bypassed password requirement' then raise;end if;end;
  reset role;
- update auth.users set encrypted_password='acceptance-changed-password-hash' where id=teacher;
- if exists(select 1 from public.profiles where id=teacher and must_change_password) then raise exception 'Trusted password update did not finish setup.';end if;
+ update auth.users set encrypted_password='acceptance-rehashed-password' where id=teacher;
+ if exists(select 1 from public.profiles where id=teacher and not must_change_password) then raise exception 'An auth rehash bypassed the password requirement.';end if;
+ perform set_config('request.jwt.claims','{"role":"service_role"}',true);
+ update public.profiles set must_change_password=false where id=teacher;
+ if exists(select 1 from public.profiles where id=teacher and must_change_password) then raise exception 'Trusted password replacement did not finish setup.';end if;
  perform set_config('request.jwt.claims','{"role":"service_role"}',true);
  select id into course from public.courses where slug='html';
  insert into public.classrooms(teacher_id,name,is_active) values(teacher,'Completion acceptance fixture',true) returning id into classroom;

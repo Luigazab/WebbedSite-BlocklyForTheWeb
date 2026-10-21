@@ -109,6 +109,17 @@ export const authService = {
     const { error } = await supabase.auth.updateUser({ password: newPassword });
     if (error) throw error;
   },
+  async completeFirstPasswordChange(currentPassword, newPassword) {
+    const { data, error } = await supabase.functions.invoke('first-password-change', {
+      body: { currentPassword, newPassword },
+    })
+    if (error) {
+      let message = 'The password could not be replaced.'
+      try { message = (await error.context?.json())?.error || message } catch { /* keep the safe fallback */ }
+      throw new Error(message)
+    }
+    if (!data?.success) throw new Error(data?.error || 'The password could not be replaced.')
+  },
   ownsSession: session => authStorage.ownsSession(session),
   isRecoverySession: session => authStorage.isRecovery(session),
   markRecovery: session => authStorage.markRecovery(session),

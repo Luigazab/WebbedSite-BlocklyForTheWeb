@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useAuthStore } from "../../store/authStore";
-import { profileService } from "../../services/profile.service";
-import { supabase } from "../../supabaseClient";
+import { authService } from "../../services/auth.service";
 import { PASSWORD_HELP, MIN_PASSWORD_LENGTH } from "../../lib/passwordPolicy";
 
 export default function FirstPasswordChange() {
@@ -21,11 +20,7 @@ export default function FirstPasswordChange() {
       );
     setBusy(true);
     try {
-      await profileService.updatePassword(password, current);
-      const { error: completionError } = await supabase.rpc(
-        "finish_first_password_change",
-      );
-      if (completionError) throw completionError;
+      await authService.completeFirstPasswordChange(current, password);
       setProfile({ ...profile, must_change_password: false });
     } catch (err) {
       setError(err.message);
