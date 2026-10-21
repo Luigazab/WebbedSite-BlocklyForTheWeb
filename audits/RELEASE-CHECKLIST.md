@@ -1,14 +1,14 @@
 # WebbedSite completion release
 
-Updated 21 October 2026. Existing uncommitted editor/JavaScript work was preserved in a pre-change temporary backup and incorporated into the release. Baseline: 87 automated tests and a passing build. Current: 112 automated tests, passing production build and shared runtime packaging; database role/assessment/report/import tests pass using rollback-only fixtures.
+Updated 21 October 2026. Existing uncommitted editor/JavaScript work was preserved in a pre-change temporary backup and incorporated into the release. Baseline: 87 automated tests and a passing build. Current: 117 automated tests, passing production build and shared runtime packaging; database role/assessment/report/import tests pass using rollback-only fixtures.
 
 ## Feature status
 
 | Feature | Status | Evidence / remaining acceptance |
 | --- | --- | --- |
-| Student-only signup, admin teacher creation, forced password replacement | Implemented; awaiting live account journey | Database metadata and password guards; auth service tests |
+| Student-only signup, admin teacher creation, forced password replacement | Working in automated/database and live browser checks | Administrator created `release.teacher`; the new teacher was blocked behind password setup, replaced the temporary password, then confirmed the old password was rejected and the new password was accepted |
 | Shared settings, required indicators, role navigation and redirects | Admin/student settings and all role sidebars checked live | Real profile settings, required fields, student security form and old teacher-registration redirect |
-| Independent classroom copies and four-type imports | Working in database and live teacher checks | Release verification imported all 12 JavaScript activities; import now preserves reference blocks, structure requirements and guidance without linking the classroom copy to its template |
+| Independent classroom copies and four-type imports | Working in database and two-teacher live checks | Both Release verification classrooms imported all 12 JavaScript activities; the second teacher could not open the first classroom, and its renamed topic did not change the first copy |
 | Labs: optional checks, drafts, snapshots, rubric totals, review and resubmission | Working in automated/database and live browser checks | Miss Ali completed draft, submission, 70% Needs revision, revision 2, 90% Passed and preserved feedback/history in Release verification |
 | Gradebook, filters, CSV and student My Progress | Working in automated and live browser checks | Filters use classroom records; live CSV preserves unscored completion, 100% quiz, 90% lab, not attempted and not submitted as distinct values |
 | Course-specific checkpoint proficiency | Working in database tests and live browser checks | Miss Ali remains Beginner after passing beginner quiz/lab; intermediate and advanced remain awaiting assessment; prerequisite tiers, pending labs and XP exclusions tested |
@@ -33,8 +33,9 @@ The production client now handles a removed lazy-loaded bundle after deployment 
 - [ ] Subject teacher approves objectives, checkpoint questions, rubric and passing requirements.
 - [ ] Adviser confirms reusable compositions satisfy the requested teacher-added-block capability and approves the three-subject title/scope.
 - [x] Recovery email delivery and link opening the password form — inbox owner confirmed.
-- [ ] User completes password change, old-password rejection and used-link checks; public signup confirmation also remains to be tested.
-- [ ] Full browser journey with admin, two teachers, and students in separate classrooms.
+- [x] Administrator-created teacher completes required password replacement; old temporary password is rejected and the new password is accepted.
+- [ ] User completes the separate recovery-link password change and used-link checks; public signup confirmation also remains to be tested.
+- [ ] Full browser journey with admin, two teachers, and students in separate classrooms. Admin, two teacher accounts, ownership denial and independent template copies have passed; the second classroom does not yet have a student journey.
 - [ ] Student/teacher usability sessions conducted; record only observed results.
 - [ ] Manuscript diagrams, instruments and page-numbered lists updated and reviewed. Native Drive edits remain declined.
 

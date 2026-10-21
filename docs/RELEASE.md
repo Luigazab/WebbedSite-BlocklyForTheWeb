@@ -12,7 +12,7 @@ The initial deployment preserved 6 profiles, 5 projects, 7 quiz attempts, 8 less
 
 ## Verification evidence
 
-- `npm test`: 112 tests passed, including HTML/CSS/JavaScript reference regeneration, interactive JavaScript examples, reusable composition output, authentication behavior, tutorial validation, previews and stale deployment chunk recovery.
+- `npm test`: 117 tests passed, including HTML/CSS/JavaScript reference regeneration, interactive JavaScript examples, reusable composition output, atomic first-password replacement, authentication behavior, tutorial validation, previews and stale deployment chunk recovery.
 - `npm run build:tutorial-runtime`: generated the deployable worker from the browser's generator and validation sources.
 - `npm run build`: passes. The initial entry JavaScript is approximately 544 KB (162 KB gzip), compared with approximately 4.35 MB before route splitting. Editor/authoring chunks still produce size warnings.
 - `node scripts/verify-deployment.mjs`: anonymous production check on 21 October measured 544,342 decoded entry bytes with Brotli response encoding and the expected release marker. This measures the entry module, not all later lazy-loaded editor assets.
@@ -26,8 +26,8 @@ Record date, role, classroom, observed result and evidence for each journey. Dat
 | Journey | Status |
 | --- | --- |
 | Public registration creates a student even with changed metadata | Database verified; live signup/confirmation pending |
-| Admin creates a teacher; teacher signs in and changes temporary password | Service/database verified; complete browser journey pending |
-| Two teachers import the same template and edit independent copies | Database verified; browser journey pending |
+| Admin creates a teacher; teacher signs in and changes temporary password | Live browser journey passed with `release.teacher`; the temporary password was replaced atomically, the old password was rejected and the new password was accepted |
+| Two teachers import the same template and edit independent copies | Live browser journey passed; second teacher imported JavaScript, was denied access to the first classroom and changed only its own topic copy |
 | Student completes lecture, quiz, tutorial and lab; continues while pending | Live browser journey passed in Release verification |
 | Teacher requests revision, student resubmits, teacher passes it | Live browser journey passed: 70% Needs revision, then revision 2 at 90% Passed |
 | Personal/tutorial/lab projects save, reopen, preview and export | Live student browser journey passed for tutorial and laboratory project copies |
@@ -51,6 +51,10 @@ On 21 October, Miss Ali completed the beginner JavaScript lecture and tutorial, 
 The teacher Gradebook was filtered by laboratory type and student, then exported through the live interface. The downloaded CSV recorded Miss Ali's lecture and tutorial as `completed`, the quiz as `100% · passed`, the lab as `90% · passed`, and later quiz/lab checkpoints as `not attempted` or `not submitted`. This confirms the export does not manufacture percentage grades for completion-only activities or collapse distinct pending states.
 
 The deployed client also listens for Vite's production preload error and reloads once within a 60-second session cooldown. This recovers an already-open page when a Netlify deployment removes an older lazy-loaded chunk, matching the transient post-login error observed during repeated release deployments.
+
+The administrator then created the disposable `release.teacher` account. Its first sign-in exposed that Supabase can update an authentication password hash during login, which caused the original database trigger to clear `must_change_password` before the teacher chose a password. The release now performs temporary-password verification, password replacement and flag clearing in one authenticated Edge Function. A fresh live attempt showed only the password-setup screen until completion; afterward the teacher dashboard opened, the old temporary password was rejected and the new password was accepted.
+
+Using that second teacher, `Release verification B` imported the same JavaScript template as the original `Release verification` classroom. Direct navigation to the first teacher's classroom returned “This classroom is unavailable.” The second copy contained three topics and 12 lessons. Renaming its first topic to `Events, variables and visible feedback — Teacher B copy` left the original classroom's title unchanged, confirmed both in the browser and in stored classroom-topic records.
 
 ## Rollback and recovery
 
