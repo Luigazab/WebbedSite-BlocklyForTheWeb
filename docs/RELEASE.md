@@ -1,4 +1,4 @@
-# Completion release — 19 October 2026
+# Completion release — 21 October 2026
 
 ## Deployment order
 
@@ -12,10 +12,10 @@ The initial deployment preserved 6 profiles, 5 projects, 7 quiz attempts, 8 less
 
 ## Verification evidence
 
-- `npm test`: 111 tests passed, including HTML/CSS/JavaScript reference regeneration, interactive JavaScript examples, reusable composition output, authentication behavior, tutorial validation and previews.
+- `npm test`: 112 tests passed, including HTML/CSS/JavaScript reference regeneration, interactive JavaScript examples, reusable composition output, authentication behavior, tutorial validation, previews and stale deployment chunk recovery.
 - `npm run build:tutorial-runtime`: generated the deployable worker from the browser's generator and validation sources.
 - `npm run build`: passes. The initial entry JavaScript is approximately 544 KB (162 KB gzip), compared with approximately 4.35 MB before route splitting. Editor/authoring chunks still produce size warnings.
-- `node scripts/verify-deployment.mjs`: anonymous production check on 19 October measured 543,964 decoded entry bytes with Brotli response encoding and the expected release marker. This measures the entry module, not all later lazy-loaded editor assets.
+- `node scripts/verify-deployment.mjs`: anonymous production check on 21 October measured 544,342 decoded entry bytes with Brotli response encoding and the expected release marker. This measures the entry module, not all later lazy-loaded editor assets.
 - `supabase/tests/completion_release.sql` and `supabase/tests/report_and_role_isolation.sql`: rollback-only tests pass against the deployed schema. They cover signup metadata, teacher password enforcement, server quiz scoring, hidden answer keys, lab drafts/submission/revision, rubric freezing, stale reviews, duplicate XP/projects/badges, checkpoint proficiency, gradebook access and independent template imports. Synthetic accounts do not survive.
 - Security advisor: the course-count view now follows caller permissions; mutable function paths and anonymous privileged-function warnings were addressed. The display directory deliberately remains a narrow owner-executed view of names and avatars, preserving existing API foreign-key joins; it exposes no email, role or activity fields. Its advisor finding is documented and intentional. The remaining private notification queue intentionally has no client policies. The platform uses its existing application password-breach screening; Supabase's separate built-in leaked-password setting remains disabled.
 
@@ -28,10 +28,10 @@ Record date, role, classroom, observed result and evidence for each journey. Dat
 | Public registration creates a student even with changed metadata | Database verified; live signup/confirmation pending |
 | Admin creates a teacher; teacher signs in and changes temporary password | Service/database verified; complete browser journey pending |
 | Two teachers import the same template and edit independent copies | Database verified; browser journey pending |
-| Student completes lecture, quiz, tutorial and lab; continues while pending | Automated/database verified; full browser journey pending |
-| Teacher requests revision, student resubmits, teacher passes it | Database verified; full browser journey pending |
-| Personal/tutorial/lab projects save, reopen, preview and export | Generator and runtime verified; browser acceptance pending |
-| Teacher creates a reusable block, student reopens and submits it | Runtime/version policies verified; browser acceptance pending |
+| Student completes lecture, quiz, tutorial and lab; continues while pending | Live browser journey passed in Release verification |
+| Teacher requests revision, student resubmits, teacher passes it | Live browser journey passed: 70% Needs revision, then revision 2 at 90% Passed |
+| Personal/tutorial/lab projects save, reopen, preview and export | Live student browser journey passed for tutorial and laboratory project copies |
+| Teacher creates a reusable block, student reopens and submits it | Live teacher/student journey passed with Counter page v1 and Counter interaction v1 |
 | Reports, screenshot access, status history and dashboard reconciliation | Report/history/screenshot permissions verified with two teachers, separate students and an admin; live browser acceptance pending |
 | Password-recovery delivery, link, password change and old-password rejection | Delivery and password form confirmed by inbox owner; password change/old-password/used-link checks pending |
 | Disabled accounts and direct-route protection | Automated authorization checks; signed-in student redirected away from admin and teacher pages; disabled-account browser check pending |
@@ -42,9 +42,13 @@ The existing student account was also checked in ICT A. Home, My Classrooms, pub
 
 On 20 October, the owner authorized changing the unused Miss Ali account from teacher to student for release testing; its password was not changed. A separate `Release verification` classroom was created and received the 12-activity JavaScript sequence. The live import exposed an omission in the clone function: reference block JSON, structure requirements and tutorial guidance were not copied even though generated reference code was. Migration `preserve_imported_tutorial_solutions` fixes future imports, a rollback-only regression verifies copy independence, and the new classroom's 18 expected-file rows and nine steps were repaired from their master counterparts. No existing classroom was updated.
 
-Teacher authoring then captured `Counter page` v1 for HTML and `Counter interaction` v1 for JavaScript. Both are scoped to Release verification, and the JavaScript reference preview changed the visible counter from 0 to 1. The corresponding student save/reopen/submission/export journey remains pending.
+Teacher authoring then captured `Counter page` v1 for HTML and `Counter interaction` v1 for JavaScript. Both are scoped to Release verification, and the JavaScript reference preview changed the visible counter from 0 to 1. Miss Ali reopened the generated HTML/JavaScript project, ran the counter, saved tutorial and laboratory project copies without duplication, submitted the reusable blocks for review and exported the project as ZIP.
 
 After the frontend deployment, the teacher classroom list reported Release verification as 0 students, 0% complete and 0 pending reviews, while ICT A reported 2 students, 17% complete and 0 pending reviews. These values now come from published lesson completion and final ungraded laboratory submissions; the former hardcoded 20% card value was removed.
+
+On 21 October, Miss Ali completed the beginner JavaScript lecture and tutorial, scored 100% on the checkpoint quiz, saved and submitted the counter laboratory, and continued to later lessons while the lab awaited review. The teacher scored revision 1 at 70% with Needs revision feedback. Miss Ali saw that result, resubmitted revision 2, and the teacher passed it at 90%. Student My Progress then showed the quiz and lab as passed, lecture/tutorial as completed without percentage scores, and the prior 70% review in preserved history. Classification remained Beginner because the intermediate and advanced quiz/lab checkpoints were still awaiting assessment.
+
+The deployed client also listens for Vite's production preload error and reloads once within a 60-second session cooldown. This recovers an already-open page when a Netlify deployment removes an older lazy-loaded chunk, matching the transient post-login error observed during repeated release deployments.
 
 ## Rollback and recovery
 
