@@ -34,46 +34,59 @@ export default function FirstPasswordChange() {
     }
   }
   return (
-    <main className="mx-auto max-w-lg p-8">
-      <h1 className="text-2xl font-bold">Set your own password</h1>
-      <p className="my-4 text-slate-600">
-        Replace the temporary password supplied by your administrator before
-        using your teacher account.
-      </p>
-      <form onSubmit={submit} className="space-y-4">
-        {[
-          ["Temporary password", current, setCurrent, "current-password"],
-          ["New password", password, setPassword, "new-password"],
-          ["Confirm new password", confirm, setConfirm, "new-password"],
-        ].map(([label, value, setter, autocomplete]) => (
-          <label key={label}>
-            {label} *
-            <input
-              required
-              minLength={
-                autocomplete === "new-password" ? MIN_PASSWORD_LENGTH : 1
-              }
-              autoComplete={autocomplete}
-              type="password"
-              value={value}
-              onChange={(e) => setter(e.target.value)}
-              className="mt-1 w-full rounded-lg border p-3"
-            />
-          </label>
-        ))}
-        <p className="text-sm text-slate-600">{PASSWORD_HELP}</p>
-        {error && (
-          <p role="alert" className="text-red-700">
-            {error}
-          </p>
-        )}
-        <button disabled={busy} className="btn btn-primary">
-          {busy ? "Updating…" : "Update password"}
+    <div className="min-h-screen z-12 bg-[url('/auth2_bg.avif')] bg-repeat bg-scroll">
+       <svg
+        className="absolute inset-0 w-full h-full"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <circle
+          cx="50%"   // center horizontally
+          cy="10%"   // center vertically
+          r="60%"    // radius = half of viewport height/width
+          fill="white"
+        />
+      </svg>
+      <main className="relative mx-auto max-w-lg p-8">
+        <h1 className="text-2xl font-bold">Set your own password</h1>
+        <p className="my-4 text-slate-600">
+          Replace the temporary password supplied by your administrator before
+          using your teacher account.
+        </p>
+        <form onSubmit={submit} className="space-y-4">
+          {[
+            ["Temporary password", current, setCurrent, "current-password"],
+            ["New password", password, setPassword, "new-password"],
+            ["Confirm new password", confirm, setConfirm, "new-password"],
+          ].map(([label, value, setter, autocomplete]) => (
+            <label key={label}>
+              {label} *
+              <input
+                required
+                minLength={
+                  autocomplete === "new-password" ? MIN_PASSWORD_LENGTH : 1
+                }
+                autoComplete={autocomplete}
+                type="password"
+                value={value}
+                onChange={(e) => setter(e.target.value)}
+                className="mt-1 w-full rounded-lg border p-3"
+              />
+            </label>
+          ))}
+          <p className="text-sm text-slate-600">{PASSWORD_HELP}</p>
+          {error && (
+            <p role="alert" className="text-red-700">
+              {error}
+            </p>
+          )}
+          <button disabled={busy} className="btn btn-primary">
+            {busy ? "Updating…" : "Update password"}
+          </button>
+        </form>
+        <button className="mt-6 underline" onClick={() => signOut()}>
+          Sign out
         </button>
-      </form>
-      <button className="mt-6 underline" onClick={() => signOut()}>
-        Sign out
-      </button>
-    </main>
+      </main>
+    </div>
   );
 }
