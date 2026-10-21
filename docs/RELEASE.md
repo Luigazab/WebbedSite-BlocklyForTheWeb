@@ -48,6 +48,8 @@ After the frontend deployment, the teacher classroom list reported Release verif
 
 On 21 October, Miss Ali completed the beginner JavaScript lecture and tutorial, scored 100% on the checkpoint quiz, saved and submitted the counter laboratory, and continued to later lessons while the lab awaited review. The teacher scored revision 1 at 70% with Needs revision feedback. Miss Ali saw that result, resubmitted revision 2, and the teacher passed it at 90%. Student My Progress then showed the quiz and lab as passed, lecture/tutorial as completed without percentage scores, and the prior 70% review in preserved history. Classification remained Beginner because the intermediate and advanced quiz/lab checkpoints were still awaiting assessment.
 
+The teacher Gradebook was filtered by laboratory type and student, then exported through the live interface. The downloaded CSV recorded Miss Ali's lecture and tutorial as `completed`, the quiz as `100% · passed`, the lab as `90% · passed`, and later quiz/lab checkpoints as `not attempted` or `not submitted`. This confirms the export does not manufacture percentage grades for completion-only activities or collapse distinct pending states.
+
 The deployed client also listens for Vite's production preload error and reloads once within a 60-second session cooldown. This recovers an already-open page when a Netlify deployment removes an older lazy-loaded chunk, matching the transient post-login error observed during repeated release deployments.
 
 ## Rollback and recovery
