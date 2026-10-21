@@ -4,7 +4,7 @@
 
 1. Preserve the working tree and record existing migration history. Several older local filenames differ from deployed timestamps; match migrations by their name and content, and do not replay the directory blindly.
 2. Apply `completion_release`, then `release_curriculum`. These add columns, protected RPCs, policies, history, and 36 master lessons. They do not replace existing classroom content or accounts.
-3. Run `npm run build:tutorial-runtime`. Deploy the `tutorial` function with its generated runtime and import map; deploy `admin-auth`. Preserve each function's existing JWT setting. `admin-auth` authenticates and checks administrator roles itself.
+3. Run `npm run build:tutorial-runtime`. Deploy the `tutorial` function with its generated runtime and import map; deploy `admin-auth` and `first-password-change`. Preserve each function's existing JWT setting. `admin-auth` authenticates and checks administrator roles itself. `first-password-change` authenticates the bearer session, verifies the temporary password and clears `must_change_password` only after the password update succeeds.
 4. Run the tests and frontend build, then publish the matching frontend through Netlify.
 5. Check the live account journeys below and record the deployed commit/build identifiers.
 
