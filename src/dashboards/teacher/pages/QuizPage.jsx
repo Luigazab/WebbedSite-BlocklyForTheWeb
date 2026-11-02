@@ -230,7 +230,7 @@ const QuizPage = ({ context = "teacher" }) => {
       />
 
       <div className="z-10 h-full w-full overflow-y-auto relative">
-        <div className="top-1 sticky shrink-0 flex items-center gap-3 px-4 py-2.5 ">
+        <div className="top-0 sticky shrink-0 flex items-center gap-3 px-4 py-2.5 z-10 backdrop-blur-md">
           <Link to="/"><img src="/icon.png" alt="icon image" className='w-8 h-8' /></Link>
           <BackButton />
           {editLessonId && <details className="max-h-96 overflow-auto rounded-lg border bg-white p-2"><summary>Assessment settings</summary><AssessmentSettings lessonId={editLessonId} /></details>}
@@ -244,12 +244,12 @@ const QuizPage = ({ context = "teacher" }) => {
               Master Content
             </span>
           )}
-          <div className='ml-auto flex truncate gap-1.5'>
+          <div className='ml-auto items-center flex gap-1.5'>
             <Button variant='ghost'>
               <Sun size={20}/>Light Mode
             </Button>
-            <Button variant="primary" onClick={() => setShowPreviewDialog(true)}>Preview</Button>
-            <Button variant="secondary" onClick={handleSaveQuiz} disabled={saving}>
+            <Button variant="primaryOutline" onClick={() => setShowPreviewDialog(true)}>Preview</Button>
+            <Button variant="primary" onClick={handleSaveQuiz} disabled={saving}>
               {saving ? (isEditMode ? "Updating..." : "Saving...") : (isEditMode ? "Update Quiz" : "Save Quiz")}
             </Button>
           </div>
@@ -357,12 +357,7 @@ const QuizPage = ({ context = "teacher" }) => {
             <div className="rounded-2xl border border-white/60 bg-background p-5 shadow-sm space-y-4">
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-bold text-slate-800">Questions</h2>
-                <Button type="button" onClick={addQuestion}>
-                  <Plus />
-                  Add Question
-                </Button>
               </div>
-
               <p className="text-sm text-slate-500">Drag the handle on each question to reorder.</p>
 
               <div className="space-y-3">
@@ -458,6 +453,10 @@ const QuizPage = ({ context = "teacher" }) => {
                   </div>
                 ))}
               </div>
+              <Button type="button" onClick={addQuestion}>
+                <Plus />
+                Add Question
+              </Button>
             </div>
           </CardContent>
 

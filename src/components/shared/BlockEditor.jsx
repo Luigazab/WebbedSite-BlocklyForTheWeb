@@ -15,8 +15,7 @@ import SaveModal from '../editor/SaveModal'
 import LoadModal from '../editor/LoadModal'
 import EditorHeader from '../layout/EditorHeader'
 import { useAuthStore } from '../../store/authStore'
-import { useBlocklyThumbnail } from '../../hooks/useBlocklyThumbnail'
-import { projectService } from '../../services/project.service'
+import { useWebsiteThumbnail } from '../../hooks/useWebsiteThumbnail'
 import EditorTour, { useAutoStartEditorTour } from '../tour/EditorTour'
 import { toast } from 'sonner'
 
@@ -27,6 +26,7 @@ const BlockEditor = () => {
   const location = useLocation()
   const fileInputRef = useRef(null)
   const pendingProjectRef = useRef(null)
+  const savingProjectRef = useRef(false)
 
   const [projectTitle, setProjectTitle] = useState(location.state?.projectTitle ?? 'Untitled')
   const [generatedCode, setGeneratedCode] = useState('')
@@ -42,8 +42,7 @@ const BlockEditor = () => {
   const [activePreviewFile, setActivePreviewFile] = useState(null)
   
   const isLoadingRef = useRef(false)
-  const lastSavedHtmlRef = useRef('');
-  const { saveThumbnail } = useBlocklyThumbnail();
+  const { saveThumbnail } = useWebsiteThumbnail();
   
   const { projects, fetchProjects,fetchProject, handleCreateProject, handleUpdateProject, handleDeleteProject: removeProjectFromDb, } = useProject()
   const { files, activeFile, isLocal, saveFile, deleteFile, setActiveFile, createFile, migrateLocalFilesToDb } = useProjectFiles(id || currentProjectId)
@@ -143,37 +142,6 @@ const BlockEditor = () => {
   }, [files]);
 
 
-  useEffect(() => {
-    if (!currentProjectId || filesWithCode.length === 0) return;
-
-    const timer = setTimeout(async () => {
-      // Use the same logic as preview to keep them in sync
-      const previewFile = files.find(f => f.id === activePreviewFile);
-      const targetFile = previewFile || 
-                        files.find(f => f.filename === 'index.html') ||
-                        files.find(f => f.filename.endsWith('.html')) ||
-                        files[0];
-      if (!targetFile) return;
-
-      const combined = codeGeneratorService.combineFilesForPreview(
-        filesWithCode,
-        targetFile.filename
-      );
-
-      // Avoid saving identical content
-      if (combined === lastSavedHtmlRef.current) return;
-
-      try {
-        await projectService.updateProjectGeneratedHtml(currentProjectId, combined);
-        lastSavedHtmlRef.current = combined;
-      } catch (error) {
-        console.error('Auto-save failed:', error);
-      }
-    }, 1000);
-
-    return () => clearTimeout(timer);
-  }, [filesWithCode, currentProjectId, activePreviewFile, files]);
-
   const updateFileCode = (fileId, code) => {
     setFilesWithCode(prev => {
       const existing = prev.find(f => f.id === fileId)
@@ -245,7 +213,20 @@ const BlockEditor = () => {
   }
 
   const handleSaveToAccount = async ({ title, description }) => {
+    if (savingProjectRef.current) return
+    savingProjectRef.current = true
+    const savingToast = toast.loading('Saving project and website screenshot…')
     try {
+      // Capture current source before migration/navigation changes file IDs or the workspace.
+      const snapshotFiles = files.map(file => ({
+        ...file,
+        generatedCode: file.blocks_json == null && file.code != null
+          ? (textDrafts[file.id] ?? file.code)
+          : file.id === activeFile
+            ? codeGeneratorService.generateCode(workspace.getWorkspace(), file.filename)
+            : codeGeneratorService.generateCodeFromState(file.blocks_json, file.filename),
+      }))
+      const websiteHtml = codeGeneratorService.combineFilesForPreview(snapshotFiles, 'index.html')
       if (activeFile) {
         await saveActiveFile()
       }
@@ -267,7 +248,6 @@ const BlockEditor = () => {
         setProjectDescription(description)
         pendingProjectRef.current = null
 
-        navigate(`/${profile?.role}/editor/${savedProject.id}`, { replace: true })
       } else {
         await handleUpdateProject(currentProjectId, { title, description })
         setProjectTitle(title)
@@ -276,19 +256,20 @@ const BlockEditor = () => {
       }
 
       setShowSaveModal(false)
-      fetchProjects()
-
       try {
-        const result = await saveThumbnail(workspace.getWorkspace(), projectIdToUse)
-        if (result) toast.success('Thumbnail saved')
-        else toast.error('Failed to save thumbnail')
+        await saveThumbnail(websiteHtml, projectIdToUse)
+        toast.success('Project and website screenshot saved', { id: savingToast })
       } catch (err) {
         console.error('Thumbnail save failed:', err)
-        toast.error('Thumbnail save error')
+        toast.warning(`Project saved, but its screenshot failed: ${err.message}`, { id: savingToast })
       }
+      await fetchProjects()
+      if (!currentProjectId) navigate(`/${profile?.role}/editor/${projectIdToUse}`, { replace: true })
     } catch (error) {
       console.error('Save error:', error)
-      toast.error(error.message || 'Failed to save project')
+      toast.error(error.message || 'Failed to save project', { id: savingToast })
+    } finally {
+      savingProjectRef.current = false
     }
   }
 

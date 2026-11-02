@@ -37,6 +37,11 @@ export function createTutorialHandler({ authenticate, loadDefinition, saveSubmis
         if (mode !== 'block') throw new Error('The current builder creates block tutorials')
         for (const file of definition.files) if (file.initialContentJson != null) canonicalize([{ filename: file.filename, blocks_json: file.initialContentJson }], mode, definition.files)
         const steps = definition.steps.map((step, index) => {
+          if (step.initialByFile != null && (typeof step.initialByFile !== 'object' || Array.isArray(step.initialByFile))) throw new Error('Invalid starting structures')
+          for (const [filename, state] of Object.entries(step.initialByFile ?? {})) {
+            if (!filenames.includes(filename)) throw new Error('A starting structure references an unknown file')
+            canonicalize([{ filename, blocks_json: state }], mode, definition.files)
+          }
           const expectedByFile = {}
           for (const [filename, expected] of Object.entries(step.expectedByFile ?? {})) {
             if (!filenames.includes(filename)) throw new Error('A solution references an unknown file')
@@ -44,12 +49,18 @@ export function createTutorialHandler({ authenticate, loadDefinition, saveSubmis
               ? canonicalize([{ filename, blocks_json: expected.blocksJson }], mode, definition.files)[0].code
               : expected.code
             const solution = { filename, expected_code: source, expected_blocks_json: expected.blocksJson, test_cases: expected.testCases ?? [], require_block_structure: expected.requireStructure === true }
+            if (solution.test_cases.some(test => test?.type === 'generatedChanges')) {
+              solution.require_block_structure = false
+              if (!Object.hasOwn(step.initialByFile ?? {}, filename)) throw new Error('Capture the starting structure first')
+            }
             // Drafts may be incomplete, but invalid test configuration is never saved.
             validateTests(solution.test_cases)
             if (body.publish) validateReference(solution, mode)
             expectedByFile[filename] = { ...expected, code: source, requireStructure: solution.require_block_structure }
           }
           if (body.publish && (!step.instruction?.trim() || !Object.keys(expectedByFile).length)) throw new Error(`Step ${index + 1} needs instructions and a captured solution`)
+          const tests = Object.values(expectedByFile).flatMap(expected => expected.testCases ?? [])
+          if (body.publish && tests.some(test => test.type === 'generatedChanges') && !tests.flatMap(test => test.type === 'generatedChanges' ? test.checks : [test]).some(test => test.enabled !== false)) throw new Error(`Step ${index + 1} needs at least one active code check`)
           return { ...step, expectedByFile }
         })
         const saved = await saveDefinition(user.id, { ...definition, steps }, body.publish)

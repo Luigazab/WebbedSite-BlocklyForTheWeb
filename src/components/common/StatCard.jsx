@@ -1,18 +1,18 @@
-export default function StatCard({label, value, sub, progress, accent, icon, imageSrc}){
+export default function StatCard({label, value, sub, progress, accent, icon, imageSrc, iconVariant = "background", iconClassName = "bg-sky-500/10 text-sky-600"}){
   const IconComponent = icon;
   return(
-    <div className={`relative shadow border-b-4 rounded-2xl border border-border p-5 ${
+    <div className={`relative flex justify-between shadow border rounded-2xl border border-border p-5 ${
         accent
           ? "border-primary/40 bg-linear-to-br from-primary/15 to-transparent"
-          : "border-b-slate-400 bg-card"
+          : "bg-card"
       }`}
     >
-      {(icon || imageSrc) && (
-        <div className="absolute right-4 top-1/2 -translate-y-1/2 opacity-50 pointer-events-none">
+      {(icon || imageSrc) && iconVariant !== "badge" && (
+        <div aria-hidden="true" className="absolute right-4 top-1/2 -translate-y-1/2 opacity-50 pointer-events-none">
           {imageSrc && !icon ? (
             <img 
               src={imageSrc} 
-              alt="stat decoration" 
+              alt=""
               className="w-20 h-20 object-contain"
             />
           ) : (
@@ -36,6 +36,12 @@ export default function StatCard({label, value, sub, progress, accent, icon, ima
           </div>
         )}
       </div>
+      
+      {icon && iconVariant === "badge" && (
+        <div aria-hidden="true" className={`mb-4 inline-flex rounded-xl p-2.5 ${iconClassName}`}>
+          <IconComponent size={22} strokeWidth={1.75} />
+        </div>
+      )}
     </div>
   )
 }

@@ -1,5 +1,6 @@
+import CaptureValidationPanel from '@/components/editor/CaptureValidationPanel'
 import WorkspaceTools from '@/components/editor/WorkspaceTools'
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router'
 import { useAuth } from '../../../hooks/useAuth'
 import { useTutorialBuilder } from '../../../hooks/useTutorialBuilder'
@@ -34,12 +35,11 @@ function StepPanel({
   files, activeFilename, getFileStatusForStep, currentStepIndex,
   steps, onGoToStep, onAddStep, onDeleteStep,
   currentStep, onUpdateCurrentStep,
-  onCapture, onClearCapture, onCaptureInitial, onLoadInitial, onSetTests, onDraftTests, onSetStructure,
+  onCapture, onClearCapture, onCaptureInitial, onLoadInitial, onSetTests, onDraftTests, onLoadExpected, pickerHtml,
   panelOpen, setPanelOpen,
 }) {
   const [metaOpen, setMetaOpen] = useState(true)
   const activeExpected = currentStep?.expectedByFile[activeFilename]
-  const testsText = currentStep?.testDraftByFile?.[activeFilename] ?? JSON.stringify(activeExpected?.testCases ?? [], null, 2)
   const selectedCategory = CATEGORY_OPTIONS.find(
     (c) => JSON.stringify(c.path) === JSON.stringify(currentStep?.highlightCategoryPath ?? [])
   )
@@ -230,46 +230,21 @@ function StepPanel({
             )}
           </div>
 
-          <div className="space-y-2 text-xs">
-            <p>Starting blocks: {currentStepIndex === 0 ? 'Capture the starter workspace below.' : 'Inherited automatically from previous solutions.'}</p>
-            <button onClick={() => onLoadInitial(activeFilename)} className="underline">Load starting blocks</button>
-            {currentStepIndex === 0 && <button onClick={() => onCaptureInitial(activeFilename)} className="underline">Capture workspace as starting blocks</button>}
-          </div>
-          {/* Capture the active file's solution for this step */}
-          <div className="bg-slate-50 rounded-xl p-3 border border-slate-200 space-y-2">
-            <p className="text-xs font-bold text-slate-700">
-              Solution for <span className="text-indigo-600">{activeFilename}</span>
-            </p>
-            {activeExpected ? (
-              <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">
-                <Check size={13} className="text-emerald-600 shrink-0" />
-                <span className="text-xs text-emerald-700 font-semibold flex-1">Captured for this step</span>
-                <button onClick={() => onClearCapture(activeFilename)} className="text-[11px] text-red-400 hover:text-red-600 font-semibold">
-                  Clear
-                </button>
-              </div>
-            ) : (
-              <button
-                onClick={() => onCapture(activeFilename)}
-                className="w-full py-2 text-xs font-bold border-2 border-dashed border-indigo-300 text-indigo-600 rounded-lg hover:bg-indigo-50 transition-colors"
-              >
-                📸 Capture this file as the step's solution
-              </button>
-            )}
-            <p className="text-[11px] text-slate-400">
-              Uncaptured files here inherit content from the nearest earlier step (or the file's starting content).
-            </p>
-          </div>
-
-          {activeExpected && <div className="space-y-2 text-xs">
-            <button className="underline" onClick={() => onCapture(activeFilename)}>Recapture edited solution</button>
-            <label className="font-bold">Validation tests (JSON)</label>
-            <p>Use [] for source-code equality. Flexible example: {JSON.stringify([{type:'htmlText',selector:'h1',value:'Welcome',message:'Add a Welcome heading'}])}</p>
-            <textarea aria-label="Validation tests" rows={7} className="w-full border p-2 font-mono" value={testsText} onChange={e => onDraftTests(activeFilename, e.target.value)} />
-            <p className="text-slate-500">Save and Publish also apply your edited tests.</p>
-            <button className="underline" onClick={() => { try { onSetTests(activeFilename, JSON.parse(testsText)); toast.success('Tests applied') } catch (e) { toast.error(e.message) } }}>Apply tests</button>
-            <label className="flex items-start gap-2"><input type="checkbox" checked={activeExpected.requireStructure === true} onChange={e => onSetStructure(activeFilename, e.target.checked)} /><span>Also require the captured block types and nesting</span></label>
-          </div>}
+          <CaptureValidationPanel
+            key={`${currentStepIndex}:${activeFilename}`}
+            filename={activeFilename || ''}
+            initialCaptured={Object.hasOwn(currentStep?.initialByFile ?? {}, activeFilename)}
+            expected={activeExpected}
+            onCaptureInitial={() => onCaptureInitial(activeFilename)}
+            onLoadInitial={() => onLoadInitial(activeFilename)}
+            onCaptureExpected={() => onCapture(activeFilename)}
+            onLoadExpected={() => onLoadExpected(activeFilename)}
+            onClearExpected={() => onClearCapture(activeFilename)}
+            onTestsChange={tests => onSetTests(activeFilename, tests)}
+            draft={currentStep?.testDraftByFile?.[activeFilename]}
+            onDraftChange={text => onDraftTests(activeFilename, text)}
+            pickerHtml={pickerHtml}
+          />
           {/* Status checklist across all files */}
           {files.length > 1 && (
             <div className="space-y-1.5">
@@ -386,6 +361,11 @@ export default function TutorialBuilderPage({ context = "teacher" }) {
     if (activeFilename === filename) setActiveFilename(remaining[0]?.filename ?? null)
   }, [builder, activeFilename])
 
+  const refreshActiveCode = filename => {
+    const code = codeGeneratorService.generateCode(workspace.getWorkspace(), filename)
+    setFilesWithCode(previous => previous.map(file => file.filename === filename ? { ...file, generatedCode: code } : file))
+  }
+
   // ── Capture / clear ─────────────────────────────────────────────────────
   const handleCapture = useCallback((filename) => {
     builder.captureActiveFile(filename)
@@ -440,6 +420,9 @@ export default function TutorialBuilderPage({ context = "teacher" }) {
     .map((f) => ({ id: f.filename, filename: f.filename }))
 
   const currentFileCode = filesWithCode.find((f) => f.filename === activeFilename)?.generatedCode || ''
+  const pickerHtml = useMemo(() => codeGeneratorService.combineFilesForPreview(
+    builder.getExpectedFilesWithCodeForStep(builder.currentStepIndex), activeFilename?.endsWith('.html') ? activeFilename : previewFilename,
+  ), [builder.getExpectedFilesWithCodeForStep, builder.currentStepIndex, builder.currentStep?.expectedByFile, builder.currentStep?.initialByFile, builder.files, activeFilename, previewFilename])
 
   
   useRemiHighlight(
@@ -506,10 +489,11 @@ export default function TutorialBuilderPage({ context = "teacher" }) {
             currentStep={builder.currentStep}
             onUpdateCurrentStep={builder.updateCurrentStep}
             onCaptureInitial={builder.captureInitial}
-            onLoadInitial={builder.loadInitial}
+            onLoadInitial={filename => { builder.loadInitial(filename); refreshActiveCode(filename) }}
             onSetTests={builder.setTests}
             onDraftTests={builder.setTestsDraft}
-            onSetStructure={builder.setStructureRequirement}
+            onLoadExpected={filename => { builder.loadExpected(filename); refreshActiveCode(filename) }}
+            pickerHtml={pickerHtml}
             onCapture={handleCapture}
             onClearCapture={handleClearCapture}
             panelOpen={panelOpen} setPanelOpen={setPanelOpen}

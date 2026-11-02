@@ -5,25 +5,27 @@ import { Slot } from "radix-ui"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-bold ring-offset-background transition-all! focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 uppercase tracking-wide",
+  "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-bold ring-offset-background transition-all! focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 tracking-wide",
   {
     variants: {
       variant: {
-        locked: "bg-neutral-200 text-primary-foreground hover:bg-neutral-200/90 border-neutral-400 border-b-4 hover:border-b-8 active:border-b-0",
-        default: "bg-white text-black border-slate-200 border-2 border-b-4 hover:border-b-8 active:border-b-2 hover:bg-slate-100 text-slate-500",
-        primary: "bg-sky-400 text-primary-foreground hover:bg-sky-400/90 border-sky-500 border-b-4 hover:border-b-8 active:border-b-0",
-        primaryOutline: "bg-white text-sky-500 hover:bg-slate-100",
-        secondary: "bg-green-500 text-primary-foreground hover:bg-green-500/90 border-green-600 border-b-4 hover:border-b-8 active:border-b-0",
-        secondaryOutline: "bg-white text-green-500 hover:bg-slate-100",
-        danger: "bg-rose-500 text-primary-foreground hover:bg-rose-500/90 border-rose-600 border-b-4 hover:border-b-8 active:border-b-0",
-        dangerOutline: "bg-white text-rose-500 hover:bg-slate-100",
-        super: "bg-indigo-500 text-primary-foreground hover:bg-indigo-500/90 border-indigo-600 border-b-4 hover:border-b-8 active:border-b-0",
+        locked: "bg-muted text-muted-foreground shadow-[0_4px_0_0_var(--border)] cursor-not-allowed opacity-75",
+        default: "bg-card text-muted-foreground border border-border shadow-[0_4px_0_0_var(--border)] hover:shadow-[0_5px_0_0_var(--border)] hover:-translate-y-px hover:bg-muted active:translate-y-[4px] active:shadow-none",
+        primary: "bg-primary text-primary-foreground shadow-[0_6px_0_0_var(--primary-depth)] hover:-translate-y-px hover:shadow-[0_7px_0_0_var(--primary-depth)] active:translate-y-[6px] active:shadow-none",
+        primaryOutline: "bg-background border-2 border-primary text-primary hover:bg-brand-200 dark:hover:bg-brand-900/20",
+        secondary: "bg-secondary text-secondary-foreground shadow-[0_6px_0_0_var(--secondary-depth)] hover:-translate-y-px hover:shadow-[0_7px_0_0_var(--secondary-depth)] active:translate-y-[6px] active:shadow-none",
+        secondaryOutline: "bg-background border-2 border-sun-700 text-sun-700 hover:bg-sun-50 dark:hover:bg-sun-700/10",
+        success: "bg-success text-white shadow-[0_6px_0_0_var(--success-depth)] hover:-translate-y-px hover:shadow-[0_7px_0_0_var(--success-depth)] active:translate-y-[6px] active:shadow-none",
+        successOutline: "bg-background border-2 border-success text-success hover:bg-leaf-50 dark:hover:bg-leaf-700/10",
+        danger: "bg-destructive text-white shadow-[0_6px_0_0_var(--destructive-depth)] hover:-translate-y-px hover:shadow-[0_7px_0_0_var(--destructive-depth)] active:translate-y-[6px] active:shadow-none",
+        dangerOutline: "bg-background border-2 border-destructive text-destructive hover:bg-danger-50 dark:hover:bg-danger-700/10",
+        super: "bg-[var(--special)] text-white shadow-[0_6px_0_0_var(--special-depth)] hover:-translate-y-px hover:shadow-[0_7px_0_0_var(--special-depth)] active:translate-y-[6px] active:shadow-none",
         superOutline: "bg-white text-indigo-500 hover:bg-slate-100",
         ghost: "bg-transparent text-slate-500 border-transparent border-0 hover:bg-slate-100",
         sidebar: "bg-transparent text-slate-500 border-2 border-transparent hover:bg-slate-100 transition-none",
         sidebarOutline: "bg-sky-500/15 text-sky-500 border-sky-300 border-2 hover:bg-sky-500/20 transition-none",
-        formalPlain: "bg-white/10 rounded-xl py-5 text-slate-600 border border-border shadow hover:bg-white/50 hover:scale-101",
-        formalPrimary: "bg-sky-600/80 rounded-xl py-5 text-white border border-sky-600 shadow hover:bg-sky-600 hover:scale-101"
+        formalPlain: "bg-card rounded-xl py-5 text-muted-foreground border border-border shadow hover:bg-muted hover:scale-101",
+        formalPrimary: "bg-primary rounded-xl py-5 text-primary-foreground shadow hover:bg-primary-800 hover:scale-101"
       },
       size: {
         default:

@@ -7,7 +7,7 @@ export async function fetchBlockTutorialByLessonId(lessonId) {
       id, title, topics_id, base_xp, is_published, updated_at,
       tutorials (
         id, type,
-        block_tutorial_steps ( id, instruction, hint, order, highlight_category_path, highlight_block_type ),
+        block_tutorial_steps ( id, instruction, hint, order, highlight_category_path, highlight_block_type, initial_files ),
         block_tutorial_step_files ( id, filename, file_type, initial_content_json )
       )
     `)

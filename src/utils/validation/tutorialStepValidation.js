@@ -27,7 +27,7 @@ export function validateTutorialStep({ files, expected, mode = 'block', fileDefi
 
 export function validateTutorialReference(solution, mode = 'block') {
   validateTestCases(solution.test_cases ?? [])
-  if (typeof solution.expected_code !== 'string' || !solution.expected_code.trim()) throw new Error('Capture a nonempty reference solution')
+  if (typeof solution.expected_code !== 'string' || (!solution.expected_code.trim() && !solution.test_cases?.some(test => test.type === 'generatedChanges'))) throw new Error('Capture a nonempty reference solution')
   const filename = solution.filename ?? 'index.html'
   const result = validateTutorialStep({
     mode,

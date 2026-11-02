@@ -39,10 +39,12 @@ export const tutorialBuilderStore = create((set) => ({
       const expectedByFile = { ...step.expectedByFile }
       const workingState = { ...step.workingState }
       const testDraftByFile = { ...step.testDraftByFile }
+      const initialByFile = { ...step.initialByFile }
       delete expectedByFile[filename]
       delete workingState[filename]
       delete testDraftByFile[filename]
-      return { ...step, expectedByFile, workingState, testDraftByFile }
+      delete initialByFile[filename]
+      return { ...step, expectedByFile, workingState, testDraftByFile, initialByFile }
     }),
     dirty: true,
   })),

@@ -17,8 +17,10 @@ import ForgotPassword from '../pages/auth/ForgotPassword'
 import NotificationEntry from '../pages/app/NotificationEntry'
 const ClassroomPostPage = lazy(() => import('../pages/app/ClassroomPostPage'))
 const RemiDemo = lazy(() => import('../pages/public/RemiDemo'))
+const ButtonGallery = lazy(() => import('../pages/dev/ButtonGallery'))
 
 const router = createBrowserRouter([
+  { path: '/dev/buttons', element: <ButtonGallery /> },
   { path: '/classroom-posts/:postId', element: <ClassroomPostPage />, errorElement: <ErrorPage /> },
   { path: '/', element: <Navigate to="/login" replace />, errorElement: <ErrorPage/> },
   {element:<PublicRoute/>, errorElement:<ErrorPage/>, children:[

@@ -95,7 +95,7 @@ const LecturePage = ({ context = "teacher" }) => {
       />
 
       <div className="z-10 h-full w-full overflow-y-auto">
-        <div className="top-1 sticky shrink-0 flex items-center gap-3 px-4 py-2.5 ">
+        <div className="top-0 sticky shrink-0 flex items-center gap-3 px-4 py-2.5 z-10 backdrop-blur-md">
           <Link to="/"><img src="/icon.png" alt="icon image" className='w-8 h-8' /></Link>
           <BackButton />
           {!isAdmin && !isEditMode && !new URLSearchParams(location.search).get("classroomId") && <p className="text-sm text-muted-foreground">Open a classroom to create a lesson for its topics. <Link to="/teacher/classrooms" className="underline">Choose classroom</Link></p>}
@@ -108,12 +108,12 @@ const LecturePage = ({ context = "teacher" }) => {
               Master Content
             </span>
           )}
-          <div className='ml-auto flex truncate gap-1.5'>
+          <div className='ml-auto justify-center items-center flex gap-1.5'>
             <Button variant='ghost'>
               <Sun size={20}/>Light Mode
             </Button>
-            <Button variant="primary" onClick={() => setShowPreviewDialog(true)}>Preview</Button>
-            <Button variant="secondary" onClick={handleSaveLecture} disabled={saving}>
+            <Button variant="primaryOutline" onClick={() => setShowPreviewDialog(true)}>Preview</Button>
+            <Button variant="primary" onClick={handleSaveLecture} disabled={saving}>
               {saving ? (isEditMode ? "Updating..." : "Saving...") : (isEditMode ? "Update Lecture" : "Save Lecture")}
             </Button>
           </div>
@@ -208,8 +208,8 @@ const LecturePage = ({ context = "teacher" }) => {
             </div>
           </CardContent>
           <CardFooter className="self-end gap-2">
-            <Button variant="primary" onClick={() => setShowPreviewDialog(true)}>Preview</Button>
-            <Button variant="secondary" onClick={handleSaveLecture} disabled={saving}>
+            <Button variant="primaryOutline" onClick={() => setShowPreviewDialog(true)}>Preview</Button>
+            <Button variant="primary" onClick={handleSaveLecture} disabled={saving}>
               {saving ? (isEditMode ? "Updating..." : "Saving...") : (isEditMode ? "Update Lecture" : "Save Lecture")}
             </Button>
           </CardFooter>

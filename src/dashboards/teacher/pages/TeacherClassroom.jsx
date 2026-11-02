@@ -11,6 +11,7 @@ import { Button } from '#components/ui/button'
 import { useClassroom } from '#hooks/useClassroom'
 import ClassroomCard from '../components/ClassroomCard'
 import { getClassroomListMetrics } from '../../../services/classroomService'
+import { PageHeader } from '#components/common/PageHeader'
 
 export default function TeacherClassrooms() {
   const [showCreate, setShowCreate] = useState(false)
@@ -47,24 +48,8 @@ export default function TeacherClassrooms() {
   }
 
   return (
-    <div className='p-6 space-y-6'>
-      <AppBreadcrumb
-        items={[
-          { label: 'Home', href: '/teacher' },
-          { label: 'Classrooms', href: '/teacher/classrooms' },
-        ]}
-      />
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="font-display text-2xl font-semibold">My Classrooms</h2>
-          <p className="mt-1 text-sm text-muted-foreground">Create and manage classrooms to track your student's progress</p>
-        </div>
-        <Button variant="primary" onClick={() => setShowCreate(true)}>
-          <Plus className="w-4 h-4" />
-          New Classroom
-        </Button>
-      </div>
-      <p className="text-sm text-muted-foreground">Progress measures completed published activities across current classroom members.</p>
+    <div className='mx-auto w-full max-w-[1600px] p-4 sm:p-6 lg:p-8'>
+      <PageHeader title="My Classrooms" description="Create and manage classrooms to track your student's progress" action={{icon:<Plus className='w-4 h-4'/>, label: 'New Classroom', onClick: () => setShowCreate(true)}} />
       {metricsError && <p role="alert" className="text-sm text-red-700">Could not load classroom progress: {metricsError} <button className="underline" onClick={() => setMetricsRetry(value => value + 1)}>Retry</button></p>}
       {loading ? (
         <div className="flex justify-center py-24">
@@ -102,6 +87,7 @@ export default function TeacherClassrooms() {
           ))}
         </div>
       )}
+      <p className="text-sm text-muted-foreground mt-4">Progress measures completed published activities across current classroom members.</p>
 
       {showCreate && (
         <CreateClassroomModal

@@ -1,0 +1,8 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Project preview regression checks</title></head><body style="margin:24px;font-family:Arial"><h1>Project preview regression checks</h1><button id="run">Capture website</button><p id="result">Ready to capture</p><img id="screenshot" style="width:640px;border:1px solid #888"/><div id="blocks"></div><script type="module">
+import RefreshRuntime from '/@react-refresh';
+RefreshRuntime.injectIntoGlobalHook(window);
+window.$RefreshReg$ = () => {};
+window.$RefreshSig$ = () => (type) => type;
+window.__vite_plugin_react_preamble_installed__ = true;
+await import('./thumbnail-browser.jsx');
+</script></body></html>

@@ -75,14 +75,6 @@ export const projectService = {
     return data
   },
 
-  async updateProjectGeneratedHtml(projectId, html) {
-    const { error } = await supabase
-      .from('projects')
-      .update({ generated_html: html, updated_at: new Date().toISOString() })
-      .eq('id', projectId)
-    if (error) throw error
-  },
-
   async getPublicProjectsByUser(userId) {
     const { data, error } = await supabase
       .from('projects')

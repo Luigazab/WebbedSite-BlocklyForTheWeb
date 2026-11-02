@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useSearchParams } from 'react-router'
 import { toast } from 'sonner'
 import CreateProjectModal from './CreateProjectModal'
@@ -8,18 +8,18 @@ import TourSpotlight from '../tour/TourSpotlight'
 import { projectsTourSteps } from '../../dashboards/student/tours/projectsTour'
 import { projectService } from '../../services/project.service'
 import {
-  Search, ChevronDown, Image as ImageIcon,
-  ThumbsUp, MessageSquare, Loader2, RefreshCw,
-  FoldersIcon,
-  Plus,
+  Search, Image as ImageIcon, ThumbsUp, MessageSquare,
+  RefreshCw, FoldersIcon, Plus,
 } from 'lucide-react'
 import { useLikes } from '../../hooks/useLikes'
 import { PageHeader } from '#components/common/PageHeader'
+import { Button } from '#components/ui/button'
 
 const FILTERS      = ['All', 'Personal', 'Tutorial', 'Laboratory', 'Public', 'Private']
 const SORT_OPTIONS = ['Recent', 'Name', 'Most Liked']
 
-
+// Shared by the real grid and the loading skeleton so they never drift apart
+const GRID = 'grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
 
 export default function ProjectsPage() {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -32,16 +32,16 @@ export default function ProjectsPage() {
   const [search,          setSearch]          = useState('')
   const [filter,          setFilter]          = useState('All')
   const [sortBy,          setSortBy]          = useState('Recent')
-  const [showFilterMenu,  setShowFilterMenu]  = useState(false)
-  const [showSortMenu,    setShowSortMenu]    = useState(false)
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [selectedProject, setSelectedProject] = useState(null)
+
+  // Deep link: /projects?project=<id>
   useEffect(() => {
     if (!linkedProjectId) return
     let active = true
-    projectService.getProjectById(linkedProjectId).then(project => {
-      if (active) setSelectedProject(project)
-    }).catch(() => { if (active) toast.error('This project was removed or is no longer accessible.') })
+    projectService.getProjectById(linkedProjectId)
+      .then((project) => { if (active) setSelectedProject(project) })
+      .catch(() => { if (active) toast.error('This project was removed or is no longer accessible.') })
     return () => { active = false }
   }, [linkedProjectId])
 
@@ -49,8 +49,7 @@ export default function ProjectsPage() {
     setLoading(true)
     setError(null)
     try {
-      const data = await projectService.getUserProjects({ filter, sortBy })
-      setProjects(data)
+      setProjects(await projectService.getUserProjects({ filter, sortBy }))
     } catch (err) {
       setError(err.message)
     } finally {
@@ -60,10 +59,20 @@ export default function ProjectsPage() {
 
   useEffect(() => { fetchProjects() }, [fetchProjects])
 
-  const displayed = projects.filter((p) =>
-    p.title.toLowerCase().includes(search.toLowerCase()) ||
-    (p.description || '').toLowerCase().includes(search.toLowerCase())
-  )
+  useEffect(() => {
+    if (localStorage.getItem('tour_projects_completed')) return
+    const timer = setTimeout(() => startTour('projects'), 500)
+    return () => clearTimeout(timer)
+  }, [startTour])
+
+  const displayed = useMemo(() => {
+    const q = search.trim().toLowerCase()
+    if (!q) return projects
+    return projects.filter((p) =>
+      (p.title || '').toLowerCase().includes(q) ||
+      (p.description || '').toLowerCase().includes(q)
+    )
+  }, [projects, search])
 
   const handleProjectCreated = () => {
     setShowCreateModal(false)
@@ -75,8 +84,9 @@ export default function ProjectsPage() {
       await projectService.deleteProject(projectId)
       setProjects((prev) => prev.filter((p) => p.id !== projectId))
       setSelectedProject(null)
+      toast.success('Project deleted')
     } catch (err) {
-      console.error('Delete failed:', err.message)
+      toast.error(`Couldn’t delete the project: ${err.message}`)
     }
   }
 
@@ -85,183 +95,145 @@ export default function ProjectsPage() {
       const updated = await projectService.toggleVisibility(project.id, !project.is_public)
       setProjects((prev) => prev.map((p) => (p.id === updated.id ? updated : p)))
       setSelectedProject(updated)
+      toast.success(updated.is_public ? 'Project is now public' : 'Project is now private')
     } catch (err) {
-      console.error('Visibility toggle failed:', err.message)
+      toast.error(`Couldn’t change visibility: ${err.message}`)
     }
-  }
-  const handleLikeToggled = (projectId, newCount) => {
-    setProjects(prev =>
-      prev.map(p => p.id === projectId ? { ...p, likes_count: newCount } : p)
-    )
   }
 
-  // const handleCommentsCountChanged = (projectId, delta) => {
-  //   setProjects(prev =>
-  //     prev.map(p => p.id === projectId
-  //       ? { ...p, comments_count: (p.comments_count || 0) + delta }
-  //       : p
-  //     )
-  //   )
-  // }
-  useEffect(() => {
-    const hasSeenTour = localStorage.getItem('tour_projects_completed')
-    if (!hasSeenTour) {
-      setTimeout(() => startTour('projects'), 500)
-    }
-  }, [startTour])
+  const handleLikeToggled = (projectId, newCount) => {
+    setProjects((prev) => prev.map((p) => (p.id === projectId ? { ...p, likes_count: newCount } : p)))
+  }
+
+  const closeDetails = () => {
+    setSelectedProject(null)
+    setSearchParams((params) => { params.delete('project'); return params }, { replace: true })
+  }
+
+  const isFiltering = Boolean(search.trim())
 
   return (
-    <div className='p-8'>
-      <PageHeader
-        title="Projects"
-        description="View all projects you have"
-      />
-      <div className="flex flex-col gap-6">
+    <div className="mx-auto w-full max-w-[1600px] p-4 sm:p-6 lg:p-8">
+      <PageHeader title="Projects" description="View all projects you have" action={{label: "New Project", icon: <Plus className='size-4'/>, onClick: () => setShowCreateModal(true)}} />
 
-        {/* ── Controls bar ─────────────────────────────────── */}
-        <div className="flex flex-wrap items-center gap-3">
+      <div className="mt-6 flex flex-col gap-6">
+        {/* ── Toolbar ───────────────────────────────────────── */}
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Search */}
+            <div className="relative min-w-56 flex-1" data-tour="search-input">
+              <Search aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+              <input
+                type="search"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search projects…"
+                aria-label="Search projects"
+                className="h-10 w-full rounded-lg border border-slate-300 bg-white pl-9 pr-4 text-sm transition focus:border-blockly-purple focus:outline-none focus:ring-2 focus:ring-blockly-purple/10"
+              />
+            </div>
 
-          {/* Filter */}
-          <div className="relative" data-tour="filter-dropdown">
-            <button
-              onClick={() => { setShowFilterMenu(!showFilterMenu); setShowSortMenu(false) }}
-              className="btn flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold btn-lead"
+            {/* Sort */}
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              aria-label="Sort projects"
+              className="h-10 rounded-lg border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 focus:border-blockly-purple focus:outline-none focus:ring-2 focus:ring-blockly-purple/10"
             >
-              {filter}<ChevronDown className="w-5 h-5" />
+              {SORT_OPTIONS.map((s) => <option key={s} value={s}>{s === 'Recent' ? 'Sort: Recent' : s}</option>)}
+            </select>
+
+            {/* Refresh */}
+            <button
+              type="button"
+              onClick={fetchProjects}
+              disabled={loading}
+              aria-label="Refresh projects"
+              title="Refresh"
+              className="flex size-10 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-500 transition hover:bg-slate-50 disabled:opacity-60"
+            >
+              <RefreshCw aria-hidden="true" className={`size-4 ${loading ? 'animate-spin' : ''}`} />
             </button>
-            {showFilterMenu && (
-              <div className="absolute top-full left-0 mt-1 w-40 bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden z-10">
-                {FILTERS.map((f) => (
-                  <button
-                    key={f}
-                    onClick={() => { setFilter(f); setShowFilterMenu(false) }}
-                    className={`w-full px-4 py-2.5 text-sm text-left transition-colors
-                      ${filter === f
-                        ? 'bg-blockly-purple/10 text-blockly-purple font-semibold'
-                        : 'text-gray-600 hover:bg-gray-50'}`}
-                  >
-                    {f}
-                  </button>
-                ))}
-              </div>
+          </div>
+
+          {/* Filters + result count */}
+          <div className="flex items-center justify-between gap-4">
+            <div
+              role="group"
+              aria-label="Filter projects"
+              data-tour="filter-dropdown"
+              className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1"
+            >
+              {FILTERS.map((f) => (
+                <button
+                  key={f}
+                  type="button"
+                  aria-pressed={filter === f}
+                  onClick={() => setFilter(f)}
+                  className={`shrink-0 rounded-full border px-4 py-1.5 text-sm font-semibold transition-colors ${
+                    filter === f
+                      ? 'border-secondary bg-secondary/60 text-secondary-foreground'
+                      : 'border-slate-300 bg-white text-slate-600 hover:bg-slate-50'
+                  }`}
+                >
+                  {f}
+                </button>
+              ))}
+            </div>
+            {!loading && !error && (
+              <p aria-live="polite" className="hidden shrink-0 text-sm text-slate-500 sm:block">
+                {displayed.length} {displayed.length === 1 ? 'project' : 'projects'}
+              </p>
             )}
           </div>
-
-          {/* Sort */}
-          <div className="relative">
-            <button
-              onClick={() => { setShowSortMenu(!showSortMenu); setShowFilterMenu(false) }}
-              className="btn flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold btn-lead"
-            >
-              {sortBy}<ChevronDown className="w-4 h-4" />
-            </button>
-            {showSortMenu && (
-              <div className="absolute top-full left-0 mt-1 w-44 bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden z-10">
-                {SORT_OPTIONS.map((s) => (
-                  <button
-                    key={s}
-                    onClick={() => { setSortBy(s); setShowSortMenu(false) }}
-                    className={`w-full px-4 py-2.5 text-sm text-left transition-colors
-                      ${sortBy === s
-                        ? 'bg-blockly-purple/10 text-blockly-purple font-semibold'
-                        : 'text-gray-600 hover:bg-gray-50'}`}
-                  >
-                    {s}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Search */}
-          <div className="flex-1 relative min-w-48" data-tour="search-input">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search projects…"
-              className="w-full pl-9 pr-4 py-4 bg-white text-sm border border-slate-400 rounded-lg focus:outline-none focus:border-blockly-purple focus:ring-2 focus:ring-blockly-purple/10 transition"
-            />
-          </div>
-
-          {/* Refresh */}
-          <button
-            onClick={fetchProjects}
-            className="p-2 rounded-lg hover:bg-gray-100 transition text-gray-500"
-            title="Refresh"
-          >
-            <RefreshCw className="w-4 h-4" />
-          </button>
-
-          {/* Create */}
-          <button
-            onClick={() => setShowCreateModal(true)}
-            data-tour="create-button"
-            className="btn btn-primary text-lg flex items-center gap-2"
-          >
-            <Plus className="w-4 h-4" />
-            New Project
-          </button>
         </div>
 
-        {/* ── Project Grid ─────────────────────────────────── */}
+        {/* ── Content ───────────────────────────────────────── */}
         {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div key={i} className="h-48 bg-white rounded-2xl border border-slate-200 animate-pulse" />
-            ))}
+          <div className={GRID} aria-busy="true" aria-label="Loading projects">
+            {Array.from({ length: 8 }).map((_, i) => <ProjectSkeleton key={i} />)}
           </div>
         ) : error ? (
-          <div className="flex flex-col bg-slate-200 rounded-3xl items-center justify-center py-12 gap-4 text-center">
-            <p className="text-red-500 font-semibold">Failed to load projects</p>
-            <p className="text-sm text-slate-400">{error}</p>
-            <button onClick={fetchProjects} className="btn btn-primary text-sm">Try Again</button>
-          </div>
+          <StateMessage
+            title="Failed to load projects"
+            titleClassName="text-red-600"
+            description={error}
+            action={<Button type="button" onClick={fetchProjects} variant='primary'>Try again</Button>}
+          />
         ) : displayed.length === 0 ? (
-          <div className="flex flex-col bg-slate-200 rounded-3xl items-center justify-center py-12 gap-4">
-            <div className="text-5xl mb-4 text-blockly-light bg-blockly-purple p-4 rounded-xl"><FoldersIcon size={48}/></div>
-            <div className='flex flex-col items-center'>
-              <p className="text-lg font-bold text-slate-700">
-                {search ? 'No projects match your search' : 'No saved projects yet'}
-              </p>
-              <p className="text-sm text-slate-700">
-                {search ? 'Try a different keyword' : 'Create one to get started!'}
-              </p>
-            </div>
-            {!search && (
-              <button
-                onClick={() => setShowCreateModal(true)}
-                className="px-4 btn py-2 btn-lead text-sm font-semibold rounded-lg"
-              >
+          <StateMessage
+            icon={<FoldersIcon size={40} aria-hidden="true" />}
+            title={isFiltering ? 'No projects match your search' : filter !== 'All' ? `No ${filter.toLowerCase()} projects yet` : 'No saved projects yet'}
+            description={isFiltering ? 'Try a different keyword.' : filter !== 'All' ? 'Try another filter, or create a new project.' : 'Create one to get started!'}
+            action={!isFiltering && (
+              <Button type="button" onClick={() => setShowCreateModal(true)} variant='primary'>
                 Create new
-              </button>
+              </Button>
             )}
-          </div>
+          />
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 p-2 rounded-2xl">
+          <div className={GRID}>
             {displayed.map((project) => (
               <ProjectCard
                 key={project.id}
                 project={project}
-                onClick={() => setSelectedProject(project)}
+                onOpen={() => setSelectedProject(project)}
+                onLikeToggled={handleLikeToggled}
               />
             ))}
           </div>
         )}
       </div>
 
-      {/* ── Modals ───────────────────────────────────────────── */}
+      {/* ── Modals ──────────────────────────────────────────── */}
       {showCreateModal && (
-        <CreateProjectModal
-          onClose={() => setShowCreateModal(false)}
-          onCreated={handleProjectCreated}
-        />
+        <CreateProjectModal onClose={() => setShowCreateModal(false)} onCreated={handleProjectCreated} />
       )}
 
       {selectedProject && (
         <ProjectDetailsModal
           project={selectedProject}
-          onClose={() => { setSelectedProject(null); setSearchParams(params => { params.delete('project'); return params }, { replace: true }) }}
+          onClose={closeDetails}
           onDelete={() => handleDeleteProject(selectedProject.id)}
           onToggleVisibility={() => handleToggleVisibility(selectedProject)}
           onLikeToggled={handleLikeToggled}
@@ -273,89 +245,124 @@ export default function ProjectsPage() {
 }
 
 // ─────────────────────────────────────────────────────────────
-// Project Card
+// Shared pieces
 // ─────────────────────────────────────────────────────────────
-function ProjectCard({ project, onClick }) {
-  const [isHovering, setIsHovering] = useState(false)
-  const [likesCount, setLikesCount] = useState(project.likes_count || 0)
-  const { toggleLike } = useLikes([project.id])
+function StateMessage({ icon, title, titleClassName = 'text-slate-700', description, action }) {
+  return (
+    <div className="flex flex-col items-center justify-center gap-4 rounded-3xl border border-dashed border-border bg-muted px-6 py-14 text-center">
+      {icon && <div className="rounded-xl bg-primary p-4 text-primary-foreground">{icon}</div>}
+      <div className="flex flex-col items-center gap-1">
+        <p className={`text-lg font-bold ${titleClassName}`}>{title}</p>
+        {description && <p className="text-sm text-muted-foreground">{description}</p>}
+      </div>
+      {action}
+    </div>
+  )
+}
 
-  const handleLike = async (e) => {
-    e.stopPropagation() 
-    
+function ProjectSkeleton() {
+  return (
+    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+      <div className="aspect-video animate-pulse bg-slate-200" />
+      <div className="space-y-3 p-4">
+        <div className="h-4 w-2/3 animate-pulse rounded bg-slate-200" />
+        <div className="h-3 w-full animate-pulse rounded bg-slate-100" />
+        <div className="h-3 w-1/3 animate-pulse rounded bg-slate-100" />
+      </div>
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────
+// Project Card
+//   The title button is stretched over the whole card (after:inset-0),
+//   so the card opens on click while the like button stays a separate,
+//   keyboard-reachable control instead of being nested inside a button.
+// ─────────────────────────────────────────────────────────────
+function ProjectCard({ project, onOpen, onLikeToggled }) {
+  const [liking, setLiking] = useState(false)
+  const { toggleLike } = useLikes([project.id])
+  const likesCount = project.likes_count || 0
+
+  const handleLike = async () => {
+    if (liking) return
+    setLiking(true)
     try {
       const nowLiked = await toggleLike(project.id)
-      setLikesCount(prev => nowLiked ? prev + 1 : prev - 1)
-    } catch (error) {
-      console.error('Error toggling like:', error)
+      onLikeToggled(project.id, Math.max(0, nowLiked ? likesCount + 1 : likesCount - 1))
+    } catch (err) {
+      toast.error('Couldn’t update your like. Please try again.')
+      console.error('Error toggling like:', err)
+    } finally {
+      setLiking(false)
     }
   }
 
-
   return (
-    <button
-      onClick={onClick}
-      onMouseEnter={() => setIsHovering(true)}
-      onMouseLeave={() => setIsHovering(false)}
-      className="bg-white rounded-2xl  hover:btn shadow p-2 border border-white overflow-hidden hover:border-blockly-purple hover:border hover:shadow-5xl transition-all! text-left group"
-    >
+    <article className="group relative flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-blockly-purple hover:shadow-md">
       {/* Thumbnail */}
-      <div className="aspect-video bg-linear-to-b from-green-50 to-amber-50 flex items-center justify-center overflow-hidden relative">
+      <div className="relative aspect-video overflow-hidden bg-linear-to-b from-green-50 to-amber-50">
         {project.thumbnail_url ? (
-          <>
-            <img
-              src={project.thumbnail_url}
-              alt={project.title}
-              className={`w-full h-full object-contain group-hover:scale-105 transition-all! duration-300! ${
-                isHovering ? 'opacity-0' : 'opacity-100'
-              }`}
-            />
-            {/* {isHovering && project.generated_html && (
-              <iframe
-                srcDoc={project.generated_html}
-                className="absolute inset-0 w-full h-full border-0 pointer-events-none"
-                sandbox="allow-scripts"
-                title={`Preview of ${project.title}`}
-              />
-            )} */}
-          </>
+          <img
+            src={project.thumbnail_url}
+            alt=""
+            loading="lazy"
+            className="size-full object-contain transition-transform duration-300 group-hover:scale-105"
+          />
         ) : (
-          <ImageIcon className="w-12 h-12 text-slate-500" />
+          <div className="flex size-full items-center justify-center">
+            <ImageIcon aria-hidden="true" className="size-12 text-slate-400" />
+          </div>
         )}
+        <span
+          className={`absolute left-2.5 top-2.5 rounded-full px-2.5 py-0.5 text-[11px] font-semibold shadow-sm ${
+            project.is_public ? 'bg-green-100 text-green-700' : 'bg-white/90 text-slate-600'
+          }`}
+        >
+          {project.is_public ? 'Public' : 'Private'}
+        </span>
       </div>
 
       {/* Content */}
-      <div className="p-4 flex flex-col gap-2">
-        <div className="flex items-start justify-between gap-2">
-          <h3 className="font-bold text-gray-800 text-sm truncate flex-1">{project.title}</h3>
-          <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full shrink-0 ${
-            project.is_public
-              ? 'bg-green-100 text-green-700'
-              : 'bg-gray-100 text-gray-500'
-          }`}>
-            {project.is_public ? 'Public' : 'Private'}
-          </span>
-        </div>
-        {project.description && (
-          <p className="text-xs text-slate-400 line-clamp-2">{project.description || 'No description'}</p>
-        )}
+      <div className="flex flex-1 flex-col gap-1.5 p-4">
+        <h3 className="min-w-0">
+          <button
+            type="button"
+            onClick={onOpen}
+            className="w-full truncate text-left text-sm font-bold text-slate-800 after:absolute after:inset-0 after:rounded-2xl focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-blockly-purple"
+          >
+            {project.title}
+          </button>
+        </h3>
 
-        <div className="flex items-center gap-4 text-xs text-slate-400 mt-1">
-          <div className="flex items-center gap-1.5">
-            <ThumbsUp className="w-3.5 h-3.5" onClick={handleLike}/>
-            <span>{likesCount}</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <MessageSquare className="w-3.5 h-3.5" />
-            <span>{project.comments_count ?? 0}</span>
-          </div>
+        <p className={`line-clamp-2 min-h-8 text-xs leading-4 ${project.description ? 'text-slate-500' : 'italic text-slate-400'}`}>
+          {project.description || 'No description'}
+        </p>
+
+        <div className="mt-auto flex items-center gap-4 border-t border-slate-100 pt-3 text-xs text-slate-500">
+          <button
+            type="button"
+            onClick={handleLike}
+            disabled={liking}
+            aria-label={`Like ${project.title}. ${likesCount} likes`}
+            className="relative z-10 -m-1 flex items-center gap-1.5 rounded-md p-1 transition-colors hover:bg-blockly-purple/10 hover:text-blockly-purple focus-visible:outline-2 focus-visible:outline-blockly-purple disabled:opacity-60"
+          >
+            <ThumbsUp aria-hidden="true" className="size-3.5" />
+            <span className="tabular-nums">{likesCount}</span>
+          </button>
+
+          <span className="flex items-center gap-1.5" aria-label={`${project.comments_count ?? 0} comments`}>
+            <MessageSquare aria-hidden="true" className="size-3.5" />
+            <span className="tabular-nums">{project.comments_count ?? 0}</span>
+          </span>
+
           {project.updated_at && (
-            <span className="ml-auto text-[10px] text-slate-500">
-              {new Date(project.updated_at).toLocaleDateString()}
-            </span>
+            <time dateTime={project.updated_at} className="ml-auto text-[11px] text-slate-500">
+              {new Date(project.updated_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+            </time>
           )}
         </div>
       </div>
-    </button>
+    </article>
   )
 }

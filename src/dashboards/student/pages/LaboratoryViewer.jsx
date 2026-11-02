@@ -137,6 +137,18 @@ const LaboratoryViewer = ({ lesson, onNext, onBack, navigation, preview = false 
   };
 
   const checkObjectives = () => {
+    if (lab.codeValidation?.version === 1) {
+      const failures = [];
+      for (const [filename, expected] of Object.entries(lab.codeValidation.expectedByFile ?? {})) {
+        const file = files.find(item => item.filename === filename);
+        if (!file) { failures.push(`Add ${filename}.`); continue; }
+        const code = file.id === activeFileId && workspace.getWorkspace()
+          ? codeGeneratorService.generateCode(workspace.getWorkspace(), filename)
+          : codeGeneratorService.generateCodeFromState(file.blocks_json, filename);
+        failures.push(...validateTutorialCode(code, expected.code, expected.testCases).failures.map(message => `${filename}: ${message}`));
+      }
+      return { passed: failures.length === 0, failures };
+    }
     const expectedFile = files.find(file => file.filename === (lab.expectedFilename || files[0]?.filename));
     const state = expectedFile?.id === activeFileId ? workspace.getWorkspaceState?.() : expectedFile?.blocks_json;
     const structure = validateWorkspaceStructure(state, lab.expectedBlocks);
@@ -158,7 +170,7 @@ const LaboratoryViewer = ({ lesson, onNext, onBack, navigation, preview = false 
   };
 
   const checkWork = async () => {
-    if (!lab.expectedBlocks) {
+    if (!lab.expectedBlocks && !lab.codeValidation?.expectedByFile) {
       addToast("No validator was saved for this laboratory yet.", "error");
       return;
     }

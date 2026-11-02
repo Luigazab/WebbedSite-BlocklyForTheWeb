@@ -1,8 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { X, HelpCircle, ThumbsUp, MessageSquare, Monitor, Code, FileCode, Palette, Code2Icon, NotebookText, Eye, EyeOff, Trash2 } from 'lucide-react'
-import * as Blockly from 'blockly/core'
-import 'blockly/blocks'
-import Theme from '@blockly/theme-modern'
+import SavedBlocksPreview from '../editor/SavedBlocksPreview'
 import { formatDistanceToNow } from 'date-fns'
 import { useProjectFiles } from '../../hooks/useProjectFiles'
 import { codeGeneratorService } from '../../services/codeGenerator.service'
@@ -26,54 +24,12 @@ export default function ProjectDetailsModal({ project, onClose, onDelete, onTogg
   const [likesCount, setLikesCount] = useState(project.likes_count || 0)
   const { isLiked, toggleLike } = useLikes([project.id])
   
-  const blocklyDivRef = useRef(null)
-  const workspaceRef = useRef(null)
 
   const profile = useAuthStore((s) => s.profile)
   const { files, activeFile, setActiveFile } = useProjectFiles(project.id)
   const { comments, loading: commentsLoading, loadComments, addComment, deleteComment } = useCommentsStore()
 
   const { activeTour, isVisible, startTour } = useTour()
-
-  function renderBlocklyWorkspace(blocksJson) {
-    if (!blocklyDivRef.current || !blocksJson) return
-
-    try {
-      if (workspaceRef.current) {
-        workspaceRef.current.dispose()
-      }
-
-      const workspace = Blockly.inject(blocklyDivRef.current, {
-        readOnly: true,
-        theme: Theme,
-        renderer: 'custom_renderer',
-        zoom: {
-          controls: true,
-          wheel: true,
-          startScale: 0.8,
-          maxScale: 3,
-          minScale: 0.3,
-          scaleSpeed: 1.2
-        },
-        move: {
-          scrollbars: true,
-          drag: true,
-          wheel: true
-        },
-        sounds: false,
-      })
-
-      workspaceRef.current = workspace
-      Blockly.serialization.workspaces.load(blocksJson, workspace)
-
-      setTimeout(() => {
-        workspace.scrollCenter()
-      }, 100)
-    } catch (error) {
-      console.error('Error rendering Blockly workspace:', error)
-    }
-  }
-
 
   useEffect(() => {
     loadComments(project.id)
@@ -86,22 +42,6 @@ export default function ProjectDetailsModal({ project, onClose, onDelete, onTogg
     return {...file,generatedCode:code}
   }),[files])
   const generatedCode = useMemo(() => codeGeneratorService.combineFilesForPreview(filesWithCode,files.find(file=>file.id===activeFile)?.filename),[filesWithCode,files,activeFile])
-
-  useEffect(() => {
-    if (viewMode === 'blocks' && activeFile && blocklyDivRef.current) {
-      const file = files.find(f => f.id === activeFile)
-      if (file?.blocks_json) {
-        renderBlocklyWorkspace(file.blocks_json)
-      }
-    }
-
-    return () => {
-      if (workspaceRef.current) {
-        workspaceRef.current.dispose()
-        workspaceRef.current = null
-      }
-    }
-  }, [viewMode, activeFile, files])
 
   const handleLike = async () => {
     try {
@@ -188,8 +128,8 @@ export default function ProjectDetailsModal({ project, onClose, onDelete, onTogg
           </div>
         </div>
 
-        <div className="flex-1 overflow-hidden flex gap-6 pt-6">
-          <div className="flex-1 flex">
+        <div className="flex-1 min-h-0 overflow-hidden flex gap-6 pt-6">
+          <div className="flex-1 min-w-0 min-h-0 flex">
             <div data-tour="details-view-tabs" className="flex flex-col mt-10">
               <button
                 onClick={() => setViewMode('preview')}
@@ -216,7 +156,7 @@ export default function ProjectDetailsModal({ project, onClose, onDelete, onTogg
             </div>
 
             {/* Preview/Blocks area */}
-            <div className="flex-1 flex flex-col">
+            <div className="flex-1 min-w-0 min-h-0 flex flex-col">
               {/* ✅ File tabs */}
               {files.length > 0 && (
                 <div data-tour="details-file-tabs" className="flex overflow-x-auto ">
@@ -238,8 +178,8 @@ export default function ProjectDetailsModal({ project, onClose, onDelete, onTogg
               )}
 
               {/* Display area */}
-              <div data-tour="details-preview-area" className="flex-1 border-2 border-slate-600 bg-white overflow-hidden shadow rounded-tr-xl">
-                <div className="flex items-center justify-between gap-2 px-3 py-1.5 border-b border-slate-600 bg-gray-100">
+              <div data-tour="details-preview-area" className="flex flex-col flex-1 min-h-0 border-2 border-slate-600 bg-white overflow-hidden shadow rounded-tr-xl">
+                <div className="shrink-0 flex items-center justify-between gap-2 px-3 py-1.5 border-b border-slate-600 bg-gray-100">
                   <span className="text-xs text-gray-500 font-mono truncate">
                     {files.find(file => file.id === activeFile)?.filename || 'Untitled'}
                   </span>
@@ -260,7 +200,7 @@ export default function ProjectDetailsModal({ project, onClose, onDelete, onTogg
                       srcDoc={buildPreviewDocument(generatedCode)}
                       title={`Preview of ${project.title}`}
                       sandbox={PREVIEW_SANDBOX}
-                      className="w-full h-full border-0"
+                      className="w-full flex-1 min-h-0 border-0"
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center bg-gray-50 text-gray-400">
@@ -268,9 +208,10 @@ export default function ProjectDetailsModal({ project, onClose, onDelete, onTogg
                     </div>
                   )
                 ) : (
-                  <div
-                    ref={blocklyDivRef}
-                    className="w-full h-full bg-gray-50"
+                  <SavedBlocksPreview
+                    key={activeFile}
+                    file={files.find(file => file.id === activeFile)}
+                    files={files}
                   />
                 )}
               </div>

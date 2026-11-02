@@ -1,3 +1,6 @@
+import CaptureValidationPanel from '@/components/editor/CaptureValidationPanel'
+import { capturedTests, countChecks } from '@/utils/validation/generatedCodeChecks'
+import { validateTestCases, validateTutorialCode } from '@/utils/validation/tutorialCodeValidation'
 import AssessmentSettings from '@/components/shared/AssessmentSettings'
 import RubricEditor from '@/components/shared/RubricEditor'
 import { DEFAULT_RUBRIC } from '@/lib/assessment'
@@ -63,6 +66,9 @@ const LaboratoryBuilderPage = ({ context = "teacher" }) => {
   const [loadingLab, setLoadingLab] = useState(isEditMode);
   const [saving, setSaving] = useState(false);
   const [referenceImageUrl, setReferenceImageUrl] = useState("");
+  const [initialFiles, setInitialFiles] = useState(null);
+  const [expectedByFile, setExpectedByFile] = useState({});
+  const [testDrafts, setTestDrafts] = useState({});
   const [expectedBlocks, setExpectedBlocks] = useState(null);
   const [expectedFilename, setExpectedFilename] = useState(null);
   const [requiredSelector, setRequiredSelector] = useState("");
@@ -115,7 +121,8 @@ const LaboratoryBuilderPage = ({ context = "teacher" }) => {
       try {
         const data = await fetchLaboratoryEditorData(id);
         const lab = parseLabInstruction(data.laboratory?.instruction);
-        const loadedFiles = lab.files?.length ? lab.files.map((file) => ({
+        const authorFiles = lab.authorFiles ?? lab.files;
+        const loadedFiles = authorFiles?.length ? authorFiles.map((file) => ({
           id: uid(),
           filename: file.filename,
           blocks_json: file.blocks_json ?? null,
@@ -128,6 +135,8 @@ const LaboratoryBuilderPage = ({ context = "teacher" }) => {
         setSelectedTopicId(data.topics_id || "");
         setDescription(lab.description || "");
         setReferenceImageUrl(lab.referenceImageUrl || "");
+        setInitialFiles(lab.files?.length ? lab.files : null);
+        setExpectedByFile(lab.codeValidation?.expectedByFile ?? {});
         setExpectedBlocks(lab.expectedBlocks || null);
         setExpectedFilename(lab.expectedFilename || loadedFiles[0]?.filename || null);
         setRequiredSelector(lab.requiredSelector || "");
@@ -136,7 +145,7 @@ const LaboratoryBuilderPage = ({ context = "teacher" }) => {
         setFiles(loadedFiles);
         setActiveFileId(loadedFiles[0]?.id ?? null);
         setPreviewFileId(loadedFiles.find((file) => file.filename.endsWith(".html"))?.id ?? loadedFiles[0]?.id ?? null);
-        setFilesWithCode(loadedFiles.map((file) => ({ id: file.id, filename: file.filename, generatedCode: "" })));
+        setFilesWithCode(loadedFiles.map((file) => ({ id: file.id, filename: file.filename, generatedCode: codeGeneratorService.generateCodeFromState(file.blocks_json, file.filename) })));
         if (workspace.isInitialized) {
           isLoadingRef.current = true;
           loadedFiles[0]?.blocks_json ? workspace.loadWorkspaceState(loadedFiles[0].blocks_json) : workspace.clearWorkspace();
@@ -192,10 +201,66 @@ const LaboratoryBuilderPage = ({ context = "teacher" }) => {
 
   const handleDeleteFile = (fileId) => {
     if (files.length <= 1) return;
-    const remaining = files.filter((file) => file.id !== fileId);
+    const removed = files.find(file => file.id === fileId);
+    const remaining = flushActiveFile().filter((file) => file.id !== fileId);
     setFiles(remaining);
     setFilesWithCode((prev) => prev.filter((file) => file.id !== fileId));
-    if (activeFileId === fileId) handleFileChange(remaining[0].id);
+    setExpectedByFile(previous => { const next = { ...previous }; delete next[removed.filename]; return next; });
+    setTestDrafts(previous => { const next = { ...previous }; delete next[removed.filename]; return next; });
+    setInitialFiles(previous => previous?.filter(file => file.filename !== removed.filename) ?? null);
+    if (activeFileId === fileId) {
+      setActiveFileId(remaining[0].id);
+      isLoadingRef.current = true;
+      workspace.loadWorkspaceState(remaining[0].blocks_json ?? {});
+      setTimeout(() => { isLoadingRef.current = false; }, 150);
+    }
+    if (previewFileId === fileId) setPreviewFileId(remaining.find(file => file.filename.endsWith('.html'))?.id ?? remaining[0].id);
+  };
+
+  const snapshotProject = () => flushActiveFile().map(file => ({ ...file, blocks_json: file.blocks_json ?? {}, code: codeGeneratorService.generateCodeFromState(file.blocks_json, file.filename) }));
+  const captureStarting = () => {
+    if (Object.keys(testDrafts).length) throw new Error('Apply your manual tests before recapturing.');
+    const snapshot = snapshotProject();
+    const next = {};
+    for (const file of snapshot) {
+      const expected = expectedByFile[file.filename];
+      if (expected) {
+        const testCases = capturedTests(file.code, expected.code, file.filename, expected.testCases);
+        validateTestCases(testCases);
+        next[file.filename] = { ...expected, testCases };
+      }
+    }
+    setInitialFiles(snapshot);
+    setExpectedByFile(next);
+    addToast('Starting project captured.', 'success');
+  };
+  const captureExpected = () => {
+    if (!initialFiles || files.some(file => !initialFiles.some(initial => initial.filename === file.filename))) throw new Error('Capture the starting project, including all files, first.');
+    if (Object.keys(testDrafts).length) throw new Error('Apply your manual tests before recapturing.');
+    const next = {};
+    for (const file of snapshotProject()) {
+      const initial = initialFiles.find(item => item.filename === file.filename);
+      const initialCode = codeGeneratorService.generateCodeFromState(initial.blocks_json, file.filename);
+      const testCases = capturedTests(initialCode, file.code, file.filename, expectedByFile[file.filename]?.testCases ?? []);
+      validateTestCases(testCases);
+      next[file.filename] = { blocksJson: file.blocks_json, code: file.code, testCases };
+    }
+    setExpectedByFile(next);
+    setExpectedBlocks(null);
+    addToast('Expected project captured and code checks generated.', 'success');
+  };
+  const loadSnapshot = expected => {
+    const next = files.map(file => ({ ...file, blocks_json: expected ? expectedByFile[file.filename]?.blocksJson ?? {} : initialFiles?.find(item => item.filename === file.filename)?.blocks_json ?? {} }));
+    setFiles(next);
+    setFilesWithCode(next.map(file => ({ ...file, generatedCode: codeGeneratorService.generateCodeFromState(file.blocks_json, file.filename) })));
+    isLoadingRef.current = true;
+    workspace.loadWorkspaceState(next.find(file => file.id === activeFileId)?.blocks_json ?? {});
+    setTimeout(() => { isLoadingRef.current = false; }, 150);
+  };
+  const applyTests = (filename, testCases) => {
+    validateTestCases(testCases);
+    setExpectedByFile(previous => ({ ...previous, [filename]: { ...previous[filename], testCases } }));
+    setTestDrafts(previous => { const next = { ...previous }; delete next[filename]; return next; });
   };
 
   const handleImageChange = (event) => {
@@ -223,6 +288,14 @@ const LaboratoryBuilderPage = ({ context = "teacher" }) => {
     setSaving(true);
     try {
       const latestFiles = flushActiveFile();
+      const expected = Object.fromEntries(Object.entries(expectedByFile).filter(([filename]) => latestFiles.some(file => file.filename === filename)).map(([filename, value]) => {
+        const testCases = testDrafts[filename] != null ? JSON.parse(testDrafts[filename]) : value.testCases;
+        validateTestCases(testCases);
+        const result = validateTutorialCode(value.code, value.code, testCases);
+        if (!result.passed) throw new Error(filename + ': ' + result.failures.join(' • '));
+        return [filename, { ...value, testCases }];
+      }));
+      if (Object.keys(expected).length && !Object.values(expected).some(value => countChecks(value.testCases))) throw new Error('Add at least one active code check before saving the expected project.');
       const lesson = lessonId
         ? await updateLessonBase({ lessonId, topicId: selectedTopicId, title, baseXp: Number(baseXp) })
         : await createLessonBase({ topicId: selectedTopicId, authorId: user.id, title, type: "laboratory", baseXp: Number(baseXp) });
@@ -237,9 +310,13 @@ const LaboratoryBuilderPage = ({ context = "teacher" }) => {
           requiredSelector: requiredSelector.trim(),
           requiredText: requiredText.trim(),
           requiredCode: requiredCode.trim(),
-          files: latestFiles.map(({ filename, blocks_json }) => ({ filename, blocks_json })),
+          files: latestFiles.map(({ filename }) => ({ filename, blocks_json: initialFiles?.find(file => file.filename === filename)?.blocks_json ?? {} })),
+          authorFiles: latestFiles.map(({ filename, blocks_json }) => ({ filename, blocks_json })),
+          codeValidation: Object.keys(expected).length ? { version: 1, expectedByFile: expected } : undefined,
         }),
       });
+      setExpectedByFile(expected);
+      setTestDrafts({});
       addToast(isEditMode ? "Laboratory updated successfully." : "Laboratory saved successfully.", "success");
       if (!isEditMode) navigate(`/${context}/laboratory/edit/${lesson.id}`, { replace: true });
     } catch (error) {
@@ -254,7 +331,7 @@ const LaboratoryBuilderPage = ({ context = "teacher" }) => {
 
   return (
     <div className="flex flex-col h-screen bg-gray-100 ">
-      <div className="shrink-0 flex items-center gap-3 px-4 py-2.5 ">
+      <div className="backdrop-blur-md shrink-0 flex items-center gap-3 px-4 py-2.5 ">
         <Link to="/"><img src="/icon.png" alt="icon image" className='w-8 h-8' /></Link>
         <BackButton />
         {lessonId && <details className="max-h-96 overflow-auto rounded-lg border bg-white p-2"><summary>Assessment settings</summary><AssessmentSettings lessonId={lessonId} /></details>}
@@ -270,11 +347,11 @@ const LaboratoryBuilderPage = ({ context = "teacher" }) => {
           </span>
         )}
           
-        <div className='ml-auto flex truncate max-w-xs'>
+        <div className='ml-auto items-center flex max-w-xs'>
           <Button variant='ghost'>
             <Sun size={20}/>Light Mode
           </Button>
-          <Button variant='secondary' onClick={handleSave} disabled={saving}>
+          <Button variant='primary' onClick={handleSave} disabled={saving}>
             {saving ? 'Saving…' : 'Save Laboratory'}
           </Button>
         </div>
@@ -350,24 +427,57 @@ const LaboratoryBuilderPage = ({ context = "teacher" }) => {
                     className="w-full px-3 py-2 text-sm border border-border rounded focus:outline-none focus:ring-1 focus:ring-indigo-400 bg-white resize-none leading-relaxed"
                   />
                 </div>
-                <div className="rounded-xl border p-3 space-y-3">
-                  <Label className="flex items-center gap-2"><Camera className="size-4" /> Reference Image</Label>
-                  <Input type="file" accept="image/*" onChange={handleImageChange} />
-                  {referenceImageUrl && <img src={referenceImageUrl} alt="Expected result" className="w-full rounded-lg border object-contain" />}
+                <div className="rounded-xl border p-4 space-y-4">
+                  <Label className="flex items-center gap-2 font-medium">
+                    <Camera className="size-4" />
+                    Reference Image
+                  </Label>
+
+                  <label
+                    htmlFor="reference-image"
+                    className="group flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-muted-foreground/25 p-2 text-center transition hover:border-primary hover:bg-muted/50"
+                  >
+                    {referenceImageUrl ? (
+                      <img
+                        src={referenceImageUrl}
+                        alt="Reference Preview"
+                        className="max-h-64 w-full rounded-lg object-contain"
+                      />
+                    ) : (
+                      <>
+                        <Camera className="size-4 text-muted-foreground" />
+                        <p className="text-sm font-medium">Upload Reference Image</p>
+                        <p className="text-xs text-muted-foreground">
+                          PNG, JPG or WEBP
+                        </p>
+                      </>
+                    )}
+
+                    <Input id="reference-image" type="file" accept="image/*" onChange={handleImageChange} className="hidden"/>
+                  </label>
                 </div>
-                <Button type="button" variant={expectedBlocks ? "secondary" : "primary"} className="w-full" onClick={() => {
-                  setExpectedBlocks(workspace.getWorkspaceState?.());
-                  setExpectedFilename(activeFile?.filename ?? null);
-                  addToast("Final validator captured.", "success");
-                }}>
-                  <Check /> {expectedBlocks ? "Validator Captured" : "Capture Final Validator"}
-                </Button>
+                <p className="text-xs text-slate-500">Capture saves all project files together. Review checks for the selected file below.</p>
+                <CaptureValidationPanel
+                  key={activeFile?.filename}
+                  filename={activeFile?.filename || ''}
+                  initialCaptured={!!initialFiles && files.every(file => initialFiles.some(initial => initial.filename === file.filename))}
+                  expected={expectedByFile[activeFile?.filename]}
+                  onCaptureInitial={captureStarting}
+                  onLoadInitial={() => loadSnapshot(false)}
+                  onCaptureExpected={captureExpected}
+                  onLoadExpected={() => loadSnapshot(true)}
+                  onTestsChange={tests => applyTests(activeFile.filename, tests)}
+                  draft={testDrafts[activeFile?.filename]}
+                  onDraftChange={text => setTestDrafts(previous => ({ ...previous, [activeFile.filename]: text }))}
+                  pickerHtml={codeGeneratorService.combineFilesForPreview(files.map(file => ({ filename: file.filename, generatedCode: expectedByFile[file.filename]?.code ?? '' })), files.find(file => file.id === previewFileId)?.filename)}
+                />
                 <div className="space-y-2 rounded-xl border p-3">
                   <RubricEditor rubric={rubric} setRubric={setRubric} passing={passingScore} setPassing={setPassingScore} />
-                  <p className="text-xs font-bold text-slate-700">Optional output checks (feedback only)</p>
-                  <label className="block text-xs">HTML selector<input className="mt-1 w-full rounded border px-2 py-1" value={requiredSelector} onChange={event => setRequiredSelector(event.target.value)} placeholder="h1" /></label>
-                  <label className="block text-xs">Text in that element<input className="mt-1 w-full rounded border px-2 py-1" value={requiredText} onChange={event => setRequiredText(event.target.value)} placeholder="Hello World" /></label>
-                  <label className="block text-xs">Required CSS or code fragment<input className="mt-1 w-full rounded border px-2 py-1" value={requiredCode} onChange={event => setRequiredCode(event.target.value)} placeholder="text-align: center" /></label>
+                  {!Object.keys(expectedByFile).length && <details><summary className="cursor-pointer text-xs">Advanced settings · existing checks</summary>
+                    <label className="flex flex-col gap-1 text-xs">HTML selector<input className="mt-1 w-full rounded border px-2 py-1" value={requiredSelector} onChange={event => setRequiredSelector(event.target.value)} /></label>
+                    <label className="flex flex-col gap-1 text-xs">Required text<input className="mt-1 w-full rounded border px-2 py-1" value={requiredText} onChange={event => setRequiredText(event.target.value)} /></label>
+                    <label className="flex flex-col gap-1 text-xs">Required code<input className="mt-1 w-full rounded border px-2 py-1" value={requiredCode} onChange={event => setRequiredCode(event.target.value)} /></label>
+                  </details>}
                 </div>
               </div>
             </div>

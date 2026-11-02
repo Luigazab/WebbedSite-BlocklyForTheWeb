@@ -1,4 +1,5 @@
 import { validateTestCases } from '../utils/validation/tutorialCodeValidation'
+import { capturedTests, countChecks } from '../utils/validation/generatedCodeChecks'
 import { validateTutorialReference } from '../utils/validation/tutorialStepValidation'
 import { saveTutorialDefinition } from '../services/tutorialSubmissionService'
 import { useCallback, useEffect, useRef } from 'react'
@@ -15,6 +16,7 @@ const makeLocalStep = (order = 0) => ({
   highlightCategoryPath: null,
   highlightBlockType: null,
   expectedByFile: {},
+  initialByFile: {},
   workingState: {},
 })
 
@@ -28,7 +30,7 @@ export function useTutorialBuilder({ lessonId, workspace, initialTopicId = null 
       store.reset()
       if (initialTopicId) store.setMeta({ topicId: initialTopicId })
       store.setFiles([{ id: null, filename: 'index.html', fileType: 'html', initialContentJson: null }])
-      store.addStep(makeLocalStep(0))
+      store.addStep({ ...makeLocalStep(0), initialByFile: { 'index.html': {} } })
       return
     }
     store.setLoading(true)
@@ -36,7 +38,9 @@ export function useTutorialBuilder({ lessonId, workspace, initialTopicId = null 
       const { lesson, tutorial, steps, files, expected } = await fetchBlockTutorialByLessonId(lessonId)
       if (tutorial && tutorial.type !== 'block') throw new Error('This editor creates block tutorials')
 
+      const inheritedStarts = Object.fromEntries(files.map(file => [file.filename, file.initial_content_json ?? {}]))
       const localSteps = steps.map((s) => {
+        const initialByFile = { ...inheritedStarts, ...s.initial_files }
         const expectedByFile = {}
         expected
           .filter((e) => e.step_id === s.id)
@@ -50,12 +54,13 @@ export function useTutorialBuilder({ lessonId, workspace, initialTopicId = null 
               code: e.expected_code,
               testCases: e.test_cases ?? [], requireStructure: e.require_block_structure === true,
             }
+            if (e.expected_blocks_json != null) inheritedStarts[file.filename] = e.expected_blocks_json
           })
         return {
           id: s.id, order: s.order, instruction: s.instruction ?? '', hint: s.hint ?? '',
           highlightCategoryPath: s.highlight_category_path ?? null,
           highlightBlockType: s.highlight_block_type ?? null,
-          expectedByFile, workingState: {},
+          expectedByFile, initialByFile, workingState: {},
         }
       })
 
@@ -84,6 +89,7 @@ export function useTutorialBuilder({ lessonId, workspace, initialTopicId = null 
 
     if (step.workingState[filename]) return step.workingState[filename]
     if (step.expectedByFile[filename]?.blocksJson) return step.expectedByFile[filename].blocksJson
+    if (Object.hasOwn(step.initialByFile ?? {}, filename)) return step.initialByFile[filename]
 
     for (let i = stepIndex - 1; i >= 0; i--) {
       const prior = steps[i]?.expectedByFile[filename]
@@ -115,11 +121,19 @@ export function useTutorialBuilder({ lessonId, workspace, initialTopicId = null 
     })
   }, [resolveStateForFile, generateCodeForState])
 
+  const getExpectedFilesWithCodeForStep = useCallback((stepIndex) => {
+    const { files, steps } = tutorialBuilderStore.getState()
+    const step = steps[stepIndex]
+    return files.map(file => ({ filename: file.filename, generatedCode: step?.expectedByFile[file.filename]?.code
+      ?? generateCodeForState(step?.initialByFile?.[file.filename] ?? file.initialContentJson, file.filename) }))
+  }, [generateCodeForState])
+
   const getFileStatusForStep = useCallback((filename, stepIndex) => {
     const { steps, files } = tutorialBuilderStore.getState()
     const step = steps[stepIndex]
     if (!step) return 'empty'
     if (step.expectedByFile[filename]) return 'captured'
+    if (Object.hasOwn(step.initialByFile ?? {}, filename)) return 'initial'
     for (let i = stepIndex - 1; i >= 0; i--) {
       if (steps[i]?.expectedByFile[filename]) return 'inherited'
     }
@@ -149,10 +163,11 @@ export function useTutorialBuilder({ lessonId, workspace, initialTopicId = null 
   }, [])
 
   const addStep = useCallback(() => {
-    const order = tutorialBuilderStore.getState().steps.length
-    store.addStep(makeLocalStep(order))
+    const { steps, files } = tutorialBuilderStore.getState()
+    const order = steps.length
+    store.addStep({ ...makeLocalStep(order), initialByFile: Object.fromEntries(files.map(file => [file.filename, resolveStateForFile(file.filename, order - 1) ?? {}])) })
     store.setCurrentStepIndex(order)
-  }, [])
+  }, [resolveStateForFile])
 
   const deleteStepAt = useCallback(async (idx) => {
     store.removeStepAt(idx)
@@ -162,6 +177,7 @@ export function useTutorialBuilder({ lessonId, workspace, initialTopicId = null 
   const addFile = useCallback((filename) => {
     if (!/^[\w.-]+\.(html|css|js)$/.test(filename) || tutorialBuilderStore.getState().files.some(f => f.filename === filename)) throw new Error('Use a unique HTML, CSS or JS filename')
     store.addFile({ id: null, filename, fileType: inferFileType(filename), initialContentJson: null })
+    tutorialBuilderStore.getState().steps.forEach((step, index) => store.updateStepFields(index, { initialByFile: { ...step.initialByFile, [filename]: {} } }))
   }, [])
 
   const removeFile = useCallback(async (filename) => {
@@ -176,17 +192,22 @@ export function useTutorialBuilder({ lessonId, workspace, initialTopicId = null 
     const blocksJson = workspace.getWorkspaceState()
     const code = codeGeneratorService.generateCode(wsObj, filename)
     const { currentStepIndex, steps, files } = tutorialBuilderStore.getState()
+    const step = steps[currentStepIndex]
+    if (!Object.hasOwn(step.initialByFile ?? {}, filename)) throw new Error('Capture the starting structure first.')
+    if (step.testDraftByFile?.[filename] != null) throw new Error('Apply your manual tests before recapturing.')
     const existing = steps[currentStepIndex]?.expectedByFile[filename]
+    const tests = capturedTests(generateCodeForState(step.initialByFile[filename], filename), code, filename, testCases.length ? testCases : existing?.testCases ?? [])
+    validateTestCases(tests)
     store.setStepExpected(currentStepIndex, filename, {
       id: existing?.id ?? null,
       fileId: existing?.fileId ?? files.find((f) => f.filename === filename)?.id ?? null,
       blocksJson,
       code,
-      requireStructure: existing?.requireStructure === true,
-      testCases: testCases.length ? testCases : (existing?.testCases ?? []),
+      requireStructure: false,
+      testCases: tests,
     })
     store.setStepWorkingState(currentStepIndex, filename, null)
-  }, [workspace])
+  }, [workspace, generateCodeForState])
 
   const clearCapture = useCallback(async (filename) => {
     const idx = tutorialBuilderStore.getState().currentStepIndex
@@ -213,6 +234,7 @@ export function useTutorialBuilder({ lessonId, workspace, initialTopicId = null 
         if (publish) validateTutorialReference({ filename, expected_code: exp.code, expected_blocks_json: exp.blocksJson, test_cases: tests, require_block_structure: exp.requireStructure === true })
       }
       if (publish && (!step.instruction.trim() || !Object.keys(expectedByFile).length)) throw new Error('Step ' + (i + 1) + ' needs instructions and a captured solution')
+      if (publish && Object.values(expectedByFile).some(exp => exp.testCases?.some(test => test.type === 'generatedChanges')) && !Object.values(expectedByFile).some(exp => countChecks(exp.testCases) > 0)) throw new Error('Step ' + (i + 1) + ' needs at least one active code check.')
       return { ...step, expectedByFile, workingState: {}, testDraftByFile: {} }
     })
     if (!steps.length) throw new Error('Add at least one step')
@@ -241,13 +263,19 @@ export function useTutorialBuilder({ lessonId, workspace, initialTopicId = null 
     updateCurrentStep: (patch) => store.updateStepFields(store.currentStepIndex, patch),
     goToStep, addStep, deleteStepAt,
     resolveStateForFile, loadFileIntoWorkspace, recordWorkingEdit,
-    getFilesWithCodeForStep, getFileStatusForStep,
+    getFilesWithCodeForStep, getExpectedFilesWithCodeForStep, getFileStatusForStep,
     captureActiveFile, clearCapture,
     captureInitial: (filename) => {
       const s = tutorialBuilderStore.getState()
-      if (s.currentStepIndex !== 0) return
-      store.setFiles(s.files.map(f => f.filename === filename ? { ...f, initialContentJson: workspace.getWorkspaceState() } : f))
-      store.setStepWorkingState(0, filename, null)
+      const step = s.steps[s.currentStepIndex]
+      if (step.testDraftByFile?.[filename] != null) throw new Error('Apply your manual tests before recapturing.')
+      const state = workspace.getWorkspaceState() ?? {}
+      const expected = step.expectedByFile[filename]
+      const tests = expected ? capturedTests(generateCodeForState(state, filename), expected.code, filename, expected.testCases) : null
+      if (tests) validateTestCases(tests)
+      store.updateStepFields(s.currentStepIndex, { initialByFile: { ...step.initialByFile, [filename]: state } })
+      if (expected) store.setStepExpected(s.currentStepIndex, filename, { ...expected, testCases: tests, requireStructure: false })
+      store.setStepWorkingState(s.currentStepIndex, filename, null)
     },
     loadInitial: (filename) => {
       const s = tutorialBuilderStore.getState()
@@ -255,8 +283,18 @@ export function useTutorialBuilder({ lessonId, workspace, initialTopicId = null 
       for (let i = 0; i < s.currentStepIndex; i++) {
         if (s.steps[i].expectedByFile[filename]) state = s.steps[i].expectedByFile[filename].blocksJson
       }
+      if (Object.hasOwn(s.steps[s.currentStepIndex].initialByFile ?? {}, filename)) state = s.steps[s.currentStepIndex].initialByFile[filename]
       isLoadingWsRef.current = true
       if (state) workspace.loadWorkspaceState(state); else workspace.clearWorkspace()
+      setTimeout(() => { isLoadingWsRef.current = false }, 150)
+    },
+    loadExpected: (filename) => {
+      const s = tutorialBuilderStore.getState()
+      const expected = s.steps[s.currentStepIndex]?.expectedByFile[filename]
+      if (!expected) return
+      isLoadingWsRef.current = true
+      workspace.loadWorkspaceState(expected.blocksJson ?? {})
+      store.setStepWorkingState(s.currentStepIndex, filename, null)
       setTimeout(() => { isLoadingWsRef.current = false }, 150)
     },
     setTests: (filename, tests) => {
@@ -265,6 +303,9 @@ export function useTutorialBuilder({ lessonId, workspace, initialTopicId = null 
       const expected = s.steps[s.currentStepIndex]?.expectedByFile[filename]
       if (!expected) throw new Error('Capture a solution first')
       store.setStepExpected(s.currentStepIndex, filename, { ...expected, testCases: tests })
+      const drafts = { ...s.steps[s.currentStepIndex].testDraftByFile }
+      delete drafts[filename]
+      store.updateStepFields(s.currentStepIndex, { testDraftByFile: drafts })
     },
     setTestsDraft: (filename, text) => store.setTestsDraft(tutorialBuilderStore.getState().currentStepIndex, filename, text),
     setStructureRequirement: (filename, required) => {
