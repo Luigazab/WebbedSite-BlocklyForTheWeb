@@ -61,10 +61,10 @@ function computeBubblePosition(rect) {
 
 // Tail position config per placement
 const TAIL_STYLES = {
-  below: 'absolute -left-3 bottom-8 w-6 h-6 bg-white border-l-4 border-b-4 border-blockly-purple transform rotate-45',
-  above: 'absolute -left-3 bottom-8 w-6 h-6 bg-white border-l-4 border-b-4 border-blockly-purple transform rotate-45',
-  right: 'absolute -right-3 bottom-8 w-6 h-6 bg-white border-r-4 border-t-4 border-blockly-purple transform rotate-45',
-  left:  'absolute -left-3 bottom-8 w-6 h-6 bg-white border-l-4 border-b-4 border-blockly-purple transform rotate-45',
+  below: 'absolute -left-3.5 bottom-8 w-6 h-6 bg-card border-l-4 border-b-4 border-blockly-purple transform rotate-45',
+  above: 'absolute -left-3.5 bottom-8 w-6 h-6 bg-card border-l-4 border-b-4 border-blockly-purple transform rotate-45',
+  right: 'absolute -right-3.5 bottom-8 w-6 h-6 bg-card border-r-4 border-t-4 border-blockly-purple transform rotate-45',
+  left:  'absolute -left-3.5 bottom-8 w-6 h-6 bg-card border-l-4 border-b-4 border-blockly-purple transform rotate-45',
 }
 
 // Flip character to opposite side of bubble based on placement

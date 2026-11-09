@@ -1,177 +1,201 @@
-import ThemeSelect from '../common/ThemeSelect'
 import { useState, useRef, useEffect } from 'react'
-import { Menu, Home, FolderOpen, University, Settings, Plus, Save, Download } from 'lucide-react'
 import { Link, useNavigate } from 'react-router'
+import { Menu, X, Home, FolderOpen, University, Settings, Plus, Save, Download } from 'lucide-react'
+import ThemeSelect from '../common/ThemeSelect'
+import BackButton from '#components/common/BackButton'
 import { useAuthStore } from '../../store/authStore'
 import { TourHelpButton } from '../tour/EditorTour'
-import BackButton from '#components/common/BackButton'
+import { Button } from '#components/ui/button'
 
 const EditorHeader = ({ onNew, onSave, onLoad, projectTitle }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const navigate       = useNavigate()
-  const desktopMenuRef = useRef(null)
-  const mobileMenuRef  = useRef(null)
-  const profile        = useAuthStore((s) => s.profile)
+  const navigate = useNavigate()
+  const menuRef = useRef(null)
+  const profile = useAuthStore((s) => s.profile)
 
   const menuItems = [
-    { icon: Home,        label: 'Home',       href: `/${profile?.role}`            },
-    { icon: FolderOpen,  label: 'Projects',   href: `/${profile?.role}/projects`   },
-    { icon: University,  label: 'Classrooms', href: `/${profile?.role}/classrooms` },
-    { icon: Settings,    label: 'Settings',   href: `/${profile?.role}/settings`   },
+    { icon: Home, label: 'Home', href: `/${profile?.role}` },
+    { icon: FolderOpen, label: 'Projects', href: `/${profile?.role}/projects` },
+    { icon: University, label: 'Classrooms', href: `/${profile?.role}/classrooms` },
+    { icon: Settings, label: 'Settings', href: `/${profile?.role}/settings` },
   ]
 
+  // Close on outside touch or click
   useEffect(() => {
-  const handleClickOutside = (event) => {
-    if (!isMenuOpen) return;
-
-    const desktopMenu = desktopMenuRef.current;
-    const mobileMenu  = mobileMenuRef.current;
-
-    const isDesktopOpen = window.innerWidth >= 1024;
-    const activeMenu = isDesktopOpen ? desktopMenu : mobileMenu;
-
-    if (activeMenu && !activeMenu.contains(event.target)) {
-      setIsMenuOpen(false);
+    const handleOutside = (event) => {
+      if (isMenuOpen && menuRef.current && !menuRef.current.contains(event.target)) {
+        setIsMenuOpen(false)
+      }
     }
-  };
-  document.addEventListener('mousedown', handleClickOutside);
-  return () => document.removeEventListener('mousedown', handleClickOutside);
-}, [isMenuOpen]);
+    document.addEventListener('mousedown', handleOutside)
+    document.addEventListener('touchstart', handleOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleOutside)
+      document.removeEventListener('touchstart', handleOutside)
+    }
+  }, [isMenuOpen])
 
   const handleNavigation = (href) => {
     setIsMenuOpen(false)
     navigate(href)
   }
 
-  // What to show beside the logo: project title if set, else app name
-  const headerLabel = projectTitle?.trim() || 'WebbedSite'
+  const headerLabel = projectTitle?.trim() || 'Untitled Project'
   const isProjectTitle = Boolean(projectTitle?.trim())
 
   return (
-    <header data-tour="editor-header" className="w-full relative z-99">
-
-      {/* ── Desktop Layout ─────────────────────────────────── */}
-      <div className="hidden lg:flex items-center justify-between px-4 py-2.5">
-
-        {/* Left: hamburger + logo + title */}
-        <div className="flex items-center space-x-3 relative">
-
-          <Link to="/"><img src="/icon.png" alt="icon image" className='w-8 h-8' /></Link>
-          <BackButton />
-          <span className="text-muted-foreground">/</span>
-          <div className="flex flex-col leading-tight">
-            {isProjectTitle ? (
-              <>
-                <span className="text-xs text-muted-foreground font-medium">WebbedSite</span>
-                <span className="font-bold text-foreground text-base truncate max-w-64">{headerLabel}</span>
-              </>
-            ) : (
-              <span className="font-semibold text-foreground text-lg">WebbedSite</span>
-            )}
-          </div>
-
-          {/* Desktop Dropdown */}
-          {isMenuOpen && (
-            <div
-              ref={desktopMenuRef}
-              className="absolute top-full left-0 mt-2 w-56 bg-card rounded-lg shadow-lg border border-border py-2 z-50"
-            >
-              {menuItems.map((item, index) => {
-                const Icon = item.icon
-                return (
-                  <button
-                    key={index}
-                    onClick={() => handleNavigation(item.href)}
-                    className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-muted transition-colors text-foreground text-left"
-                  >
-                    <Icon size={18} />
-                    <span>{item.label}</span>
-                  </button>
-                )
-              })}
-            </div>
-          )}
-        </div>
-
-        {/* Right: action buttons */}
-        <div className="flex gap-2" data-tour="file-actions">
-          <button onClick={onNew}  className="btn flex items-center space-x-2 btn-lead">
-            <Plus size={15} /><span>New</span>
-          </button>
-          <button onClick={onSave}  data-tour="save-btn" className="btn flex items-center space-x-2 btn-secondary">
-            <Save size={15} /><span>Save</span>
-          </button>
-          <button onClick={onLoad} className="btn flex items-center space-x-2 btn-primary">
-            <Download size={15} /><span>Load</span>
-          </button>
-        </div>
-        <ThemeSelect compact />
-        <TourHelpButton/>
-      </div>
-
-      {/* ── Mobile Layout ──────────────────────────────────── */}
-      <div className="lg:hidden">
-        <div className="flex items-center justify-between px-4 py-3">
-          <div className="flex items-center space-x-3">
+    <>
+      <header
+        data-tour="editor-header"
+        className="w-full border-b border-border bg-sidebar px-3 py-2 shrink-0 z-30"
+      >
+        <div className="flex items-center justify-between gap-2 max-w-full">
+          <div className="flex items-center gap-2 min-w-0">
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="p-2 rounded-lg hover:bg-muted transition-colors"
-              aria-label="Toggle menu"
+              className="lg:hidden p-1.5 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors shrink-0"
+              aria-label="Toggle navigation menu"
             >
-              <Menu size={24} />
+              {isMenuOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
-            <img src="/anotherlogo.png" alt="Logo" className="h-8" />
+
+            {/* Logo and Back button */}
+            <Link to="/" className="shrink-0 flex items-center">
+              <img src="/icon.png" alt="Logo" className="w-7 h-7 object-contain" />
+            </Link>
+            
+            <BackButton />
+
+            <span className="text-muted-foreground/40 hidden sm:inline">/</span>
+
+            {/* Truncated Project Title */}
+            <div className="flex flex-col leading-tight min-w-0">
+              <span className="text-[10px] text-muted-foreground font-medium hidden sm:inline">
+                WebbedSite
+              </span>
+              <span
+                title={headerLabel}
+                className="font-bold text-foreground text-xs sm:text-sm truncate max-w-[130px] sm:max-w-[200px] md:max-w-xs"
+              >
+                {headerLabel}
+              </span>
+            </div>
           </div>
 
-          <div className="flex flex-col items-end leading-tight">
-            {isProjectTitle ? (
-              <>
-                <span className="text-[10px] text-muted-foreground">WebbedSite</span>
-                <span className="font-bold text-foreground text-sm truncate max-w-40">{headerLabel}</span>
-              </>
-            ) : (
-              <span className="font-bold text-foreground">WebbedSite</span>
-            )}
+          {/* ── Center / Right Desktop Action Buttons (lg+) ──── */}
+          <div className="hidden lg:flex items-center gap-2" data-tour="file-actions">
+            <Button onClick={onNew} variant='secondary'>
+              <Plus size={14} />
+              <span>New</span>
+            </Button>
+            <Button onClick={onLoad} variant='primary'>
+              <Download size={14} />
+              <span>Load</span>
+            </Button>
+            <Button onClick={onSave} data-tour="save-btn" variant='success'>
+              <Save size={14} />
+              <span>Save</span>
+            </Button>
+
+            <div className="h-4 w-px bg-border mx-1" />
+
+            <ThemeSelect compact iconOnly />
+            <TourHelpButton />
+          </div>
+
+          {/* ── Mobile Right Actions (Compact Single Row) ───── */}
+          <div className="flex lg:hidden items-center gap-1.5 shrink-0">
+            {/* Always accessible Primary Save Button */}
+            <Button
+              onClick={onSave}
+              data-tour="save-btn"
+              variant='success'
+              size='sm'
+            >
+              <Save size={14} />
+              <span>Save</span>
+            </Button>
+
+            <div className="scale-90 origin-right">
+              <ThemeSelect iconOnly />
+            </div>
           </div>
         </div>
+      </header>
 
-        {/* Mobile Dropdown */}
-        {isMenuOpen && (
-          <div
-            ref={mobileMenuRef}
-            className="absolute left-4 mt-1 w-56 bg-card rounded-lg shadow-lg border border-border py-2 z-50"
+      {/* ── Backdrop for Mobile Menu ─────────────────────────── */}
+      {isMenuOpen && (
+        <div
+          role="presentation"
+          onClick={() => setIsMenuOpen(false)}
+          className="fixed inset-0 z-99 bg-black/50 backdrop-blur-xs lg:hidden"
+        />
+      )}
+
+      {/* ── Mobile Drawer Dropdown Menu ──────────────────────── */}
+      {isMenuOpen && (
+        <div
+          ref={menuRef}
+          className="fixed left-3 top-14 z-100 w-64 rounded-xl border border-border bg-card p-2 shadow-2xl lg:hidden flex flex-col gap-1 animate-in fade-in slide-in-from-top-2 duration-150"
+        >
+          {/* Project File Actions inside Menu */}
+          <div className="px-2 py-1.5 text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
+            Project Actions
+          </div>
+
+          <button
+            onClick={() => {
+              setIsMenuOpen(false)
+              onNew?.()
+            }}
+            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-foreground hover:bg-muted transition-colors text-left"
           >
-            {menuItems.map((item, index) => {
-              const Icon = item.icon
-              return (
-                <button
-                  key={index}
-                  onClick={() => handleNavigation(item.href)}
-                  className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-muted transition-colors text-foreground text-left"
-                >
-                  <Icon size={18} />
-                  <span>{item.label}</span>
-                </button>
-              )
-            })}
-          </div>
-        )}
+            <Plus size={16} className="text-emerald-500" />
+            <span className="font-medium">New Project</span>
+          </button>
 
-        {/* Mobile action buttons */}
-        <div className="flex flex-wrap justify-center gap-2 px-4 pb-3">
-          <ThemeSelect compact />
-          <button onClick={onNew}  className="btn flex items-center space-x-1 btn-lead text-sm px-3 py-2 rounded-md font-semibold">
-            <Plus size={16} /><span>New</span>
+          <button
+            onClick={() => {
+              setIsMenuOpen(false)
+              onLoad?.()
+            }}
+            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-foreground hover:bg-muted transition-colors text-left"
+          >
+            <Download size={16} className="text-blue-500" />
+            <span className="font-medium">Load from Device / Cloud</span>
           </button>
-          <button onClick={onSave} className="btn flex items-center space-x-1 btn-secondary text-sm px-3 py-2 rounded-md font-semibold">
-            <Save size={16} /><span>Save</span>
-          </button>
-          <button onClick={onLoad} className="btn flex items-center space-x-1 btn-primary text-sm px-3 py-2 rounded-md font-semibold">
-            <Download size={16} /><span>Load</span>
-          </button>
+
+          <div className="my-1 border-t border-border" />
+
+          {/* App Navigation */}
+          <div className="px-2 py-1.5 text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
+            Navigate
+          </div>
+
+          {menuItems.map((item, index) => {
+            const Icon = item.icon
+            return (
+              <button
+                key={index}
+                onClick={() => handleNavigation(item.href)}
+                className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-foreground hover:bg-muted transition-colors text-left"
+              >
+                <Icon size={16} className="text-muted-foreground" />
+                <span>{item.label}</span>
+              </button>
+            )
+          })}
+
+          <div className="my-1 border-t border-border" />
+
+          {/* Footer Utility in Menu */}
+          <div className="px-2 py-1 flex items-center justify-between">
+            <span className="text-xs text-muted-foreground">Editor Tour</span>
+            <TourHelpButton />
+          </div>
         </div>
-      </div>
-    </header>
+      )}
+    </>
   )
 }
 

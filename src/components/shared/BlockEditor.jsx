@@ -1,6 +1,6 @@
 import { supabase } from '../../supabaseClient'
 import WorkspaceTools from '@/components/editor/WorkspaceTools'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate, useParams, useLocation } from 'react-router'
 import BlocklyWorkspace from '../editor/BlocklyWorkspace'
 import PreviewPane from '../editor/PreviewPane'
@@ -18,6 +18,8 @@ import { useAuthStore } from '../../store/authStore'
 import { useWebsiteThumbnail } from '../../hooks/useWebsiteThumbnail'
 import EditorTour, { useAutoStartEditorTour } from '../tour/EditorTour'
 import { toast } from 'sonner'
+import * as Blockly from 'blockly/core'
+import { Blocks, Eye, Play, GripVertical } from 'lucide-react'
 
 const BlockEditor = () => {
   const { id } = useParams()
@@ -27,6 +29,15 @@ const BlockEditor = () => {
   const fileInputRef = useRef(null)
   const pendingProjectRef = useRef(null)
   const savingProjectRef = useRef(false)
+
+  const [mobileTab, setMobileTab] = useState('workspace') // 'workspace' | 'preview'
+
+  const containerRef = useRef(null)
+  const [isDragging, setIsDragging] = useState(false)
+  const [workspaceWidth, setWorkspaceWidth] = useState(() => {
+    const saved = localStorage.getItem('editor_split_percent')
+    return saved ? parseFloat(saved) : 60 // Default 60%
+  })
 
   const [projectTitle, setProjectTitle] = useState(location.state?.projectTitle ?? 'Untitled')
   const [generatedCode, setGeneratedCode] = useState('')
@@ -38,13 +49,13 @@ const BlockEditor = () => {
   const [selectedDevice, setSelectedDevice] = useState('desktop')
   const [initialWorkspaceState, setInitialWorkspaceState] = useState(null)
   const [filesWithCode, setFilesWithCode] = useState([])
-  const [textDrafts,setTextDrafts] = useState({})
+  const [textDrafts, setTextDrafts] = useState({})
   const [activePreviewFile, setActivePreviewFile] = useState(null)
   
   const isLoadingRef = useRef(false)
-  const { saveThumbnail } = useWebsiteThumbnail();
+  const { saveThumbnail } = useWebsiteThumbnail()
   
-  const { projects, fetchProjects,fetchProject, handleCreateProject, handleUpdateProject, handleDeleteProject: removeProjectFromDb, } = useProject()
+  const { projects, fetchProjects, fetchProject, handleCreateProject, handleUpdateProject, handleDeleteProject: removeProjectFromDb } = useProject()
   const { files, activeFile, isLocal, saveFile, deleteFile, setActiveFile, createFile, migrateLocalFilesToDb } = useProjectFiles(id || currentProjectId)
 
   const workspace = BlocklyWorkspace({
@@ -63,6 +74,64 @@ const BlockEditor = () => {
       defineFileReferenceBlocks(files)
     }
   })
+
+  // ── Drag & Resize Handlers ─────────────────────────────────────────────
+  const handleMouseMove = useCallback((e) => {
+    if (!isDragging || !containerRef.current) return
+    const rect = containerRef.current.getBoundingClientRect()
+    const newPercent = ((e.clientX - rect.left) / rect.width) * 100
+    
+    // Clamp width between 20% and 80%
+    const clamped = Math.min(Math.max(newPercent, 20), 80)
+    setWorkspaceWidth(clamped)
+
+    const ws = workspace.getWorkspace()
+    if (ws) {
+      Blockly.svgResize(ws)
+    }
+  }, [isDragging, workspace])
+
+  const handleMouseUp = useCallback(() => {
+    if (isDragging) {
+      setIsDragging(false)
+      localStorage.setItem('editor_split_percent', workspaceWidth.toString())
+      const ws = workspace.getWorkspace()
+      if (ws) {
+        Blockly.svgResize(ws)
+      }
+    }
+  }, [isDragging, workspaceWidth, workspace])
+
+  useEffect(() => {
+    if (isDragging) {
+      window.addEventListener('mousemove', handleMouseMove)
+      window.addEventListener('mouseup', handleMouseUp)
+    }
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove)
+      window.removeEventListener('mouseup', handleMouseUp)
+    }
+  }, [isDragging, handleMouseMove, handleMouseUp])
+
+  // Resize Blockly whenever switching tabs or window size changes
+  const handleTabSwitch = useCallback((tab) => {
+    setMobileTab(tab)
+    if (tab === 'workspace' && workspace.getWorkspace()) {
+      setTimeout(() => {
+        const ws = workspace.getWorkspace()
+        if (ws) Blockly.svgResize(ws)
+      }, 50)
+    }
+  }, [workspace])
+
+  useEffect(() => {
+    const handleResize = () => {
+      const ws = workspace.getWorkspace()
+      if (ws) Blockly.svgResize(ws)
+    }
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [workspace])
 
   useEffect(() => {
     if (id && id !== currentProjectId) setCurrentProjectId(id)
@@ -108,7 +177,7 @@ const BlockEditor = () => {
     
     const file = files.find(f => f.id === activeFile)
     if (!file) return
-    if (file.blocks_json == null && file.code != null) { updateFileCode(file.id,textDrafts[file.id] ?? file.code); return }
+    if (file.blocks_json == null && file.code != null) { updateFileCode(file.id, textDrafts[file.id] ?? file.code); return }
 
     isLoadingRef.current = true
 
@@ -130,17 +199,17 @@ const BlockEditor = () => {
       setGeneratedCode(combined)
     }
   }, [filesWithCode, activePreviewFile, files])
+
   useEffect(() => {
     setFilesWithCode(prev => {
       const updated = files.map(file => ({
         id: file.id,
         filename: file.filename,
-        generatedCode: prev.find(f => f.id === file.id)?.generatedCode ?? (file.blocks_json ? codeGeneratorService.generateCodeFromState(file.blocks_json,file.filename) : file.code ?? '')
-      }));
-      return updated;
-    });
-  }, [files]);
-
+        generatedCode: prev.find(f => f.id === file.id)?.generatedCode ?? (file.blocks_json ? codeGeneratorService.generateCodeFromState(file.blocks_json, file.filename) : file.code ?? '')
+      }))
+      return updated
+    })
+  }, [files])
 
   const updateFileCode = (fileId, code) => {
     setFilesWithCode(prev => {
@@ -160,29 +229,29 @@ const BlockEditor = () => {
     const file = files.find(f => f.id === activeFile)
     if (!file) return
     if (file.blocks_json == null && file.code != null) {
-      const {error}=await supabase.from('project_files').update({code:textDrafts[file.id] ?? file.code}).eq('id',file.id)
-      if(error)throw error
-    } else await saveFile(currentProjectId,activeFile,workspace.getWorkspaceState())
+      const { error } = await supabase.from('project_files').update({ code: textDrafts[file.id] ?? file.code }).eq('id', file.id)
+      if (error) throw error
+    } else await saveFile(currentProjectId, activeFile, workspace.getWorkspaceState())
   }
 
   const runCode = () => {
     const file = files.find(f => f.id === activeFile)
-    if (file && file.blocks_json == null && file.code != null) { updateFileCode(file.id,textDrafts[file.id] ?? file.code); return }
+    if (file && file.blocks_json == null && file.code != null) { updateFileCode(file.id, textDrafts[file.id] ?? file.code); return }
     if (file && workspace.getWorkspace()) {
       const code = codeGeneratorService.generateCode(workspace.getWorkspace(), file.filename)
       updateFileCode(activeFile, code)
     }
   }
 
-  // ✅ SIMPLE: Just save and switch
+  const handleMobileRunAndPreview = () => {
+    runCode()
+    handleTabSwitch('preview')
+  }
+
   const handleFileChange = async (fileId) => {
     if (!activeFile || fileId === activeFile) return
-
     try {
-      // Save current file
       await saveActiveFile()
-      
-      // Switch to new file (this will trigger the load effect)
       setActiveFile(fileId)
     } catch (error) {
       console.error('Error switching files:', error)
@@ -192,9 +261,7 @@ const BlockEditor = () => {
 
   const handleCreateFile = async (filename) => {
     try {
-      if (activeFile) {
-        await saveActiveFile()
-      }
+      if (activeFile) await saveActiveFile()
       await createFile(currentProjectId, filename)
       toast.success(`Created ${filename}`)
     } catch (error) {
@@ -217,7 +284,6 @@ const BlockEditor = () => {
     savingProjectRef.current = true
     const savingToast = toast.loading('Saving project and website screenshot…')
     try {
-      // Capture current source before migration/navigation changes file IDs or the workspace.
       const snapshotFiles = files.map(file => ({
         ...file,
         generatedCode: file.blocks_json == null && file.code != null
@@ -247,7 +313,6 @@ const BlockEditor = () => {
         setProjectTitle(title)
         setProjectDescription(description)
         pendingProjectRef.current = null
-
       } else {
         await handleUpdateProject(currentProjectId, { title, description })
         setProjectTitle(title)
@@ -418,19 +483,70 @@ const BlockEditor = () => {
     const file = files.find(f => f.id === activePreviewFile)
     return file?.filename || ''
   }
+
   useAutoStartEditorTour()
 
   return (
-    <div className="flex flex-col h-screen">
+    <div className="flex flex-col h-screen w-screen overflow-hidden select-none">
       <EditorHeader
         onNew={handleCreateNew}
         onSave={() => setShowSaveModal(true)}
         onLoad={() => setShowLoadModal(true)}
         projectTitle={projectTitle}
       />
-      
-      <div className="flex flex-col px-4 gap-3 py-2.5 md:flex-row flex-1 overflow-hidden">
-        <div className="flex flex-col md:w-2/3 h-full rounded shadow border border-border bg-card overflow-hidden">
+      <div className="flex items-center justify-between border-b border-border bg-sidebar px-3 pb-1.5 md:hidden shrink-0">
+        <div className="flex rounded-lg bg-muted p-1 border border-border">
+          <button
+            onClick={() => handleTabSwitch('workspace')}
+            className={`flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-md transition-all ${
+              mobileTab === 'workspace'
+                ? 'bg-primary text-primary-foreground shadow-xs'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <Blocks className="size-3.5" />
+            Blocks
+          </button>
+          <button
+            onClick={() => handleTabSwitch('preview')}
+            className={`flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-md transition-all ${
+              mobileTab === 'preview'
+                ? 'bg-primary text-primary-foreground shadow-xs'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <Eye className="size-3.5" />
+            Preview
+          </button>
+        </div>
+
+        {mobileTab === 'workspace' && (
+          <button
+            onClick={handleMobileRunAndPreview}
+            className="flex items-center gap-1 px-3 py-1 text-xs font-semibold rounded-md bg-emerald-600 text-white shadow active:scale-95 transition-transform"
+          >
+            <Play className="size-3 fill-current" />
+            Run & View
+          </button>
+        )}
+      </div>
+
+      <div
+        ref={containerRef}
+        style={{ '--workspace-width': `${workspaceWidth}%` }}
+        className="flex flex-col px-1 pb-1.5 gap-0 md:px-3 md:flex-row flex-1 min-h-0 overflow-hidden relative"
+      >
+        {isDragging && (
+          <div className="fixed inset-0 z-50 cursor-col-resize select-none bg-transparent" />
+        )}
+
+        <div
+          className={`flex-col h-full rounded shadow border border-border bg-card overflow-hidden transition-none min-w-0 ${
+            mobileTab === 'workspace'
+              ? 'flex flex-2/5 w-full md:flex-none md:w-[var(--workspace-width)]'
+              : 'hidden md:flex md:flex-none md:w-[var(--workspace-width)]'
+          }`}
+        >
           <FileTabs
             files={files}
             activeFile={activeFile}
@@ -439,12 +555,60 @@ const BlockEditor = () => {
             onFileCreate={handleCreateFile}
             onFileDelete={handleDeleteFile}
           />
-          {!(files.find(f=>f.id===activeFile)?.blocks_json == null && files.find(f=>f.id===activeFile)?.code != null) && <WorkspaceTools workspace={workspace} />}
-          <div ref={workspace.blocklyDiv} className={`blocklyDiv flex-1 ${files.find(f=>f.id===activeFile)?.blocks_json == null && files.find(f=>f.id===activeFile)?.code != null ? 'hidden' : ''}`} />
-          {files.find(f=>f.id===activeFile)?.blocks_json == null && files.find(f=>f.id===activeFile)?.code != null && <textarea aria-label={`Source for ${getCurrentFileName()}`} spellCheck={false} className="flex-1 resize-none p-4 font-mono text-sm" value={textDrafts[activeFile] ?? files.find(f=>f.id===activeFile)?.code ?? ''} onChange={e=>{setTextDrafts(previous=>({...previous,[activeFile]:e.target.value}));updateFileCode(activeFile,e.target.value)}}/>}
+          {!(files.find(f => f.id === activeFile)?.blocks_json == null && files.find(f => f.id === activeFile)?.code != null) && (
+            <WorkspaceTools workspace={workspace} />
+          )}
+
+          <div
+            ref={workspace.blocklyDiv}
+            className={`blocklyDiv flex-1 min-h-0 w-full relative ${
+              files.find(f => f.id === activeFile)?.blocks_json == null && files.find(f => f.id === activeFile)?.code != null
+                ? 'hidden'
+                : ''
+            }`}
+          />
+
+          {files.find(f => f.id === activeFile)?.blocks_json == null && files.find(f => f.id === activeFile)?.code != null && (
+            <textarea
+              aria-label={`Source for ${getCurrentFileName()}`}
+              spellCheck={false}
+              className="flex-1 min-h-0 resize-none p-4 font-mono text-sm outline-none bg-card text-foreground"
+              value={textDrafts[activeFile] ?? files.find(f => f.id === activeFile)?.code ?? ''}
+              onChange={(e) => {
+                setTextDrafts(prev => ({ ...prev, [activeFile]: e.target.value }))
+                updateFileCode(activeFile, e.target.value)
+              }}
+            />
+          )}
         </div>
-        
-        <div className="flex-1 h-full overflow-hidden"> 
+
+        <div
+          onMouseDown={() => setIsDragging(true)}
+          onDoubleClick={() => {
+            setWorkspaceWidth(60) // Double click resets to 60/40
+            localStorage.setItem('editor_split_percent', '60')
+            setTimeout(() => {
+              const ws = workspace.getWorkspace()
+              if (ws) Blockly.svgResize(ws)
+            }, 50)
+          }}
+          title="Drag to resize, double-click to reset"
+          className="hidden md:flex items-center justify-center w-3 hover:w-3 cursor-col-resize group shrink-0 transition-all select-none z-10"
+        >
+          <div
+            className={`w-1 h-12 rounded-full transition-colors flex items-center justify-center ${
+              isDragging ? 'bg-primary h-20' : 'bg-border group-hover:bg-primary/70'
+            }`}
+          >
+            <GripVertical className="size-3 text-muted-foreground/50 opacity-0 group-hover:opacity-100 transition-opacity" />
+          </div>
+        </div>
+
+        <div
+          className={`h-full overflow-hidden flex-1 min-w-0 ${
+            mobileTab === 'preview' ? 'flex flex-col w-full' : 'hidden md:flex'
+          }`}
+        >
           <PreviewPane
             storageScope={id || currentProjectId || 'scratch'}
             generatedCode={generatedCode}

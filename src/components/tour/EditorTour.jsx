@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { HelpCircle } from 'lucide-react'
 import TourSpotlight from './TourSpotlight'
 import { useTour } from './TourProvider'
+import { Button } from '#components/ui/button'
 
 // ─────────────────────────────────────────────
 // Tour step definitions
@@ -85,14 +86,14 @@ export function TourHelpButton({ className = '' }) {
   const { startTour } = useTour()
 
   return (
-    <button
+    <Button
       onClick={() => startTour(EDITOR_TOUR_ID)}
       title="Take the editor tour"
-      className={`btn flex items-center gap-1.5 px-3 py-2 rounded-lg bg-blockly-purple/10 text-blockly-purple hover:bg-blockly-purple hover:text-white transition-all font-semibold text-sm ${className}`}
+      variant='super'
     >
       <HelpCircle size={16} />
       <span>Tour</span>
-    </button>
+    </Button>
   )
 }
 

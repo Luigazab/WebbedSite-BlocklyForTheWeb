@@ -130,9 +130,9 @@
   --primary: var(--brand-500);
   --primary-foreground: #ffffff;
   --primary-depth: var(--brand-900);
-  --secondary: #172554;
-  --secondary-foreground: var(--brand-100);
-  --secondary-depth: var(--sun-700);
+  --secondary: var(--sun-700);
+  --secondary-foreground: var(--brand-800);
+  --secondary-depth: var(--sun-900);
   --muted: #1a2540;
   --muted-foreground: #94a3b8;
   --accent: #3b2a07;
