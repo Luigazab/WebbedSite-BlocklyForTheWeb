@@ -24,6 +24,22 @@ export async function getBadgeLibrary() {
   return data ?? []
 }
 
+export async function getTemplateBadgeRules(courseId) {
+  const { data, error } = await supabase.from('topic_badge_templates').select('*').eq('course_id', courseId).order('created_at', { ascending: false })
+  if (error) throw error
+  return (data ?? []).map(rule => ({ ...rule, criterion: 'topic_completed' }))
+}
+export async function createTemplateBadgeRule(values) {
+  const { classroom_id: _classroom, xp_target: _xp, criterion: _criterion, ...template } = values
+  const { data, error } = await supabase.from('topic_badge_templates').insert(template).select().single()
+  if (error) throw error
+  return data
+}
+export async function setTemplateBadgeActive(id, isActive) {
+  const { error } = await supabase.from('topic_badge_templates').update({ is_active: isActive }).eq('id', id)
+  if (error) throw error
+}
+
 export async function getStudentBadgeAwards(studentId) {
   const { data, error } = await supabase.from('classroom_badge_awards').select('*')
     .eq('student_id', studentId).order('earned_at', { ascending: false })

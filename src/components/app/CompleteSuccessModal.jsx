@@ -1,98 +1,101 @@
-import { Dialog } from '@headlessui/react';
-import { ArrowRight, BookOpen, CheckCircle } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { Dialog, Transition } from "@headlessui/react";
+import { Fragment, useState } from "react";
+import { Award, ArrowRight } from "lucide-react";
+import RewardAnimation from "./RewardAnimation";
 
-const CompleteSuccessModal = ({
+export default function CompleteSuccessModal({
   isOpen,
-  onClose,
-  onRemain,
-  onSubmitToTopic,
-  onSubmitToNext,
-  title = "Lesson Completed!",
-  message = "Congratulations! You've successfully completed this lesson."
-}) => {
-  const [progress, setProgress] = useState(0);
-
-  useEffect(() => {
-    if (isOpen) {
-      setTimeout(() => setProgress(100), 200);
-    } else {
-      setProgress(0);
-    }
-  }, [isOpen]);
-
+  onExit,
+  onContinue,
+  earnedXp = 0,
+  title = "Lesson completed!",
+  message = "Congratulations! Your hard work is paying off.",
+  badge = null,
+  lastLesson = false,
+}) {
+  const [imageFailed, setImageFailed] = useState(false);
   return (
-    <Dialog open={isOpen} onClose={onClose} className="relative z-50">
-      {/* Backdrop */}
-      <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" aria-hidden="true" />
-
-      {/* Modal */}
-      <div className="fixed inset-0 flex items-center justify-center p-4">
-        <Dialog.Panel className="bg-white rounded-2xl p-8 max-w-md w-full shadow-xl border border-slate-200">
-          <Dialog.Title className="text-2xl font-extrabold mb-4 text-center text-slate-600">
-            {title}
-          </Dialog.Title>
-
-          {/* Progress Bar */}
-          <div className="flex flex-col items-center mb-6">
-            <div className="relative w-24 h-24">
-              <svg className="w-full h-full">
-                <circle
-                  cx="50%"
-                  cy="50%"
-                  r="45%"
-                  stroke="#e5e7eb"
-                  strokeWidth="8"
-                  fill="none"
+    <Transition appear show={isOpen} as={Fragment}>
+      <Dialog onClose={onExit} className="relative z-[100]">
+        <Transition.Child
+          as={Fragment}
+          enter="transition-opacity duration-[250ms] motion-reduce:duration-0"
+          enterFrom="opacity-0"
+          enterTo="opacity-100"
+          leave="transition-opacity duration-[250ms] motion-reduce:duration-0"
+          leaveFrom="opacity-100"
+          leaveTo="opacity-0"
+        >
+          <div className="fixed inset-0 overflow-y-auto bg-gradient-to-b from-violet-50 via-white to-amber-50">
+            <Dialog.Panel className="flex min-h-dvh w-full flex-col items-center justify-center px-6 py-10 text-center">
+              <div className="relative flex h-64 w-64 items-center justify-center sm:h-80 sm:w-80">
+                <RewardAnimation
+                  src={
+                    badge ? "/Reward%20light%20effect.lottie" : "/Trophy.lottie"
+                  }
+                  light={Boolean(badge)}
                 />
-                <circle
-                  cx="50%"
-                  cy="50%"
-                  r="45%"
-                  stroke="#10b981"
-                  strokeWidth="8"
-                  fill="none"
-                  strokeDasharray="283"
-                  strokeDashoffset={283 - (progress / 100) * 283}
-                  className="transition-all! duration-1000! ease-out!"
-                />
-              </svg>
-              <CheckCircle className="absolute inset-0 m-auto text-green-500 w-10 h-10" />
-            </div>
-            <p className="mt-2 text-sm text-slate-600 font-semibold">100% Complete</p>
+                {badge && (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    {badge.image_url && !imageFailed ? (
+                      <img
+                        src={badge.image_url}
+                        alt={badge.name}
+                        onError={() => setImageFailed(true)}
+                        className="h-36 w-36 object-contain drop-shadow-xl sm:h-44 sm:w-44"
+                      />
+                    ) : (
+                      <Award className="h-36 w-36 text-amber-500" />
+                    )}
+                  </div>
+                )}
+              </div>
+              <p className="mb-3 text-sm font-bold uppercase tracking-widest text-violet-600 dark:text-violet-300">
+                {badge ? "Topic badge earned" : "You did it!"}
+              </p>
+              <Dialog.Title className="max-w-xl text-3xl font-extrabold text-foreground sm:text-5xl">
+                {badge?.name || title}
+              </Dialog.Title>
+              <Dialog.Description className="mt-5 max-w-lg text-lg text-foreground">
+                {badge ? badge.description || badge.requirement : message}
+              </Dialog.Description>
+              {!badge && (
+                <p className="mt-6 rounded-full bg-amber-100 dark:bg-amber-950/50 px-6 py-3 text-xl font-bold text-amber-800 dark:text-amber-300">
+                  +{earnedXp} XP earned
+                </p>
+              )}
+              <div className="mt-10 flex w-full max-w-md flex-col gap-3 sm:flex-row">
+                {badge ? (
+                  <button
+                    autoFocus
+                    onClick={onExit}
+                    className="w-full rounded-xl bg-violet-600 px-6 py-4 font-bold text-white hover:bg-violet-700"
+                  >
+                    Awesome!
+                  </button>
+                ) : (
+                  <>
+                    <button
+                      onClick={onExit}
+                      className="flex-1 rounded-xl border border-border bg-card px-5 py-4 font-semibold text-foreground hover:bg-muted"
+                    >
+                      Exit to classroom
+                    </button>
+                    <button
+                      autoFocus
+                      onClick={onContinue}
+                      className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-violet-600 px-5 py-4 font-bold text-white hover:bg-violet-700"
+                    >
+                      {lastLesson ? "Back to classroom" : "Continue"}
+                      <ArrowRight size={18} />
+                    </button>
+                  </>
+                )}
+              </div>
+            </Dialog.Panel>
           </div>
-
-          <p className="mb-6 text-center text-slate-700">{message}</p>
-
-          {/* Action Buttons */}
-          <div className="flex flex-col gap-3">
-            <button
-              onClick={onRemain}
-              className="w-full px-4 py-2 border border-yellow-500 text-yellow-600 rounded-lg 
-                        bg-white hover:bg-blue-50 transition-colors font-semibold"
-            >
-              Remain Here
-            </button>
-            <button
-              onClick={onSubmitToTopic}
-              className="w-full px-4 py-2 border border-green-500 text-green-600 rounded-lg 
-                        bg-white hover:bg-green-50 transition-colors font-semibold"
-            >
-              Submit & Go to Topic
-            </button>
-            <button
-              onClick={onSubmitToNext}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg 
-                        hover:bg-blue-600 transition-colors font-semibold shadow"
-            >
-              <ArrowRight size={18}/>
-              Submit & Continue
-            </button>
-          </div>
-        </Dialog.Panel>
-      </div>
-    </Dialog>
+        </Transition.Child>
+      </Dialog>
+    </Transition>
   );
-};
-
-export default CompleteSuccessModal;
+}
