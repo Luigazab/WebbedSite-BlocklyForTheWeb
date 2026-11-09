@@ -1,3 +1,4 @@
+import { splitQuizTime, quizTimeInSeconds } from '../../../utils/quizTimer';
 import AssessmentSettings from '@/components/shared/AssessmentSettings'
 import { AppBreadcrumb } from "#components/common/breadcrumb";
 import { Button } from "#components/ui/button";
@@ -61,7 +62,11 @@ const QuizPage = ({ context = "teacher" }) => {
 
   const [selectedTopicId, setSelectedTopicId] = useState("");
   const [title, setTitle] = useState("");
-  const [timeLimit, setTimeLimit] = useState("");
+  const [timerMinutes, setTimerMinutes] = useState("");
+  const [timerSeconds, setTimerSeconds] = useState("");
+  let timeLimit = null;
+  let timerError = "";
+  try { timeLimit = quizTimeInSeconds(timerMinutes, timerSeconds); } catch (cause) { timerError = cause.message; }
   const [passingScore, setPassingScore] = useState("");
   const [questions, setQuestions] = useState([createQuestion()]);
   const [draggingQuestionId, setDraggingQuestionId] = useState(null);
@@ -83,7 +88,9 @@ const QuizPage = ({ context = "teacher" }) => {
   useEffect(() => {
     setTitle(quiz.title);
     setSelectedTopicId(quiz.topicId || (!isEditMode ? new URLSearchParams(location.search).get("topicId") : "") || "");
-    setTimeLimit(quiz.timeLimit);
+    const timer = splitQuizTime(quiz.timeLimit);
+    setTimerMinutes(timer.minutes);
+    setTimerSeconds(timer.seconds);
     setPassingScore(quiz.passingScore);
 
     if (quiz.questions === null) return; // create-mode default, don't stomp on it
@@ -93,7 +100,7 @@ const QuizPage = ({ context = "teacher" }) => {
       options: normalizeOptions(q.options ?? []),
     }));
     setQuestions(loaded.length > 0 ? loaded : [createQuestion()]);
-  }, [quiz]);
+  }, [quiz.title, quiz.topicId, quiz.timeLimit, quiz.passingScore, quiz.questions]);
 
   const updateQuestion = (questionId, updater) => {
     setQuestions((prev) =>
@@ -189,25 +196,20 @@ const QuizPage = ({ context = "teacher" }) => {
     return null;
   };
 
-  const handleSaveQuiz = async () => {
+  const handleSaveQuiz = async (publish = false) => {
     const lesson = await saveQuiz({
       title,
       topicId: selectedTopicId,
-      timeLimit: timeLimit ? Number(timeLimit) : null,
+      timeLimit,
       passingScore: passingScore ? Number(passingScore) : null,
       questions,
-      validationError: validateQuiz(),
+      publish,
+      validationError: timerError || (publish ? validateQuiz() : !title.trim() ? "Quiz title is required." : null),
     });
     if (!lesson) return;
 
     setShowSubmittedDialog(true);
-    if (!isEditMode) {
-      setTitle("");
-      setTimeLimit("");
-      setPassingScore("");
-      setQuestions([createQuestion()]);
-      setSelectedTopicId("");
-    }
+
   };
   const handleDeleteQuiz = async () => {
     const ok = await removeQuiz();
@@ -215,7 +217,7 @@ const QuizPage = ({ context = "teacher" }) => {
   };
 
   return (
-    <div className="h-screen w-full bg-slate-50 relative overflow-hidden flex">
+    <div className="h-screen w-full bg-muted relative overflow-hidden flex">
       <div
         className="absolute inset-0 z-0"
         style={{
@@ -233,14 +235,15 @@ const QuizPage = ({ context = "teacher" }) => {
         <div className="top-0 sticky shrink-0 flex items-center gap-3 px-4 py-2.5 z-10 backdrop-blur-md">
           <Link to="/"><img src="/icon.png" alt="icon image" className='w-8 h-8' /></Link>
           <BackButton />
-          {editLessonId && <details className="max-h-96 overflow-auto rounded-lg border bg-white p-2"><summary>Assessment settings</summary><AssessmentSettings lessonId={editLessonId} /></details>}
+          {editLessonId && <details className="max-h-96 overflow-auto rounded-lg border bg-card p-2"><summary>Assessment settings</summary><AssessmentSettings lessonId={editLessonId} /></details>}
           {!isAdmin && !isEditMode && !new URLSearchParams(location.search).get("classroomId") && <p className="text-sm text-muted-foreground">Open a classroom to create a lesson for its topics. <Link to="/teacher/classrooms" className="underline">Choose classroom</Link></p>}
-          <span className="text-slate-500">/</span>
-          <span className="font-bold text-slate-700 truncate max-w-xs">
+          <span className="text-muted-foreground">/</span>
+          <span className="font-bold text-foreground truncate max-w-xs">
             {title || 'New Quiz'}
           </span>
+          <span className="rounded-full bg-muted px-2 py-1 text-xs font-semibold">{quiz.isPublished ? "Published" : "Draft"}</span>
           {isAdmin && (
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300">
               Master Content
             </span>
           )}
@@ -249,16 +252,17 @@ const QuizPage = ({ context = "teacher" }) => {
               <Sun size={20}/>Light Mode
             </Button>
             <Button variant="primaryOutline" onClick={() => setShowPreviewDialog(true)}>Preview</Button>
-            <Button variant="primary" onClick={handleSaveQuiz} disabled={saving}>
-              {saving ? (isEditMode ? "Updating..." : "Saving...") : (isEditMode ? "Update Quiz" : "Save Quiz")}
+            <Button variant="primary" onClick={() => handleSaveQuiz(false)} disabled={saving}>
+              {saving ? "Saving…" : "Save Draft"}
             </Button>
+            <Button variant="primary" onClick={() => handleSaveQuiz(true)} disabled={saving}>Publish</Button>
           </div>
         </div>
 
-        <Card className="w-full max-w-5xl mx-auto mt-6 bg-white/60!">
+        <Card className="w-full max-w-5xl mx-auto mt-6 bg-card/60!">
           <CardHeader>
-            <CardTitle className="text-2xl font-bold text-slate-800">{isEditMode ? "Edit Quiz" : "Create New Quiz"}</CardTitle>
-            <CardDescription className="text-slate-500 mt-1">
+            <CardTitle className="text-2xl font-bold text-foreground">{isEditMode ? "Edit Quiz" : "Create New Quiz"}</CardTitle>
+            <CardDescription className="text-muted-foreground mt-1">
               Build a quiz with flexible answer options and reorderable questions.
             </CardDescription>
           </CardHeader>
@@ -266,22 +270,22 @@ const QuizPage = ({ context = "teacher" }) => {
           <CardContent className="space-y-6">
             {quizLoading && <p className="text-sm text-muted-foreground">Loading quiz...</p>}
             <div>
-              <Label htmlFor="quiz-title" className="mb-2 text-lg font-bold text-slate-800">
+              <Label htmlFor="quiz-title" className="mb-2 text-lg font-bold text-foreground">
                 Title:<span className="text-red-500">*</span>
               </Label>
               <Input
                 id="quiz-title"
                 value={title}
                 onChange={(event) => setTitle(event.target.value)}
-                className="bg-background/60 rounded-lg! border-slate-300 shadow text-xl!"
+                className="bg-background/60 rounded-lg! border-border shadow text-xl!"
                 placeholder="Enter quiz title"
               />
             </div>
 
             <div className="space-y-3">
-              <Label className="mb-2 text-lg font-bold text-slate-800">Topics:<span className="text-red-500">*</span></Label>
+              <Label className="mb-2 text-lg font-bold text-foreground">Topics:<span className="text-red-500">*</span></Label>
               <Combobox>
-                <ComboboxInput placeholder="Select topics..."  className="w-full bg-background/60 rounded-lg border border-slate-300 shadow" />
+                <ComboboxInput placeholder="Select topics..."  className="w-full bg-background/60 rounded-lg border border-border shadow" />
                 <ComboboxContent>
                   <ComboboxList>
                     {topicsLoading && <ComboboxLabel>Loading topics...</ComboboxLabel>}
@@ -309,7 +313,7 @@ const QuizPage = ({ context = "teacher" }) => {
                 </ComboboxContent>
               </Combobox>
               {selectedTopic && (
-                <p className="mt-2 text-xs text-slate-600">
+                <p className="mt-2 text-xs text-foreground">
                   Selected topic: <span className="font-semibold">{selectedTopic.title}</span>
                 </p>
               )}
@@ -317,22 +321,23 @@ const QuizPage = ({ context = "teacher" }) => {
 
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div>
-                <Label htmlFor="time-limit" className="mb-2 text-lg font-bold text-slate-800">
-                  Quiz time limit:<span className="text-muted-foreground/60 text-sm">(minutes)</span>
-                </Label>
-                <Input
-                  id="time-limit"
-                  type="number"
-                  min={1}
-                  value={timeLimit}
-                  onChange={(event) => setTimeLimit(event.target.value)}
-                  className="bg-background/60 rounded-lg! border-slate-300 shadow"
-                  placeholder="e.g. 30"
-                />
+                <p className="mb-2 text-lg font-bold text-foreground">Quiz time limit</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label htmlFor="timer-minutes" className="mb-1">Minutes</Label>
+                    <Input id="timer-minutes" type="number" min={0} step={1} value={timerMinutes} onChange={event => setTimerMinutes(event.target.value)} aria-invalid={Boolean(timerError)} aria-describedby="timer-help" className="bg-background/60 rounded-lg! border-border shadow" placeholder="0" />
+                  </div>
+                  <div>
+                    <Label htmlFor="timer-seconds" className="mb-1">Seconds</Label>
+                    <Input id="timer-seconds" type="number" min={0} max={59} step={1} value={timerSeconds} onChange={event => setTimerSeconds(event.target.value)} aria-invalid={Boolean(timerError)} aria-describedby="timer-help" className="bg-background/60 rounded-lg! border-border shadow" placeholder="0" />
+                  </div>
+                </div>
+                <p id="timer-help" className="mt-2 text-xs text-muted-foreground">Leave both fields blank or zero for no time limit.</p>
+                {timerError && <p role="alert" className="mt-1 text-xs text-red-600 dark:text-red-300">{timerError}</p>}
               </div>
 
               <div>
-                <Label htmlFor="passing-score" className="mb-2 text-lg font-bold text-slate-800">
+                <Label htmlFor="passing-score" className="mb-2 text-lg font-bold text-foreground">
                   Passing score:<span className="text-muted-foreground/60 text-sm"> out of {questionCount}</span>
                 </Label>
                 <Input
@@ -343,7 +348,7 @@ const QuizPage = ({ context = "teacher" }) => {
                   value={passingScore}
                   onChange={handlePassingScoreChange}
                   className={cn(
-                    "bg-background/60 rounded-lg! border-slate-300 shadow",
+                    "bg-background/60 rounded-lg! border-border shadow",
                     passingScoreError && "border-red-500 focus-visible:border-red-500"
                   )}
                   placeholder="e.g. 8"
@@ -356,9 +361,9 @@ const QuizPage = ({ context = "teacher" }) => {
 
             <div className="rounded-2xl border border-white/60 bg-background p-5 shadow-sm space-y-4">
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-bold text-slate-800">Questions</h2>
+                <h2 className="text-lg font-bold text-foreground">Questions</h2>
               </div>
-              <p className="text-sm text-slate-500">Drag the handle on each question to reorder.</p>
+              <p className="text-sm text-muted-foreground">Drag the handle on each question to reorder.</p>
 
               <div className="space-y-3">
                 {questions.map((question, questionIndex) => (
@@ -373,16 +378,16 @@ const QuizPage = ({ context = "teacher" }) => {
                     }}
                     onDragEnd={() => setDraggingQuestionId(null)}
                     className={cn(
-                      "rounded-2xl border border-slate-200 bg-white p-4 space-y-4",
+                      "rounded-2xl border border-border bg-card p-4 space-y-4",
                       draggingQuestionId === question.id && "opacity-50"
                     )}
                   >
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-2">
-                        <button type="button" className="cursor-grab rounded-lg border bg-slate-50 p-2 text-slate-500 active:cursor-grabbing">
+                        <button type="button" className="cursor-grab rounded-lg border bg-muted p-2 text-muted-foreground active:cursor-grabbing">
                           <GripVertical className="size-4" />
                         </button>
-                        <p className="text-sm font-semibold text-slate-700">Question {questionIndex + 1}</p>
+                        <p className="text-sm font-semibold text-foreground">Question {questionIndex + 1}</p>
                       </div>
                       <Button
                         type="button"
@@ -396,20 +401,20 @@ const QuizPage = ({ context = "teacher" }) => {
                     </div>
 
                     <div>
-                      <Label className="mb-2 text-sm font-semibold text-slate-700">Question text</Label>
+                      <Label className="mb-2 text-sm font-semibold text-foreground">Question text</Label>
                       <Textarea
                         value={question.text}
                         onChange={(event) =>
                           updateQuestion(question.id, (current) => ({ ...current, text: event.target.value }))
                         }
-                        className="border border-slate-200 bg-slate-50"
+                        className="border border-border bg-muted"
                         placeholder="Enter your question..."
                       />
                     </div>
 
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
-                        <Label className="text-sm font-semibold text-slate-700">Options</Label>
+                        <Label className="text-sm font-semibold text-foreground">Options</Label>
                         <Button type="button" variant="secondaryOutline" onClick={() => addOption(question.id)}>
                           <Plus />
                           Add Option
@@ -417,13 +422,13 @@ const QuizPage = ({ context = "teacher" }) => {
                       </div>
 
                       {question.options.map((option, optionIndex) => (
-                        <div key={option.id} className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 p-2">
+                        <div key={option.id} className="flex items-center gap-2 rounded-xl border border-border bg-muted p-2">
                           <button
                             type="button"
                             onClick={() => toggleOptionCorrect(question.id, option.id)}
                             className={cn(
                               "size-8 shrink-0 rounded-lg border flex items-center justify-center transition-colors",
-                              option.isCorrect ? "bg-green-500 border-green-600 text-white" : "bg-white border-slate-300 text-slate-400"
+                              option.isCorrect ? "bg-green-500 border-green-600 text-white" : "bg-card border-border text-muted-foreground"
                             )}
                             aria-label={`Toggle correctness for option ${optionIndex + 1}`}
                           >
@@ -433,7 +438,7 @@ const QuizPage = ({ context = "teacher" }) => {
                           <Input
                             value={option.text}
                             onChange={(event) => updateOptionText(question.id, option.id, event.target.value)}
-                            className="border border-slate-200 bg-white"
+                            className="border border-border bg-card"
                             placeholder={`Option ${optionIndex + 1}`}
                           />
 
@@ -468,19 +473,19 @@ const QuizPage = ({ context = "teacher" }) => {
               </Button>
             )}
             <Button variant="primary" onClick={() => setShowPreviewDialog(true)}>Preview</Button>
-            <Button variant="secondary" onClick={handleSaveQuiz} disabled={saving}>
-              {saving ? (isEditMode ? "Updating..." : "Saving...") : (isEditMode ? "Update Quiz" : "Save Quiz")}
+            <Button variant="secondary" onClick={() => handleSaveQuiz(false)} disabled={saving}>
+              {saving ? "Saving…" : "Save Draft"}
             </Button>
+            <Button variant="primary" onClick={() => handleSaveQuiz(true)} disabled={saving}>Publish</Button>
           </CardFooter>
         </Card>
         <Dialog open={showSubmittedDialog} onOpenChange={setShowSubmittedDialog}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle>Lesson submitted for approval</DialogTitle>
+              <DialogTitle>Lesson saved</DialogTitle>
             </DialogHeader>
-            <p className="text-sm text-slate-600">
-              Your quiz has been {isEditMode ? "updated" : "created"} and sent to an administrator for review. It will remain unpublished
-              until it is approved.
+            <p className="text-sm text-foreground">
+              {quiz.isPublished ? "Your lesson is published and available to students when its topic is open." : "Your draft is saved and hidden from students."}
             </p>
             <DialogFooter>
               <Button variant="primary" onClick={() => setShowSubmittedDialog(false)}>
@@ -503,21 +508,21 @@ const QuizPage = ({ context = "teacher" }) => {
 
               <div className="flex flex-wrap gap-2">
                 <Badge variant="outline">Questions: {questions.length}</Badge>
-                {timeLimit && <Badge variant="outline">Time limit: {timeLimit} min</Badge>}
+                <Badge variant="outline">{timerError ? "Invalid timer" : timeLimit ? `Time limit: ${Math.floor(timeLimit / 60)} min ${timeLimit % 60} sec` : "No time limit"}</Badge>
                 {passingScore && <Badge variant="outline">Passing: {passingScore}/{questions.length}</Badge>}
               </div>
 
               <div className="space-y-4">
                 {questions.map((question, questionIndex) => (
-                  <div key={question.id} className="rounded-2xl border border-slate-200 bg-white p-4 space-y-3">
-                    <p className="font-semibold text-slate-800">
+                  <div key={question.id} className="rounded-2xl border border-border bg-card p-4 space-y-3">
+                    <p className="font-semibold text-foreground">
                       {questionIndex + 1}. {question.text || "Untitled question"}
                     </p>
                     <div className="space-y-2">
                       {question.options.map((option, optionIndex) => (
-                        <div key={option.id} className="flex items-center gap-2 rounded-xl border border-slate-100 bg-slate-50 p-2">
-                          <span className="text-sm font-semibold text-slate-500">{String.fromCharCode(65 + optionIndex)}.</span>
-                          <p className="text-sm text-slate-700 flex-1">{option.text || "Empty option"}</p>
+                        <div key={option.id} className="flex items-center gap-2 rounded-xl border border-border bg-muted p-2">
+                          <span className="text-sm font-semibold text-muted-foreground">{String.fromCharCode(65 + optionIndex)}.</span>
+                          <p className="text-sm text-foreground flex-1">{option.text || "Empty option"}</p>
                           {option.isCorrect && <Badge variant="secondary">Correct</Badge>}
                         </div>
                       ))}
@@ -538,7 +543,7 @@ const QuizPage = ({ context = "teacher" }) => {
             <DialogHeader>
               <DialogTitle>Delete this quiz?</DialogTitle>
             </DialogHeader>
-            <p className="text-sm text-slate-600">
+            <p className="text-sm text-foreground">
               This will permanently delete "{title || "Untitled Quiz"}" and all of its questions. This action cannot be undone.
             </p>
             <DialogFooter>

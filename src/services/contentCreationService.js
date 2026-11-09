@@ -163,6 +163,7 @@ export const fetchLectureEditorData = async (lessonId) => {
       id,
       title,
       topics_id,
+      is_published,
       type,
       base_xp,
       lectures (
@@ -247,6 +248,7 @@ export const fetchQuizEditorData = async (lessonId) => {
       id,
       title,
       topics_id,
+      is_published,
       type,
       base_xp,
       quizzes (
@@ -289,6 +291,7 @@ export const fetchTutorialEditorData = async (lessonId) => {
       id,
       title,
       topics_id,
+      is_published,
       type,
       base_xp,
       tutorials (
@@ -325,7 +328,8 @@ export const fetchLaboratoryEditorData = async (lessonId) => {
       id,
       title,
       topics_id,
-      type, base_xp, is_published,
+      is_published,
+      type, base_xp,
       laboratories (
         id,
         instruction, rubric, passing_score, rubric_version
@@ -385,6 +389,8 @@ export const createQuizContent = async ({ lessonId, timeLimit, passingScore, que
     .single();
 
   if (quizError) throw quizError;
+
+  if (!questions.length) return quizRow;
 
   const questionPayload = questions.map((question, index) => ({
     quiz_id: quizRow.id,

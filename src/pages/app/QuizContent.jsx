@@ -6,7 +6,6 @@ import { Clock } from "lucide-react";
 import { useQuizViewer } from "@/hooks/useQuizViewer";
 import QuizAssessment from "./QuizAssessment";
 import QuizResult from "./QuizResult";
-import CompleteSuccessModal from "../../components/app/CompleteSuccessModal";
 import Loader from "../../components/layout/Loader";
 
 const normaliseDbAnswers = (dbAnswers, questions) =>
@@ -53,22 +52,22 @@ function StartQuizDialog({ isOpen, onConfirm, onCancel, quiz }) {
         </Transition.Child>
         <div className="fixed inset-0 flex items-center justify-center p-4">
           <Transition.Child as={Fragment} enter="ease-out duration-200" enterFrom="opacity-0 scale-95" enterTo="opacity-100 scale-100" leave="ease-in duration-150" leaveFrom="opacity-100 scale-100" leaveTo="opacity-0 scale-95">
-            <Dialog.Panel className="w-full max-w-sm bg-white rounded-2xl shadow-2xl p-8 flex flex-col items-center gap-5 text-center">
-              <div className="w-16 h-16 bg-violet-100 rounded-2xl flex items-center justify-center">
-                <Clock className="w-8 h-8 text-violet-600" />
+            <Dialog.Panel className="w-full max-w-sm bg-card rounded-2xl shadow-2xl p-8 flex flex-col items-center gap-5 text-center">
+              <div className="w-16 h-16 bg-violet-100 dark:bg-violet-950/50 rounded-2xl flex items-center justify-center">
+                <Clock className="w-8 h-8 text-violet-600 dark:text-violet-300" />
               </div>
-              <Dialog.Title className="text-xl font-black text-slate-800">Ready to start?</Dialog.Title>
-              <div className="space-y-1.5 text-sm text-slate-500">
-                <p>You're about to take a <span className="font-bold text-slate-700">timed quiz</span>.</p>
+              <Dialog.Title className="text-xl font-black text-foreground">Ready to start?</Dialog.Title>
+              <div className="space-y-1.5 text-sm text-muted-foreground">
+                <p>You're about to take a <span className="font-bold text-foreground">timed quiz</span>.</p>
                 {timeLimit ? (
-                  <p>You'll have <span className="font-bold text-violet-600">{formatDuration(timeLimit)}</span> to complete it.</p>
+                  <p>You'll have <span className="font-bold text-violet-600 dark:text-violet-300">{formatDuration(timeLimit)}</span> to complete it.</p>
                 ) : (
-                  <p>This quiz has <span className="font-bold text-violet-600">no time limit</span>.</p>
+                  <p>This quiz has <span className="font-bold text-violet-600 dark:text-violet-300">no time limit</span>.</p>
                 )}
-                <p className="pt-1 text-slate-400">The timer starts as soon as you click Begin.</p>
+                <p className="pt-1 text-muted-foreground">The timer starts as soon as you click Begin.</p>
               </div>
               <div className="flex gap-3 w-full pt-1">
-                <button onClick={onCancel} className="flex-1 btn py-2.5 bg-slate-100 text-slate-600 font-semibold rounded-xl hover:bg-slate-200 transition-colors">Cancel</button>
+                <button onClick={onCancel} className="flex-1 btn py-2.5 bg-muted text-foreground font-semibold rounded-xl hover:bg-muted transition-colors">Cancel</button>
                 <button onClick={onConfirm} className="flex-1 btn py-2.5 bg-violet-600 text-white font-bold rounded-xl hover:bg-violet-700 transition-colors">Begin</button>
               </div>
             </Dialog.Panel>
@@ -79,7 +78,7 @@ function StartQuizDialog({ isOpen, onConfirm, onCancel, quiz }) {
   );
 }
 
-const QuizContent = ({ lessonId, onNext, navigation, preview = false }) => {
+const QuizContent = ({ lessonId, onNext, navigation, onCompleted, preview = false }) => {
   const { lessonQuiz, loading, attempts, submitting, finishAttempt } = useQuizViewer(lessonId, { preview });
   const quiz = lessonQuiz?.quiz;
   const questions = quiz?.questions ?? [];
@@ -89,7 +88,6 @@ const QuizContent = ({ lessonId, onNext, navigation, preview = false }) => {
   const [phase, setPhase] = useState("start");
   const [activeAttemptIdx, setActiveAttemptIdx] = useState(0);
   const [currentResult, setCurrentResult] = useState(null);
-  const [showCompleteModal, setShowCompleteModal] = useState(false);
 
 
   // Once attempts load, jump straight to the best one instead of "start"
@@ -132,10 +130,14 @@ const QuizContent = ({ lessonId, onNext, navigation, preview = false }) => {
     setCurrentResult(attemptToResult(attempts[idx], questions));
   };
 
-  const handleFinish = () => setShowCompleteModal(true);
-  const handleRemain = () => setShowCompleteModal(false);
-  const handleToTopic = () => { setShowCompleteModal(false); onNext?.("topic"); };
-  const handleToNext = () => { setShowCompleteModal(false); onNext?.("next"); };
+  const handleFinish = async () => {
+    if (preview) { onNext?.('next'); return; }
+    if ((currentResult?.score ?? 0) < (attempts[activeAttemptIdx]?.passing_count ?? quiz.passing_score)) {
+      toast.info('Pass this quiz to complete the lesson. Review your answers and retry.');
+      return;
+    }
+    await onCompleted?.();
+  };
 
   if (phase === "taking") {
     return <QuizAssessment lesson={{ id: lessonQuiz.id, title: lessonQuiz.title, quiz }} onComplete={handleQuizComplete} deadline={!preview ? assessedAttempt?.deadline : null} />;
@@ -154,9 +156,9 @@ const QuizContent = ({ lessonId, onNext, navigation, preview = false }) => {
     <>
       {submitting && (
         <div className="fixed inset-0 z-[55] bg-black/20 backdrop-blur-sm flex items-center justify-center pointer-events-none">
-          <div className="bg-white rounded-2xl shadow-xl px-8 py-5 flex items-center gap-3">
+          <div className="bg-card rounded-2xl shadow-xl px-8 py-5 flex items-center gap-3">
             <div className="w-5 h-5 rounded-full border-4 border-violet-500 border-t-transparent animate-spin" />
-            <p className="font-semibold text-slate-700">Saving your attempt…</p>
+            <p className="font-semibold text-foreground">Saving your attempt…</p>
           </div>
         </div>
       )}
@@ -171,17 +173,7 @@ const QuizContent = ({ lessonId, onNext, navigation, preview = false }) => {
         onSelectAttempt={handleSelectAttempt}
       />
 
-      <CompleteSuccessModal
-        isOpen={showCompleteModal}
-        onClose={handleRemain}
-        onRemain={handleRemain}
-        onSubmitToTopic={handleToTopic}
-        onSubmitToNext={navigation?.next ? handleToNext : handleToTopic}
-        title="Quiz Complete!"
-        message={`You scored ${currentResult?.scoreLabel ?? `${currentResult?.score ?? 0} / ${total}`}. ${
-          preview ? "Preview only." : "Attempt saved!"
-        }`}
-      />
+
     </>
   );
 };

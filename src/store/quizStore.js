@@ -1,3 +1,4 @@
+import { publishSavedLesson } from '../services/lessonPublicationService';
 import { create } from 'zustand'
 import { quizService } from '../services/quiz.service'
 import { createLessonBase, updateLessonBase, removeLessonById, fetchTopicGroupsForAuthoring } from "@/services/lessonService";
@@ -5,6 +6,7 @@ import { fetchQuizEditorData, upsertQuizContent } from "@/services/quizService";
 
 const emptyQuiz = {
   id: null,
+  isPublished: false,
   title: "",
   topicId: "",
   timeLimit: "",
@@ -57,6 +59,7 @@ export const useQuizStore = create((set) => ({
       const data = await fetchQuizEditorData(lessonId);
       const quiz = {
         id: data.id,
+        isPublished: Boolean(data.is_published),
         title: data.title ?? "",
         topicId: data.topics_id ?? "",
         timeLimit: data.quiz?.time_limit ? String(data.quiz.time_limit) : "",
@@ -70,23 +73,29 @@ export const useQuizStore = create((set) => ({
     }
   },
 
-  createQuiz: async ({ authorId, title, topicId, timeLimit, passingScore, questions }) => {
+  createQuiz: async ({ authorId, title, topicId, timeLimit, passingScore, questions, publish = false }) => {
     set({ saving: true });
     try {
       const lesson = await createLessonBase({ topicId, authorId, title: title.trim(), type: "quiz" });
+      set(state => ({ quiz: { ...state.quiz, id: lesson.id, isPublished: false } }));
       await upsertQuizContent({ lessonId: lesson.id, timeLimit, passingScore, questions });
-      return lesson;
+      if (publish) await publishSavedLesson(lesson.id);
+      set(state => ({ quiz: { ...state.quiz, id: lesson.id, isPublished: publish } }));
+      return { ...lesson, is_published: publish };
     } finally {
       set({ saving: false });
     }
   },
 
-  updateQuiz: async ({ lessonId, title, topicId, timeLimit, passingScore, questions }) => {
+  updateQuiz: async ({ lessonId, title, topicId, timeLimit, passingScore, questions, publish = false }) => {
     set({ saving: true });
     try {
       const lesson = await updateLessonBase({ lessonId, topicId, title: title.trim() });
+      set(state => ({ quiz: { ...state.quiz, id: lesson.id, isPublished: false } }));
       await upsertQuizContent({ lessonId: lesson.id, timeLimit, passingScore, questions });
-      return lesson;
+      if (publish) await publishSavedLesson(lesson.id);
+      set(state => ({ quiz: { ...state.quiz, id: lesson.id, isPublished: publish } }));
+      return { ...lesson, is_published: publish };
     } finally {
       set({ saving: false });
     }

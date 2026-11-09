@@ -141,6 +141,7 @@ export const getLessonDetails = async (courseSlug, lessonSlug, { masterOnly = fa
     .from('lessons')
     .select('slug, type, topics!inner(slug, course_id, is_unlocked)')
     .eq('topics.course_id', courseId)
+    .eq('topics_id', lessonData.topics.id)
     .order('order', { foreignTable: 'topics', ascending: true })
     .order('order', { ascending: true });
 

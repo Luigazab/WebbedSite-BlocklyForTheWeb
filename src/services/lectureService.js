@@ -18,6 +18,7 @@ export const fetchLectureEditorData = async (lessonId) => {
       id,
       title,
       topics_id,
+      is_published,
       type,
       base_xp,
       lectures (

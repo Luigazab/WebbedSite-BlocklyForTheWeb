@@ -1,9 +1,11 @@
+import { publishSavedLesson } from '../services/lessonPublicationService';
 import { create } from "zustand";
 import { createLessonBase, updateLessonBase, removeLessonById, fetchTopicGroupsForAuthoring } from "@/services/lessonService";
 import { fetchLectureEditorData, uploadLectureAttachment, upsertLectureContent } from "@/services/lectureService";
 
 const emptyLecture = {
   id: null,
+  isPublished: false,
   title: "",
   topicId: "",
   content: "",
@@ -45,6 +47,7 @@ export const useLectureStore = create((set) => ({
       const data = await fetchLectureEditorData(lessonId);
       const lecture = {
         id: data.id,
+        isPublished: Boolean(data.is_published),
         title: data.title ?? "",
         topicId: data.topics_id ?? "",
         content: data.lecture?.content ?? "",
@@ -62,25 +65,31 @@ export const useLectureStore = create((set) => ({
     }
   },
 
-  createLecture: async ({ authorId, title, topicId, content, attachments }) => {
+  createLecture: async ({ authorId, title, topicId, content, attachments, publish = false }) => {
     set({ saving: true });
     try {
       const lesson = await createLessonBase({ topicId, authorId, title, type: "lecture" });
+      set(state => ({ lecture: { ...state.lecture, id: lesson.id, isPublished: false } }));
       const fileUrl = await resolveFileUrl(lesson.id, attachments);
       await upsertLectureContent({ lessonId: lesson.id, content, videoSrc: attachments.video, fileUrl });
-      return lesson;
+      if (publish) await publishSavedLesson(lesson.id);
+      set(state => ({ lecture: { ...state.lecture, id: lesson.id, isPublished: publish } }));
+      return { ...lesson, is_published: publish };
     } finally {
       set({ saving: false });
     }
   },
 
-  updateLecture: async ({ lessonId, title, topicId, content, attachments }) => {
+  updateLecture: async ({ lessonId, title, topicId, content, attachments, publish = false }) => {
     set({ saving: true });
     try {
       const lesson = await updateLessonBase({ lessonId, topicId, title });
+      set(state => ({ lecture: { ...state.lecture, id: lesson.id, isPublished: false } }));
       const fileUrl = await resolveFileUrl(lesson.id, attachments);
       await upsertLectureContent({ lessonId: lesson.id, content, videoSrc: attachments.video, fileUrl });
-      return lesson;
+      if (publish) await publishSavedLesson(lesson.id);
+      set(state => ({ lecture: { ...state.lecture, id: lesson.id, isPublished: publish } }));
+      return { ...lesson, is_published: publish };
     } finally {
       set({ saving: false });
     }

@@ -10,6 +10,10 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
+  --heading: #0f172a;
+  --subtitle: #475569;
+  --body: #334155;
+  --caption: #64748b;
   --brand-50:  #F4F7FA;
   --brand-100: #E4EBF2;
   --brand-200: #C9D7E4;
@@ -64,7 +68,7 @@
   --blockly-purple: #7b5ddd;
 
   --background: #f8fafc;
-  --foreground: #0f172a;
+  --foreground: #2B4663;
   --card: #ffffff;
   --card-foreground: #0f172a;
   --popover: #ffffff;
@@ -305,13 +309,13 @@
   }
 
   a.topActive.active {
-    @apply bg-white border border-black/10 shadow-lg text-black;
+    @apply bg-card border border-border shadow-lg text-foreground;
   }
   a.navButtons.active {
-    @apply font-extrabold text-lg bg-slate-50 text-slate-950 border-3 border-black drop-shadow-[-1px_1px_0px_rgba(0,0,0,1)] hover:-translate-y-1 hover:translate-x-1 hover:drop-shadow-[-4px_4px_0px_rgba(0,0,0,1)] hover:bg-white hover:scale-105 ;
+    @apply font-extrabold text-lg bg-muted text-foreground border-3 border-black drop-shadow-[-1px_1px_0px_rgba(0,0,0,1)] hover:-translate-y-1 hover:translate-x-1 hover:drop-shadow-[-4px_4px_0px_rgba(0,0,0,1)] hover:bg-card hover:scale-105 ;
   }
   .navButtons{
-    @apply  px-2 py-1 hover:bg-white  rounded-2xl transition-all duration-300 ease-in-out cursor-pointer;
+    @apply  px-2 py-1 hover:bg-card  rounded-2xl transition-all duration-300 ease-in-out cursor-pointer;
   }
   .adminButton{
     @apply text-white hover:bg-blue-50/90 hover:text-indigo-900 transition-all ease-in-out duration-300
@@ -357,7 +361,12 @@
   line-height: 1.4;
   color: var(--caption);
 }
-
+.wide-container {
+  @apply w-full max-w-[1600px] mx-auto space-y-6 p-4 sm:p-6 lg:p-8;
+}
+.inner-container {
+  @apply p-6 space-y-6 max-w-7xl mx-auto;
+}
 
 .container {
   @apply w-full max-w-7xl mx-auto px-6;
@@ -382,6 +391,7 @@
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  border-color: var(--border);
   box-shadow: 0 10px 25px -5px rgb(0 0 0 / 0.15);
   border-bottom: 4px solid rgba(0, 0, 0, 0.15);
 }
@@ -395,13 +405,12 @@
   list-style-position: inside;
   padding: 1.5rem;
   color: var(--heading);
-  background-color: var(--brand-100);
+  background-color: var(--muted);
   line-height: 1.7rem;
   font-size: 1rem;
   border-radius: 0 1.5rem;
 }
 .signup img { max-width: 5rem; }
-.signup button { background-color: var(--blockly-yellow); width: 100%; color: var(--blockly-dark); }
  
 .hero-content h1 {
   font-size: clamp(2rem, 1.3rem + 2vw, 3rem);
@@ -479,17 +488,14 @@
   .blocklyTreeRowContentContainer{
     @apply flex items-center gap-2;
   }
-  .blocklyToolboxCategoryLabel{
-    @apply text-sm
-  }
   .blocklyToolbox {
-    @apply bg-linear-to-r! from-purple-50 via-white to-blue-50 border-r text-black border-slate-200 shadow-lg rounded-r-2xl;
+    @apply bg-card! border-r text-foreground border-border shadow-lg rounded-r-2xl;
   }
   .blocklyTreeSeparator{
     @apply border-3 border-blockly-blue! rounded-full
   }
   .blocklyToolboxCategory{
-    @apply py-1 flex items-center justify-between rounded-sm transition-all! hover:bg-slate-100! hover:drop-shadow hover:-translate-y-1;
+    @apply py-1 flex items-center justify-between rounded-sm transition-all! hover:bg-muted! hover:drop-shadow hover:-translate-y-1;
     transition: transform .15s ease, border-bottom-width .15s ease, background .15s ease !important;
   }
 
@@ -497,24 +503,25 @@
   .blocklyToolboxCategory.blocklyToolboxCategorySelected {
     background:var(--cat-color) !important;
     border-bottom: 6px solid color-mix(in srgb, var(--cat-color), black 20%) !important;
+    color:var(--blockly-light) !important;
   }
   .blocklyToolboxCategoryLabel,
   .blocklyToolboxCategory svg{
-    color:black;
+    color:var(--foreground);
   }
   .blocklyToolboxCategoryLabel{
-    color: color-mix(in srgb, var(--cat-color), grey 60%);
-    font-weight:bold !important;
+    font-weight:600 !important;
+    font-size: 1em !important;
   }
   .blocklyCategoryIcon {
-    stroke: rgb(255, 245, 231);
+    stroke: var(--background);
     fill: var(--cat-color);
     background: var(--cat-color);
     padding: 4px;
     border-radius: 4px;
     width: 25px;
     height: auto;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
     margin-left: 2px;
   }
 
@@ -531,22 +538,28 @@
     @apply  py-1 bg-[#29a8e0] hover:bg-[#29a8e0]! border-2! border-black! min-w-42.5! my-1 hover:drop-shadow-[0_3px_0_black] hover:-translate-y-1 transition-all rounded-sm
   }
   .externalCSS{
-    @apply btn btn-secondary! rounded-sm my-1 border-l-0! px-2! items-center flex justify-center;
+    @apply btn btn-secondary! rounded-sm my-1 border-l-0! font-extrabold! items-center flex justify-center text-white!;
   }
   .internalCSS{
-    @apply btn btn-primary! rounded-sm my-1 border-l-0! px-2! items-center flex justify-center;
+    @apply btn btn-primary! rounded-sm my-1 border-l-0! font-extrabold! items-center flex justify-center text-white;
+  }
+  .javascriptCat{
+    @apply btn btn-warning! rounded-sm my-1 border-l-0! font-extrabold! items-center flex justify-center text-white;
+  }
+  .blocklyToolboxCategoryIcon{
+    @apply hidden!;
+  }
+  .blocklyTreeRowContentContainer.blocklyToolboxCategoryLabel{
+    @apply text-white!;
   }
   .blocklySvg{
-    @apply bg-gray-50!;
-  }
-  .blocklyToolboxCategoryGroup{
-    @apply   px-2;
+    @apply bg-background!;
   }
   .customLabel{
-    @apply font-extrabold ml-2 text-slate-600! tracking-widest! text-xl
+    @apply font-extrabold ml-2 text-foreground! tracking-widest! text-xl
   }
   .blocklyFlyout{
-    @apply flex bg-slate-950/40!
+    @apply flex bg-muted!
   }
   .blocklyToolboxCategoryRow {
     @apply flex! items-center!
@@ -555,6 +568,21 @@
 
 .blocklyToolboxScrollbar { fill: var(--brand-400); }
 .blocklyToolboxCategory  { height: initial; }
+.blocklyToolbox input[type="search"] {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--card);
+  color: var(--foreground);
+  font-size: 13px;
+}
+.blocklyToolbox input[type="search"]:focus {
+  outline: 2px solid var(--primary);
+  outline-offset: 1px;
+}
 .blocklyScrollbarHandle  { fill: var(--brand-400); }
 
 .blocklyDiv {
@@ -580,13 +608,13 @@
 }
 
 .blocklyFlyoutBackground {
-  fill: #222 !important;   /* background color */
-  fill-opacity: .3 !important; /* opacity */
-  stroke: #444 !important; /* border color */
+  fill: var(--muted) !important;   /* background color */
+  fill-opacity: 1 !important; /* opacity */
+  stroke: var(--border) !important; /* border color */
 }
 .blocklyFlyoutLabelText {
   font-weight: bold;
-  fill: white !important;
+  fill: var(--foreground) !important;
   font-size: 16px;
 }
 
@@ -603,6 +631,13 @@
    ─────────────────────────────────────────────────────────────────────────── */
 
 .tiptap-content {
+  /* Authored content remains a light document, including explicit author colors. */
+  color-scheme: light;
+  background: #fff;
+  --heading: #111827;
+  --subtitle: #475569;
+  --body: #374151;
+  --caption: #64748b;
   color: #374151;           /* gray-700 */
   line-height: 1.75;
   font-size: 0.9375rem;     /* ~15px */
@@ -719,79 +754,6 @@
   shrink: 0;
 }
 
-@theme inline {
-    --font-heading: var(--font-sans);
-    --font-sans: 'Inter Variable', sans-serif;
-    --color-sidebar-ring: var(--sidebar-ring);
-    --color-sidebar-border: var(--sidebar-border);
-    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-    --color-sidebar-accent: var(--sidebar-accent);
-    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-    --color-sidebar-primary: var(--sidebar-primary);
-    --color-sidebar-foreground: var(--sidebar-foreground);
-    --color-sidebar: var(--sidebar);
-    --color-chart-5: var(--chart-5);
-    --color-chart-4: var(--chart-4);
-    --color-chart-3: var(--chart-3);
-    --color-chart-2: var(--chart-2);
-    --color-chart-1: var(--chart-1);
-    --color-ring: var(--ring);
-    --color-input: var(--input);
-    --color-border: var(--border);
-    --color-destructive: var(--destructive);
-    --color-accent-foreground: var(--accent-foreground);
-    --color-accent: var(--accent);
-    --color-muted-foreground: var(--muted-foreground);
-    --color-muted: var(--muted);
-    --color-secondary-foreground: var(--secondary-foreground);
-    --color-secondary: var(--secondary);
-    --color-primary-foreground: var(--primary-foreground);
-    --color-primary: var(--primary);
-    --color-popover-foreground: var(--popover-foreground);
-    --color-popover: var(--popover);
-    --color-card-foreground: var(--card-foreground);
-    --color-card: var(--card);
-    --color-foreground: var(--foreground);
-    --color-background: var(--background);
-    --radius-sm: calc(var(--radius) * 0.6);
-    --radius-md: calc(var(--radius) * 0.8);
-    --radius-lg: var(--radius);
-    --radius-xl: calc(var(--radius) * 1.4);
-    --radius-2xl: calc(var(--radius) * 1.8);
-    --radius-3xl: calc(var(--radius) * 2.2);
-    --radius-4xl: calc(var(--radius) * 2.6);
-}
 
-.dark {
-    --background: oklch(0.145 0 0);
-    --foreground: oklch(0.985 0 0);
-    --card: oklch(0.205 0 0);
-    --card-foreground: oklch(0.985 0 0);
-    --popover: oklch(0.205 0 0);
-    --popover-foreground: oklch(0.985 0 0);
-    --primary: oklch(0.922 0 0);
-    --primary-foreground: oklch(0.205 0 0);
-    --secondary: oklch(0.269 0 0);
-    --secondary-foreground: oklch(0.985 0 0);
-    --muted: oklch(0.269 0 0);
-    --muted-foreground: oklch(0.708 0 0);
-    --accent: oklch(0.269 0 0);
-    --accent-foreground: oklch(0.985 0 0);
-    --destructive: oklch(0.704 0.191 22.216);
-    --border: oklch(1 0 0 / 10%);
-    --input: oklch(1 0 0 / 15%);
-    --ring: oklch(0.556 0 0);
-    --chart-1: oklch(0.87 0 0);
-    --chart-2: oklch(0.556 0 0);
-    --chart-3: oklch(0.439 0 0);
-    --chart-4: oklch(0.371 0 0);
-    --chart-5: oklch(0.269 0 0);
-    --sidebar: oklch(0.205 0 0);
-    --sidebar-foreground: oklch(0.985 0 0);
-    --sidebar-primary: oklch(0.488 0.243 264.376);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.269 0 0);
-    --sidebar-accent-foreground: oklch(0.985 0 0);
-    --sidebar-border: oklch(1 0 0 / 10%);
-    --sidebar-ring: oklch(0.556 0 0);
-}
+/* Preview documents keep their own authored palette. */
+iframe[srcdoc] { color-scheme: light; background: #fff; }

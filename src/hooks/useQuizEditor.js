@@ -34,27 +34,30 @@ export const useQuizEditor = (lessonId, { isAdmin = false, classroomId = null } 
       passingScore,
       questions,
       validationError,
+      publish = false,
     }) => {
       if (!user?.id) {
         toast.error("You must be signed in to save a quiz.");
         return null;
       }
 
-      if (!store.topics.some((group) => group.topics.some((topic) => topic.id === topicId))) return toast.error("Select a topic from the current classroom or master library.");
+      if (!store.topics.some((group) => group.topics.some((topic) => topic.id === topicId))) { toast.error("Select a topic from the current classroom or master library."); return null; }
       if (validationError) {
         toast.error(validationError);
         return null;
       }
 
       try {
-        const lesson = isEditMode
+        const savedId = lessonId || useQuizStore.getState().quiz.id;
+        const lesson = savedId
           ? await store.updateQuiz({
-              lessonId,
+              lessonId: savedId,
               title,
               topicId,
               timeLimit,
               passingScore,
               questions,
+              publish,
             })
           : await store.createQuiz({
               authorId: user.id,
@@ -63,6 +66,7 @@ export const useQuizEditor = (lessonId, { isAdmin = false, classroomId = null } 
               timeLimit,
               passingScore,
               questions,
+              publish,
             });
 
         toast.success(

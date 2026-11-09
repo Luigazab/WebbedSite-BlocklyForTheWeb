@@ -81,6 +81,8 @@ export const createQuizContent = async ({ lessonId, timeLimit, passingScore, que
 
   if (quizError) throw quizError;
 
+  if (!questions.length) return quizRow;
+
   const questionPayload = questions.map((question, index) => ({
     quiz_id: quizRow.id,
     text: question.text.trim(),
