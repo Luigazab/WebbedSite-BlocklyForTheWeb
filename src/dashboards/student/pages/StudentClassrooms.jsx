@@ -57,7 +57,7 @@ function MyClassroomCard({ classroom, progress, progressLoading, onLeave }) {
         {progress && (
           <div className="mt-5">
             <div className="flex justify-between gap-3 text-sm">
-              <span className="font-medium text-gray-600">
+              <span className="font-medium text-foreground">
                 Your core lesson progress
               </span>
               <span className="font-bold text-blockly-purple">
@@ -65,7 +65,7 @@ function MyClassroomCard({ classroom, progress, progressLoading, onLeave }) {
               </span>
             </div>
             <div
-              className="mt-2 h-2 overflow-hidden rounded-full bg-gray-100"
+              className="mt-2 h-2 overflow-hidden rounded-full bg-muted"
               role="progressbar"
               aria-label="Your required core lesson progress"
               aria-valuenow={summary.completed}
@@ -242,7 +242,7 @@ export default function StudentClassrooms() {
           <Loader2 className="animate-spin text-blockly-purple" />
         </div>
       ) : error && !studentClassroom ? (
-        <div role="alert" className="rounded-xl bg-red-50 p-4 text-red-700">
+        <div role="alert" className="rounded-xl bg-red-50 dark:bg-red-950/50 p-4 text-red-700 dark:text-red-300">
           {error}
           <button
             type="button"
@@ -262,7 +262,7 @@ export default function StudentClassrooms() {
           onLeave={() => setShowLeave(true)}
         />
       ) : (
-        <div className="rounded-2xl border bg-white px-6 py-16 text-center">
+        <div className="rounded-2xl border bg-card px-6 py-16 text-center">
           <BookOpen className="mx-auto text-blockly-purple" size={42} />
           <h2 className="mt-4 text-xl font-bold">
             You’re not in a classroom yet

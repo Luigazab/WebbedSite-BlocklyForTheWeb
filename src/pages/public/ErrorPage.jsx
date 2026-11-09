@@ -25,16 +25,16 @@ export default function ErrorPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-muted flex items-center justify-center px-4">
       <div className="w-full max-w-md text-center flex flex-col items-center gap-6">
 
         {/* Big error code */}
         <div className="relative">
-          <p className="text-[120px] font-black text-slate-500 leading-none select-none">
+          <p className="text-[120px] font-black text-muted-foreground leading-none select-none">
             {config.code}
           </p>
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-16 h-16 rounded-2xl bg-red-100 flex items-center justify-center">
+            <div className="w-16 h-16 rounded-2xl bg-red-100 dark:bg-red-950/50 flex items-center justify-center">
               <AlertTriangle className="w-8 h-8 text-red-500" />
             </div>
           </div>
@@ -42,20 +42,20 @@ export default function ErrorPage() {
 
         {/* Message */}
         <div className="flex flex-col gap-2">
-          <h1 className="text-2xl font-black text-gray-800">{config.title}</h1>
-          <p className="text-gray-400 text-sm leading-relaxed">{config.subtitle}</p>
+          <h1 className="text-2xl font-black text-foreground">{config.title}</h1>
+          <p className="text-muted-foreground text-sm leading-relaxed">{config.subtitle}</p>
         </div>
 
         {/* Error details — collapsed in prod, shown in dev */}
         {import.meta.env.DEV && error?.message && (
           <details className="w-full text-left bg-gray-900 rounded-xl overflow-hidden">
-            <summary className="px-4 py-3 text-xs font-mono text-gray-400 cursor-pointer hover:text-gray-300 select-none">
+            <summary className="px-4 py-3 text-xs font-mono text-muted-foreground cursor-pointer hover:text-gray-300 select-none">
               Error details (dev only)
             </summary>
             <div className="px-4 pb-4">
               <p className="text-xs font-mono text-red-400 break-all">{error.message}</p>
               {error.stack && (
-                <pre className="text-xs font-mono text-gray-500 mt-2 overflow-x-auto whitespace-pre-wrap">
+                <pre className="text-xs font-mono text-muted-foreground mt-2 overflow-x-auto whitespace-pre-wrap">
                   {error.stack}
                 </pre>
               )}
@@ -67,7 +67,7 @@ export default function ErrorPage() {
         <div className="flex flex-col sm:flex-row gap-3 w-full">
           <button
             onClick={() => navigate(-1)}
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 border border-gray-200 text-gray-600 text-sm font-semibold rounded-lg hover:bg-gray-100 transition-colors"
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 border border-border text-foreground text-sm font-semibold rounded-lg hover:bg-muted transition-colors"
           >
             <RefreshCw className="w-4 h-4" />
             Go Back
@@ -83,8 +83,8 @@ export default function ErrorPage() {
 
         {/* Helpful links */}
         {is404 && (
-          <div className="flex flex-col gap-1.5 w-full border-t border-gray-100 pt-4">
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">
+          <div className="flex flex-col gap-1.5 w-full border-t border-border pt-4">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">
               Maybe you were looking for
             </p>
             {[
@@ -94,10 +94,10 @@ export default function ErrorPage() {
               <button
                 key={to}
                 onClick={() => navigate(to)}
-                className="flex items-center justify-between px-4 py-2.5 rounded-lg hover:bg-gray-100 transition-colors text-sm text-gray-600 font-medium"
+                className="flex items-center justify-between px-4 py-2.5 rounded-lg hover:bg-muted transition-colors text-sm text-foreground font-medium"
               >
                 {label}
-                <ChevronRight className="w-4 h-4 text-gray-400" />
+                <ChevronRight className="w-4 h-4 text-muted-foreground" />
               </button>
             ))}
           </div>

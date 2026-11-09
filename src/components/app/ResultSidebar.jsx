@@ -35,13 +35,13 @@ const ResultSidebar = ({ totalQuestions, questions = [], answers = [], currentQu
     <div className="flex flex-col h-full">
       {/* ── Header: "Attempt X of Y" + dropdown ─────────────────────── */}
       <div className="flex items-center justify-between mb-4 gap-2">
-        <p className="text-slate-700 text-xl font-bold shrink-0">
+        <p className="text-foreground text-xl font-bold shrink-0">
           Attempt{" "}
-          <span className="text-violet-600">
+          <span className="text-violet-600 dark:text-violet-300">
             {totalAttempts > 0 ? activeAttemptIdx + 1 : "—"}
           </span>
           {totalAttempts > 0 && (
-            <span className="text-slate-400 text-base font-semibold">
+            <span className="text-muted-foreground text-base font-semibold">
               {" "}/ {totalAttempts}
             </span>
           )}
@@ -52,21 +52,21 @@ const ResultSidebar = ({ totalQuestions, questions = [], answers = [], currentQu
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setDropdownOpen((v) => !v)}
-              className="flex items-center gap-1.5 bg-white border border-slate-300 text-slate-700 rounded-xl py-1.5 pl-3 pr-2.5 font-semibold text-sm shadow-sm hover:border-violet-400 transition-colors"
+              className="flex items-center gap-1.5 bg-card border border-border text-foreground rounded-xl py-1.5 pl-3 pr-2.5 font-semibold text-sm shadow-sm hover:border-violet-400 transition-colors"
             >
               View
               <ChevronDown
                 size={16}
-                className={`text-slate-400 transition-transform duration-200 ${
+                className={`text-muted-foreground transition-transform duration-200 ${
                   dropdownOpen ? "rotate-180" : ""
                 }`}
               />
             </button>
 
             {dropdownOpen && (
-              <div className="absolute right-0 top-full mt-1 w-52 bg-white border border-slate-200 rounded-2xl shadow-xl z-50 overflow-hidden">
-                <div className="px-3 py-2 border-b border-slate-100">
-                  <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+              <div className="absolute right-0 top-full mt-1 w-52 bg-card border border-border rounded-2xl shadow-xl z-50 overflow-hidden">
+                <div className="px-3 py-2 border-b border-border">
+                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
                     Your Attempts
                   </p>
                 </div>
@@ -89,14 +89,14 @@ const ResultSidebar = ({ totalQuestions, questions = [], answers = [], currentQu
                         className={`w-full flex items-center justify-between px-4 py-2.5 text-sm transition-colors
                           ${
                             isCurrent
-                              ? "bg-violet-50 text-violet-700 font-bold"
-                              : "text-slate-700 hover:bg-slate-50"
+                              ? "bg-violet-50 dark:bg-violet-950/50 text-violet-700 dark:text-violet-300 font-bold"
+                              : "text-foreground hover:bg-muted"
                           }`}
                       >
                         <span className="font-semibold">
                           Attempt {idx + 1}
                           {isPerfect && (
-                            <span className="ml-1.5 text-[10px] font-bold bg-yellow-100 text-yellow-600 px-1.5 py-0.5 rounded-full">
+                            <span className="ml-1.5 text-[10px] font-bold bg-yellow-100 dark:bg-yellow-950/50 text-yellow-600 dark:text-yellow-300 px-1.5 py-0.5 rounded-full">
                               Perfect
                             </span>
                           )}
@@ -105,15 +105,15 @@ const ResultSidebar = ({ totalQuestions, questions = [], answers = [], currentQu
                           <span
                             className={`font-bold ${
                               pct === 100
-                                ? "text-emerald-600"
+                                ? "text-emerald-600 dark:text-emerald-300"
                                 : pct >= 70
-                                ? "text-violet-600"
+                                ? "text-violet-600 dark:text-violet-300"
                                 : "text-red-500"
                             }`}
                           >
                             {pct}%
                           </span>
-                          <span className="text-[10px] text-slate-400">
+                          <span className="text-[10px] text-muted-foreground">
                             {formatAttemptDate(attempt.started_at)}
                           </span>
                         </span>
@@ -130,7 +130,7 @@ const ResultSidebar = ({ totalQuestions, questions = [], answers = [], currentQu
       {/* ── Score summary card ───────────────────────────────────────── */}
       <div
         onClick={onShowOverview}
-        className={`bg-white rounded-2xl shadow mb-4 border-2 cursor-pointer flex flex-col items-center text-center transition-all
+        className={`bg-card rounded-2xl shadow mb-4 border-2 cursor-pointer flex flex-col items-center text-center transition-all
           ${
             currentQuestion === null
               ? "border-violet-500"
@@ -139,7 +139,7 @@ const ResultSidebar = ({ totalQuestions, questions = [], answers = [], currentQu
           ${variant === "desktop" ? "p-5" : "p-4"}`}
       >
         <p className="text-5xl font-extrabold text-violet-500">{percentage}%</p>
-        <p className="text-slate-500 font-bold text-sm mt-1">
+        <p className="text-muted-foreground font-bold text-sm mt-1">
           {correctCount} / {totalQuestions} correct
         </p>
       </div>
@@ -154,8 +154,8 @@ const ResultSidebar = ({ totalQuestions, questions = [], answers = [], currentQu
               ${variant === "desktop" ? "p-4" : "p-3"}
               ${
                 q.number === currentQuestion
-                  ? "bg-white border-2 border-sky-500"
-                  : "bg-white border-2 border-transparent hover:bg-slate-100"
+                  ? "bg-card border-2 border-sky-500"
+                  : "bg-card border-2 border-transparent hover:bg-muted"
               }`}
           >
             {q.isCorrect ? (
@@ -171,7 +171,7 @@ const ResultSidebar = ({ totalQuestions, questions = [], answers = [], currentQu
                 size={variant === "desktop" ? 28 : 24}
               />
             )}
-            <p className="text-slate-700 font-bold">Question {q.number}</p>
+            <p className="text-foreground font-bold">Question {q.number}</p>
           </div>
         ))}
       </div>

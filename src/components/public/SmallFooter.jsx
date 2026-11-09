@@ -1,7 +1,7 @@
 const SmallFooter = () => {
   return (
     <footer className="bg-blockly-dark text-white py-8 rounded-t-3xl">
-        <div className="container mx-auto px-6 flex flex-col md:flex-row justify-between items-center text-gray-400">
+        <div className="container mx-auto px-6 flex flex-col md:flex-row justify-between items-center text-muted-foreground">
           <div className="mb-4 md:mb-0">
             &copy; 2026 WebbedSite. All rights reserved.
           </div>

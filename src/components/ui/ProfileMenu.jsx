@@ -53,21 +53,21 @@ export default function ProfileMenu() {
       {/* Trigger */}
       <button
         onClick={() => setOpen((prev) => !prev)}
-        className="flex items-center gap-2 p-1 rounded-full hover:bg-gray-100 transition-colors"
+        className="flex items-center gap-2 p-1 rounded-full hover:bg-muted transition-colors"
       >
         <img
           src={profile?.avatar_url || '/default-avatar.png'}
           alt="avatar"
           className="w-10 h-10 rounded-full object-cover border-2 border-blockly-purple/30"
         />
-        <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
+        <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
       </button>
 
       {/* Dropdown Panel */}
       {open && (
-        <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-100 z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150">
+        <div className="absolute right-0 top-full mt-2 w-56 bg-card rounded-xl shadow-lg border border-border z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150">
           {/* User info header */}
-          <div className="px-4 py-3 border-b border-gray-100 bg-gray-50">
+          <div className="px-4 py-3 border-b border-border bg-muted">
             <div className="flex items-center gap-3">
               <img
                 src={profile?.avatar_url || '/default-avatar.png'}
@@ -75,8 +75,8 @@ export default function ProfileMenu() {
                 className="w-10 h-10 rounded-full object-cover border-2 border-blockly-purple/30"
               />
               <div className="min-w-0">
-                <p className="text-sm font-semibold text-gray-800 truncate">{profile?.username}</p>
-                <p className="text-xs text-gray-400 truncate">{profile?.email}</p>
+                <p className="text-sm font-semibold text-foreground truncate">{profile?.username}</p>
+                <p className="text-xs text-muted-foreground truncate">{profile?.email}</p>
               </div>
             </div>
           </div>
@@ -87,16 +87,16 @@ export default function ProfileMenu() {
               <button
                 key={label}
                 onClick={() => handleNavigate(to)}
-                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-blockly-purple transition-colors text-left"
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-foreground hover:bg-muted hover:text-blockly-purple transition-colors text-left"
               >
-                <Icon className="w-4 h-4 shrink-0 text-gray-400" />
+                <Icon className="w-4 h-4 shrink-0 text-muted-foreground" />
                 {label}
               </button>
             ))}
           </div>
 
           {/* Logout — separated */}
-          <div className="border-t border-gray-100 py-1">
+          <div className="border-t border-border py-1">
             <button
               onClick={handleLogout}
               className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors text-left"

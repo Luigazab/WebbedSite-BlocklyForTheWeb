@@ -19,7 +19,7 @@ const Stats = () => {
               <div className={`text-7xl md:text-8xl font-extrabold ${stat.color} mb-4`}>
                 {stat.number}
               </div>
-              <div className="text-2xl font-bold text-gray-800">
+              <div className="text-2xl font-bold text-foreground">
                 {stat.label}
               </div>
             </div>

@@ -21,7 +21,7 @@ const FileTabs = ({ files, activeFile, onFileChange, onFileCreate, onFileDelete,
   };
 
   return (
-    <div data-tour="file-tabs" className="flex items-center gap-1 bg-slate-200 overflow-x-auto">
+    <div data-tour="file-tabs" className="flex items-center gap-1 bg-muted overflow-x-auto">
       {/* {isLocal && (
         <div className="flex items-center gap-1 px-2 py-1 text-xs text-yellow-400 bg-yellow-900/30 rounded mr-2">
           <HardDrive size={12} />
@@ -35,7 +35,7 @@ const FileTabs = ({ files, activeFile, onFileChange, onFileCreate, onFileDelete,
             flex items-center gap-1 px-3 py-2 cursor-pointer
             transition-all! min-w-fit group
             ${activeFile === file.id 
-              ? 'bg-white shadow text-black font-black' 
+              ? 'bg-card shadow text-foreground font-black' 
               : 'bg-slate-400 text-slate-100 hover:bg-slate-500'
             }
           `}
@@ -60,7 +60,7 @@ const FileTabs = ({ files, activeFile, onFileChange, onFileCreate, onFileDelete,
       ))}
 
       {showNewFileInput ? (
-        <div className="flex items-center gap-1 px-2 py-1 bg-white rounded-t">
+        <div className="flex items-center gap-1 px-2 py-1 bg-card rounded-t">
           <input
             type="text"
             value={newFileName}
@@ -73,12 +73,12 @@ const FileTabs = ({ files, activeFile, onFileChange, onFileCreate, onFileDelete,
               }
             }}
             placeholder="filename.html"
-            className="text-sm outline-none w-32 text-black"
+            className="text-sm outline-none w-32 text-foreground"
             autoFocus
           />
           <button
             onClick={handleCreateFile}
-            className="text-green-600 hover:text-green-700 font-bold"
+            className="text-green-600 dark:text-green-300 hover:text-green-700 font-bold"
           >
             <Check/>
           </button>
@@ -86,7 +86,7 @@ const FileTabs = ({ files, activeFile, onFileChange, onFileCreate, onFileDelete,
       ) : (
         <button
           onClick={() => setShowNewFileInput(true)}
-          className="p-1.5 hover:bg-slate-300 rounded transition-colors! text-slate-700"
+          className="p-1.5 hover:bg-slate-300 rounded transition-colors! text-foreground"
           title="Add new file"
         >
           <Plus size={16} />

@@ -19,7 +19,7 @@ export default function ExercisePage() {
   }
 
   return (
-    <div className="h-screen w-full overflow-hidden bg-[#020817] text-white">
+    <div className="h-screen w-full overflow-hidden bg-card text-foreground">
 
       {/* Top navigation */}
       <TopBar />

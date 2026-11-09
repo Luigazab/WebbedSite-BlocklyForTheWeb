@@ -63,7 +63,7 @@ const Footer = () => {
         <div className="border-t border-gray-700 mb-8"></div>
 
         {/* Copyright */}
-        <div className="flex flex-col md:flex-row justify-between items-center text-gray-400">
+        <div className="flex flex-col md:flex-row justify-between items-center text-muted-foreground">
           <div className="mb-4 md:mb-0">
             &copy; 2026 WebbedSite. All rights reserved.
           </div>

@@ -47,13 +47,13 @@ export default function StudentClassrooms() {
     >
       <div className="flex flex-col gap-5">
         {/* Tabs */}
-        <div className="flex gap-2 border-b border-gray-200">
+        <div className="flex gap-2 border-b border-border">
           {TABS.map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
               className={`px-4 py-2 text-sm font-semibold transition-colors relative
-                ${activeTab === tab ? 'text-blockly-purple' : 'text-gray-500 hover:text-gray-700'}`}
+                ${activeTab === tab ? 'text-blockly-purple' : 'text-muted-foreground hover:text-foreground'}`}
             >
               {tab}
               {activeTab === tab && (
@@ -66,19 +66,19 @@ export default function StudentClassrooms() {
         {/* Tab Content */}
         {loading ? (
           <div className="flex items-center justify-center py-20">
-            <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
           </div>
         ) : (
           <>
             {activeTab === 'Active Class' && (
               activeClassrooms.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-20 gap-4 text-center bg-gray-100 rounded-3xl">
+                <div className="flex flex-col items-center justify-center py-20 gap-4 text-center bg-muted rounded-3xl">
                   <div className="w-16 h-16 rounded-2xl bg-blockly-purple/10 flex items-center justify-center">
                     <BookOpen className="w-8 h-8 text-blockly-purple" />
                   </div>
                   <div>
-                    <p className="font-semibold text-gray-800">No classrooms yet</p>
-                    <p className="text-sm text-gray-400 mt-1">Ask your teacher for a class code to join</p>
+                    <p className="font-semibold text-foreground">No classrooms yet</p>
+                    <p className="text-sm text-muted-foreground mt-1">Ask your teacher for a class code to join</p>
                   </div>
                   <button
                     onClick={() => setShowJoin(true)}
@@ -106,7 +106,7 @@ export default function StudentClassrooms() {
               archivedClassrooms.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-20 gap-3 text-center">
                   <Archive className="w-8 h-8 text-gray-300" />
-                  <p className="text-sm text-gray-400">No archived classrooms</p>
+                  <p className="text-sm text-muted-foreground">No archived classrooms</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">

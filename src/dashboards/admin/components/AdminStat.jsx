@@ -4,7 +4,7 @@ export default function AdminStat({label, value, sub, progress, accent, icon, im
     <div className={`shadow rounded-lg border p-5 relative overflow-hidden ${
         accent
           ? "border-primary/40 bg-linear-to-br from-primary/15 to-transparent"
-          : "border-slate-200 bg-card"
+          : "border-border bg-card"
       }`}
     >
       {(icon || imageSrc) && (
@@ -16,7 +16,7 @@ export default function AdminStat({label, value, sub, progress, accent, icon, im
               className="w-20 h-20 object-contain"
             />
           ) : (
-            <IconComponent size={80} strokeWidth={1.5} className="text-sky-600" />
+            <IconComponent size={80} strokeWidth={1.5} className="text-sky-600 dark:text-sky-300" />
           )}
         </div>
       )}
@@ -30,7 +30,7 @@ export default function AdminStat({label, value, sub, progress, accent, icon, im
         </p>
         {sub && <p className="mt-1 text-xs text-muted-foreground">{sub}</p>}
         {typeof progress === "number" && (
-          <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-white border border-border">
+          <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-card border border-border">
             <div className="h-full rounded-full bg-blue-500 transition-all!"
               style={{ width: `${progress}%` }}
             />

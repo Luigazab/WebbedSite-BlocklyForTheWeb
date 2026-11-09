@@ -14,7 +14,7 @@ function DueBadge({ dueDate }) {
 
   if (past) {
     return (
-      <span className="inline-flex items-center gap-1 text-xs font-semibold text-red-600 bg-red-50 px-2 py-0.5 rounded-full">
+      <span className="inline-flex items-center gap-1 text-xs font-semibold text-red-600 dark:text-red-300 bg-red-50 dark:bg-red-950/50 px-2 py-0.5 rounded-full">
         <AlertCircle className="w-3 h-3" />
         Overdue · {format(due, 'MMM d')}
       </span>
@@ -38,7 +38,7 @@ function DueBadge({ dueDate }) {
 function StatusChip({ status }) {
   if (status === 'completed') {
     return (
-      <span className="flex items-center gap-1 text-xs font-semibold text-green-600">
+      <span className="flex items-center gap-1 text-xs font-semibold text-green-600 dark:text-green-300">
         <CheckCircle2 className="w-3.5 h-3.5" />
         Done
       </span>
@@ -81,9 +81,9 @@ export default function StudentLessonCard({ assignment, classroomId }) {
         })
       }
       className={`
-        group w-full text-left bg-white rounded-2xl border shadow-sm
+        group w-full text-left bg-card rounded-2xl border shadow-sm
         hover:shadow-md transition-all duration-200
-        ${isCompleted ? 'border-green-100' : isMissing ? 'border-red-100 opacity-70' : 'border-gray-100 hover:border-blockly-purple/30'}
+        ${isCompleted ? 'border-green-100' : isMissing ? 'border-red-100 opacity-70' : 'border-border hover:border-blockly-purple/30'}
       `}
     >
       {/* Top accent bar */}
@@ -95,7 +95,7 @@ export default function StudentLessonCard({ assignment, classroomId }) {
         {/* Header row */}
         <div className="flex items-start gap-3">
           <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 mt-0.5 ${
-            isCompleted ? 'bg-green-50' : 'bg-blockly-purple/8 bg-purple-50'
+            isCompleted ? 'bg-green-50 dark:bg-green-950/50' : 'bg-blockly-purple/8 bg-purple-50 dark:bg-purple-950/50'
           }`}>
             <BookOpen className={`w-4 h-4 ${isCompleted ? 'text-green-500' : 'text-blockly-purple'}`} />
           </div>
@@ -104,18 +104,18 @@ export default function StudentLessonCard({ assignment, classroomId }) {
             <div className="flex items-center gap-2 flex-wrap mb-1">
               <StatusChip status={status} />
               {quiz && (
-                <span className="text-xs bg-purple-50 text-purple-600 px-2 py-0.5 rounded-full font-medium">
+                <span className="text-xs bg-purple-50 dark:bg-purple-950/50 text-purple-600 dark:text-purple-300 px-2 py-0.5 rounded-full font-medium">
                   Quiz
                 </span>
               )}
               {lesson.estimated_duration && (
-                <span className="text-xs text-gray-400 flex items-center gap-1">
+                <span className="text-xs text-muted-foreground flex items-center gap-1">
                   <Clock className="w-3 h-3" />
                   {lesson.estimated_duration}m
                 </span>
               )}
             </div>
-            <h3 className={`font-bold leading-snug ${isDimmed ? 'text-gray-500' : 'text-gray-800'}`}>
+            <h3 className={`font-bold leading-snug ${isDimmed ? 'text-muted-foreground' : 'text-foreground'}`}>
               {lesson.title}
             </h3>
           </div>
@@ -125,7 +125,7 @@ export default function StudentLessonCard({ assignment, classroomId }) {
 
         {/* Content preview */}
         {contentPreview && (
-          <p className="text-xs text-gray-400 mt-2 ml-12 line-clamp-2 leading-relaxed">
+          <p className="text-xs text-muted-foreground mt-2 ml-12 line-clamp-2 leading-relaxed">
             {contentPreview}
           </p>
         )}
@@ -135,7 +135,7 @@ export default function StudentLessonCard({ assignment, classroomId }) {
           <div className="flex items-center gap-2 flex-wrap">
             <DueBadge dueDate={due_date} />
             {attachCount > 0 && (
-              <span className="flex items-center gap-1 text-xs text-gray-400">
+              <span className="flex items-center gap-1 text-xs text-muted-foreground">
                 <Paperclip className="w-3 h-3" />
                 {attachCount}
               </span>
@@ -150,7 +150,7 @@ export default function StudentLessonCard({ assignment, classroomId }) {
               ) : (
                 <Award className="w-4 h-4 text-yellow-500" />
               )}
-              <span className="text-xs text-gray-400 font-medium hidden sm:block">{badge.title}</span>
+              <span className="text-xs text-muted-foreground font-medium hidden sm:flow-root">{badge.title}</span>
             </div>
           )}
         </div>

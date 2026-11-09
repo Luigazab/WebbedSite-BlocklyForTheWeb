@@ -131,7 +131,7 @@ export default function TopicNode({
             {!isCompleted && isUnlocked && (
               <button
                 onClick={(e) => { e.stopPropagation(); onStart(topic.id) }}
-                className="w-full py-2 rounded-xl text-xs font-black bg-white/20 hover:bg-white/30 border border-white/30 transition-colors"
+                className="w-full py-2 rounded-xl text-xs font-black bg-card/20 hover:bg-card/30 border border-white/30 transition-colors"
               >
                 Start →
               </button>

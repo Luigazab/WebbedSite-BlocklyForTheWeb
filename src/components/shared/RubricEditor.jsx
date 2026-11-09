@@ -7,9 +7,9 @@ export default function RubricEditor({
   setPassing,
 }) {
   return (
-    <fieldset className="rounded-xl border bg-white p-3">
+    <fieldset className="rounded-xl border bg-card p-3">
       <legend className="px-1 font-semibold">Laboratory grading rubric</legend>
-      <p className="text-xs text-slate-600">
+      <p className="text-xs text-foreground">
         Points must total 100. Unpublish before editing; submitted work keeps
         its original rubric.
       </p>

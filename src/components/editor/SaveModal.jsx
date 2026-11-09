@@ -60,7 +60,7 @@ const SaveModal = ({
   if (showDetailForm) {
     return (
       <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-99 flex items-center justify-center p-4">
-        <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl">
+        <div className="bg-card rounded-xl p-6 w-full max-w-md shadow-2xl">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-2xl font-bold">Save Project</h3>
             <button
@@ -68,15 +68,15 @@ const SaveModal = ({
                 setShowDetailForm(false)
                 onClose()
               }}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              className="p-2 hover:bg-muted rounded-lg transition-colors"
             >
-              <X size={20} className="text-gray-500" />
+              <X size={20} className="text-muted-foreground" />
             </button>
           </div>
 
           <div className="space-y-4">
             <div>
-              <label className="text-sm font-medium text-gray-700 mb-2">
+              <label className="text-sm font-medium text-foreground mb-2">
                 Title
               </label>
               <input
@@ -84,20 +84,20 @@ const SaveModal = ({
                 placeholder="Name your project"
                 value={projectTitle}
                 onChange={(e) => setProjectTitle(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                 autoFocus
               />
             </div>
 
             <div>
-              <label className="text-sm font-medium text-gray-700 mb-2">
-                Description <span className="font-normal text-gray-400">(optional)</span>
+              <label className="text-sm font-medium text-foreground mb-2">
+                Description <span className="font-normal text-muted-foreground">(optional)</span>
               </label>
               <textarea
                 placeholder="What is this project about?"
                 value={projectDescription}
                 onChange={(e) => setProjectDescription(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg h-24 resize-none focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="w-full px-4 py-2 border border-border rounded-lg h-24 resize-none focus:outline-none focus:ring-2 focus:ring-green-500"
               />
             </div>
           </div>
@@ -105,7 +105,7 @@ const SaveModal = ({
           <div className="flex gap-3 mt-6">
             <button
               onClick={() => setShowDetailForm(false)}
-              className="btn flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 "
+              className="btn flex-1 px-4 py-2 bg-gray-300 text-foreground rounded-lg hover:bg-gray-400 "
             >
               Back
             </button>
@@ -124,14 +124,14 @@ const SaveModal = ({
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-99 p-4">
-      <div className="card bg-white rounded-xl p-6 w-full max-w-md shadow-2xl">
+      <div className="card bg-card rounded-xl p-6 w-full max-w-md shadow-2xl">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-2xl font-bold">Save Project</h3>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-muted rounded-lg transition-colors"
           >
-            <X size={20} className="text-gray-500" />
+            <X size={20} className="text-muted-foreground" />
           </button>
         </div>
 
@@ -139,15 +139,15 @@ const SaveModal = ({
           {/* Option 1: Save to Account */}
           <button
             onClick={handleSaveToAccount}
-            className="shadow w-full flex items-center justify-between p-4 bg-white hover:bg-purple-100 rounded-xl transition-all group border-2 border-gray-200 hover:border-purple-300"
+            className="shadow w-full flex items-center justify-between p-4 bg-card hover:bg-purple-100 rounded-xl transition-all group border-2 border-border hover:border-purple-300"
           >
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-white group-hover:bg-purple-600 border-2 border-gray-300 group-hover:border-purple-600 rounded-xl flex items-center justify-center shrink-0 transition-all">
-                <Save className="w-6 h-6 text-gray-700 group-hover:text-white transition-colors" />
+              <div className="w-12 h-12 bg-card group-hover:bg-purple-600 border-2 border-border group-hover:border-purple-600 rounded-xl flex items-center justify-center shrink-0 transition-all">
+                <Save className="w-6 h-6 text-foreground group-hover:text-white transition-colors" />
               </div>
               <div className="text-left">
-                <h4 className="text-lg font-semibold text-gray-900">Save project</h4>
-                <p className="text-sm text-gray-600">
+                <h4 className="text-lg font-semibold text-foreground">Save project</h4>
+                <p className="text-sm text-foreground">
                   {isNewProject 
                     ? 'Save project to your account'
                     : 'Update saved project'
@@ -160,15 +160,15 @@ const SaveModal = ({
           {/* Option 2: Export as HTML */}
           <button
             onClick={handleExportHTML}
-            className="shadow w-full flex items-center justify-between p-4 bg-white hover:bg-purple-100 rounded-xl transition-all group border-2 border-gray-200 hover:border-purple-300"
+            className="shadow w-full flex items-center justify-between p-4 bg-card hover:bg-purple-100 rounded-xl transition-all group border-2 border-border hover:border-purple-300"
           >
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-white group-hover:bg-purple-600 border-2 border-gray-300 group-hover:border-purple-600 rounded-xl flex items-center justify-center shrink-0 transition-all">
-                <Download className="w-6 h-6 text-gray-700 group-hover:text-white transition-colors" />
+              <div className="w-12 h-12 bg-card group-hover:bg-purple-600 border-2 border-border group-hover:border-purple-600 rounded-xl flex items-center justify-center shrink-0 transition-all">
+                <Download className="w-6 h-6 text-foreground group-hover:text-white transition-colors" />
               </div>
               <div className="text-left">
-                <h4 className="text-lg font-semibold text-gray-900">Save file as HTML</h4>
-                <p className="text-sm text-gray-600">Save the generated code as HTML file</p>
+                <h4 className="text-lg font-semibold text-foreground">Save file as HTML</h4>
+                <p className="text-sm text-foreground">Save the generated code as HTML file</p>
               </div>
             </div>
           </button>
@@ -176,29 +176,29 @@ const SaveModal = ({
           {/* Option 3: Export as JSON */}
           <button
             onClick={handleExportJSON}
-            className="shadow w-full flex items-center justify-between p-4 bg-white hover:bg-purple-100 rounded-xl transition-all group border-2 border-gray-200 hover:border-purple-300"
+            className="shadow w-full flex items-center justify-between p-4 bg-card hover:bg-purple-100 rounded-xl transition-all group border-2 border-border hover:border-purple-300"
           >
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-white group-hover:bg-purple-600 border-2 border-gray-300 group-hover:border-purple-600 rounded-xl flex items-center justify-center shrink-0 transition-all">
-                <FileJson className="w-6 h-6 text-gray-700 group-hover:text-white transition-colors" />
+              <div className="w-12 h-12 bg-card group-hover:bg-purple-600 border-2 border-border group-hover:border-purple-600 rounded-xl flex items-center justify-center shrink-0 transition-all">
+                <FileJson className="w-6 h-6 text-foreground group-hover:text-white transition-colors" />
               </div>
               <div className="text-left">
-                <h4 className="text-lg font-semibold text-gray-900">Save project locally</h4>
-                <p className="text-sm text-gray-600">Save project to your device as .json file</p>
+                <h4 className="text-lg font-semibold text-foreground">Save project locally</h4>
+                <p className="text-sm text-foreground">Save project to your device as .json file</p>
               </div>
             </div>
           </button>
           <button
             onClick={onExportZip}
-            className="shadow w-full flex items-center justify-between p-4 bg-white hover:bg-purple-100 rounded-xl transition-all group border-2 border-gray-200 hover:border-purple-300"
+            className="shadow w-full flex items-center justify-between p-4 bg-card hover:bg-purple-100 rounded-xl transition-all group border-2 border-border hover:border-purple-300"
           >
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-white group-hover:bg-purple-600 border-2 border-gray-300 group-hover:border-purple-600 rounded-xl flex items-center justify-center shrink-0 transition-all">
-                <FolderClosed className="w-6 h-6 text-gray-700 group-hover:text-white transition-colors" />
+              <div className="w-12 h-12 bg-card group-hover:bg-purple-600 border-2 border-border group-hover:border-purple-600 rounded-xl flex items-center justify-center shrink-0 transition-all">
+                <FolderClosed className="w-6 h-6 text-foreground group-hover:text-white transition-colors" />
               </div>
               <div className="text-left">
-                <h4 className="text-lg font-semibold text-gray-900">Export to ZIP file</h4>
-                <p className="text-sm text-gray-600">Includes all project files</p>
+                <h4 className="text-lg font-semibold text-foreground">Export to ZIP file</h4>
+                <p className="text-sm text-foreground">Includes all project files</p>
               </div>
             </div>
           </button>
@@ -206,7 +206,7 @@ const SaveModal = ({
 
         <button
           onClick={onClose}
-          className="btn w-full mt-4 px-4 py-2 bg-orange-300 text-orange-900 rounded-lg hover:bg-orange-400 transition! font-medium"
+          className="btn w-full mt-4 px-4 py-2 bg-orange-300 text-orange-900 dark:text-orange-300 rounded-lg hover:bg-orange-400 transition! font-medium"
         >
           Cancel
         </button>

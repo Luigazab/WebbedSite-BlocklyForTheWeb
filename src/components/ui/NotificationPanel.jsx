@@ -18,7 +18,7 @@ function NotificationItem({ notification, onRead }) {
   return (
     <button
       onClick={() => onRead(notification)}
-      className={`w-full flex items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-gray-50
+      className={`w-full flex items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-muted
         ${notification.is_read ? 'opacity-60' : 'bg-blue-50/40'}`}
     >
       {/* Avatar or type icon */}
@@ -39,11 +39,11 @@ function NotificationItem({ notification, onRead }) {
 
       {/* Content */}
       <div className="flex-1 min-w-0">
-        <p className="text-sm text-gray-800 leading-snug">{notification.content}</p>
+        <p className="text-sm text-foreground leading-snug">{notification.content}</p>
         {notification.from_user && (
-          <p className="text-xs text-gray-400 mt-0.5">from {notification.from_user.username}</p>
+          <p className="text-xs text-muted-foreground mt-0.5">from {notification.from_user.username}</p>
         )}
-        <p className="text-xs text-gray-400 mt-1">
+        <p className="text-xs text-muted-foreground mt-1">
           {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
         </p>
       </div>
@@ -81,7 +81,7 @@ export default function NotificationPanel() {
         aria-label={`Notifications${unreadCount ? `, ${unreadCount} unread` : ''}`}
         aria-expanded={open}
         onClick={() => setOpen((prev) => !prev)}
-        className={`relative p-2 rounded-full hover:bg-gray-100 transition-colors ${open ? 'bg-slate-500 rounded-full hover:bg-slate-600' : 'text-gray-600'}`}
+        className={`relative p-2 rounded-full hover:bg-muted transition-colors ${open ? 'bg-slate-500 rounded-full hover:bg-slate-600' : 'text-foreground'}`}
       >
         <img src='/bell.svg' alt="" className={`w-6 h-6 transition-colors `} />
         {unreadCount > 0 && (
@@ -93,11 +93,11 @@ export default function NotificationPanel() {
 
       {/* Panel */}
       {open && (
-        <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-xl shadow-lg border border-gray-100 z-50 overflow-hidden">
+        <div className="fixed sm:absolute left-16 sm:left-full top-12 sm:top-0 ml-2 w-80 bg-card rounded-xl shadow-xl border border-border z-50 overflow-hidden">
           {/* Header */}
-          <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-border">
             <div className="flex items-center gap-2">
-              <h3 className="text-sm font-semibold text-gray-800">Notifications</h3>
+              <h3 className="text-sm font-semibold text-foreground">Notifications</h3>
               {unreadCount > 0 && (
                 <span className="text-xs bg-blockly-purple/10 text-blockly-purple font-semibold px-2 py-0.5 rounded-full">
                   {unreadCount} new
@@ -117,15 +117,15 @@ export default function NotificationPanel() {
 
           {/* List */}
           <div className="max-h-90 overflow-y-auto divide-y divide-gray-50">
-            {error && <div role="alert" className="p-4 text-sm text-red-600">{error} <button onClick={retry} className="underline">Retry</button></div>}
+            {error && <div role="alert" className="p-4 text-sm text-red-600 dark:text-red-300">{error} <button onClick={retry} className="underline">Retry</button></div>}
             {loading && notifications.length === 0 ? (
               <div className="flex items-center justify-center py-10">
-                <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
+                <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
               </div>
             ) : notifications.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-10 gap-2">
                 <Bell className="w-8 h-8 text-gray-200" />
-                <p className="text-sm text-gray-400">No notifications yet</p>
+                <p className="text-sm text-muted-foreground">No notifications yet</p>
               </div>
             ) : (
               notifications.map((n) => (
@@ -136,7 +136,7 @@ export default function NotificationPanel() {
 
           {/* Footer */}
           {hasMore && (
-            <div className="border-t border-gray-100 px-4 py-2.5">
+            <div className="border-t border-border px-4 py-2.5">
               <button onClick={loadMore} disabled={loading} className="text-xs text-blockly-purple hover:underline font-medium w-full text-center">
                 {loading ? 'Loading…' : 'Load older notifications'}
               </button>

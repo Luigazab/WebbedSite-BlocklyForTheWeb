@@ -1,11 +1,11 @@
 export default function LessonPanel() {
   return (
-    <section className="w-full overflow-y-auto border-r border-slate-700 bg-[#020817] lg:w-[33%]">
+    <section className="w-full overflow-y-auto border-r border-border bg-card lg:w-[33%]">
 
       {/* Exercise header */}
-      <div className="flex h-11 items-center justify-between border-b border-slate-700 bg-[#1e293b] px-5">
+      <div className="flex h-11 items-center justify-between border-b border-border bg-card px-5">
 
-        <span className="text-sm font-semibold text-slate-200">
+        <span className="text-sm font-semibold text-foreground">
           Exercise
         </span>
 
@@ -13,15 +13,15 @@ export default function LessonPanel() {
 
           <div className="flex -space-x-2">
 
-            <div className="h-6 w-6 rounded-full border border-slate-800 bg-slate-300" />
+            <div className="h-6 w-6 rounded-full border border-border bg-slate-300" />
 
-            <div className="h-6 w-6 rounded-full border border-slate-800 bg-white" />
+            <div className="h-6 w-6 rounded-full border border-border bg-card" />
 
-            <div className="h-6 w-6 rounded-full border border-slate-800 bg-slate-500" />
+            <div className="h-6 w-6 rounded-full border border-border bg-slate-500" />
 
           </div>
 
-          <span className="ml-3 text-xs text-slate-400">
+          <span className="ml-3 text-xs text-muted-foreground">
             +6 also learning
           </span>
 
@@ -47,7 +47,7 @@ export default function LessonPanel() {
 
         </h2>
 
-        <div className="space-y-5 text-sm leading-6 text-slate-100">
+        <div className="space-y-5 text-sm leading-6 text-foreground">
 
           <p>
             Let's dig further into how CSS is written.
@@ -72,19 +72,19 @@ export default function LessonPanel() {
                 Selector
               </span>
 
-              <span className="mx-2 text-slate-400">
+              <span className="mx-2 text-muted-foreground">
                 ─
               </span>
 
-              <span className="text-slate-400">
+              <span className="text-muted-foreground">
                 ┌
               </span>
 
-              <span className="ml-2 text-slate-200">
+              <span className="ml-2 text-foreground">
                 div
               </span>
 
-              <span className="ml-3 text-slate-400">
+              <span className="ml-3 text-muted-foreground">
                 {'{'}
               </span>
 
@@ -98,7 +98,7 @@ export default function LessonPanel() {
               ;
             </div>
 
-            <div className="ml-24 text-slate-400">
+            <div className="ml-24 text-muted-foreground">
               {'}'}
             </div>
 
@@ -110,24 +110,24 @@ export default function LessonPanel() {
 
         </div>
 
-        <div className="space-y-5 text-sm leading-6 text-slate-100">
+        <div className="space-y-5 text-sm leading-6 text-foreground">
 
           <p>
             Every rule begins with a selector, followed
             by curly brackets{' '}
-            <code className="rounded bg-slate-800 px-1.5 py-0.5">
+            <code className="rounded bg-muted px-1.5 py-0.5">
               {'{ }'}
             </code>.
           </p>
 
           <p>
             Inside, declarations are made of{' '}
-            <code className="rounded bg-slate-800 px-1.5 py-0.5">
+            <code className="rounded bg-muted px-1.5 py-0.5">
               property: value
             </code>{' '}
             pairs separated by a colon. Each line ends
             with a{' '}
-            <code className="rounded bg-slate-800 px-1.5 py-0.5">
+            <code className="rounded bg-muted px-1.5 py-0.5">
               ;
             </code>{' '}
             semicolon.
@@ -144,9 +144,9 @@ export default function LessonPanel() {
       </div>
 
       {/* Instructions */}
-      <div className="border-t border-slate-700">
+      <div className="border-t border-border">
 
-        <div className="bg-[#1e293b] px-5 py-3 text-sm font-semibold">
+        <div className="bg-card px-5 py-3 text-sm font-semibold">
           Instructions
         </div>
 
@@ -160,7 +160,7 @@ export default function LessonPanel() {
             Copy and paste the following HTML:
           </p>
 
-          <div className="mt-4 rounded border border-slate-700 bg-[#0f172a] p-4 font-mono text-xs text-slate-300">
+          <div className="mt-4 rounded border border-border bg-card p-4 font-mono text-xs text-foreground">
 
             &lt;div&gt;Hello World&lt;/div&gt;
 

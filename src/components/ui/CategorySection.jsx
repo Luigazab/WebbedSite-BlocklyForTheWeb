@@ -26,10 +26,10 @@ export default function CategorySection({ category, topics, onStart }) {
           {category.icon_url && (
             <img src={category.icon_url} alt="" className="w-20 h-20 rounded-xl object-cover" />
           )}
-          <div className="flex-1 min-w-0 bg-white/50 rounded-2xl p-4">
-            <h2 className="text-lg font-black text-slate-800">{category.title}</h2>
+          <div className="flex-1 min-w-0 bg-card/50 rounded-2xl p-4">
+            <h2 className="text-lg font-black text-foreground">{category.title}</h2>
             {category.description && (
-              <p className="text-sm text-slate-500 font-bold mt-0.5 truncate">{category.description}</p>
+              <p className="text-sm text-muted-foreground font-bold mt-0.5 truncate">{category.description}</p>
             )}
           </div>
           <div
@@ -40,7 +40,7 @@ export default function CategorySection({ category, topics, onStart }) {
           </div>
         </div>
 
-        <div className="mx-2 h-3 rounded-full bg-white overflow-hidden border border-b-2"
+        <div className="mx-2 h-3 rounded-full bg-card overflow-hidden border border-b-2"
           style={{borderColor: color}}
         >
           <div
@@ -61,7 +61,7 @@ export default function CategorySection({ category, topics, onStart }) {
               <span className='bg-amber-400 p-2 rounded-2xl'>
                 <Construction size={48} color='green'/>
               </span>
-              <p className="text-center text-slate-500 font-semibold py-6">Topics still under construction. Please wait for a teacher to add one.</p>
+              <p className="text-center text-muted-foreground font-semibold py-6">Topics still under construction. Please wait for a teacher to add one.</p>
             </div>
           ): (
             topics.map((topic, idx) => {

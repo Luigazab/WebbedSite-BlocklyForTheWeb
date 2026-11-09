@@ -33,22 +33,22 @@ export default function TeacherNavbar() {
   const tourId = getTourForRoute()
 
   return (
-    <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 shrink-0 z-20">
+    <header className="h-16 bg-card border-b border-border flex items-center justify-between px-6 shrink-0 z-20">
       <div className='leading-tightest'>
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-muted-foreground">
           Teacher Dashboard
         </p>
-        <span className="font-semibold text-gray-800">{profile?.username}</span>
+        <span className="font-semibold text-foreground">{profile?.username}</span>
       </div>
 
       <div className="flex items-center gap-1">
         {tourId && (
           <button 
             onClick={handleHelpClick}
-            className="p-2 rounded-full hover:bg-gray-100 transition-colors group relative"
+            className="p-2 rounded-full hover:bg-muted transition-colors group relative"
             title="Show tour"
           >
-            <HelpCircle className="w-5 h-5 text-gray-600 group-hover:text-blockly-purple transition-colors" />
+            <HelpCircle className="w-5 h-5 text-foreground group-hover:text-blockly-purple transition-colors" />
             <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
               Show tour
             </span>

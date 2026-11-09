@@ -14,7 +14,7 @@ export default function LearnPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-slate-400 text-sm animate-pulse">Loading your journey…</div>
+        <div className="text-muted-foreground text-sm animate-pulse">Loading your journey…</div>
       </div>
     )
   }
@@ -33,18 +33,18 @@ export default function LearnPage() {
       <div className="mb-12 text-center">
         <div className="inline-flex items-center justify-center gap-2 mb-4">
           <MapPin className="text-indigo-500" size={28} />
-          <h1 className="text-4xl font-black tracking-tight text-slate-900">
+          <h1 className="text-4xl font-black tracking-tight text-foreground">
             Learning Journey
           </h1>
         </div>
-        <p className="text-slate-500 text-sm max-w-sm mx-auto">
+        <p className="text-muted-foreground text-sm max-w-sm mx-auto">
           Complete each stage to unlock the next. Your progress is saved automatically.
         </p>
       </div>
 
       {/* ── Roadmap ───────────────────────────────────────────────────── */}
       {categories.length === 0 ? (
-        <div className="text-center py-20 text-slate-400 text-sm">
+        <div className="text-center py-20 text-muted-foreground text-sm">
           No learning content available yet. Check back soon!
         </div>
       ) : (

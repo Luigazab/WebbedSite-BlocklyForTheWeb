@@ -100,7 +100,7 @@ const QuizAssessment = ({ lesson, onComplete, deadline = null }) => {
     return <div className="p-8 text-center">No questions found.</div>;
 
   return (
-    <div className="h-[93vh] w-full bg-slate-50 relative overflow-hidden flex">
+    <div className="h-[93vh] w-full bg-muted relative overflow-hidden flex">
       <div
         className="absolute inset-0 z-0"
         style={{
@@ -121,7 +121,7 @@ const QuizAssessment = ({ lesson, onComplete, deadline = null }) => {
             <button
               onClick={handleBack}
               disabled={currentIndex === 0}
-              className="bg-slate-200/70 hover:bg-slate-300 p-2 rounded-lg disabled:opacity-40"
+              className="bg-muted/70 hover:bg-slate-300 p-2 rounded-lg disabled:opacity-40"
             >
               <ArrowLeft size={25} />
             </button>
@@ -144,9 +144,9 @@ const QuizAssessment = ({ lesson, onComplete, deadline = null }) => {
           </div>
 
           {/* Question card */}
-          <div className="bg-white shadow p-6 mx-auto rounded-4xl space-y-4 border border-slate-200 w-full">
+          <div className="bg-card shadow p-6 mx-auto rounded-4xl space-y-4 border border-border w-full">
             <p className="text-slate-300 font-bold text-lg">{lesson.title}</p>
-            <h1 className="text-3xl font-bold text-slate-700 text-center">
+            <h1 className="text-3xl font-bold text-foreground text-center">
               {currentQuestion.text}
             </h1>
             <div className="space-y-4">
@@ -159,11 +159,11 @@ const QuizAssessment = ({ lesson, onComplete, deadline = null }) => {
                     className={`w-full py-6 px-4 rounded-3xl border cursor-pointer transition-all
                       ${
                         isSelected
-                          ? "border-sky-400 bg-sky-100"
-                          : "border-slate-300 hover:border-sky-400 hover:bg-sky-100"
+                          ? "border-sky-400 bg-sky-100 dark:bg-sky-950/50"
+                          : "border-border hover:border-sky-400 hover:bg-sky-100"
                       }`}
                   >
-                    <p className="text-slate-700 text-lg font-bold">
+                    <p className="text-foreground text-lg font-bold">
                       {option.text}
                     </p>
                   </div>
@@ -223,7 +223,7 @@ const QuizAssessment = ({ lesson, onComplete, deadline = null }) => {
           onClick={() => setShowQuestions(false)}
         />
         <div
-          className={`absolute right-0 top-0 h-full w-[85%] max-w-sm bg-slate-50 shadow-2xl p-6 overflow-y-auto transition-transform duration-300 ${
+          className={`absolute right-0 top-0 h-full w-[85%] max-w-sm bg-muted shadow-2xl p-6 overflow-y-auto transition-transform duration-300 ${
             showQuestions ? "translate-x-0" : "translate-x-full"
           }`}
         >

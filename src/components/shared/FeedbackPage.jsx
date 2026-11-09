@@ -61,7 +61,7 @@ export default function FeedbackPage() {
       <div className="max-w-3xl mx-auto flex flex-col gap-5">
 
         {/* Tab switcher */}
-        <div className="flex gap-1 bg-gray-100 p-1 rounded-xl w-fit">
+        <div className="flex gap-1 bg-muted p-1 rounded-xl w-fit">
           {[
             { key: 'submit',  label: 'Submit Feedback' },
             { key: 'history', label: `My Reports${myFeedback.length ? ` (${myFeedback.length})` : ''}` },
@@ -71,8 +71,8 @@ export default function FeedbackPage() {
               onClick={() => setTab(key)}
               className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors
                 ${tab === key
-                  ? 'bg-white text-blockly-purple shadow-sm'
-                  : 'text-gray-500 hover:text-gray-700'
+                  ? 'bg-card text-blockly-purple shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
                 }`}
             >
               {label}
@@ -82,9 +82,9 @@ export default function FeedbackPage() {
 
         {/* ── Submit tab ──────────────────────────────── */}
         {tab === 'submit' && (
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-50 bg-gray-50/50">
-              <p className="text-sm text-gray-500">
+          <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
+            <div className="px-6 py-4 border-b border-border bg-muted/50">
+              <p className="text-sm text-muted-foreground">
                 All feedback goes directly to our admin team. We typically respond within 1–2 business days.
               </p>
             </div>
@@ -92,7 +92,7 @@ export default function FeedbackPage() {
             <form onSubmit={onSubmit} className="p-6 flex flex-col gap-5">
               {/* Category */}
               <div className="flex flex-col gap-2">
-                <label className="text-sm font-semibold text-gray-700">Category</label>
+                <label className="text-sm font-semibold text-foreground">Category</label>
                 <div className="flex flex-wrap gap-2">
                   {CATEGORIES.map(({ value, label, icon: Icon }) => (
                     <button
@@ -102,7 +102,7 @@ export default function FeedbackPage() {
                       className={`flex items-center gap-1.5 px-3 py-2 rounded-lg border text-sm font-medium transition-all
                         ${form.category === value
                           ? 'border-blockly-purple bg-blockly-purple/10 text-blockly-purple'
-                          : 'border-gray-200 text-gray-500 hover:border-gray-300 hover:bg-gray-50'
+                          : 'border-border text-muted-foreground hover:border-border hover:bg-muted'
                         }`}
                     >
                       <Icon className="w-3.5 h-3.5" />
@@ -114,7 +114,7 @@ export default function FeedbackPage() {
 
               {/* Title */}
               <div className="flex flex-col gap-1.5">
-                <label className="text-sm font-semibold text-gray-700">
+                <label className="text-sm font-semibold text-foreground">
                   Title <span className="text-red-400">*</span>
                 </label>
                 <input
@@ -122,14 +122,14 @@ export default function FeedbackPage() {
                   value={form.title}
                   onChange={(e) => setField('title', e.target.value)}
                   placeholder="Brief summary of your issue..."
-                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-blockly-purple focus:ring-2 focus:ring-blockly-purple/10 transition"
+                  className="w-full border border-border rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-blockly-purple focus:ring-2 focus:ring-blockly-purple/10 transition"
                   required
                 />
               </div>
 
               {/* Message */}
               <div className="flex flex-col gap-1.5">
-                <label className="text-sm font-semibold text-gray-700">
+                <label className="text-sm font-semibold text-foreground">
                   Message <span className="text-red-400">*</span>
                 </label>
                 <textarea
@@ -137,10 +137,10 @@ export default function FeedbackPage() {
                   onChange={(e) => setField('message', e.target.value)}
                   placeholder="Describe your issue in as much detail as possible..."
                   rows={5}
-                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blockly-purple focus:ring-2 focus:ring-blockly-purple/10 transition resize-none"
+                  className="w-full border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blockly-purple focus:ring-2 focus:ring-blockly-purple/10 transition resize-none"
                   required
                 />
-                <p className="text-xs text-gray-400 text-right">
+                <p className="text-xs text-muted-foreground text-right">
                   {form.message.length} characters
                 </p>
               </div>
@@ -161,7 +161,7 @@ export default function FeedbackPage() {
 
         {/* ── History tab ─────────────────────────────── */}
         {tab === 'history' && (
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden md:min-w-2xl px-4">
+          <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden md:min-w-2xl px-4">
             {loading ? (
               <div className="flex items-center justify-center py-16">
                 <Loader2 className="w-5 h-5 animate-spin text-gray-300" />
@@ -169,7 +169,7 @@ export default function FeedbackPage() {
             ) : myFeedback.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 gap-3">
                 <MessageSquare className="w-8 h-8 text-gray-200" />
-                <p className="text-sm text-gray-400">You haven't submitted any feedback yet.</p>
+                <p className="text-sm text-muted-foreground">You haven't submitted any feedback yet.</p>
                 <button
                   onClick={() => setTab('submit')}
                   className="text-sm text-blockly-purple hover:underline font-medium"
@@ -203,32 +203,32 @@ function FeedbackHistoryItem({ item }) {
         className="w-full flex items-start gap-4 text-left"
       >
         {/* Category icon */}
-        <div className="w-9 h-9 rounded-xl bg-gray-100 flex items-center justify-center shrink-0 mt-0.5">
-          {category && <category.icon className="w-4 h-4 text-gray-500" />}
+        <div className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center shrink-0 mt-0.5">
+          {category && <category.icon className="w-4 h-4 text-muted-foreground" />}
         </div>
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <p className="text-sm font-semibold text-gray-800 truncate">{item.title}</p>
+            <p className="text-sm font-semibold text-foreground truncate">{item.title}</p>
             <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${status.class}`}>
               {status.label}
             </span>
           </div>
           <div className="flex items-center gap-3 mt-1">
-            <span className="text-xs text-gray-400 capitalize">{category?.label}</span>
+            <span className="text-xs text-muted-foreground capitalize">{category?.label}</span>
             <span className="text-xs text-gray-300">·</span>
-            <span className="text-xs text-gray-400">
+            <span className="text-xs text-muted-foreground">
               {formatDistanceToNow(new Date(item.created_at), { addSuffix: true })}
             </span>
           </div>
         </div>
 
-        <ChevronDown className={`w-4 h-4 text-gray-400 shrink-0 mt-1 transition-transform ${open ? 'rotate-180' : ''}`} />
+        <ChevronDown className={`w-4 h-4 text-muted-foreground shrink-0 mt-1 transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
 
       {open && (
-        <div className="mt-3 ml-13 pl-4 border-l-2 border-gray-100">
-          <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap">
+        <div className="mt-3 ml-13 pl-4 border-l-2 border-border">
+          <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
             {item.message}
           </p>
         </div>

@@ -294,7 +294,7 @@ export function SimpleEditor({ value, onChange, placeholder, onImageRemoved, onI
   }, [isMobile, mobileView])
 
   return (
-    <div className="tiptap-editor simple-editor-wrapper bg-white border border-gray-200 shadow">
+    <div className="tiptap-editor simple-editor-wrapper bg-card border border-border shadow">
       <EditorContext.Provider value={{ editor }}>
         <Toolbar
           ref={toolbarRef}

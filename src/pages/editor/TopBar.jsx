@@ -7,7 +7,7 @@ import {
 
 export default function TopBar() {
   return (
-    <header className="h-14 border-b border-slate-700 bg-[#020617]">
+    <header className="h-14 border-b border-border bg-card">
 
       <div className="flex h-full items-center justify-between px-4">
 
@@ -23,15 +23,15 @@ export default function TopBar() {
 
           <div className="hidden items-center gap-2 text-sm md:flex">
 
-            <span className="text-slate-400">
+            <span className="text-muted-foreground">
               CSS
             </span>
 
-            <span className="text-slate-600">
+            <span className="text-foreground">
               /
             </span>
 
-            <span className="font-semibold text-white">
+            <span className="font-semibold text-foreground">
               Selectors
             </span>
 
@@ -40,7 +40,7 @@ export default function TopBar() {
           {/* Progress */}
           <div className="hidden items-center gap-3 md:flex">
 
-            <div className="h-2 w-40 overflow-hidden rounded-full border border-slate-500 bg-slate-800">
+            <div className="h-2 w-40 overflow-hidden rounded-full border border-border bg-muted">
 
               <div
                 className="h-full bg-lime-400"
@@ -49,7 +49,7 @@ export default function TopBar() {
 
             </div>
 
-            <span className="text-xs text-slate-400">
+            <span className="text-xs text-muted-foreground">
               20%
             </span>
 
@@ -64,19 +64,19 @@ export default function TopBar() {
 
           <Flag
             size={18}
-            className="text-slate-400"
+            className="text-muted-foreground"
           />
 
           <Monitor
             size={18}
-            className="text-slate-400"
+            className="text-muted-foreground"
           />
 
-          <div className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-600 bg-slate-800">
+          <div className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-muted">
             <UserRound size={18} />
           </div>
 
-          <button className="hidden border-2 border-yellow-600 bg-yellow-400 px-4 py-2 font-bold text-black shadow-[2px_2px_0px_#92400e] transition hover:translate-y-[1px] sm:block">
+          <button className="hidden border-2 border-yellow-600 bg-yellow-400 px-4 py-2 font-bold text-foreground shadow-[2px_2px_0px_#92400e] transition hover:translate-y-[1px] sm:flow-root">
             Join Club
           </button>
 

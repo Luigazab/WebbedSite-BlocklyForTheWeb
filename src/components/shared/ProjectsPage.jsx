@@ -122,14 +122,14 @@ export default function ProjectsPage() {
           <div className="flex flex-wrap items-center gap-3">
             {/* Search */}
             <div className="relative min-w-56 flex-1" data-tour="search-input">
-              <Search aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+              <Search aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
               <input
                 type="search"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search projects…"
                 aria-label="Search projects"
-                className="h-10 w-full rounded-lg border border-slate-300 bg-white pl-9 pr-4 text-sm transition focus:border-blockly-purple focus:outline-none focus:ring-2 focus:ring-blockly-purple/10"
+                className="h-10 w-full rounded-lg border border-border bg-card pl-9 pr-4 text-sm transition focus:border-blockly-purple focus:outline-none focus:ring-2 focus:ring-blockly-purple/10"
               />
             </div>
 
@@ -138,7 +138,7 @@ export default function ProjectsPage() {
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
               aria-label="Sort projects"
-              className="h-10 rounded-lg border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 focus:border-blockly-purple focus:outline-none focus:ring-2 focus:ring-blockly-purple/10"
+              className="h-10 rounded-lg border border-border bg-card px-3 text-sm font-medium text-foreground focus:border-blockly-purple focus:outline-none focus:ring-2 focus:ring-blockly-purple/10"
             >
               {SORT_OPTIONS.map((s) => <option key={s} value={s}>{s === 'Recent' ? 'Sort: Recent' : s}</option>)}
             </select>
@@ -150,7 +150,7 @@ export default function ProjectsPage() {
               disabled={loading}
               aria-label="Refresh projects"
               title="Refresh"
-              className="flex size-10 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-500 transition hover:bg-slate-50 disabled:opacity-60"
+              className="flex size-10 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground transition hover:bg-muted disabled:opacity-60"
             >
               <RefreshCw aria-hidden="true" className={`size-4 ${loading ? 'animate-spin' : ''}`} />
             </button>
@@ -173,7 +173,7 @@ export default function ProjectsPage() {
                   className={`shrink-0 rounded-full border px-4 py-1.5 text-sm font-semibold transition-colors ${
                     filter === f
                       ? 'border-secondary bg-secondary/60 text-secondary-foreground'
-                      : 'border-slate-300 bg-white text-slate-600 hover:bg-slate-50'
+                      : 'border-border bg-card text-foreground hover:bg-muted'
                   }`}
                 >
                   {f}
@@ -181,7 +181,7 @@ export default function ProjectsPage() {
               ))}
             </div>
             {!loading && !error && (
-              <p aria-live="polite" className="hidden shrink-0 text-sm text-slate-500 sm:block">
+              <p aria-live="polite" className="hidden shrink-0 text-sm text-muted-foreground sm:flow-root">
                 {displayed.length} {displayed.length === 1 ? 'project' : 'projects'}
               </p>
             )}
@@ -262,12 +262,12 @@ function StateMessage({ icon, title, titleClassName = 'text-slate-700', descript
 
 function ProjectSkeleton() {
   return (
-    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
-      <div className="aspect-video animate-pulse bg-slate-200" />
+    <div className="overflow-hidden rounded-2xl border border-border bg-card">
+      <div className="aspect-video animate-pulse bg-muted" />
       <div className="space-y-3 p-4">
-        <div className="h-4 w-2/3 animate-pulse rounded bg-slate-200" />
-        <div className="h-3 w-full animate-pulse rounded bg-slate-100" />
-        <div className="h-3 w-1/3 animate-pulse rounded bg-slate-100" />
+        <div className="h-4 w-2/3 animate-pulse rounded bg-muted" />
+        <div className="h-3 w-full animate-pulse rounded bg-muted" />
+        <div className="h-3 w-1/3 animate-pulse rounded bg-muted" />
       </div>
     </div>
   )
@@ -299,7 +299,7 @@ function ProjectCard({ project, onOpen, onLikeToggled }) {
   }
 
   return (
-    <article className="group relative flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-blockly-purple hover:shadow-md">
+    <article className="group relative flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-blockly-purple hover:shadow-md">
       {/* Thumbnail */}
       <div className="relative aspect-video overflow-hidden bg-linear-to-b from-green-50 to-amber-50">
         {project.thumbnail_url ? (
@@ -311,12 +311,12 @@ function ProjectCard({ project, onOpen, onLikeToggled }) {
           />
         ) : (
           <div className="flex size-full items-center justify-center">
-            <ImageIcon aria-hidden="true" className="size-12 text-slate-400" />
+            <ImageIcon aria-hidden="true" className="size-12 text-muted-foreground" />
           </div>
         )}
         <span
           className={`absolute left-2.5 top-2.5 rounded-full px-2.5 py-0.5 text-[11px] font-semibold shadow-sm ${
-            project.is_public ? 'bg-green-100 text-green-700' : 'bg-white/90 text-slate-600'
+            project.is_public ? 'bg-green-100 dark:bg-green-950/50 text-green-700 dark:text-green-300' : 'bg-card/90 text-foreground'
           }`}
         >
           {project.is_public ? 'Public' : 'Private'}
@@ -329,17 +329,17 @@ function ProjectCard({ project, onOpen, onLikeToggled }) {
           <button
             type="button"
             onClick={onOpen}
-            className="w-full truncate text-left text-sm font-bold text-slate-800 after:absolute after:inset-0 after:rounded-2xl focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-blockly-purple"
+            className="w-full truncate text-left text-sm font-bold text-foreground after:absolute after:inset-0 after:rounded-2xl focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-blockly-purple"
           >
             {project.title}
           </button>
         </h3>
 
-        <p className={`line-clamp-2 min-h-8 text-xs leading-4 ${project.description ? 'text-slate-500' : 'italic text-slate-400'}`}>
+        <p className={`line-clamp-2 min-h-8 text-xs leading-4 ${project.description ? 'text-muted-foreground' : 'italic text-muted-foreground'}`}>
           {project.description || 'No description'}
         </p>
 
-        <div className="mt-auto flex items-center gap-4 border-t border-slate-100 pt-3 text-xs text-slate-500">
+        <div className="mt-auto flex items-center gap-4 border-t border-border pt-3 text-xs text-muted-foreground">
           <button
             type="button"
             onClick={handleLike}
@@ -357,7 +357,7 @@ function ProjectCard({ project, onOpen, onLikeToggled }) {
           </span>
 
           {project.updated_at && (
-            <time dateTime={project.updated_at} className="ml-auto text-[11px] text-slate-500">
+            <time dateTime={project.updated_at} className="ml-auto text-[11px] text-muted-foreground">
               {new Date(project.updated_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
             </time>
           )}

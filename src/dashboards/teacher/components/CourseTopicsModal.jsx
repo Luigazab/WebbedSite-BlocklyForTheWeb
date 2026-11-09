@@ -49,7 +49,7 @@ export default function CourseTopicsModal({ classroomId, group, onClose, onSaved
           </div>)}
           <Button type="button" variant="outline" onClick={() => setTopics(rows => [...rows, { id: null, key: crypto.randomUUID(), title: '', description: '', isPublished: false }])}><Plus size={16} /> Add topic</Button>
         </fieldset>
-        {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
+        {error && <p role="alert" className="text-sm text-red-600 dark:text-red-300">{error}</p>}
         <div className="flex justify-end gap-2 border-t pt-4"><Button type="button" variant="outline" disabled={busy} onClick={onClose}>Cancel</Button><Button type="submit" disabled={busy || !topics.length}>{busy && <Loader2 size={16} className="animate-spin" />}{busy ? 'Saving…' : 'Save topics'}</Button></div>
       </form>
     </DialogContent>

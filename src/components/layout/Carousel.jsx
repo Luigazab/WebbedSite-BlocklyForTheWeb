@@ -30,10 +30,10 @@ const Carousel = ({ children }) => {
       {showLeftArrow && (
         <button
           onClick={() => scroll('left')}
-          className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white rounded-full p-2 shadow-lg hover:bg-gray-50 transition-all opacity-0 group-hover:opacity-100 -ml-4"
+          className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-card rounded-full p-2 shadow-lg hover:bg-muted transition-all opacity-0 group-hover:opacity-100 -ml-4"
           aria-label="Scroll left"
         >
-          <ChevronLeft className="w-6 h-6 text-gray-600" />
+          <ChevronLeft className="w-6 h-6 text-foreground" />
         </button>
       )}
 
@@ -41,10 +41,10 @@ const Carousel = ({ children }) => {
       {showRightArrow && (
         <button
           onClick={() => scroll('right')}
-          className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white rounded-full p-2 shadow-lg hover:bg-gray-50 transition-all opacity-0 group-hover:opacity-100 -mr-4"
+          className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-card rounded-full p-2 shadow-lg hover:bg-muted transition-all opacity-0 group-hover:opacity-100 -mr-4"
           aria-label="Scroll right"
         >
-          <ChevronRight className="w-6 h-6 text-gray-600" />
+          <ChevronRight className="w-6 h-6 text-foreground" />
         </button>
       )}
 

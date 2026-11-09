@@ -94,7 +94,7 @@ export default function ClassroomDetail() {
 
   return(
     <div className="p-6 space-y-6 max-w-7xl mx-auto">
-      <section className="relative overflow-hidden rounded-3xl border border-border border-b-4 border-b-slate-400 shadow bg-[url('/classroom_bg.png')] bg-cover p-8 text-sky-800">
+      <section className="relative overflow-hidden rounded-3xl border border-border border-b-4 border-b-slate-400 shadow bg-[url('/classroom_bg.png')] bg-cover p-8 text-sky-800 dark:text-sky-300">
         <div className="relative flex flex-wrap items-end justify-between gap-6">
           <div className="max-w-2xl">
             <h1 className="text-3xl font-semibold leading-tight tracking-tight text-balance md:text-4xl">
@@ -106,12 +106,12 @@ export default function ClassroomDetail() {
             <div className="flex items-center gap-2 mt-3">
               <img src={currentClassroom?.teacher?.avatar_url || "/default-avatar.png"} alt="teacher picture" className="w-10 h-10 rounded-full object-cover object-center" />
               <div>
-                <p className="text-sm font-semibold text-gray-600">{currentClassroom?.teacher?.username}</p>
+                <p className="text-sm font-semibold text-foreground">{currentClassroom?.teacher?.username}</p>
                 <p className="text-xs border border-cyan-700 bg-cyan-50 text-cyan-500 rounded-full px-2 w-fit">Teacher</p>
               </div>
             </div>
           </div>
-          <div className="flex items-end gap-3 rounded-xl border border-border/60 bg-slate-50/70 px-4 py-3 backdrop-blur shadow">
+          <div className="flex items-end gap-3 rounded-xl border border-border/60 bg-muted/70 px-4 py-3 backdrop-blur shadow">
             <div>
               <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
                 Join code
@@ -204,7 +204,7 @@ export default function ClassroomDetail() {
               </div>
             )}
  
-            {!curriculumLoading && <ClassroomCurriculum
+            {!curriculumLoading && <ClassroomCurriculum onTopicPublicationChanged={refreshClassroom}
               classroomId={classroomId} courses={classroomCourses} topics={topics} teacher
               lessonCompletion={lessonCompletion} onEditTopics={setTopicGroup}
               onConfigureTopic={setProgressionTopic} onUnlockTopic={handleUnlockTopic}

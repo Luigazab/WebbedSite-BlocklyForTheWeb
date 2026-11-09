@@ -45,7 +45,7 @@ function DaysLeft({ dueDate }) {
   }
   if (days === 0) return <span className="text-xs text-orange-500 font-semibold">Due today</span>
   if (days === 1) return <span className="text-xs text-orange-400 font-semibold">Due tomorrow</span>
-  return <span className="text-xs text-gray-400">{days} days left</span>
+  return <span className="text-xs text-muted-foreground">{days} days left</span>
 }
 
 export default function AssignmentsTab() {
@@ -80,7 +80,7 @@ export default function AssignmentsTab() {
     return (
       <div className="flex flex-col items-center justify-center py-20 gap-3 text-center">
         <ClipboardList className="w-8 h-8 text-gray-300" />
-        <p className="text-sm text-gray-400">No assignments with due dates yet</p>
+        <p className="text-sm text-muted-foreground">No assignments with due dates yet</p>
       </div>
     )
   }
@@ -95,10 +95,10 @@ export default function AssignmentsTab() {
             {/* Classroom header */}
             <div className="flex items-center gap-2">
               <div className={`w-3 h-3 rounded-full border-2 ${accentClass.replace('border-l-', 'border-')}`} />
-              <h3 className="text-sm font-bold text-gray-700">{classroom.name}</h3>
-              <span className="text-xs text-gray-400">({items.length} assignment{items.length !== 1 ? 's' : ''})</span>
+              <h3 className="text-sm font-bold text-foreground">{classroom.name}</h3>
+              <span className="text-xs text-muted-foreground">({items.length} assignment{items.length !== 1 ? 's' : ''})</span>
               {classroom.is_active === false && (
-                <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">Archived</span>
+                <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">Archived</span>
               )}
             </div>
 
@@ -120,29 +120,29 @@ export default function AssignmentsTab() {
                     }
                     className={`
                       w-full text-left flex items-center gap-4 px-5 py-4
-                      bg-white rounded-xl border border-gray-100 shadow-sm
+                      bg-card rounded-xl border border-border shadow-sm
                       border-l-4 ${accentClass}
                       hover:shadow-md transition-all duration-150
                       ${isDimmed ? 'opacity-60' : ''}
                     `}
                   >
-                    <div className="w-9 h-9 rounded-lg bg-gray-50 flex items-center justify-center shrink-0">
-                      <BookOpen className="w-4 h-4 text-gray-400" />
+                    <div className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                      <BookOpen className="w-4 h-4 text-muted-foreground" />
                     </div>
 
                     <div className="flex-1 min-w-0">
-                      <p className={`text-sm font-semibold truncate ${isDimmed ? 'text-gray-500' : 'text-gray-800'}`}>
+                      <p className={`text-sm font-semibold truncate ${isDimmed ? 'text-muted-foreground' : 'text-foreground'}`}>
                         {la.lesson?.title ?? la.title}
                       </p>
                       <div className="flex items-center gap-3 mt-0.5">
                         {la.due_date && <DaysLeft dueDate={la.due_date} />}
                         {la.due_date && (
-                          <span className="text-xs text-gray-400">
+                          <span className="text-xs text-muted-foreground">
                             {format(new Date(la.due_date), 'MMM d')}
                           </span>
                         )}
                         {hasQuiz && (
-                          <span className="text-xs bg-purple-50 text-purple-600 px-2 py-0.5 rounded-full font-medium">
+                          <span className="text-xs bg-purple-50 dark:bg-purple-950/50 text-purple-600 dark:text-purple-300 px-2 py-0.5 rounded-full font-medium">
                             Quiz
                           </span>
                         )}

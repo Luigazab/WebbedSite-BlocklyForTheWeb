@@ -64,7 +64,7 @@ export default function StudentsManagement() {
             className="bg-transparent text-sm  outline-none flex-1"
           />
           {search && (
-            <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+            <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
               <X className="w-4 h-4" />
             </button>
           )}
@@ -72,12 +72,12 @@ export default function StudentsManagement() {
         <div className="flex items-center gap-2 self-end">
           <DropdownMenu>
             <DropdownMenuTrigger asChild className="min-w-40 justify-between">
-              <button className="flex shadow items-center gap-2 px-3 py-2.5 bg-white border border-border rounded-lg hover:bg-slate-50 transition-colors">
-                <Filter className="w-4 h-4 text-slate-400 shrink-0" />
+              <button className="flex shadow items-center gap-2 px-3 py-2.5 bg-card border border-border rounded-lg hover:bg-muted transition-colors">
+                <Filter className="w-4 h-4 text-muted-foreground shrink-0" />
                 <span className="capitalize">
                   {filterCategory === "all" ? "All Students" : filterCategory}
                 </span>
-                <ChevronDown size={14} className="text-slate-500" />
+                <ChevronDown size={14} className="text-muted-foreground" />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="center" className="min-w-40">

@@ -93,7 +93,7 @@ export default function CaptureValidationPanel({
         <legend className="px-1 font-semibold">
           Starting and expected structures
         </legend>
-        <p className="text-xs text-slate-600">
+        <p className="text-xs text-foreground">
           {filename} · Validation checks generated code.
         </p>
       <div className="flex flex-col gap-2 text-xs">
@@ -144,7 +144,7 @@ export default function CaptureValidationPanel({
         </div>
       </div>
       {/\.js$/i.test(filename) && (
-        <p className="text-amber-800">
+        <p className="text-amber-800 dark:text-amber-300">
           JavaScript automatic checks will be added later. You can still capture
           this file.
         </p>
@@ -168,7 +168,7 @@ export default function CaptureValidationPanel({
               </Button>
             )}
           </div>
-          <p className="text-slate-500">
+          <p className="text-muted-foreground">
             Checks cover changes from the starting code. Recapturing regenerates
             these checks and keeps manual tests.
           </p>
@@ -183,7 +183,7 @@ export default function CaptureValidationPanel({
                 title="Pick expected element"
                 sandbox="allow-scripts"
                 srcDoc={picker}
-                className="h-48 w-full rounded border bg-white"
+                className="h-48 w-full rounded border bg-card"
               />
               {selected !== null && (
                 <button
@@ -201,7 +201,7 @@ export default function CaptureValidationPanel({
               selected && !selected.includes(index) ? null : (
                 <label
                   key={index}
-                  className="flex items-start gap-2 rounded bg-white p-2"
+                  className="flex items-start gap-2 rounded bg-card p-2"
                 >
                   <input
                     type="checkbox"
@@ -236,24 +236,24 @@ export default function CaptureValidationPanel({
               ),
             )}
             {!checks.length && (
-              <p className="text-slate-500">
+              <p className="text-muted-foreground">
                 No automatic changes detected. Edit the expected structure or
                 add manual checks.
               </p>
             )}
             {selected?.length === 0 && (
-              <p className="text-slate-500">
+              <p className="text-muted-foreground">
                 This element has no generated checks. Show all checks to review
                 the rest.
               </p>
             )}
           </div>
           {draft != null && (
-            <p className="text-amber-800">
+            <p className="text-amber-800 dark:text-amber-300">
               Apply your manual edits before changing selections or recapturing.
             </p>
           )}
-          <details className="rounded border bg-white p-2">
+          <details className="rounded border bg-card p-2">
             <summary className="cursor-pointer font-semibold">
               Advanced settings · manual tests
             </summary>

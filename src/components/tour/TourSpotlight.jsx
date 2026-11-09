@@ -188,16 +188,16 @@ export default function TourSpotlight({ steps }) {
         </div>
 
         {/* Speech Bubble */}
-        <div className="relative bg-white rounded-2xl shadow-2xl p-6 max-w-md border-4 border-blockly-purple">
+        <div className="relative bg-card rounded-2xl shadow-2xl p-6 max-w-md border-4 border-blockly-purple">
           {/* Bubble tail — changes direction based on placement */}
           <div className={TAIL_STYLES[placement]} />
 
           {/* Close button */}
           <button
             onClick={skipTour}
-            className="absolute top-3 right-3 p-1 rounded-lg hover:bg-gray-100 transition-colors"
+            className="absolute top-3 right-3 p-1 rounded-lg hover:bg-muted transition-colors"
           >
-            <X className="w-4 h-4 text-gray-500" />
+            <X className="w-4 h-4 text-muted-foreground" />
           </button>
 
           {/* Content */}
@@ -206,15 +206,15 @@ export default function TourSpotlight({ steps }) {
               <p className="text-xs font-bold text-blockly-purple uppercase tracking-wider mb-1">
                 Step {currentStep + 1} of {steps.length}
               </p>
-              <h3 className="text-lg font-bold text-gray-800 mb-2">{step.title}</h3>
-              <p className="text-sm text-gray-600 leading-relaxed">{step.content}</p>
+              <h3 className="text-lg font-bold text-foreground mb-2">{step.title}</h3>
+              <p className="text-sm text-foreground leading-relaxed">{step.content}</p>
             </div>
 
             {/* Navigation */}
-            <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+            <div className="flex items-center justify-between pt-2 border-t border-border">
               <button
                 onClick={skipTour}
-                className="text-sm text-gray-400 hover:text-gray-600 font-medium transition-colors"
+                className="text-sm text-muted-foreground hover:text-foreground font-medium transition-colors"
               >
                 Skip Tour
               </button>
@@ -223,7 +223,7 @@ export default function TourSpotlight({ steps }) {
                 {!isFirstStep && (
                   <button
                     onClick={prevStep}
-                    className="btn flex items-center gap-1 px-3 py-2 bg-gray-100 text-gray-600 rounded-lg text-sm font-semibold hover:bg-gray-200 transition-colors"
+                    className="btn flex items-center gap-1 px-3 py-2 bg-muted text-foreground rounded-lg text-sm font-semibold hover:bg-muted transition-colors"
                   >
                     <ChevronLeft className="w-4 h-4" />
                     Back

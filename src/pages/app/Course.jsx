@@ -68,7 +68,7 @@ const Course = () => {
 
     const content = (
       <div
-        className="relative bg-contain bg-no-repeat rounded-2xl shadow border border-slate-200 group hover:ring-offset-4 ring-offset-slate-200"
+        className="relative bg-contain bg-no-repeat rounded-2xl shadow border border-border group hover:ring-offset-4 ring-offset-slate-200"
         style={{
           backgroundImage: `url(${course.image_src})`,
         }}
@@ -80,10 +80,10 @@ const Course = () => {
             borderColor: course.color,
           }}
         ></div>
-        <div className="bg-white w-full rounded-b-2xl p-4 flex justify-between items-center">
+        <div className="bg-card w-full rounded-b-2xl p-4 flex justify-between items-center">
           <div>
-            <h2 className="font-extrabold tracking-widest text-slate-600 text-xl">{course.title}</h2>
-            <p className="font-bold tracking-wide text-slate-400 ">{course.description}</p>
+            <h2 className="font-extrabold tracking-widest text-foreground text-xl">{course.title}</h2>
+            <p className="font-bold tracking-wide text-muted-foreground ">{course.description}</p>
           </div>
           <ChevronRightCircleIcon className="group-hover:fill-slate-300 group-hover:text-emerald-700 w-6 h-6 group-hover:animate-bounce transition-all! ease-in-out" />
         </div>
@@ -146,15 +146,15 @@ const Course = () => {
                 leaveFrom="opacity-100 scale-100"
                 leaveTo="opacity-0 scale-95"
               >
-                <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
+                <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-card p-6 text-left align-middle shadow-xl transition-all">
                   <Dialog.Title
                     as="h3"
-                    className="text-lg font-medium leading-6 text-gray-900 flex justify-between items-center"
+                    className="text-lg font-medium leading-6 text-foreground flex justify-between items-center"
                   >
                     Select Your Starting Level for {selectedCourseForLevel?.title}
                     <button
                       type="button"
-                      className="inline-flex justify-center rounded-md border border-transparent bg-gray-100 px-2 py-1 text-sm font-medium text-gray-900 hover:bg-gray-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-500 focus-visible:ring-offset-2"
+                      className="inline-flex justify-center rounded-md border border-transparent bg-muted px-2 py-1 text-sm font-medium text-foreground hover:bg-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-500 focus-visible:ring-offset-2"
                       onClick={() => setIsLevelModalOpen(false)}
                     >
                       <X size={18} />
@@ -175,8 +175,8 @@ const Course = () => {
                             onChange={() => handleLevelSelect(key)}
                             className="hidden peer"
                           />
-                          <span className={`capitalize px-4 py-3 font-bold text-center w-full rounded-lg border border-slate-200 bg-white shadow transition-all
-                            peer-checked:bg-blue-500 peer-checked:text-white peer-checked:border-blue-500 hover:bg-slate-100`}>
+                          <span className={`capitalize px-4 py-3 font-bold text-center w-full rounded-lg border border-border bg-card shadow transition-all
+                            peer-checked:bg-blue-500 peer-checked:text-white peer-checked:border-blue-500 hover:bg-muted`}>
                             {key}
                           </span>
                         </label>

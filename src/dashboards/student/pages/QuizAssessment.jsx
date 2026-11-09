@@ -6,7 +6,7 @@ const QuizAssessment = () => {
   const [showQuestions, setShowQuestions] = useState(false)
   const [currentQuestion, setCurrentQuestion] = useState(5)
   return (
-  <div className="h-[93vh] w-full bg-slate-50 relative overflow-hidden flex">
+  <div className="h-[93vh] w-full bg-muted relative overflow-hidden flex">
     <div
       className="absolute inset-0 z-0"
       style={{
@@ -22,7 +22,7 @@ const QuizAssessment = () => {
     <div className="z-10 flex justify-center items-center h-full w-full">
       <div className="space-y-4 p-8 flex flex-col justify-between h-full">
         <div className="flex justify-between items-center">
-          <button className="bg-slate-200/70 hover:bg-slate-300 p-2 rounded-lg"><ArrowLeft size={25}/> </button>
+          <button className="bg-muted/70 hover:bg-slate-300 p-2 rounded-lg"><ArrowLeft size={25}/> </button>
           <p className="font-extrabold text-2xl">05 of 10</p>
           <span className="font-extrabold flex gap-2 text-xl rounded-full bg-blockly-blue/50 text-white p-2 items-center">
             <img src="/clock.png" alt="" className="h-6 w-auto" />
@@ -32,21 +32,21 @@ const QuizAssessment = () => {
         <div class="w-full bg-slate-600 rounded-full h-4">
           <div class="bg-emerald-400 h-4 rounded-full w-[50%]"/>
         </div>
-        <div className="bg-white shadow p-6 mx-auto rounded-4xl space-y-4 border border-slate-200">
+        <div className="bg-card shadow p-6 mx-auto rounded-4xl space-y-4 border border-border">
           <p className="text-slate-300 font-bold text-lg">Lesson Title</p>
-          <h1 className="text-3xl font-bold text-slate-700 text-center">Quiz Title lorem impum dolor sit amet consectetur?</h1>
+          <h1 className="text-3xl font-bold text-foreground text-center">Quiz Title lorem impum dolor sit amet consectetur?</h1>
           <div className="space-y-4">
-            <div className="w-full py-6 px-4 rounded-3xl border border-slate-300 hover:border-sky-400 hover:bg-sky-100 cursor-pointer">
-              <p className="text-slate-700 text-lg font-bold">Question 1</p>
+            <div className="w-full py-6 px-4 rounded-3xl border border-border hover:border-sky-400 hover:bg-sky-100 cursor-pointer">
+              <p className="text-foreground text-lg font-bold">Question 1</p>
             </div>
-            <div className="w-full py-6 px-4 rounded-3xl border border-slate-300 hover:border-sky-400 hover:bg-sky-100 cursor-pointer">
-              <p className="text-slate-700 text-lg font-bold">Question 1</p>
+            <div className="w-full py-6 px-4 rounded-3xl border border-border hover:border-sky-400 hover:bg-sky-100 cursor-pointer">
+              <p className="text-foreground text-lg font-bold">Question 1</p>
             </div>
-            <div className="w-full py-6 px-4 rounded-3xl border border-slate-300 hover:border-sky-400 hover:bg-sky-100 cursor-pointer">
-              <p className="text-slate-700 text-lg font-bold">Question 1</p>
+            <div className="w-full py-6 px-4 rounded-3xl border border-border hover:border-sky-400 hover:bg-sky-100 cursor-pointer">
+              <p className="text-foreground text-lg font-bold">Question 1</p>
             </div>
-            <div className="w-full py-6 px-4 rounded-3xl border border-slate-300 hover:border-sky-400 hover:bg-sky-100 cursor-pointer">
-              <p className="text-slate-700 text-lg font-bold">Question 1</p>
+            <div className="w-full py-6 px-4 rounded-3xl border border-border hover:border-sky-400 hover:bg-sky-100 cursor-pointer">
+              <p className="text-foreground text-lg font-bold">Question 1</p>
             </div>
           </div>
         </div>
@@ -76,7 +76,7 @@ const QuizAssessment = () => {
 
       {/* Slide Panel */}
       <div
-        className={`absolute right-0 top-0 h-full w-[85%] max-w-sm bg-slate-50 shadow-2xl p-6 overflow-y-auto transition-transform duration-300 ${
+        className={`absolute right-0 top-0 h-full w-[85%] max-w-sm bg-muted shadow-2xl p-6 overflow-y-auto transition-transform duration-300 ${
           showQuestions ? "translate-x-0" : "translate-x-full"
         }`}
       >

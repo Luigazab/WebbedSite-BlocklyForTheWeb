@@ -93,13 +93,13 @@ const AddAttachmentModal = ({ onSave }) => {
           </TabsList>
 
           <TabsContent value="file" className="space-y-4">
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 space-y-3">
-              <p className="text-sm text-slate-600">
+            <div className="rounded-2xl border border-border bg-muted p-4 space-y-3">
+              <p className="text-sm text-foreground">
                 Upload a file or attach one external file link. Only one item is allowed in this tab.
               </p>
 
               {fileTabAttachment ? (
-                <div className="flex items-center justify-between rounded-xl border bg-white px-3 py-2">
+                <div className="flex items-center justify-between rounded-xl border bg-card px-3 py-2">
                   <div className="min-w-0">
                     <p className="text-xs text-muted-foreground uppercase tracking-wide">
                       {fileTabAttachment.type === "file" ? "Uploaded file" : "File link"}
@@ -148,13 +148,13 @@ const AddAttachmentModal = ({ onSave }) => {
           </TabsContent>
 
           <TabsContent value="video" className="space-y-4">
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 space-y-3">
-              <p className="text-sm text-slate-600">
+            <div className="rounded-2xl border border-border bg-muted p-4 space-y-3">
+              <p className="text-sm text-foreground">
                 Paste one video URL for this lecture (YouTube, Vimeo, or external host).
               </p>
 
               {videoAttachment ? (
-                <div className="flex items-center justify-between rounded-xl border bg-white px-3 py-2">
+                <div className="flex items-center justify-between rounded-xl border bg-card px-3 py-2">
                   <p className="truncate text-sm font-medium">{videoAttachment}</p>
                   <Button
                     type="button"

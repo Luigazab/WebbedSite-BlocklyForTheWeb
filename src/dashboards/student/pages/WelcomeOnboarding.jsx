@@ -90,7 +90,7 @@ export default function WelcomeOnboarding() {
   if (!profile) return null
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,#ede9fe,#f8fafc_52%,#dbeafe)] px-4 py-8 text-slate-800 sm:px-6 sm:py-12">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,#ede9fe,#f8fafc_52%,#dbeafe)] px-4 py-8 text-foreground sm:px-6 sm:py-12">
       <div className="mx-auto max-w-3xl">
         <div className="mb-8 text-center">
           <p className="text-sm font-black uppercase tracking-[0.25em] text-blockly-purple">
@@ -99,7 +99,7 @@ export default function WelcomeOnboarding() {
           <h1 className="mt-2 text-3xl font-black sm:text-4xl">
             Let's get you set up
           </h1>
-          <p className="mt-2 text-slate-500">
+          <p className="mt-2 text-muted-foreground">
             A quick chat with Remi before you explore.
           </p>
         </div>
@@ -110,12 +110,12 @@ export default function WelcomeOnboarding() {
           {steps.map((label, index) => (
             <div
               key={label}
-              className={`h-2 w-14 rounded-full sm:w-20 ${index <= step ? "bg-blockly-purple" : "bg-slate-200"}`}
+              className={`h-2 w-14 rounded-full sm:w-20 ${index <= step ? "bg-blockly-purple" : "bg-muted"}`}
               title={label}
             />
           ))}
         </div>
-        <div className="rounded-[2rem] border border-white/80 bg-white/80 p-5 shadow-xl shadow-violet-100/70 backdrop-blur-sm sm:p-8">
+        <div className="rounded-[2rem] border border-white/80 bg-card/80 p-5 shadow-xl shadow-violet-100/70 backdrop-blur-sm sm:p-8">
           {step > 0 && (
             <button
               type="button"
@@ -134,7 +134,7 @@ export default function WelcomeOnboarding() {
               className="h-28 w-24 shrink-0 object-contain sm:h-36 sm:w-32"
             />
             <div
-              className="max-w-lg rounded-3xl rounded-bl-md bg-violet-100 px-5 py-4 text-base font-semibold leading-relaxed text-violet-950 shadow-sm sm:text-lg"
+              className="max-w-lg rounded-3xl rounded-bl-md bg-violet-100 dark:bg-violet-950/50 px-5 py-4 text-base font-semibold leading-relaxed text-violet-950 dark:text-violet-300 shadow-sm sm:text-lg"
               aria-live="polite"
             >
               {step === 0 && (
@@ -162,8 +162,8 @@ export default function WelcomeOnboarding() {
               )}
             </div>
           </div>
-          <div className="ml-auto max-w-lg rounded-3xl rounded-br-md border-2 border-sky-100 bg-sky-50 p-5 shadow-sm sm:p-6">
-            <p className="mb-4 text-xs font-black uppercase tracking-widest text-sky-700">
+          <div className="ml-auto max-w-lg rounded-3xl rounded-br-md border-2 border-sky-100 bg-sky-50 dark:bg-sky-950/50 p-5 shadow-sm sm:p-6">
+            <p className="mb-4 text-xs font-black uppercase tracking-widest text-sky-700 dark:text-sky-300">
               Your reply
             </p>
             {step === 0 && (
@@ -177,7 +177,7 @@ export default function WelcomeOnboarding() {
                       autoComplete="given-name"
                       maxLength={80}
                       required
-                      className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 outline-none focus:border-blockly-purple"
+                      className="mt-1 w-full rounded-xl border border-border bg-card px-4 py-3 outline-none focus:border-blockly-purple"
                     />
                   </label>
                   <label className="text-sm font-semibold">
@@ -188,7 +188,7 @@ export default function WelcomeOnboarding() {
                       autoComplete="family-name"
                       maxLength={80}
                       required
-                      className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 outline-none focus:border-blockly-purple"
+                      className="mt-1 w-full rounded-xl border border-border bg-card px-4 py-3 outline-none focus:border-blockly-purple"
                     />
                   </label>
                 </div>
@@ -225,7 +225,7 @@ export default function WelcomeOnboarding() {
             {step === 2 &&
               (classroomName ? (
                 <div className="space-y-3">
-                  <p className="font-semibold text-slate-700">
+                  <p className="font-semibold text-foreground">
                     You're already in {classroomName}.
                   </p>
                   <button
@@ -250,7 +250,7 @@ export default function WelcomeOnboarding() {
                       autoFocus
                       maxLength={6}
                       placeholder="ABC123"
-                      className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-center text-xl font-black tracking-[0.25em] uppercase outline-none focus:border-blockly-purple"
+                      className="mt-1 w-full rounded-xl border border-border bg-card px-4 py-3 text-center text-xl font-black tracking-[0.25em] uppercase outline-none focus:border-blockly-purple"
                     />
                   </label>
                   <button
@@ -265,7 +265,7 @@ export default function WelcomeOnboarding() {
                       setWantsCode(false);
                       setError("");
                     }}
-                    className="w-full text-sm font-semibold text-slate-500 underline"
+                    className="w-full text-sm font-semibold text-muted-foreground underline"
                   >
                     Back to choices
                   </button>
@@ -285,7 +285,7 @@ export default function WelcomeOnboarding() {
                       setError("");
                       setStep(3);
                     }}
-                    className="rounded-xl border border-slate-200 bg-white px-5 py-3 font-bold text-slate-700"
+                    className="rounded-xl border border-border bg-card px-5 py-3 font-bold text-foreground"
                   >
                     Not right now
                   </button>
@@ -308,12 +308,12 @@ export default function WelcomeOnboarding() {
               </button>
             )}
             {error && (
-              <p role="alert" className="mt-4 text-sm font-medium text-red-600">
+              <p role="alert" className="mt-4 text-sm font-medium text-red-600 dark:text-red-300">
                 {error}
               </p>
             )}
           </div>
-          <p className="mt-7 flex items-center justify-center gap-2 text-xs text-slate-500">
+          <p className="mt-7 flex items-center justify-center gap-2 text-xs text-muted-foreground">
             <Check size={14} /> Step {step + 1} of {steps.length}: {steps[step]}
           </p>
         </div>

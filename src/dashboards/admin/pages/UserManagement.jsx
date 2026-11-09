@@ -97,16 +97,10 @@ export default function UserManagement() {
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
   return (
-    <div className="p-6 space-y-6">
-      <AppBreadcrumb
-        items={[
-          { label: 'Home', href: '/admin/' },
-          { label: 'User Management', href: '/admin/users' },
-        ]}
-      />
+    <div className="wide-container">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h2 className="font-display text-2xl font-semibold">User Management</h2>
+          <h1 className="font-display text-2xl font-semibold">User Management</h1>
           <p className="mt-1 text-sm text-muted-foreground">View and manage user accounts.</p>
         </div>
         <div className="flex gap-2">
@@ -130,7 +124,7 @@ export default function UserManagement() {
             className="bg-transparent text-sm  outline-none flex-1"
           />
           {search && (
-            <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+            <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
               <X className="w-4 h-4" />
             </button>
           )}
@@ -139,11 +133,11 @@ export default function UserManagement() {
         <div className="flex items-center gap-2 self-end">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="flex shadow items-center gap-2 px-3 py-2.5 text-sm bg-white border border-border rounded-lg hover:bg-slate-50 transition-colors">
+              <button className="flex shadow items-center gap-2 px-3 py-2.5 text-sm bg-card border border-border rounded-lg hover:bg-muted transition-colors">
                 <span className="capitalize">
                   {roleFilter === "all" ? "All Roles" : roleFilter}
                 </span>
-                <ChevronDown size={14} className="text-slate-500" />
+                <ChevronDown size={14} className="text-muted-foreground" />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="center" className="min-w-40">
@@ -151,14 +145,14 @@ export default function UserManagement() {
                 <DropdownMenuItem 
                   key={role}
                   onClick={() => { setRoleFilter(role); setPage(0); }}
-                  className={`capitalize ${roleFilter === role ? "bg-sky-700/10 text-sky-700" : ""}`}
+                  className={`capitalize ${roleFilter === role ? "bg-sky-700/10 text-sky-700 dark:text-sky-300" : ""}`}
                 >
                   {role === "all" ? "All Roles" : role}
                 </DropdownMenuItem>
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
-          <button onClick={fetchUsers} className="w-10 h-10 flex items-center justify-center rounded-lg shadow bg-white border border-slate-200 hover:text-slate-600 hover:bg-slate-100 transition-colors">
+          <button onClick={fetchUsers} className="w-10 h-10 flex items-center justify-center rounded-lg shadow bg-card border border-border hover:text-foreground hover:bg-muted transition-colors">
             <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
           </button>
         </div>
@@ -221,22 +215,22 @@ export default function UserManagement() {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-between px-4 py-3 border-t border-slate-200">
+          <div className="flex items-center justify-between px-4 py-3 border-t border-border">
             <p className=" text-xs">{total.toLocaleString()} total users</p>
             <div className="flex items-center gap-1">
-              <button onClick={() => setPage((p) => Math.max(0, p - 1))} disabled={page === 0} className="px-3 py-1.5 text-xs  hover: disabled:opacity-30 rounded-md hover:bg-slate-50 transition-colors">
+              <button onClick={() => setPage((p) => Math.max(0, p - 1))} disabled={page === 0} className="px-3 py-1.5 text-xs  hover: disabled:opacity-30 rounded-md hover:bg-muted transition-colors">
                 Prev
               </button>
               {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                 const pg = page < 3 ? i : page - 2 + i;
                 if (pg >= totalPages) return null;
                 return (
-                  <button key={pg} onClick={() => setPage(pg)} className={`w-7 h-7 text-xs rounded-md transition-colors ${pg === page ? "bg-amber-500/20 text-amber-300" : " hover:bg-slate-50"}`}>
+                  <button key={pg} onClick={() => setPage(pg)} className={`w-7 h-7 text-xs rounded-md transition-colors ${pg === page ? "bg-amber-500/20 text-amber-300" : " hover:bg-muted"}`}>
                     {pg + 1}
                   </button>
                 );
               })}
-              <button onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))} disabled={page >= totalPages - 1} className="px-3 py-1.5 text-xs  hover: disabled:opacity-30 rounded-md hover:bg-slate-50 transition-colors">
+              <button onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))} disabled={page >= totalPages - 1} className="px-3 py-1.5 text-xs  hover: disabled:opacity-30 rounded-md hover:bg-muted transition-colors">
                 Next
               </button>
             </div>
@@ -268,7 +262,7 @@ function RoleBadge({ role }) {
 
 function StatusDot({ banned }) {
   return (
-    <span className={`inline-flex items-center gap-1.5 ${banned ? "text-red-600" : "text-emerald-600"}`}>
+    <span className={`inline-flex items-center gap-1.5 ${banned ? "text-red-600 dark:text-red-300" : "text-emerald-600 dark:text-emerald-300"}`}>
       <span className={`w-1.5 h-1.5 rounded-full ${banned ? "bg-red-600" : "bg-emerald-600"}`} />
       {banned ? "Banned" : "Active"}
     </span>
@@ -284,7 +278,7 @@ function RowActions({ user, onBan, onReset, onDelete, onRoleChange }) {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">
-        <DropdownMenuItem onClick={() => onBan(user)} className={`${user.is_banned ? "text-emerald-600" : "text-amber-600"} cursor-pointer`}>
+        <DropdownMenuItem onClick={() => onBan(user)} className={`${user.is_banned ? "text-emerald-600 dark:text-emerald-300" : "text-amber-600 dark:text-amber-300"} cursor-pointer`}>
           {user.is_banned ? <Shield className="h-4 w-4 mr-2" /> : <ShieldOff className="h-4 w-4 mr-2" />}
           {user.is_banned ? "Unban User" : "Ban User"}
         </DropdownMenuItem>
@@ -305,7 +299,7 @@ function RowActions({ user, onBan, onReset, onDelete, onRoleChange }) {
         
         <DropdownMenuSeparator />
         
-        <DropdownMenuItem onClick={() => onDelete(user)} className="text-rose-600 cursor-pointer hover:text-rose-700 hover:bg-rose-50">
+        <DropdownMenuItem onClick={() => onDelete(user)} className="text-rose-600 dark:text-rose-300 cursor-pointer hover:text-rose-700 hover:bg-rose-50">
           <Trash2 className="h-4 w-4 mr-2" />
           Remove User
         </DropdownMenuItem>

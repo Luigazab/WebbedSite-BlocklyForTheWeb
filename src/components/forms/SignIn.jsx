@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useAuth } from '../../hooks/useAuth'
 import { Link } from 'react-router'
+import { Button } from '#components/ui/button'
 
 const SignIn = () => {
   const { handleSignIn } = useAuth()
@@ -27,11 +28,11 @@ const SignIn = () => {
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="peer w-full border border-slate-300 shadow rounded-lg px-4 py-2 text-base tracking-wide focus:outline-none focus:border-blockly-purple"
+            className="peer w-full border border-border shadow rounded-lg px-4 py-2 text-base tracking-wide focus:outline-none focus:border-blockly-purple"
           />
-          <label htmlFor="login-email" className="pt-2 absolute left-4 text-slate-400 bg-transparent transition-all! duration-300
-            peer-focus:-translate-y-5 peer-focus:-translate-x-2 peer-focus:scale-90 peer-focus:bg-white peer-focus:px-1 peer-focus:text-blockly-purple peer-focus:font-bold
-            peer-valid:-translate-y-5 peer-valid:-translate-x-2 peer-valid:scale-90 peer-valid:bg-white peer-valid:px-1 peer-valid:text-blockly-purple peer-valid:font-bold">
+          <label htmlFor="login-email" className="pt-2 absolute left-4 text-muted-foreground bg-transparent transition-all! duration-300
+            peer-focus:-translate-y-5 peer-focus:-translate-x-2 peer-focus:scale-90 peer-focus:bg-card peer-focus:px-1 peer-focus:text-blockly-purple peer-focus:font-bold
+            peer-valid:-translate-y-5 peer-valid:-translate-x-2 peer-valid:scale-90 peer-valid:bg-card peer-valid:px-1 peer-valid:text-blockly-purple peer-valid:font-bold">
             Email
           </label>
         </div>
@@ -44,11 +45,11 @@ const SignIn = () => {
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="peer w-full border border-slate-300 shadow rounded-lg px-4 py-2 text-base tracking-wide focus:outline-none focus:border-blockly-purple"
+            className="peer w-full border border-border shadow rounded-lg px-4 py-2 text-base tracking-wide focus:outline-none focus:border-blockly-purple"
           />
-          <label htmlFor="login-password" className="pt-2 absolute left-4 text-slate-400 bg-transparent transition-all! duration-300
-            peer-focus:-translate-y-5 peer-focus:-translate-x-2 peer-focus:scale-90 peer-focus:bg-white peer-focus:px-1 peer-focus:text-blockly-purple peer-focus:font-bold
-            peer-valid:-translate-y-5 peer-valid:-translate-x-2 peer-valid:scale-90 peer-valid:bg-white peer-valid:px-1 peer-valid:text-blockly-purple peer-valid:font-bold">
+          <label htmlFor="login-password" className="pt-2 absolute left-4 text-muted-foreground bg-transparent transition-all! duration-300
+            peer-focus:-translate-y-5 peer-focus:-translate-x-2 peer-focus:scale-90 peer-focus:bg-card peer-focus:px-1 peer-focus:text-blockly-purple peer-focus:font-bold
+            peer-valid:-translate-y-5 peer-valid:-translate-x-2 peer-valid:scale-90 peer-valid:bg-card peer-valid:px-1 peer-valid:text-blockly-purple peer-valid:font-bold">
             Password
           </label>
         </div>
@@ -61,9 +62,9 @@ const SignIn = () => {
           <Link to='/forgot-password' className='text-sm! hover:underline hover:text-blockly-purple'>I forgot my password</Link>
         </div>
 
-        <button className="btn" disabled={loading}>
+        <Button variant='primary' disabled={loading}>
           {loading ? 'Signing in...' : 'Login to WebbedSite'}
-        </button>
+        </Button>
       </form>
     </div>
   )

@@ -104,7 +104,7 @@ function TopicPage({ topic, subcategory, category }) {
         <span>/</span>
         <span style={{ color: subcategory.color }}>{subcategory.title}</span>
         <span>/</span>
-        <span className="text-purple-800">{topic.title}</span>
+        <span className="text-purple-800 dark:text-purple-300">{topic.title}</span>
       </div>
 
       {/* Title */}
@@ -206,7 +206,7 @@ function WelcomeScreen() {
         {categories.map((cat) => (
           <div
             key={cat.id}
-            className="px-4 py-4 rounded-xl border text-xl font-bold font-mono flex flex-col bg-white"
+            className="px-4 py-4 rounded-xl border text-xl font-bold font-mono flex flex-col bg-card"
             style={{
               color: cat.color,
             }}
@@ -240,7 +240,7 @@ function Sidebar({ selectedCat, selectedSub, selectedTopic, onSelect }) {
 
   return (
     <aside
-      className="h-full flex flex-col overflow-hidden bg-white"
+      className="h-full flex flex-col overflow-hidden bg-card"
     >
       {/* Header */}
       <div
@@ -260,7 +260,7 @@ function Sidebar({ selectedCat, selectedSub, selectedTopic, onSelect }) {
               {/* Category row */}
               <button
                 onClick={() => toggleCat(cat.id)}
-                className="w-full flex items-center justify-between px-4 py-2 text-left transition-colors cursor-pointer hover:bg-white/5 group"
+                className="w-full flex items-center justify-between px-4 py-2 text-left transition-colors cursor-pointer hover:bg-card/5 group"
               >
                 <span className="flex items-center gap-2.5">
                   <span
@@ -296,7 +296,7 @@ function Sidebar({ selectedCat, selectedSub, selectedTopic, onSelect }) {
                         {/* Subcategory row */}
                         <button
                           onClick={() => toggleSub(subKey)}
-                          className="w-full flex items-center justify-between px-3 py-1.5 text-left transition-colors cursor-pointer hover:bg-white/5 rounded-md"
+                          className="w-full flex items-center justify-between px-3 py-1.5 text-left transition-colors cursor-pointer hover:bg-card/5 rounded-md"
                         >
                           <span className="flex items-center gap-2">
                             <span
@@ -411,7 +411,7 @@ const Documentation = () => {
         </div>
 
         {/* ── Content area ── */}
-        <main className="flex-1 overflow-y-auto bg-amber-50">
+        <main className="flex-1 overflow-y-auto bg-amber-50 dark:bg-amber-950/50">
           {/* Mobile header */}
           <div
             className="lg:hidden flex items-center gap-3 px-4 py-3 border-b sticky top-0 z-10 bg-blockly-purple"
@@ -422,7 +422,7 @@ const Documentation = () => {
           >
             <button
               onClick={() => setMobileSidebarOpen(true)}
-              className="p-1.5 rounded-lg transition-colors hover:bg-white/10 cursor-pointer"
+              className="p-1.5 rounded-lg transition-colors hover:bg-card/10 cursor-pointer"
               style={{ color: "white" }}
             >
               <MenuIcon />

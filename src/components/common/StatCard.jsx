@@ -29,7 +29,7 @@ export default function StatCard({label, value, sub, progress, accent, icon, ima
         </p>
         {sub && <p className="mt-1 text-xs text-muted-foreground">{sub}</p>}
         {typeof progress === "number" && (
-          <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-white border border-border">
+          <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-card border border-border">
             <div className="h-full rounded-full bg-blue-500 transition-all!"
               style={{ width: `${progress}%` }}
             />

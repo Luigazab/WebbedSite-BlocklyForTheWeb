@@ -35,15 +35,16 @@ export const useLectureEditor = (lessonId, { isAdmin = false, classroomId = null
   }, [isEditMode, lessonId, fetchLecture, resetLecture]);
 
   const saveLecture = useCallback(
-    async ({ title, topicId, content, attachments }) => {
-      if (!user?.id) return toast.error("You must be signed in to save a lecture.");
-      if (!title?.trim()) return toast.error("Lecture title is required.");
-      if (!topics.some((group) => group.topics.some((topic) => topic.id === topicId))) return toast.error("Select a topic from the current classroom or master library.");
+    async ({ title, topicId, content, attachments, publish = false }) => {
+      if (!user?.id) { toast.error("You must be signed in to save a lecture."); return null; }
+      if (!title?.trim()) { toast.error("Lecture title is required."); return null; }
+      if (!topics.some((group) => group.topics.some((topic) => topic.id === topicId))) { toast.error("Select a topic from the current classroom or master library."); return null; }
 
       try {
-        const lesson = isEditMode
-          ? await updateLecture({ lessonId, title, topicId, content, attachments })
-          : await createLecture({ authorId: user.id, title, topicId, content, attachments });
+        const savedId = lessonId || useLectureStore.getState().lecture.id;
+        const lesson = savedId
+          ? await updateLecture({ lessonId: savedId, title, topicId, content, attachments, publish })
+          : await createLecture({ authorId: user.id, title, topicId, content, attachments, publish });
 
         toast.success(isEditMode ? "Lecture updated successfully." : "Lecture saved successfully.");
         return lesson;

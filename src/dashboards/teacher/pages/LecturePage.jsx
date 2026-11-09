@@ -13,6 +13,7 @@ import { useLectureEditor } from "@/hooks/useLectureEditor";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useParams } from "react-router";
 import BackButton from "#components/common/BackButton";
+import ThemeSelect from "#components/common/ThemeSelect";
 
 const LecturePage = ({ context = "teacher" }) => {
   const isAdmin = context === "admin";
@@ -46,7 +47,7 @@ const LecturePage = ({ context = "teacher" }) => {
     setSelectedTopicId(lecture.topicId || (!isEditMode ? new URLSearchParams(location.search).get("topicId") : "") || "");
     setContent(lecture.content);
     setAttachments(lecture.attachments);
-  }, [lecture]);
+  }, [lecture.title, lecture.topicId, lecture.content, lecture.attachments]);
 
   const selectedTopic = useMemo(
     () => courseTopics.flatMap((group) => group.topics).find((topic) => topic.id === selectedTopicId),
@@ -60,17 +61,12 @@ const LecturePage = ({ context = "teacher" }) => {
       ? URL.createObjectURL(attachments.file.value)
       : null;
 
-  const handleSaveLecture = async () => {
-    const lesson = await saveLecture({ title, topicId: selectedTopicId, content, attachments });
+  const handleSaveLecture = async (publish = false) => {
+    const lesson = await saveLecture({ title, topicId: selectedTopicId, content, attachments, publish });
     if (!lesson) return;
 
     setShowSubmittedDialog(true);
-    if (!isEditMode) {
-      setTitle("");
-      setContent("");
-      setSelectedTopicId("");
-      setAttachments({ file: null, video: null });
-    }
+
   };
 
   const handleDeleteLecture = async () => {
@@ -80,7 +76,7 @@ const LecturePage = ({ context = "teacher" }) => {
   };
 
   return(
-    <div className="h-screen w-full bg-slate-50 relative overflow-hidden flex">
+    <div className="h-screen w-full bg-muted relative overflow-hidden flex">
       <div
         className="absolute inset-0 z-0"
         style={{
@@ -99,48 +95,48 @@ const LecturePage = ({ context = "teacher" }) => {
           <Link to="/"><img src="/icon.png" alt="icon image" className='w-8 h-8' /></Link>
           <BackButton />
           {!isAdmin && !isEditMode && !new URLSearchParams(location.search).get("classroomId") && <p className="text-sm text-muted-foreground">Open a classroom to create a lesson for its topics. <Link to="/teacher/classrooms" className="underline">Choose classroom</Link></p>}
-          <span className="text-slate-500">/</span>
-          <span className="font-bold text-slate-700 truncate max-w-xs">
+          <span className="text-muted-foreground">/</span>
+          <span className="font-bold text-foreground truncate max-w-xs">
             {title || 'New Lecture'}
           </span>
+          <span className="rounded-full bg-muted px-2 py-1 text-xs font-semibold">{lecture.isPublished ? "Published" : "Draft"}</span>
           {isAdmin && (
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300">
               Master Content
             </span>
           )}
           <div className='ml-auto justify-center items-center flex gap-1.5'>
-            <Button variant='ghost'>
-              <Sun size={20}/>Light Mode
-            </Button>
+            <ThemeSelect compact iconOnly/>
             <Button variant="primaryOutline" onClick={() => setShowPreviewDialog(true)}>Preview</Button>
-            <Button variant="primary" onClick={handleSaveLecture} disabled={saving}>
-              {saving ? (isEditMode ? "Updating..." : "Saving...") : (isEditMode ? "Update Lecture" : "Save Lecture")}
+            <Button variant="primary" onClick={() => handleSaveLecture(false)} disabled={saving}>
+              {saving ? "Saving…" : "Save Draft"}
             </Button>
+            <Button variant="primary" onClick={() => handleSaveLecture(true)} disabled={saving}>Publish</Button>
           </div>
         </div>
-        <Card className="w-full max-w-5xl mx-auto mt-6 bg-white/60!">
+        <Card className="w-full max-w-5xl mx-auto mt-6 bg-card/60! backdrop-blur-sm">
           <CardHeader>
-            <CardTitle className="text-2xl font-bold text-slate-800">{isEditMode ? "Edit Lecture" : "Create New Lecture"}</CardTitle>
-            <CardDescription className="text-slate-500 mt-1">
+            <CardTitle className="text-2xl font-bold text-foreground">{isEditMode ? "Edit Lecture" : "Create New Lecture"}</CardTitle>
+            <CardDescription className="text-muted-foreground mt-1">
               Design engaging lectures for your students. Add multimedia content such as plain texts, images, videos, and pdf files to create an interactive learning experience.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {lectureLoading && <p className="text-sm text-muted-foreground">Loading lecture...</p>}
             <div>
-              <Label htmlFor="title" className="mb-2 text-lg font-bold text-slate-800">Title:<span className="text-red-500">*</span> </Label>
+              <Label htmlFor="title" className="mb-2 text-lg font-bold text-foreground">Title:<span className="text-red-500">*</span> </Label>
               <Input
                 id="title"
                 value={title}
                 onChange={(event) => setTitle(event.target.value)}
-                className="bg-background/60 rounded-lg! border-slate-300 shadow text-xl!"
+                className="bg-background/60 rounded-lg! border-border shadow text-xl!"
                 placeholder="Enter lecture title"
               />
             </div>
             <div>
-              <Label htmlFor="topic" className="mb-2 text-lg font-bold text-slate-800">Topic:<span className="text-red-500">*</span></Label>
+              <Label htmlFor="topic" className="mb-2 text-lg font-bold text-foreground">Topic:<span className="text-red-500">*</span></Label>
               <Combobox>
-                <ComboboxInput placeholder="Select topics..." className="w-full bg-background/60 rounded-lg border border-slate-300 shadow" />
+                <ComboboxInput placeholder="Select topics..." className="w-full bg-background/60 rounded-lg border border-border shadow" />
                 <ComboboxContent>
                   <ComboboxList>
                     {topicsLoading && <ComboboxLabel>Loading topics...</ComboboxLabel>}
@@ -168,38 +164,38 @@ const LecturePage = ({ context = "teacher" }) => {
                 </ComboboxContent>
               </Combobox>
               {selectedTopic && (
-                <p className="mt-2 text-xs text-slate-600">
+                <p className="mt-2 text-xs text-foreground">
                   Selected topic: <span className="font-semibold">{selectedTopic.title}</span>
                 </p>
               )}
             </div>
             <div>
-              <Label className="mb-2 text-lg font-bold text-slate-800">Content:</Label>
+              <Label className="mb-2 text-lg font-bold text-foreground">Content:</Label>
               <SimpleEditor value={content} onChange={setContent} placeholder="Write lecture content..." />
             </div>
             <div className="bg-background backdrop-blur-sm rounded-2xl border border-white/60 shadow-sm p-5 space-y-3">
               <div className="md:flex justify-between items-center">
                 <div>
-                  <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                  <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
                     Attachments <span className="text-muted-foreground/60 text-sm">(Optional)</span>
                   </h2>
-                  <p className="text-sm text-slate-500 mb-4 font-medium">
+                  <p className="text-sm text-muted-foreground mb-4 font-medium">
                     Add PDFs, PowerPoint files, or external links.
                   </p>
                 </div>
                 <AddAttachmentModal onSave={setAttachments} />
               </div>
               {(attachments.file || attachments.video) && (
-                <div className="space-y-2 rounded-xl border border-slate-200 bg-slate-50 p-3">
+                <div className="space-y-2 rounded-xl border border-border bg-muted p-3">
                   <p className="text-xs uppercase tracking-wide text-muted-foreground">Current attachments</p>
                   {attachments.file && (
-                    <div className="text-sm text-blue-700 border rounded-sm px-2 border-blue-400 flex gap-2 items-center ">
+                    <div className="text-sm text-blue-700 dark:text-blue-300 border rounded-sm px-2 border-blue-400 flex gap-2 items-center ">
                       <span className="font-semibold"><FileText/></span>{" "}
                       {attachments.file.type === "file" ? attachments.file.name : attachments.file.value}
                     </div>
                   )}
                   {attachments.video && (
-                    <p className="text-sm text-blue-700 border rounded-sm px-2 border-blue-400 flex gap-2 items-center ">
+                    <p className="text-sm text-blue-700 dark:text-blue-300 border rounded-sm px-2 border-blue-400 flex gap-2 items-center ">
                       <span className="font-semibold"><Film/></span> {attachments.video}
                     </p>
                   )}
@@ -209,20 +205,20 @@ const LecturePage = ({ context = "teacher" }) => {
           </CardContent>
           <CardFooter className="self-end gap-2">
             <Button variant="primaryOutline" onClick={() => setShowPreviewDialog(true)}>Preview</Button>
-            <Button variant="primary" onClick={handleSaveLecture} disabled={saving}>
-              {saving ? (isEditMode ? "Updating..." : "Saving...") : (isEditMode ? "Update Lecture" : "Save Lecture")}
+            <Button variant="primary" onClick={() => handleSaveLecture(false)} disabled={saving}>
+              {saving ? "Saving…" : "Save Draft"}
             </Button>
+            <Button variant="primary" onClick={() => handleSaveLecture(true)} disabled={saving}>Publish</Button>
           </CardFooter>
         </Card>
 
         <Dialog open={showSubmittedDialog} onOpenChange={setShowSubmittedDialog}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle>Lesson submitted for approval</DialogTitle>
+              <DialogTitle>Lesson saved</DialogTitle>
             </DialogHeader>
-            <p className="text-sm text-slate-600">
-              Your lecture has been {isEditMode ? "updated" : "created"} and sent to an administrator for review. It will remain unpublished
-              until it is approved.
+            <p className="text-sm text-foreground">
+              {lecture.isPublished ? "Your lesson is published and available to students when its topic is open." : "Your draft is saved and hidden from students."}
             </p>
             <DialogFooter>
               <Button variant="primary" onClick={() => setShowSubmittedDialog(false)}>
@@ -242,25 +238,25 @@ const LecturePage = ({ context = "teacher" }) => {
                 {title || "Untitled Lecture"}
               </h1>
 
-              <div className="flex items-center gap-1.5 text-sm text-slate-500">
+              <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
                 <Calendar className="w-4 h-4" />
                 <span>Preview mode</span>
               </div>
 
               {attachments.video && (
-                <div className="w-full aspect-video border-2 p-2 border-slate-200 rounded-2xl shadow bg-white">
+                <div className="w-full aspect-video border-2 p-2 border-border rounded-2xl shadow bg-card">
                   <iframe className="w-full h-full rounded-2xl" src={attachments.video} title={title || "Lecture preview"} frameBorder="0" allowFullScreen />
                 </div>
               )}
 
               {content && (
-                <div className="rounded-2xl p-8 bg-white shadow my-2 border border-slate-200">
+                <div className="rounded-2xl p-8 bg-card shadow my-2 border border-border">
                   <div className="tiptap-content" dangerouslySetInnerHTML={{ __html: content }} />
                 </div>
               )}
 
               {previewFileUrl && (
-                <details className="rounded-2xl bg-white shadow border border-slate-200">
+                <details className="rounded-2xl bg-card shadow border border-border">
                   <summary className="cursor-pointer font-semibold px-4 py-3">View Attached File</summary>
                   <div className="mt-2 w-full aspect-4/3 rounded-2xl shadow">
                     <iframe src={previewFileUrl} className="w-full h-full rounded-2xl" frameBorder="0" />

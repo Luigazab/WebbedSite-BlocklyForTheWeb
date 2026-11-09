@@ -10,7 +10,7 @@ const DeviceSelector = ({
   return (
     <div data-tour='device-selector' className='flex flex-col justify-around h-full p-4'>
       <div className='flex justify-between items-center mb-2'>
-        <h5 className='font-bold text-slate-600'>Screen Sizes:</h5>
+        <h5 className='font-bold text-foreground'>Screen Sizes:</h5>
       </div>
       <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-1'>
         {Object.entries(deviceSizes).map(([key, device]) => {
@@ -32,7 +32,7 @@ const DeviceSelector = ({
           );
         })}
       </div>
-      <p className='text-slate-400 text-xs'>Click any button to view your work in different screen sizes.</p>
+      <p className='text-muted-foreground text-xs'>Click any button to view your work in different screen sizes.</p>
     </div>
   );
 };

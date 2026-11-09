@@ -57,20 +57,20 @@ const LessonButton = ({
         </button>
         
         {status === 'completed' && (
-          <div className='absolute -top-1 -right-1 bg-emerald-100 border-2 border-white rounded-full p-1 text-emerald-600'>
+          <div className='absolute -top-1 -right-1 bg-emerald-100 dark:bg-emerald-950/50 border-2 border-white rounded-full p-1 text-emerald-600 dark:text-emerald-300'>
             <Check size={12} strokeWidth={4} />
           </div>
         )}
         {status === 'current' && (
           <div className="relative">
-            <div className='absolute -top-28 -left-2.5 px-3 py-2.5 border-2 font-bold uppercase text-green-600 bg-white rounded-xl tracking-wide z-10 animate-bounce  `'>
+            <div className='absolute -top-28 -left-2.5 px-3 py-2.5 border-2 font-bold uppercase text-green-600 dark:text-green-300 bg-card rounded-xl tracking-wide z-10 animate-bounce  `'>
               Start
               <div className='absolute left-1/2 -bottom-2 w-0 h-0 border-x-8 border-x-transparent border-t-8 transform -translate-x-1/2'/>
             </div>
           </div>
         )}
       </div>
-      <span className={`font-bold text-sm ${status === 'locked' ? 'text-slate-400' : 'text-slate-700'}`}>
+      <span className={`font-bold text-sm ${status === 'locked' ? 'text-muted-foreground' : 'text-foreground'}`}>
         {title}
       </span>
     </div>

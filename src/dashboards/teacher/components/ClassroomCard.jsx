@@ -76,7 +76,7 @@ export default function ClassroomCard({ classroom, onArchive, averageProgress, p
             classroom.students.slice(0, 4).map((student, i) => (
               <div
                 key={student.id || i}
-                className="grid size-7 place-items-center rounded-full border-2 border-card bg-muted font-bold text-slate-500"
+                className="grid size-7 place-items-center rounded-full border-2 border-card bg-muted font-bold text-muted-foreground"
                 style={{ zIndex: 10 - i }}
               >
                 {student.avatar_url ? (

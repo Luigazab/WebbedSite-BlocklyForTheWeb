@@ -45,55 +45,55 @@ const CreateUserModal = ({ onClose, onCreated }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={onClose}>
-      <div className="bg-white border border-gray-200 rounded-2xl w-full max-w-md p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+      <div className="bg-card border border-border rounded-2xl w-full max-w-md p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h2 className="text-lg font-bold text-slate-900">Create New User</h2>
-            <p className="mt-0.5 text-slate-500">Add a new account to the platform</p>
+            <h2 className="text-lg font-bold text-foreground">Create New User</h2>
+            <p className="mt-0.5 text-muted-foreground">Add a new account to the platform</p>
           </div>
-          <button onClick={onClose} className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-slate-100 transition-colors">
-            <X size={15} className="text-slate-500" />
+          <button onClick={onClose} className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-muted transition-colors">
+            <X size={15} className="text-muted-foreground" />
           </button>
         </div>
 
         <div className="space-y-4">
           {/* Email Field */}
           <div className="space-y-1.5">
-            <Label htmlFor="email" className="font-medium text-slate-700">
+            <Label htmlFor="email" className="font-medium text-foreground">
               Email
             </Label>
             <div className="relative">
-              <Mail size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <Mail size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
               <Input id="email" type="email" placeholder="user@example.com" value={form.email} onChange={set("email")} className="pl-9"/>
             </div>
           </div>
 
           {/* Username Field */}
           <div className="space-y-1.5">
-            <Label htmlFor="username" className="font-medium text-slate-700">
+            <Label htmlFor="username" className="font-medium text-foreground">
               Username
             </Label>
             <div className="relative">
-              <User size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <User size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
               <Input id="username" type="text" placeholder="johndoe" value={form.username} onChange={set("username")} className="pl-9"/>
             </div>
           </div>
 
           {/* Password Field */}
           <div className="space-y-1.5">
-            <Label htmlFor="password" className="font-medium text-slate-700">
+            <Label htmlFor="password" className="font-medium text-foreground">
               Password
             </Label>
             <div className="relative">
-              <Lock size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <Lock size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
               <Input id="password" type="password" autoComplete="new-password" minLength={MIN_PASSWORD_LENGTH} maxLength={MAX_PASSWORD_LENGTH} placeholder="••••••••" value={form.password} onChange={set("password")} className="pl-9"/>
-              <p className="text-xs text-slate-500">{PASSWORD_HELP}</p>
+              <p className="text-xs text-muted-foreground">{PASSWORD_HELP}</p>
             </div>
           </div>
 
           {/* Role Selection */}
           <div className="space-y-1.5">
-            <Label className="font-medium text-slate-700">Role</Label>
+            <Label className="font-medium text-foreground">Role</Label>
             <div className="flex gap-2">
               {roleOptions.map(({ value, label }) => (
                 <button
@@ -101,8 +101,8 @@ const CreateUserModal = ({ onClose, onCreated }) => {
                   onClick={() => setForm((f) => ({ ...f, role: value }))}
                   className={`flex-1 py-2 font-medium rounded-lg border transition-all! capitalize ${
                     form.role === value
-                      ? "bg-sky-500/15 border-sky-500/40 text-sky-700"
-                      : "bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100"
+                      ? "bg-sky-500/15 border-sky-500/40 text-sky-700 dark:text-sky-300"
+                      : "bg-muted border-border text-foreground hover:bg-muted"
                   }`}
                 >
                   {label}
@@ -113,7 +113,7 @@ const CreateUserModal = ({ onClose, onCreated }) => {
 
           {/* Error Message */}
           {error && (
-            <p className="text-rose-600 bg-rose-50 border border-rose-200 rounded-lg px-3 py-2">
+            <p className="text-rose-600 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/50 border border-rose-200 rounded-lg px-3 py-2">
               {error}
             </p>
           )}

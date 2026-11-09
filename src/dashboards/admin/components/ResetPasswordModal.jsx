@@ -29,31 +29,31 @@ const ResetPasswordModal = ({ user, onClose }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={onClose}>
-      <div className="bg-white space-y-4 border border-gray-200 rounded-xl w-full max-w-md p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+      <div className="bg-card space-y-4 border border-border rounded-xl w-full max-w-md p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-2">
-          <h2 className="text-black text-base font-bold">Reset Password</h2>
-          <button onClick={onClose} className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-slate-100 transition-colors">
-            <X size={15} className="text-slate-500" />
+          <h2 className="text-foreground text-base font-bold">Reset Password</h2>
+          <button onClick={onClose} className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-muted transition-colors">
+            <X size={15} className="text-muted-foreground" />
           </button>
         </div>
         <hr />
         {done ? (
           <div className="text-center py-4">
             <div className="w-10 h-10 rounded-full bg-emerald-500/15 flex items-center justify-center mx-auto mb-3">
-              <Check size={18} className="text-emerald-700" />
+              <Check size={18} className="text-emerald-700 dark:text-emerald-300" />
             </div>
-            <p className="text-gray-700 text-sm">
-              Password reset for <span className="text-black font-medium">@{user.username}</span>
+            <p className="text-foreground text-sm">
+              Password reset for <span className="text-foreground font-medium">@{user.username}</span>
             </p>
-            <button onClick={onClose} className="mt-4 px-4 py-2 bg-gray-100 text-slate-700 text-sm rounded-lg hover:bg-slate-200 transition-colors">
+            <button onClick={onClose} className="mt-4 px-4 py-2 bg-muted text-foreground text-sm rounded-lg hover:bg-muted transition-colors">
               Close
             </button>
           </div>
         ) : (
           <>
-            {error && <p role="alert" className="text-red-600">{error}</p>}
-            <p className="text-slate-600 mb-4">
-              Setting new password for <span className="text-black">@{user.username}</span>
+            {error && <p role="alert" className="text-red-600 dark:text-red-300">{error}</p>}
+            <p className="text-foreground mb-4">
+              Setting new password for <span className="text-foreground">@{user.username}</span>
             </p>
             
             <div className="space-y-2">
@@ -61,10 +61,10 @@ const ResetPasswordModal = ({ user, onClose }) => {
                 New Password
               </Label>
               <div className="relative">
-                <Lock size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <Lock size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                 <Input id="password" type="password" autoComplete="new-password" minLength={MIN_PASSWORD_LENGTH} maxLength={MAX_PASSWORD_LENGTH} placeholder="••••••••" value={pw} onChange={(e) => setPw(e.target.value)} className="pl-9"/>
               </div>
-              <p className="text-xs text-slate-500 mt-1">{PASSWORD_HELP}</p>
+              <p className="text-xs text-muted-foreground mt-1">{PASSWORD_HELP}</p>
             </div>
 
             <div className="flex gap-2 mt-4">

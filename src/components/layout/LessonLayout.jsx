@@ -7,5 +7,5 @@ export default function LessonLayout() {
     window.scrollTo(0, 0);
   }, [pathname]);
 
-  return <main className="min-h-dvh bg-slate-50"><Outlet /></main>;
+  return <main className="min-h-dvh bg-muted"><Outlet /></main>;
 }

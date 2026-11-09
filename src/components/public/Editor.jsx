@@ -1,3 +1,4 @@
+import ThemeSelect from '../common/ThemeSelect'
 import WorkspaceTools from '@/components/editor/WorkspaceTools'
 // Editor.jsx
 import { useState, useEffect } from 'react';
@@ -181,14 +182,15 @@ const Editor = () => {
       )}
       
         {/* Blockly Workspace */}
-        <div className="flex w-2/3 h-full md:overflow-hidden border-4 rounded-xl border-gray-600 relative bg-white">
+        <div className="flex w-2/3 h-full md:overflow-hidden border-4 rounded-xl border-gray-600 relative bg-card">
           <WorkspaceTools workspace={workspace} />
           <div ref={workspace.blocklyDiv} className="blocklyDiv flex-1 z-0" />
         </div>
         
         {/* Preview Pane */}
         <div className='flex-1 h-full'> 
-          <div className="flex gap-2 justify-end">
+          <div className="flex flex-wrap gap-2 justify-end">
+            <ThemeSelect compact />
             <button onClick={createNewProject} 
               className="flex items-center px-2 py-2 bg-orange-600 text-white font-semibold text-md rounded-xs border-2 drop-shadow-[4px_4px_0_rgba(0,0,0,1)] border-black hover:drop-shadow-[2px_2px_0_rgba(0,0,0,1)] hover:bg-orange-700 transition">
               New Project

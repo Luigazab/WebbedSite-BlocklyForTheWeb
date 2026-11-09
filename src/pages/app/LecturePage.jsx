@@ -54,29 +54,29 @@ const LecturePage = () => {
 
   return (
     <div className='relative'>
-      <div className='flex sticky top-0 justify-between items-baseline border-b bg-white border-slate-200 px-4 py-2'>
-        <h2 className='font-bold tracking-widest text-xl text-slate-500'>{lesson.topic.title}</h2>
-        <h2 className='font-semibold tracking-tight text-xs text-slate-400 uppercase truncate max-w-md'>{lesson.topic.description}</h2>
+      <div className='flex sticky top-0 justify-between items-baseline border-b bg-card border-border px-4 py-2'>
+        <h2 className='font-bold tracking-widest text-xl text-muted-foreground'>{lesson.topic.title}</h2>
+        <h2 className='font-semibold tracking-tight text-xs text-muted-foreground uppercase truncate max-w-md'>{lesson.topic.description}</h2>
       </div>
       <div className='p-4 flex flex-col gap-4 justify-between max-w-5xl mx-auto'>
         <div className='space-y-4'>
           <div className='relative'>
             <h1 className='text-center font-bold text-4xl font-sans! border-b border-slate-400 pb-4'>{lesson.title}</h1>
           </div>
-          <div className="flex flex-wrap justify-between items-center gap-x-5 gap-y-2 py-2 text-sm text-slate-500">
+          <div className="flex flex-wrap justify-between items-center gap-x-5 gap-y-2 py-2 text-sm text-muted-foreground">
             <div className="flex items-center gap-1.5">
               <Calendar className="w-4 h-4" />
               <span>Posted {new Date(lesson.created_at).toLocaleDateString()}</span>
             </div>
             {lesson.author && (
               <div className="flex items-center gap-2"> 
-                <img src={lesson.author.avatar_url || '/profile.svg'} alt={lesson.author.username} className="w-6 h-6 rounded-full object-cover border border-gray-200" />
-                <span className="font-bold text-gray-700">{lesson.author.username}</span>
+                <img src={lesson.author.avatar_url || '/profile.svg'} alt={lesson.author.username} className="w-6 h-6 rounded-full object-cover border border-border" />
+                <span className="font-bold text-foreground">{lesson.author.username}</span>
               </div>
             )}
           </div>
           {lesson.lecture.video_src && (
-            <div className="w-full aspect-video border-2 p-2 border-slate-200 rounded-2xl shadow bg-white">
+            <div className="w-full aspect-video border-2 p-2 border-border rounded-2xl shadow bg-card">
               <iframe 
                 className="w-full h-full rounded-2xl" 
                 src={lesson.lecture.video_src} 
@@ -89,14 +89,14 @@ const LecturePage = () => {
           )}
 
           {lesson.lecture.content && (
-            <div className='rounded-2xl p-8 bg-white shadow my-2 border border-slate-200'>
+            <div className='rounded-2xl p-8 bg-card shadow my-2 border border-border'>
               <LessonContent content={lesson.lecture.content}/>
             </div>
           )}
 
           {lesson.lecture.file_url && (
-            <details className="rounded-2xl bg-white shadow border border-slate-200">
-              <summary className="rounded-2xl cursor-pointer flex items-center justify-between font-semibold px-4 py-2 transition-colors group-open:bg-slate-200">
+            <details className="rounded-2xl bg-card shadow border border-border">
+              <summary className="rounded-2xl cursor-pointer flex items-center justify-between font-semibold px-4 py-2 transition-colors group-open:bg-muted">
                 <span className="p-4 font-bold tracking-widest">View Attached File</span>
                 <ChevronRight className="w-4 h-4 transition-transform group-open:rotate-90" />
               </summary>

@@ -63,7 +63,7 @@ export default function ClassroomTopicFlow({ classroomId, teacher = false, curri
         <div><h2 className="text-lg font-semibold">Core topic progression</h2><p className="text-sm text-muted-foreground">Required core activities determine completion. Practice and teacher reviews do not delay the class.</p></div>
         <button type="button" className="rounded-lg border px-3 py-1.5 text-sm" onClick={refresh}>Refresh</button>
       </div>
-      {error && <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</p>}
+      {error && <p role="alert" className="rounded-lg bg-red-50 dark:bg-red-950/50 p-3 text-sm text-red-700 dark:text-red-300">{error}</p>}
       {!flow && !error && <p className="text-sm text-muted-foreground">Loading topic progress…</p>}
       {(flow?.topics ?? []).filter(topic => (teacher || topic.is_published) && (!topicId || topic.id === topicId)).map(topic => {
         const curriculumTopic = byId.get(topic.id)
@@ -72,12 +72,12 @@ export default function ClassroomTopicFlow({ classroomId, teacher = false, curri
         return <article key={topic.id} className="rounded-2xl border bg-card p-5 space-y-4">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div><p className="text-xs text-muted-foreground">{courseNames.get(topic.course_id) || curriculumTopic?.courseTitle || 'Course'}</p><h3 className="font-semibold">{topic.title}</h3><p className="text-sm text-muted-foreground">{topic.is_unlocked ? topic.eligible ? `${topic.completed} of ${topic.eligible} active students completed` : 'No eligible students are holding this topic' : 'Locked until the previous topic is complete'}</p></div>
-            <div className="flex items-center gap-2"><span className={`rounded-full px-3 py-1 text-xs font-semibold ${topic.is_unlocked ? 'bg-green-100 text-green-800' : 'bg-slate-100 text-slate-600'}`}>{topic.is_unlocked ? 'Open' : 'Locked'}</span>
+            <div className="flex items-center gap-2"><span className={`rounded-full px-3 py-1 text-xs font-semibold ${topic.is_unlocked ? 'bg-green-100 dark:bg-green-950/50 text-green-800 dark:text-green-300' : 'bg-muted text-foreground'}`}>{topic.is_unlocked ? 'Open' : 'Locked'}</span>
               {teacher && !topic.is_unlocked && <button disabled={busy} onClick={() => act(() => teacherUnlockTopic(topic.id))} className="rounded-lg border px-3 py-1 text-xs font-semibold disabled:opacity-50">Unlock now</button>}
             </div>
           </div>
-          <div className="h-2 overflow-hidden rounded-full bg-slate-100" aria-label={`${percent}% of eligible students completed`}><div className="h-full bg-emerald-500 transition-all" style={{ width: `${percent}%` }} /></div>
-          {topic.required_lessons === 0 && <p className="text-xs text-amber-700">Add a required tutorial or laboratory to enable automatic progression.</p>}
+          <div className="h-2 overflow-hidden rounded-full bg-muted" aria-label={`${percent}% of eligible students completed`}><div className="h-full bg-emerald-500 transition-all" style={{ width: `${percent}%` }} /></div>
+          {topic.required_lessons === 0 && <p className="text-xs text-amber-700 dark:text-amber-300">Add a required tutorial or laboratory to enable automatic progression.</p>}
           {own && <p className="text-sm">Your status: <strong>{label(own.status)}</strong>{own.late_joiner ? ' · Late enrollee (does not hold the class)' : ''}{own.pending_reviews > 0 ? ` · ${own.pending_reviews} teacher review pending` : ''}{own.classification ? ` · ${label(own.classification)}${own.classification_provisional ? ' (provisional)' : ''}` : ''}</p>}
 
           {curriculumTopic && <div className="space-y-3">
@@ -86,7 +86,7 @@ export default function ClassroomTopicFlow({ classroomId, teacher = false, curri
               if (!lessons.length) return null
               return <div key={track}><h4 className="mb-1 text-xs font-bold uppercase tracking-wide text-muted-foreground">{track === 'core' ? 'Core activities' : `${label(track)} practice · optional`}</h4>
                 <ul className="space-y-1">{lessons.map(lesson => <li key={lesson.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border px-3 py-2 text-sm">
-                  <span>{lesson.title} <span className="text-muted-foreground">({lesson.type})</span>{!lesson.is_published && <span className="ml-2 text-xs text-amber-700">Draft · does not count until published</span>}{track === 'core' && <span className="ml-2 text-xs text-muted-foreground">{lesson.required_for_topic ? 'Required' : 'Optional'}</span>}</span>
+                  <span>{lesson.title} <span className="text-muted-foreground">({lesson.type})</span>{!lesson.is_published && <span className="ml-2 text-xs text-amber-700 dark:text-amber-300">Draft · does not count until published</span>}{track === 'core' && <span className="ml-2 text-xs text-muted-foreground">{lesson.required_for_topic ? 'Required' : 'Optional'}</span>}</span>
                   {teacher ? <span className="flex items-center gap-2">
                     <select aria-label={`Track for ${lesson.title}`} disabled={busy} value={lesson.topic_track || 'core'} onChange={event => act(() => setClassroomLessonRule(lesson.id, event.target.value, event.target.value === 'core' && Boolean(lesson.required_for_topic)))} className="rounded border px-1 py-1 text-xs">{TRACKS.map(value => <option key={value} value={value}>{label(value)}</option>)}</select>
                     {track === 'core' && <label className="flex items-center gap-1 text-xs"><input type="checkbox" checked={Boolean(lesson.required_for_topic)} disabled={busy} onChange={event => act(() => setClassroomLessonRule(lesson.id, 'core', event.target.checked))} /> Required</label>}
@@ -99,7 +99,7 @@ export default function ClassroomTopicFlow({ classroomId, teacher = false, curri
           {teacher && <div className="space-y-2 border-t pt-3"><h4 className="text-sm font-semibold">Student status and exemptions</h4>
             {(topic.students ?? []).map(student => <div key={student.student_id} className="flex flex-wrap items-center gap-2 text-xs">
               <span className="w-36 truncate font-medium">{student.username}</span><span className="w-32">{label(student.status)} · {student.completed_lessons}/{student.required_lessons}</span>
-              {student.pending_reviews > 0 && <span className="text-sky-700">{student.pending_reviews} review pending</span>}
+              {student.pending_reviews > 0 && <span className="text-sky-700 dark:text-sky-300">{student.pending_reviews} review pending</span>}
               <span className="text-muted-foreground">{student.classification ? `${label(student.classification)} · ${student.accuracy}% accuracy + ${student.speed_bonus ?? 0} speed bonus${student.classification_provisional ? ' (provisional)' : ''}` : 'Unclassified'}</span>
               {!student.late_joiner && (student.exemption_reason ?
                 <button disabled={busy} className="rounded border px-2 py-1" onClick={() => act(() => setClassroomTopicExemption(topic.id, student.student_id, false))}>Remove exemption</button> :

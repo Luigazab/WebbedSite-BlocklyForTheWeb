@@ -46,17 +46,17 @@ const UpdatePassword = () => {
         try { await signOut() } catch { /* local session is still cleared */ }
         navigate('/forgot-password', { replace: true });
       }}>Request a new link</button> : <Link className="btn btn-secondary" to="/forgot-password">Request a new link</Link>}
-      <Link className="flex justify-center text-slate-700 underline pt-4" to="/login">Return to login</Link>
+      <Link className="flex justify-center text-foreground underline pt-4" to="/login">Return to login</Link>
     </div>
   );
 
   return (
     <div className="items-center px-6 py-16 md:py-[10%] justify-center">
-      <div className="flex flex-col items-center justify-center mx-auto w-full max-w-md gap-8 border border-slate-200 p-8 rounded-lg shadow-sm">
+      <div className="flex flex-col items-center justify-center mx-auto w-full max-w-md gap-8 border border-border p-8 rounded-lg shadow-sm">
         
         <div className="text-center w-full">
           <h2 className="text-2xl font-bold mb-2">Create New Password</h2>
-          <p className="text-gray-600">Please enter your new password below.</p>
+          <p className="text-foreground">Please enter your new password below.</p>
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-5 w-full">
@@ -76,7 +76,7 @@ const UpdatePassword = () => {
             <label htmlFor="reset-confirm-password" className={floatingLabel}>Confirm New Password</label>
           </div>
 
-          <p id="reset-password-help" className="text-sm text-slate-500">{PASSWORD_HELP}</p>
+          <p id="reset-password-help" className="text-sm text-muted-foreground">{PASSWORD_HELP}</p>
           <button className="btn btn-primary" disabled={loading}>
             {loading ? 'Updating...' : 'Update Password'}
           </button>

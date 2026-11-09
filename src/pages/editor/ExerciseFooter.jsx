@@ -9,8 +9,8 @@ export default function ExerciseFooter() {
       z-50
       h-[58px]
       border-t
-      border-slate-700
-      bg-[#020617]
+      border-border
+      bg-card
     ">
 
       <div className="flex h-full items-center justify-between px-5">
@@ -25,8 +25,8 @@ export default function ExerciseFooter() {
             items-center
             justify-center
             border
-            border-slate-500
-            bg-[#0f172a]
+            border-border
+            bg-card
             md:flex
           ">
             ☷
@@ -40,18 +40,18 @@ export default function ExerciseFooter() {
 
             <div className="flex items-center gap-3">
 
-              <span className="text-xs text-slate-400">
+              <span className="text-xs text-muted-foreground">
                 Exercise 2 / 5
               </span>
 
               <span className="
                 rounded-full
-                bg-slate-800
+                bg-muted
                 px-2
                 py-0.5
                 text-[10px]
                 font-bold
-                text-slate-300
+                text-foreground
               ">
                 10 XP
               </span>
@@ -71,11 +71,11 @@ export default function ExerciseFooter() {
           px-5
           py-2
           font-bold
-          text-black
+          text-foreground
           shadow-[2px_2px_0px_#365314]
           transition
           hover:translate-y-[1px]
-          sm:block
+          sm:flow-root
         ">
           ✓ Mark complete
         </button>
@@ -85,25 +85,25 @@ export default function ExerciseFooter() {
 
           <button className="
             border
-            border-slate-500
-            bg-[#020617]
+            border-border
+            bg-card
             px-8
             py-2
             font-bold
-            text-white
-            hover:bg-slate-800
+            text-foreground
+            hover:bg-muted
           ">
             Back
           </button>
 
           <button className="
             border
-            border-slate-700
-            bg-[#020617]
+            border-border
+            bg-card
             px-8
             py-2
             font-bold
-            text-slate-600
+            text-foreground
           ">
             Next
           </button>

@@ -36,11 +36,11 @@ export default function TutorialCharacterGuide({
       {/* ── Speech bubble ─────────────────────────────────────────── */}
       {!minimized && (
         <div
-          className="relative bg-white rounded-2xl shadow-2xl border-4 border-blockly-purple p-5 w-80 mb-1 mr-3"
+          className="relative bg-card rounded-2xl shadow-2xl border-4 border-blockly-purple p-5 w-80 mb-1 mr-3"
           style={{ animation: 'tutorialFadeIn 0.25s ease-out' }}
         >
           {/* Tail pointing toward character (bottom-right) */}
-          <div className="absolute -bottom-3.5 right-10 w-6 h-6 bg-white border-r-4 border-b-4 border-blockly-purple rotate-45" />
+          <div className="absolute -bottom-3.5 right-10 w-6 h-6 bg-card border-r-4 border-b-4 border-blockly-purple rotate-45" />
 
           {/* Header row */}
           <div className="flex items-start justify-between gap-2 mb-3">
@@ -49,20 +49,20 @@ export default function TutorialCharacterGuide({
                 Step {currentStep + 1} of {steps.length}
               </p>
               {tutorialTitle && (
-                <p className="text-xs text-gray-400 truncate">{tutorialTitle}</p>
+                <p className="text-xs text-muted-foreground truncate">{tutorialTitle}</p>
               )}
             </div>
             <button
               onClick={() => setMinimized(true)}
-              className="shrink-0 p-1 rounded-lg hover:bg-gray-100 transition-colors"
+              className="shrink-0 p-1 rounded-lg hover:bg-muted transition-colors"
               title="Minimize"
             >
-              <Minimize2 className="w-3.5 h-3.5 text-gray-400" />
+              <Minimize2 className="w-3.5 h-3.5 text-muted-foreground" />
             </button>
           </div>
 
           {/* Instruction */}
-          <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
+          <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
             {step.instruction_text}
           </p>
 
@@ -71,13 +71,13 @@ export default function TutorialCharacterGuide({
             <div className="mt-3">
               <button
                 onClick={() => setShowHint(h => !h)}
-                className="flex items-center gap-1.5 text-xs font-semibold text-amber-600 hover:text-amber-700 transition-colors"
+                className="flex items-center gap-1.5 text-xs font-semibold text-amber-600 dark:text-amber-300 hover:text-amber-700 transition-colors"
               >
                 <Lightbulb className="w-3.5 h-3.5" />
                 {showHint ? 'Hide hint' : 'Need a hint?'}
               </button>
               {showHint && (
-                <p className="mt-2 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 leading-relaxed">
+                <p className="mt-2 text-xs text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/50 border border-amber-200 rounded-xl px-3 py-2 leading-relaxed">
                   💡 {step.hint}
                 </p>
               )}
@@ -94,18 +94,18 @@ export default function TutorialCharacterGuide({
                     ? 'w-4 h-1.5 bg-blockly-purple'
                     : i < currentStep
                       ? 'w-1.5 h-1.5 bg-blockly-purple/40'
-                      : 'w-1.5 h-1.5 bg-gray-200'
+                      : 'w-1.5 h-1.5 bg-muted'
                 }`}
               />
             ))}
           </div>
 
           {/* Navigation row */}
-          <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
+          <div className="flex items-center justify-between mt-3 pt-3 border-t border-border">
             <button
               onClick={handlePrev}
               disabled={isFirst}
-              className="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-gray-500 rounded-lg hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              className="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-muted-foreground rounded-lg hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
             >
               <ChevronLeft className="w-4 h-4" />
               Back

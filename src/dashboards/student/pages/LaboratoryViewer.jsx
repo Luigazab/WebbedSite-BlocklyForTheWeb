@@ -1,3 +1,4 @@
+import ThemeSelect from '../../../components/common/ThemeSelect'
 import WorkspaceTools from '@/components/editor/WorkspaceTools'
 import BlocklyWorkspace from "@/components/editor/BlocklyWorkspace";
 import FileTabs from "@/components/editor/FileTabs";
@@ -25,7 +26,7 @@ const parseLabInstruction = (value) => {
   }
 };
 
-const LaboratoryViewer = ({ lesson, onNext, onBack, navigation, preview = false }) => {
+const LaboratoryViewer = ({ lesson, onNext, onBack, navigation, onCompleted, preview = false }) => {
   const navigate = useNavigate();
   const addToast = useUIStore((state) => state.addToast);
   const profile = useAuthStore((state) => state.profile);
@@ -192,7 +193,8 @@ const LaboratoryViewer = ({ lesson, onNext, onBack, navigation, preview = false 
       requestRef.current = crypto.randomUUID();
       if (!draft) { try { await copyLearningProject(lesson.id); } catch (error) { addToast(`Submitted successfully. Project copy could not be saved: ${error.message}`, "error"); } }
       setSubmission(saved);
-      addToast(draft ? 'Draft saved.' : 'Submitted. You can continue while your teacher reviews your work.', 'success');
+      if (draft) addToast('Draft saved.', 'success');
+      else await onCompleted?.();
     } catch (error) { addToast(error.message || 'Could not submit your laboratory.', 'error'); throw error; }
     finally { submittingRef.current = false; setSubmitting(false); }
   };
@@ -201,47 +203,48 @@ const LaboratoryViewer = ({ lesson, onNext, onBack, navigation, preview = false 
   const htmlFiles = files.filter((file) => file.filename.endsWith(".html"));
 
   return (
-    <div className="h-screen bg-slate-100 flex flex-col overflow-hidden">
-      <header className="shrink-0 flex items-center gap-3 border-b bg-white px-4 py-2.5">
-        <button onClick={onBack ?? (() => navigate(-1))} className="flex items-center gap-1.5 text-sm font-semibold text-slate-500 hover:text-slate-800">
+    <div className="h-screen bg-muted flex flex-col overflow-hidden">
+      <header className="shrink-0 flex flex-wrap items-center gap-3 border-b bg-card px-4 py-2.5">
+        <button onClick={onBack ?? (() => navigate(-1))} className="flex items-center gap-1.5 text-sm font-semibold text-muted-foreground hover:text-foreground">
           <ArrowLeft className="size-4" /> Back
         </button>
         <span className="text-slate-300">|</span>
-        {preview && <span className="text-xs text-amber-700">Preview · Progress is not saved</span>}
+        {preview && <span className="text-xs text-amber-700 dark:text-amber-300">Preview · Progress is not saved</span>}
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-black text-slate-800">{lesson?.title || "Laboratory"}</p>
-          <p className="truncate text-xs text-slate-400">{lesson?.topic?.title}</p>
+          <p className="truncate text-sm font-black text-foreground">{lesson?.title || "Laboratory"}</p>
+          <p className="truncate text-xs text-muted-foreground">{lesson?.topic?.title}</p>
         </div>
         <button onClick={checkWork} className="rounded-xl bg-emerald-500 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-400">
           Check Work
         </button>
         {!preview && <button disabled={submitting || (submission?.is_final && submission.review_status !== "needs_revision")} onClick={() => submitWork(false).catch(() => {})} className="rounded-xl bg-sky-600 px-4 py-2 text-xs font-bold text-white disabled:opacity-50">{submitting ? 'Submitting…' : submission?.review_status === 'needs_revision' ? 'Resubmit for review' : submission?.is_final ? 'Submitted' : 'Submit for grading'}</button>}
         {!preview && <button disabled={submitting || (submission?.is_final && submission.review_status !== "needs_revision")} onClick={() => submitWork(true).catch(() => {})} className="rounded border px-3 py-2 text-xs disabled:opacity-50">Save draft</button>}
-        <button onClick={() => onNext?.(navigation?.next ? "next" : "topic")} className="rounded-xl border px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50">
+        <button onClick={() => onNext?.(navigation?.next ? "next" : "topic")} className="rounded-xl border px-4 py-2 text-xs font-bold text-foreground hover:bg-muted">
           Continue
         </button>
+      <ThemeSelect compact />
       </header>
 
       <div className="flex flex-1 overflow-hidden">
-        <aside className="w-80 shrink-0 overflow-y-auto border-r bg-white p-4 space-y-4">
-          {submission && <div className="rounded-xl border border-sky-200 bg-sky-50 p-4 text-sm"><p className="font-bold">{submission.graded_at ? `${submission.review_status === "needs_revision" ? "Needs revision" : "Passed"}: ${submission.score}%` : submission.is_final ? 'Awaiting teacher review' : 'Draft saved'}</p>{submission.feedback && <p className="mt-2 whitespace-pre-wrap">{submission.feedback}</p>}</div>}
+        <aside className="w-80 shrink-0 overflow-y-auto border-r bg-card p-4 space-y-4">
+          {submission && <div className="rounded-xl border border-sky-200 bg-sky-50 dark:bg-sky-950/50 p-4 text-sm"><p className="font-bold">{submission.graded_at ? `${submission.review_status === "needs_revision" ? "Needs revision" : "Passed"}: ${submission.score}%` : submission.is_final ? 'Awaiting teacher review' : 'Draft saved'}</p>{submission.feedback && <p className="mt-2 whitespace-pre-wrap">{submission.feedback}</p>}</div>}
           <div className="rounded-xl border p-4">
-            <div className="mb-2 flex items-center gap-2 text-sm font-bold text-slate-800">
+            <div className="mb-2 flex items-center gap-2 text-sm font-bold text-foreground">
               <FlaskConical className="size-4 text-emerald-500" /> Challenge
             </div>
-            <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-600">{lab.description || "Complete the laboratory activity."}</p>
+            <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground">{lab.description || "Complete the laboratory activity."}</p>
           </div>
-          <div className="rounded-xl border p-4 text-sm"><h2 className="font-bold">Grading rubric · Pass: {submission?.passing_score_snapshot ?? lesson?.laboratory?.passing_score ?? 75}%</h2>{(submission?.rubric_snapshot ?? lesson?.laboratory?.rubric ?? []).map(c => <p key={c.id} className="mt-2">{c.label}: {c.max} points</p>)}<p className="mt-3 text-xs text-slate-600">Objective checks are practice feedback. Your teacher grades the submitted project.</p></div>
+          <div className="rounded-xl border p-4 text-sm"><h2 className="font-bold">Grading rubric · Pass: {submission?.passing_score_snapshot ?? lesson?.laboratory?.passing_score ?? 75}%</h2>{(submission?.rubric_snapshot ?? lesson?.laboratory?.rubric ?? []).map(c => <p key={c.id} className="mt-2">{c.label}: {c.max} points</p>)}<p className="mt-3 text-xs text-foreground">Objective checks are practice feedback. Your teacher grades the submitted project.</p></div>
           {lab.referenceImageUrl && (
             <div className="rounded-xl border p-4 space-y-2">
-              <div className="flex items-center gap-2 text-sm font-bold text-slate-800">
+              <div className="flex items-center gap-2 text-sm font-bold text-foreground">
                 <Image className="size-4 text-blue-500" /> Expected Result
               </div>
               <img src={lab.referenceImageUrl} alt="Expected laboratory result" className="w-full rounded-lg border object-contain" />
             </div>
           )}
           {validationState !== "idle" && (
-            <div className={`rounded-xl border p-4 text-sm font-semibold ${validationState === "passed" ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-red-200 bg-red-50 text-red-700"}`}>
+            <div className={`rounded-xl border p-4 text-sm font-semibold ${validationState === "passed" ? "border-emerald-200 bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300" : "border-red-200 bg-red-50 dark:bg-red-950/50 text-red-700 dark:text-red-300"}`}>
               {validationState === "passed" ? (
                 <span className="flex items-center gap-2"><CheckCircle2 className="size-4" /> Your blocks match the validator.</span>
               ) : (
@@ -252,7 +255,7 @@ const LaboratoryViewer = ({ lesson, onNext, onBack, navigation, preview = false 
         </aside>
 
         <main className="flex flex-1 overflow-hidden">
-          <section className="flex flex-col flex-1 bg-white border-r">
+          <section className="flex flex-col flex-1 bg-card border-r">
             <FileTabs files={files} activeFile={activeFileId} isLocal={false} onFileChange={handleFileChange} onFileCreate={createFile} onFileDelete={deleteFile} />
             <WorkspaceTools workspace={workspace} />
           <div ref={workspace.blocklyDiv} className="blocklyDiv flex-1" />

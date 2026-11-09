@@ -49,7 +49,7 @@ const StudentHome = () => {
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-      <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4 sm:mb-6">
+      <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-4 sm:mb-6">
         Home
       </h1>
 
@@ -96,7 +96,7 @@ const StudentHome = () => {
 
       {/* Recent Projects */}
       <div data-tour="recent-projects" className="mb-8 mx-auto max-w-xs md:max-w- lg:max-w-5xl">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">
+        <h2 className="text-xl font-semibold text-foreground mb-4">
           Recent Projects
         </h2>
         
@@ -105,9 +105,9 @@ const StudentHome = () => {
             <Loader2 className="w-8 h-8 animate-spin text-blockly-blue" />
           </div>
         ) : recentProjects.length === 0 ? (
-          <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
-            <Globe className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-500">No projects yet. Create your first project to get started!</p>
+          <div className="bg-card border border-border rounded-lg p-8 text-center">
+            <Globe className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+            <p className="text-muted-foreground">No projects yet. Create your first project to get started!</p>
             <button 
               onClick={() => navigate('editor')}
               className="btn btn-primary mt-4"
@@ -131,10 +131,10 @@ const StudentHome = () => {
             {/* See More Card */}
             <div 
               onClick={() => navigate('/student/projects')}
-              className="bg-blockly-blue border border-gray-200 rounded-lg p-4 hover:shadow-md transition-all cursor-pointer w-[280px] sm:w-[300px] flex-shrink-0 flex items-center justify-center group"
+              className="bg-blockly-blue border border-border rounded-lg p-4 hover:shadow-md transition-all cursor-pointer w-[280px] sm:w-[300px] flex-shrink-0 flex items-center justify-center group"
             >
               <div className="text-center">
-                <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center mx-auto mb-2 group-hover:scale-110 transition-transform">
+                <div className="w-12 h-12 bg-card/20 rounded-lg flex items-center justify-center mx-auto mb-2 group-hover:scale-110 transition-transform">
                   <Globe className="w-6 h-6 text-white" />
                 </div>
                 <h3 className="font-bold text-white">View All Projects</h3>

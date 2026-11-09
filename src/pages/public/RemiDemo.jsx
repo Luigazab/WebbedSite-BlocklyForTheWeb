@@ -56,7 +56,7 @@ export default function RemiDemo() {
         <header className="flex items-center justify-between gap-4">
           <Link
             to="/login"
-            className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/8 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:border-sky-300/40 hover:bg-white/12 hover:text-white"
+            className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-card/8 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:border-sky-300/40 hover:bg-card/12 hover:text-white"
           >
             <ArrowLeft size={16} />
             Back to WebbedSite
@@ -89,7 +89,7 @@ export default function RemiDemo() {
                 type="button"
                 onClick={togglePlayback}
                 disabled={!isReady}
-                className="inline-flex min-w-32 items-center justify-center gap-2 rounded-xl bg-sky-400 px-5 py-3 font-bold text-slate-950 shadow-lg shadow-sky-500/20 transition hover:-translate-y-0.5 hover:bg-sky-300 disabled:cursor-not-allowed disabled:opacity-40"
+                className="inline-flex min-w-32 items-center justify-center gap-2 rounded-xl bg-sky-400 px-5 py-3 font-bold text-foreground shadow-lg shadow-sky-500/20 transition hover:-translate-y-0.5 hover:bg-sky-300 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 {isPlaying ? <Pause size={18} /> : <Play size={18} />}
                 {isPlaying ? 'Pause' : 'Play'}
@@ -98,7 +98,7 @@ export default function RemiDemo() {
                 type="button"
                 onClick={restart}
                 disabled={!isReady}
-                className="inline-flex min-w-32 items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/8 px-5 py-3 font-bold text-white transition hover:-translate-y-0.5 hover:border-white/30 hover:bg-white/12 disabled:cursor-not-allowed disabled:opacity-40"
+                className="inline-flex min-w-32 items-center justify-center gap-2 rounded-xl border border-white/15 bg-card/8 px-5 py-3 font-bold text-white transition hover:-translate-y-0.5 hover:border-white/30 hover:bg-card/12 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 <RotateCcw size={18} />
                 Restart
@@ -106,16 +106,16 @@ export default function RemiDemo() {
             </div>
 
             <dl className="mt-8 grid grid-cols-2 gap-3 text-sm sm:grid-cols-3">
-              <div className="rounded-xl border border-white/10 bg-white/5 p-3">
-                <dt className="text-slate-400">Artboard</dt>
+              <div className="rounded-xl border border-white/10 bg-card/5 p-3">
+                <dt className="text-muted-foreground">Artboard</dt>
                 <dd className="mt-1 font-bold text-white">{ARTBOARD}</dd>
               </div>
-              <div className="rounded-xl border border-white/10 bg-white/5 p-3">
-                <dt className="text-slate-400">State machine</dt>
+              <div className="rounded-xl border border-white/10 bg-card/5 p-3">
+                <dt className="text-muted-foreground">State machine</dt>
                 <dd className="mt-1 font-bold text-white">{STATE_MACHINE}</dd>
               </div>
-              <div className="col-span-2 rounded-xl border border-white/10 bg-white/5 p-3 sm:col-span-1">
-                <dt className="text-slate-400">Source</dt>
+              <div className="col-span-2 rounded-xl border border-white/10 bg-card/5 p-3 sm:col-span-1">
+                <dt className="text-muted-foreground">Source</dt>
                 <dd className="mt-1 font-bold text-white">untitled.riv</dd>
               </div>
             </dl>
@@ -127,7 +127,7 @@ export default function RemiDemo() {
               <div className="relative aspect-[4/3] overflow-hidden rounded-[1.45rem] bg-gradient-to-b from-[#dff5ff] to-[#9bd8ff]">
                 {!isReady && !loadError && (
                   <div className="absolute inset-0 z-10 grid place-items-center">
-                    <div className="flex items-center gap-3 rounded-full bg-white/80 px-4 py-2 text-sm font-bold text-blue-950 shadow-lg backdrop-blur">
+                    <div className="flex items-center gap-3 rounded-full bg-card/80 px-4 py-2 text-sm font-bold text-blue-950 dark:text-blue-300 shadow-lg backdrop-blur">
                       <span className="h-2.5 w-2.5 animate-ping rounded-full bg-sky-500" />
                       Waking Remi up…
                     </div>
@@ -135,7 +135,7 @@ export default function RemiDemo() {
                 )}
 
                 {loadError ? (
-                  <div className="absolute inset-0 grid place-items-center p-8 text-center text-sm font-semibold leading-6 text-red-950">
+                  <div className="absolute inset-0 grid place-items-center p-8 text-center text-sm font-semibold leading-6 text-red-950 dark:text-red-300">
                     {loadError}
                   </div>
                 ) : (

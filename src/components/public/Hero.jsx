@@ -9,7 +9,7 @@ const Hero = () => {
           <h1>
             Build <span className="text-blockly-blue">HTML & CSS</span> with colorful blocks
           </h1>
-          <p className="text-xl text-gray-600 mb-8">
+          <p className="text-xl text-foreground mb-8">
             A visual programming editor that makes web development fun and accessible for learners of all ages. 
             Drag, drop, and create beautiful websites without writing code!
           </p>
@@ -25,7 +25,7 @@ const Hero = () => {
         </div>
 
         {/* Blockly Preview */}
-        <div className="lg:w-1/2 bg-white rounded-3xl p-8 shadow-2xl border-8 border-blockly-yellow">
+        <div className="lg:w-1/2 bg-card rounded-3xl p-8 shadow-2xl border-8 border-blockly-yellow">
           <div className="bg-linear-to-br from-blue-100 to-purple-100 rounded-xl p-8 h-64 flex items-center justify-center">
             <div className="flex items-center space-x-4">
               {/* HTML Block */}
@@ -52,7 +52,7 @@ const Hero = () => {
           </div>
           
           <div className="text-center mt-6">
-            <p className="text-lg font-bold text-gray-800">
+            <p className="text-lg font-bold text-foreground">
               Drag and drop blocks to build your webpage
             </p>
           </div>

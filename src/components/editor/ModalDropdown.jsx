@@ -20,7 +20,7 @@ const ModalDropdown = ({label, onClick, onClick2, onClick3, action, action2, act
     <details className="relative">
       <summary className={`flex items-center justify-between gap-1 w-full py-2 px-4 btn ${colors.bg} text-white font-bold ${colors.hover} ${colors.hoverText} cursor-pointer`}>{label}</summary>
       <div>
-        <ul className="absolute right-0 z-10 mt-1 w-full min-w-50 bg-white border-3 rounded-sm drop-shadow-[5px_5px_0_rgba(0,0,0,1)] font-bold text-sm">
+        <ul className="absolute right-0 z-10 mt-1 w-full min-w-50 bg-card border-3 rounded-sm drop-shadow-[5px_5px_0_rgba(0,0,0,1)] font-bold text-sm">
           <li className={`px-4 py-2 m-1 ${colors.itemHover} rounded-sm cursor-pointer transition`} onMouseDown={onClick} title={description}>
               {action}
           </li>

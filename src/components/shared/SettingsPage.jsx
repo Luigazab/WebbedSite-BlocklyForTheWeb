@@ -49,7 +49,7 @@ export default function SettingsPage() {
       <div className="max-w-3xl w-full mx-auto flex flex-col gap-5">
         <div className='font-bold'>
           <h1 className='text-2xl'>Settings</h1>
-          <p className='text-slate-400'>Manage your account and preferences</p>
+          <p className='text-muted-foreground'>Manage your account and preferences</p>
         </div>
         {/* Tab navigation */}
         <div className="flex gap-2 overflow-x-auto pb-1">
@@ -60,7 +60,7 @@ export default function SettingsPage() {
               className={`px-4 py-2 rounded-lg text-sm font-semibold whitespace-nowrap transition-colors
                 ${activeTab === tab
                   ? 'bg-blockly-purple text-white'
-                  : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                  : 'bg-muted text-muted-foreground hover:bg-muted'
                 }`}
             >
               {tab}
@@ -111,16 +111,16 @@ function ProfileInfoTab() {
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden w-full">
+    <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden w-full">
       {/* Header with avatar */}
-      <div className="px-6 py-5 border-b border-gray-50 bg-gray-50/50">
+      <div className="px-6 py-5 border-b border-border bg-muted/50">
         <div className="flex items-center gap-4">
           {/* Avatar */}
           <div className="relative shrink-0">
             <img
               src={profile?.avatar_url || '/default-avatar.png'}
               alt="avatar"
-              className="w-20 h-20 rounded-2xl object-cover border-2 border-gray-100"
+              className="w-20 h-20 rounded-2xl object-cover border-2 border-border"
             />
             <button
               onClick={() => fileRef.current?.click()}
@@ -144,8 +144,8 @@ function ProfileInfoTab() {
 
           {/* Info */}
           <div className="flex-1">
-            <h3 className="font-bold text-gray-800">{profile?.username}</h3>
-            <p className="text-sm text-gray-400 mt-0.5">{profile?.email}</p>
+            <h3 className="font-bold text-foreground">{profile?.username}</h3>
+            <p className="text-sm text-muted-foreground mt-0.5">{profile?.email}</p>
             <span className={`inline-block text-xs font-bold px-2.5 py-1 rounded-full mt-2 ${roleConfig.class}`}>
               {roleConfig.label}
             </span>
@@ -157,8 +157,8 @@ function ProfileInfoTab() {
       <form onSubmit={onSave} className="p-6 flex flex-col gap-5">
         {/* Username */}
         <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-            <User className="w-4 h-4 text-gray-400" />
+          <label className="text-sm font-semibold text-foreground flex items-center gap-2">
+            <User className="w-4 h-4 text-muted-foreground" />
             Name *
           </label>
           <input
@@ -166,23 +166,23 @@ function ProfileInfoTab() {
             value={form.username}
             onChange={(e) => setForm((p) => ({ ...p, username: e.target.value }))}
             placeholder="Your name"
-            className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-blockly-purple focus:ring-2 focus:ring-blockly-purple/10 transition"
+            className="w-full border border-border rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-blockly-purple focus:ring-2 focus:ring-blockly-purple/10 transition"
             required
           />
         </div>
 
         {/* Email — read only */}
         <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-            <Mail className="w-4 h-4 text-gray-400" />
+          <label className="text-sm font-semibold text-foreground flex items-center gap-2">
+            <Mail className="w-4 h-4 text-muted-foreground" />
             Email
-            <span className="text-xs text-gray-400 font-normal">(confirmation required)</span>
+            <span className="text-xs text-muted-foreground font-normal">(confirmation required)</span>
           </label>
           <input
             type="email"
             value={email}
             onChange={e => setEmail(e.target.value)}
-            className="w-full border border-gray-100 rounded-lg px-4 py-2.5 text-sm bg-gray-50 text-slate-800"
+            className="w-full border border-border rounded-lg px-4 py-2.5 text-sm bg-muted text-foreground"
           />
         </div>
 
@@ -191,8 +191,8 @@ function ProfileInfoTab() {
         <Link to={`/${profile.role}/help`} className="text-sm underline">Help and my reports</Link>
         {/* Bio */}
         <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-            <FileText className="w-4 h-4 text-gray-400" />
+          <label className="text-sm font-semibold text-foreground flex items-center gap-2">
+            <FileText className="w-4 h-4 text-muted-foreground" />
             Bio
           </label>
           <textarea
@@ -201,9 +201,9 @@ function ProfileInfoTab() {
             placeholder="Biooo"
             rows={3}
             maxLength={200}
-            className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blockly-purple focus:ring-2 focus:ring-blockly-purple/10 transition resize-none"
+            className="w-full border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blockly-purple focus:ring-2 focus:ring-blockly-purple/10 transition resize-none"
           />
-          <p className="text-xs text-gray-400 text-right">{form.bio.length}/200</p>
+          <p className="text-xs text-muted-foreground text-right">{form.bio.length}/200</p>
         </div>
 
         <button
@@ -243,10 +243,10 @@ function SecurityTab() {
   const passwordsMatch = passwords.newPassword === passwords.confirmPassword
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden w-full">
-      <div className="px-6 py-4 border-b border-gray-50">
-        <h3 className="font-bold text-gray-800">Change Password</h3>
-        <p className="text-xs text-gray-400 mt-0.5">{PASSWORD_HELP}</p>
+    <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden w-full">
+      <div className="px-6 py-4 border-b border-border">
+        <h3 className="font-bold text-foreground">Change Password</h3>
+        <p className="text-xs text-muted-foreground mt-0.5">{PASSWORD_HELP}</p>
       </div>
 
       <form onSubmit={onSave} className="p-6 flex flex-col gap-5">
@@ -256,7 +256,7 @@ function SecurityTab() {
           { key: 'confirmPassword', label: 'Confirm New Password' },
         ].map(({ key, label }) => (
           <div key={key} className="flex flex-col gap-1.5">
-            <label htmlFor={`settings-${key}`} className="text-sm font-semibold text-gray-700">{label}</label>
+            <label htmlFor={`settings-${key}`} className="text-sm font-semibold text-foreground">{label}</label>
             <div className="relative">
               <input
                 id={`settings-${key}`}
@@ -267,14 +267,14 @@ function SecurityTab() {
                 value={passwords[key]}
                 onChange={(e) => setPasswords((p) => ({ ...p, [key]: e.target.value }))}
                 placeholder="*********"
-                className="w-full border border-gray-200 rounded-lg px-4 py-2.5 pr-10 text-sm focus:outline-none focus:border-blockly-purple focus:ring-2 focus:ring-blockly-purple/10 transition"
+                className="w-full border border-border rounded-lg px-4 py-2.5 pr-10 text-sm focus:outline-none focus:border-blockly-purple focus:ring-2 focus:ring-blockly-purple/10 transition"
                 required
               />
               {key === 'confirmPassword' && (
                 <button
                   type="button"
                   onClick={() => setShowPasswords((p) => !p)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                 >
                   {showPasswords ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -321,9 +321,9 @@ function SubmitFeedbackTab() {
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden w-full">
-      <div className="px-6 py-4 border-b border-gray-50 bg-gray-50/50">
-        <p className="text-sm text-gray-500">
+    <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden w-full">
+      <div className="px-6 py-4 border-b border-border bg-muted/50">
+        <p className="text-sm text-muted-foreground">
           All feedback goes directly to our admin team. We typically respond within 1–2 business days.
         </p>
       </div>
@@ -331,7 +331,7 @@ function SubmitFeedbackTab() {
       <form onSubmit={onSubmit} className="p-6 flex flex-col gap-5">
         {/* Category */}
         <div className="flex flex-col gap-2">
-          <label className="text-sm font-semibold text-gray-700">Category</label>
+          <label className="text-sm font-semibold text-foreground">Category</label>
           <div className="flex flex-wrap gap-2">
             {CATEGORIES.map(({ value, label, icon: Icon }) => (
               <button
@@ -341,7 +341,7 @@ function SubmitFeedbackTab() {
                 className={`flex items-center gap-1.5 px-3 py-2 rounded-lg border text-sm font-medium transition-all
                   ${form.category === value
                     ? 'border-blockly-purple bg-blockly-purple/10 text-blockly-purple'
-                    : 'border-gray-200 text-gray-500 hover:border-gray-300 hover:bg-gray-50'
+                    : 'border-border text-muted-foreground hover:border-border hover:bg-muted'
                   }`}
               >
                 <Icon className="w-3.5 h-3.5" />
@@ -353,7 +353,7 @@ function SubmitFeedbackTab() {
 
         {/* Title */}
         <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-semibold text-gray-700">
+          <label className="text-sm font-semibold text-foreground">
             Title <span className="text-red-400">*</span>
           </label>
           <input
@@ -361,14 +361,14 @@ function SubmitFeedbackTab() {
             value={form.title}
             onChange={(e) => setField('title', e.target.value)}
             placeholder="Brief summary of your issue..."
-            className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-blockly-purple focus:ring-2 focus:ring-blockly-purple/10 transition"
+            className="w-full border border-border rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-blockly-purple focus:ring-2 focus:ring-blockly-purple/10 transition"
             required
           />
         </div>
 
         {/* Message */}
         <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-semibold text-gray-700">
+          <label className="text-sm font-semibold text-foreground">
             Message <span className="text-red-400">*</span>
           </label>
           <textarea
@@ -376,10 +376,10 @@ function SubmitFeedbackTab() {
             onChange={(e) => setField('message', e.target.value)}
             placeholder="Describe your issue in as much detail as possible..."
             rows={5}
-            className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blockly-purple focus:ring-2 focus:ring-blockly-purple/10 transition resize-none"
+            className="w-full border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blockly-purple focus:ring-2 focus:ring-blockly-purple/10 transition resize-none"
             required
           />
-          <p className="text-xs text-gray-400 text-right">
+          <p className="text-xs text-muted-foreground text-right">
             {form.message.length} characters
           </p>
         </div>
@@ -413,7 +413,7 @@ function MyReportsTab() {
 
   if (loading) {
     return (
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-16 flex items-center justify-center w-full">
+      <div className="bg-card rounded-2xl border border-border shadow-sm p-16 flex items-center justify-center w-full">
         <Loader2 className="w-5 h-5 animate-spin text-gray-300" />
       </div>
     )
@@ -421,15 +421,15 @@ function MyReportsTab() {
 
   if (myFeedback.length === 0) {
     return (
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-16 flex flex-col items-center justify-center gap-3 w-full">
+      <div className="bg-card rounded-2xl border border-border shadow-sm p-16 flex flex-col items-center justify-center gap-3 w-full">
         <MessageSquare className="w-8 h-8 text-gray-200" />
-        <p className="text-sm text-gray-400">You haven't submitted any feedback yet.</p>
+        <p className="text-sm text-muted-foreground">You haven't submitted any feedback yet.</p>
       </div>
     )
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden divide-y divide-gray-50 w-full">
+    <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden divide-y divide-gray-50 w-full">
       {myFeedback.map((item) => {
         const isOpen = expandedId === item.id
         const status = STATUS_CONFIG[item.status] ?? STATUS_CONFIG.open
@@ -442,32 +442,32 @@ function MyReportsTab() {
               className="w-full flex items-start gap-4 text-left"
             >
               {/* Category icon */}
-              <div className="w-9 h-9 rounded-xl bg-gray-100 flex items-center justify-center shrink-0 mt-0.5">
-                {category && <category.icon className="w-4 h-4 text-gray-500" />}
+              <div className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center shrink-0 mt-0.5">
+                {category && <category.icon className="w-4 h-4 text-muted-foreground" />}
               </div>
 
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <p className="text-sm font-semibold text-gray-800 truncate">{item.title}</p>
+                  <p className="text-sm font-semibold text-foreground truncate">{item.title}</p>
                   <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${status.class}`}>
                     {status.label}
                   </span>
                 </div>
                 <div className="flex items-center gap-3 mt-1">
-                  <span className="text-xs text-gray-400 capitalize">{category?.label}</span>
+                  <span className="text-xs text-muted-foreground capitalize">{category?.label}</span>
                   <span className="text-xs text-gray-300">·</span>
-                  <span className="text-xs text-gray-400">
+                  <span className="text-xs text-muted-foreground">
                     {formatDistanceToNow(new Date(item.created_at), { addSuffix: true })}
                   </span>
                 </div>
               </div>
 
-              <ChevronDown className={`w-4 h-4 text-gray-400 shrink-0 mt-1 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+              <ChevronDown className={`w-4 h-4 text-muted-foreground shrink-0 mt-1 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
             </button>
 
             {isOpen && (
-              <div className="mt-3 ml-13 pl-4 border-l-2 border-gray-100">
-                <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap">
+              <div className="mt-3 ml-13 pl-4 border-l-2 border-border">
+                <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
                   {item.message}
                 </p>
               </div>

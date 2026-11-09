@@ -53,14 +53,14 @@ export default function CreateProjectModal({ onClose, onCreated }) {
       <div className="card max-w-xl w-full">
 
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-gray-100">
-          <h2 className="text-xl font-extrabold text-slate-900">Create Project</h2>
+        <div className="flex items-center justify-between border-b border-border">
+          <h2 className="text-xl font-extrabold text-foreground">Create Project</h2>
           <button
             onClick={onClose}
             disabled={loading}
-            className="p-1.5 rounded-full hover:bg-slate-200 transition-colors"
+            className="p-1.5 rounded-full hover:bg-muted transition-colors"
           >
-            <X className="w-5 h-5 text-slate-600" />
+            <X className="w-5 h-5 text-foreground" />
           </button>
         </div>
 
@@ -71,28 +71,28 @@ export default function CreateProjectModal({ onClose, onCreated }) {
             {/* Left: title + description */}
             <div className="flex flex-col justify-between gap-4">
               <div className="flex flex-col gap-1.5">
-                <label className="text-lg font-bold text-gray-800">Title<span className="font-normal text-red-500"> *</span></label>
+                <label className="text-lg font-bold text-foreground">Title<span className="font-normal text-red-500"> *</span></label>
                 <input
                   type="text"
                   value={form.title}
                   onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
                   placeholder="Name your project"
-                  className="w-full border border-gray-200 rounded-lg font-semibold shadow px-4 py-2.5 focus:outline-none focus:border-blockly-purple focus:ring-2 focus:ring-blockly-purple/10 transition"
+                  className="w-full border border-border rounded-lg font-semibold shadow px-4 py-2.5 focus:outline-none focus:border-blockly-purple focus:ring-2 focus:ring-blockly-purple/10 transition"
                   required
                   disabled={loading}
                 />
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <label className="text-lg font-bold text-gray-800">
-                  Description <span className="font-normal text-gray-400">(optional)</span>
+                <label className="text-lg font-bold text-foreground">
+                  Description <span className="font-normal text-muted-foreground">(optional)</span>
                 </label>
                 <textarea
                   value={form.description}
                   onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
                   placeholder="What is this project about?"
                   rows={3}
-                  className="w-full border border-gray-200 rounded-lg px-4 shadow py-2.5 resize-none focus:outline-none focus:border-blockly-purple focus:ring-2 focus:ring-blockly-purple/10 transition"
+                  className="w-full border border-border rounded-lg px-4 shadow py-2.5 resize-none focus:outline-none focus:border-blockly-purple focus:ring-2 focus:ring-blockly-purple/10 transition"
                   disabled={loading}
                 />
               </div>
@@ -100,7 +100,7 @@ export default function CreateProjectModal({ onClose, onCreated }) {
 
             {/* Right: mode selector */}
             <div className="flex flex-col gap-2 justify-end">
-              <label className="text-lg font-bold text-gray-800">Mode</label>
+              <label className="text-lg font-bold text-foreground">Mode</label>
               <div className="flex gap-2">
                 {MODES.map(({title, description, mode, icon: Icon, disabled: modeDisabled, comingSoon}) => (
                   <button
@@ -111,19 +111,19 @@ export default function CreateProjectModal({ onClose, onCreated }) {
                     className={`relative flex flex-col flex-1 items-center gap-0.5 p-4 rounded-xl border-2 shadow transition-all text-left
                       ${form.mode === mode
                         ? 'border-blockly-purple/50'
-                        : 'border-gray-200 hover:border-gray-300'}
-                        ${modeDisabled ? 'opacity-50 cursor-not-allowed hover:border-gray-200' : ''}`}
+                        : 'border-border hover:border-border'}
+                        ${modeDisabled ? 'opacity-50 cursor-not-allowed hover:border-border' : ''}`}
                   >
                     {comingSoon && (
-                      <span className="absolute top-1.5 right-1.5 text-[10px] font-bold uppercase text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">
+                      <span className="absolute top-1.5 right-1.5 text-[10px] font-bold uppercase text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
                         Soon
                       </span>
                     )}
                     <Icon className="w-10 h-10 shrink-0" />
-                    <span className={`uppercase font-bold ${form.mode === mode ? 'text-blockly-purple' : 'text-gray-800'}`}>
+                    <span className={`uppercase font-bold ${form.mode === mode ? 'text-blockly-purple' : 'text-foreground'}`}>
                       {title}
                     </span>
-                    <span className="font-semibold text-sm text-gray-500 lowercase">{description}</span>
+                    <span className="font-semibold text-sm text-muted-foreground lowercase">{description}</span>
                   </button>
                 ))}
               </div>
@@ -132,7 +132,7 @@ export default function CreateProjectModal({ onClose, onCreated }) {
 
           {/* Error */}
           {error && (
-            <p className="text-sm text-red-500 bg-red-50 rounded-lg px-4 py-2">{error}</p>
+            <p className="text-sm text-red-500 bg-red-50 dark:bg-red-950/50 rounded-lg px-4 py-2">{error}</p>
           )}
 
           {/* Actions */}
@@ -141,7 +141,7 @@ export default function CreateProjectModal({ onClose, onCreated }) {
               type="button"
               onClick={onClose}
               disabled={loading}
-              className="flex-1 btn font-semibold text-gray-600 bg-slate-200"
+              className="flex-1 btn font-semibold text-foreground bg-muted"
             >
               Cancel
             </button>

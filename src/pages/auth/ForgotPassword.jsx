@@ -26,19 +26,19 @@ const ForgotPassword = () => {
 
   return (
     <div className="items-center px-6 py-16 md:py-[10%] justify-center">
-      <div className="flex flex-col items-center justify-center mx-auto w-full height max-w-md gap-8 border border-slate-200 p-8 rounded-lg shadow! card">
+      <div className="flex flex-col items-center justify-center mx-auto w-full height max-w-md gap-8 border border-border p-8 rounded-lg shadow! card">
         
         <div className="text-center w-full">
           <h2 className="text-2xl font-bold mb-2">Reset Password</h2>
-          <p className="text-gray-600">Enter your email to receive a reset link.</p>
+          <p className="text-foreground">Enter your email to receive a reset link.</p>
         </div>
 
         {isSubmitted ? (
           <div className="flex flex-col items-center text-center gap-4 w-full">
-            <div className="p-4 bg-green-50 text-green-700 rounded-lg w-full">
+            <div className="p-4 bg-green-50 dark:bg-green-950/50 text-green-700 dark:text-green-300 rounded-lg w-full">
               If an account exists for <strong>{email}</strong>, a reset link will be sent.
             </div>
-            <p className="text-sm text-gray-500">Please check your spam folder if you don't see it.</p>
+            <p className="text-sm text-muted-foreground">Please check your spam folder if you don't see it.</p>
             <Link to="/login" className="text-blockly-purple underline mt-4">
               Return to Login
             </Link>
@@ -57,7 +57,7 @@ const ForgotPassword = () => {
             </button>
             
             <div className="text-center mt-4">
-              <Link to="/login" className="text-sm text-gray-500 hover:text-blockly-purple">
+              <Link to="/login" className="text-sm text-muted-foreground hover:text-blockly-purple">
                 Back to Login
               </Link>
             </div>

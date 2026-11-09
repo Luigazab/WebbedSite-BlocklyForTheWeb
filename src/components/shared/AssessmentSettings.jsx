@@ -83,23 +83,23 @@ export default function AssessmentSettings({ lessonId }) {
           Required proficiency checkpoint
         </label>
       )}
-      <p className="text-xs text-slate-600">
+      <p className="text-xs text-foreground">
         Each tier needs a checkpoint quiz and laboratory. XP and completion do
         not establish proficiency.
       </p>
       <button
         disabled={busy}
-        className="rounded border bg-white px-3 py-2 text-sm"
+        className="rounded border bg-card px-3 py-2 text-sm"
       >
         {busy ? "Saving…" : "Save assessment settings"}
       </button>
       {error && (
-        <p role="alert" className="text-red-700">
+        <p role="alert" className="text-red-700 dark:text-red-300">
           {error}
         </p>
       )}
       {message && (
-        <p role="status" className="text-green-800">
+        <p role="status" className="text-green-800 dark:text-green-300">
           {message}
         </p>
       )}

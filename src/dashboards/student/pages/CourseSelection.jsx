@@ -47,9 +47,9 @@ function CourseSelection() {
       <div className="space-y-4">
         <ChevronLeft
           onClick={() => navigate(-1)}
-          className="w-8 h-8 shrink-0 cursor-pointer bg-slate-100 hover:bg-slate-200 rounded"
+          className="w-8 h-8 shrink-0 cursor-pointer bg-muted hover:bg-muted rounded"
         />
-        <hr className="border-slate-200" />
+        <hr className="border-border" />
       </div>
       <div className="max-w-4xl mx-auto md:mt-24">
         <h1 className="font-bold text-3xl text-center">
@@ -58,7 +58,7 @@ function CourseSelection() {
 
         <form
           onSubmit={handleSubmit}
-          className="flex flex-col bg-white/80 rounded-xl items-center space-y-6 p-6"
+          className="flex flex-col bg-card/80 rounded-xl items-center space-y-6 p-6"
         >
           {/* Step 1: Radio with images */}
           <div className="flex flex-wrap items-center justify-center gap-8">
@@ -68,7 +68,7 @@ function CourseSelection() {
                 className={`flex flex-col items-center space-y-2 cursor-pointer rounded-xl shadow p-6 w-44 border transition-all!
                   ${selected == course.id
                     ? 'scale-105'
-                    : 'bg-white border-slate-100 hover:border-slate-200 hover:bg-slate-50 hover:-translate-y-2'
+                    : 'bg-card border-border hover:border-border hover:bg-muted hover:-translate-y-2'
                   }`}
                 style={selected == course.id ? {
                   borderColor: course.color,
@@ -92,7 +92,7 @@ function CourseSelection() {
             ))}
           </div>
 
-          <p className="font-semibold text-slate-400">
+          <p className="font-semibold text-muted-foreground">
             Choosing HTML is recommended if you are just starting with Web
             Languages
           </p>
@@ -115,7 +115,7 @@ function CourseSelection() {
                       onChange={(e) => setLevel(e.target.value)}
                       className="hidden peer"
                     />
-                    <span className="capitalize px-4 py-3 font-bold text-center w-full rounded-lg border border-slate-200 bg-white shadow peer-checked:bg-blue-500 peer-checked:text-white">
+                    <span className="capitalize px-4 py-3 font-bold text-center w-full rounded-lg border border-border bg-card shadow peer-checked:bg-blue-500 peer-checked:text-white">
                       {key}
                     </span>
                   </label>

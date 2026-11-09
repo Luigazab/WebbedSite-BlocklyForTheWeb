@@ -100,14 +100,14 @@ export default function ProjectDetailsModal({ project, onClose, onDelete, onTogg
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="absolute max-w-6xl w-full h-[90vh] bg-white shadow-2xl rounded-lg transform rotate-3 translate-x-2 translate-y-2 z-40" />
-      <div data-tour="details-modal" className="card max-w-6xl w-full h-[90vh]  overflow-hidden flex flex-col shadow z-50 border-2 border-slate-300">
+      <div className="absolute max-w-6xl w-full h-[90vh] bg-card shadow-2xl rounded-lg transform rotate-3 translate-x-2 translate-y-2 z-40" />
+      <div data-tour="details-modal" className="card max-w-6xl w-full h-[90vh]  overflow-hidden flex flex-col shadow z-50 border-2 border-border">
         {/* Header */}
         <div className="flex justify-between border-b pb-4 items-start">
           <div data-tour="details-title">
-            <h2 className="text-xl font-extrabold text-slate-800">{project.title}</h2>
+            <h2 className="text-xl font-extrabold text-foreground">{project.title}</h2>
             {project.description && (
-              <p className="text-sm font-bold text-slate-500 ml-4">{project.description}</p>
+              <p className="text-sm font-bold text-muted-foreground ml-4">{project.description}</p>
             )}
           </div>
           <div className="flex items-center gap-1 shrink-0">
@@ -123,7 +123,7 @@ export default function ProjectDetailsModal({ project, onClose, onDelete, onTogg
               aria-label="Close project details"
               className="p-1.5 rounded-lg hover:bg-slate-300 transition-colors"
             >
-              <X className="w-5 h-5 text-slate-500" />
+              <X className="w-5 h-5 text-muted-foreground" />
             </button>
           </div>
         </div>
@@ -136,7 +136,7 @@ export default function ProjectDetailsModal({ project, onClose, onDelete, onTogg
                 className={`p-3 rounded-l-lg transition-all ${
                   viewMode === 'preview'
                     ? 'bg-blockly-purple text-white shadow-lg'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    : 'bg-muted text-foreground hover:bg-muted'
                 }`}
                 title="Preview"
               >
@@ -147,7 +147,7 @@ export default function ProjectDetailsModal({ project, onClose, onDelete, onTogg
                 className={`p-3 rounded-l-lg transition-all ${
                   viewMode === 'blocks'
                     ? 'bg-green-600 text-white shadow-lg'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    : 'bg-muted text-foreground hover:bg-muted'
                 }`}
                 title="Blocks"
               >
@@ -167,7 +167,7 @@ export default function ProjectDetailsModal({ project, onClose, onDelete, onTogg
                       className={`flex items-center gap-2 px-3 py-2 rounded-tr-xl transition-all duration-400 ease-in-out min-w-fit ${
                         activeFile === file.id
                           ? 'bg-blockly-purple font-bold text-white shadow'
-                          : 'text-slate-400 hover:bg-slate-700'
+                          : 'text-muted-foreground hover:bg-slate-700'
                       }`}
                     >
                       <span>{getFileIcon(file.filename)}</span>
@@ -178,9 +178,9 @@ export default function ProjectDetailsModal({ project, onClose, onDelete, onTogg
               )}
 
               {/* Display area */}
-              <div data-tour="details-preview-area" className="flex flex-col flex-1 min-h-0 border-2 border-slate-600 bg-white overflow-hidden shadow rounded-tr-xl">
-                <div className="shrink-0 flex items-center justify-between gap-2 px-3 py-1.5 border-b border-slate-600 bg-gray-100">
-                  <span className="text-xs text-gray-500 font-mono truncate">
+              <div data-tour="details-preview-area" className="flex flex-col flex-1 min-h-0 border-2 border-slate-600 bg-card overflow-hidden shadow rounded-tr-xl">
+                <div className="shrink-0 flex items-center justify-between gap-2 px-3 py-1.5 border-b border-slate-600 bg-muted">
+                  <span className="text-xs text-muted-foreground font-mono truncate">
                     {files.find(file => file.id === activeFile)?.filename || 'Untitled'}
                   </span>
                   <div className='flex gap-2'>
@@ -203,7 +203,7 @@ export default function ProjectDetailsModal({ project, onClose, onDelete, onTogg
                       className="w-full flex-1 min-h-0 border-0"
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-gray-50 text-gray-400">
+                    <div className="w-full h-full flex items-center justify-center bg-muted text-muted-foreground">
                       No preview available
                     </div>
                   )
@@ -232,21 +232,21 @@ export default function ProjectDetailsModal({ project, onClose, onDelete, onTogg
 
           {/* Right: Stats & Comments */}
           <div className="w-80 flex flex-col gap-4">
-            {project.source_classroom_id && <Link onClick={onClose} className="rounded-lg border p-3 text-sm text-sky-800 underline" to={`/${profile.role}/classrooms/${project.source_classroom_id}`}>Open source classroom · {project.source_kind}</Link>}
-            {profile.role==='student' && project.source_lesson?.slug && project.source_lesson?.topic?.course?.slug && <Link onClick={onClose} className="text-sm text-sky-800 underline" to={`/student/classrooms/${project.source_classroom_id}/lessons/${project.source_lesson.topic.course.slug}/${project.source_lesson.slug}`}>Open source lesson</Link>}
+            {project.source_classroom_id && <Link onClick={onClose} className="rounded-lg border p-3 text-sm text-sky-800 dark:text-sky-300 underline" to={`/${profile.role}/classrooms/${project.source_classroom_id}`}>Open source classroom · {project.source_kind}</Link>}
+            {profile.role==='student' && project.source_lesson?.slug && project.source_lesson?.topic?.course?.slug && <Link onClick={onClose} className="text-sm text-sky-800 dark:text-sky-300 underline" to={`/student/classrooms/${project.source_classroom_id}/lessons/${project.source_lesson.topic.course.slug}/${project.source_lesson.slug}`}>Open source lesson</Link>}
             <div className="flex items-center gap-3">
               <button data-tour="details-like-btn"
                 onClick={handleLike}
                 className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold transition-colors ${
                   isLiked(project.id)
                     ? 'bg-blue-500 text-white hover:bg-blue-600'
-                    : 'bg-blue-100 text-blue-600 hover:bg-blue-200'
+                    : 'bg-blue-100 dark:bg-blue-950/50 text-blue-600 dark:text-blue-300 hover:bg-blue-200'
                 }`}
               >
                 <ThumbsUp className="w-4 h-4" />
                 {likesCount}
               </button>
-              <button className="flex items-center gap-2 px-3 py-2 bg-slate-100 text-slate-600 rounded-lg text-sm font-semibold hover:bg-gray-200 transition-colors">
+              <button className="flex items-center gap-2 px-3 py-2 bg-muted text-foreground rounded-lg text-sm font-semibold hover:bg-muted transition-colors">
                 <MessageSquare className="w-4 h-4" />
                 {comments.length || 0}
               </button>
@@ -254,13 +254,13 @@ export default function ProjectDetailsModal({ project, onClose, onDelete, onTogg
               <div data-tour="details-visibility" className="flex-1 flex justify-center">
                 <div className="flex rounded-full overflow-hidden border border-slate-400 shadow-inset transition-all group">
                   <label className={`flex-1 flex gap-2 px-2 items-center rounded-full text-center py-2 cursor-pointer text-xs font-semibold transition-colors
-                    ${project.is_public ? 'bg-slate-100 text-slate-700' : 'bg-blockly-blue text-white'}`}>
+                    ${project.is_public ? 'bg-muted text-foreground' : 'bg-blockly-blue text-white'}`}>
                     <input type="radio" name="visibility" value="private" checked={!project.is_public} onChange={() => onToggleVisibility(false)} className="hidden"/>
                     <EyeOff className="w-4 h-4" />
                     Private
                   </label>
                   <label className={`flex-1 flex gap-2 px-2 items-center rounded-full text-center py-2 cursor-pointer text-xs font-semibold transition-colors
-                    ${project.is_public ? 'bg-blockly-blue text-white' : 'bg-slate-100 text-slate-700'}`}>
+                    ${project.is_public ? 'bg-blockly-blue text-white' : 'bg-muted text-foreground'}`}>
                     <input type="radio" name="visibility" value="public" checked={project.is_public} onChange={() => onToggleVisibility(true)} className="hidden"/>
                     <Eye className="w-4 h-4" />
                     Public
@@ -283,7 +283,7 @@ export default function ProjectDetailsModal({ project, onClose, onDelete, onTogg
 
             {/* Comments section */}
             <div data-tour="details-comments" className="flex-1 flex flex-col gap-3 overflow-hidden">
-              <h3 className="font-bold text-gray-800">Comments</h3>
+              <h3 className="font-bold text-foreground">Comments</h3>
 
               {/* Comment form */}
               <form onSubmit={handleSubmitComment} className="flex flex-col gap-2 p-3 rounded-lg">
@@ -292,7 +292,7 @@ export default function ProjectDetailsModal({ project, onClose, onDelete, onTogg
                   onChange={(e) => setComment(e.target.value)}
                   placeholder="Add a comment..."
                   rows={3}
-                  className="w-full border border-slate-300 shadow rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blockly-purple focus:ring-2 focus:ring-blockly-purple/10 transition resize-none bg-white"
+                  className="w-full border border-border shadow rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blockly-purple focus:ring-2 focus:ring-blockly-purple/10 transition resize-none bg-card"
                 />
                 <button
                   type="submit"
@@ -306,12 +306,12 @@ export default function ProjectDetailsModal({ project, onClose, onDelete, onTogg
               {/* Comments list */}
               <div className="flex-1 overflow-y-auto flex flex-col gap-2">
                 {commentsLoading ? (
-                  <div className="text-center text-sm text-gray-400 py-4">Loading...</div>
+                  <div className="text-center text-sm text-muted-foreground py-4">Loading...</div>
                 ) : comments.length === 0 ? (
-                  <div className="text-center text-sm text-gray-400 py-4">No comments yet</div>
+                  <div className="text-center text-sm text-muted-foreground py-4">No comments yet</div>
                 ) : (
                   comments.map(comment => (
-                    <div key={comment.id} className="flex gap-3 p-3 bg-white border border-slate-300 shadow rounded-lg group">
+                    <div key={comment.id} className="flex gap-3 p-3 bg-card border border-border shadow rounded-lg group">
                       {comment.profiles?.avatar_url ? (
                         <img
                           src={comment.profiles.avatar_url}
@@ -326,7 +326,7 @@ export default function ProjectDetailsModal({ project, onClose, onDelete, onTogg
                       
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between">
-                          <p className="text-sm font-semibold text-gray-800">
+                          <p className="text-sm font-semibold text-foreground">
                             {comment.profiles?.username || 'Unknown'}
                           </p>
                           {comment.user_id === profile?.id && (
@@ -335,12 +335,12 @@ export default function ProjectDetailsModal({ project, onClose, onDelete, onTogg
                               className="opacity-0 group-hover:opacity-100 p-1 hover:bg-red-100 rounded transition-all"
                               title="Delete comment"
                             >
-                              <Trash2 className="w-3 h-3 text-red-600" />
+                              <Trash2 className="w-3 h-3 text-red-600 dark:text-red-300" />
                             </button>
                           )}
                         </div>
-                        <p className="text-sm text-gray-600 mt-1">{comment.content}</p>
-                        <p className="text-xs text-gray-400 mt-1">{formatDate(comment.created_at)}</p>
+                        <p className="text-sm text-foreground mt-1">{comment.content}</p>
+                        <p className="text-xs text-muted-foreground mt-1">{formatDate(comment.created_at)}</p>
                       </div>
                     </div>
                   ))

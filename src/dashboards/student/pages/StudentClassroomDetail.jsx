@@ -46,14 +46,14 @@ const C = {
 // ─── Stat card ────────────────────────────────────────────────────────────────
 function StatCard({ icon: Icon, label, value, sub, color = C.purple, bg = C.purpleL }) {
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex items-center gap-4">
+    <div className="bg-card rounded-2xl border border-border shadow-sm p-5 flex items-center gap-4">
       <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0" style={{ backgroundColor: bg }}>
         <Icon className="w-5 h-5" style={{ color }} />
       </div>
       <div className="min-w-0">
-        <p className="text-2xl font-black text-gray-900 leading-none">{value}</p>
-        <p className="text-xs font-semibold text-gray-500 mt-0.5">{label}</p>
-        {sub && <p className="text-xs text-gray-400 mt-0.5">{sub}</p>}
+        <p className="text-2xl font-black text-foreground leading-none">{value}</p>
+        <p className="text-xs font-semibold text-muted-foreground mt-0.5">{label}</p>
+        {sub && <p className="text-xs text-muted-foreground mt-0.5">{sub}</p>}
       </div>
     </div>
   )
@@ -63,8 +63,8 @@ function StatCard({ icon: Icon, label, value, sub, color = C.purple, bg = C.purp
 function ChartTip({ active, payload, label }) {
   if (!active || !payload?.length) return null
   return (
-    <div className="bg-white border border-gray-200 rounded-xl shadow-lg px-4 py-3 text-xs">
-      {label && <p className="font-bold text-gray-700 mb-1">{label}</p>}
+    <div className="bg-card border border-border rounded-xl shadow-lg px-4 py-3 text-xs">
+      {label && <p className="font-bold text-foreground mb-1">{label}</p>}
       {payload.map((p, i) => (
         <p key={i} style={{ color: p.fill || p.color }} className="font-semibold">
           {p.name}: {p.value}{typeof p.value === 'number' && p.name?.includes('%') ? '' : ''}
@@ -77,7 +77,7 @@ function ChartTip({ active, payload, label }) {
 // ─── Badge grid ───────────────────────────────────────────────────────────────
 function BadgeGrid({ earned, all }) {
   const earnedIds = new Set(earned.map((a) => a.badge?.id).filter(Boolean))
-  if (!all.length) return <p className="text-sm text-gray-400 text-center py-6">No badges available for this classroom.</p>
+  if (!all.length) return <p className="text-sm text-muted-foreground text-center py-6">No badges available for this classroom.</p>
 
   return (
     <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-7 gap-4">
@@ -87,12 +87,12 @@ function BadgeGrid({ earned, all }) {
         return (
           <div key={badge.id} title={isEarned ? `Earned ${achievement ? format(new Date(achievement.earned_at), 'MMM d, yyyy') : ''}` : badge.title}
             className={`flex flex-col items-center gap-2 p-3 rounded-2xl border transition-all cursor-default ${
-              isEarned ? 'bg-yellow-50 border-yellow-200' : 'bg-gray-50 border-gray-100 opacity-40 grayscale'
+              isEarned ? 'bg-yellow-50 dark:bg-yellow-950/50 border-yellow-200' : 'bg-muted border-border opacity-40 grayscale'
             }`}>
             {badge.icon_url
               ? <img src={badge.icon_url} alt={badge.title} className="w-9 h-9 object-contain" />
               : <Award className={`w-9 h-9 ${isEarned ? 'text-yellow-500' : 'text-gray-300'}`} />}
-            <span className="text-xs font-medium text-center text-gray-600 leading-tight line-clamp-2">{badge.title}</span>
+            <span className="text-xs font-medium text-center text-foreground leading-tight line-clamp-2">{badge.title}</span>
             {isEarned && <CheckCircle2 className="w-3.5 h-3.5 text-green-500 -mt-1" />}
           </div>
         )
@@ -110,24 +110,24 @@ function QuizHistoryCard({ quiz, earned }) {
     : null
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+    <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
       <button
         onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center justify-between gap-3 px-5 py-4 text-left hover:bg-gray-50 transition-colors"
+        className="w-full flex items-center justify-between gap-3 px-5 py-4 text-left hover:bg-muted transition-colors"
       >
         <div className="flex items-center gap-3 min-w-0">
-          <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${passed === true ? 'bg-green-100' : passed === false ? 'bg-red-100' : 'bg-gray-100'}`}>
-            <Trophy className={`w-5 h-5 ${passed === true ? 'text-green-600' : passed === false ? 'text-red-500' : 'text-gray-400'}`} />
+          <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${passed === true ? 'bg-green-100 dark:bg-green-950/50' : passed === false ? 'bg-red-100 dark:bg-red-950/50' : 'bg-muted'}`}>
+            <Trophy className={`w-5 h-5 ${passed === true ? 'text-green-600 dark:text-green-300' : passed === false ? 'text-red-500' : 'text-muted-foreground'}`} />
           </div>
           <div className="min-w-0">
-            <p className="text-sm font-bold text-gray-800 truncate">{quiz.title}</p>
+            <p className="text-sm font-bold text-foreground truncate">{quiz.title}</p>
             <div className="flex items-center gap-2 mt-0.5">
-              <span className="text-xs text-gray-400">{quiz.attemptCount} attempt{quiz.attemptCount !== 1 ? 's' : ''}</span>
+              <span className="text-xs text-muted-foreground">{quiz.attemptCount} attempt{quiz.attemptCount !== 1 ? 's' : ''}</span>
               {quiz.passing_score !== null && (
-                <span className="text-xs text-gray-400">· Pass: {quiz.passing_score}/{quiz.questionCount}</span>
+                <span className="text-xs text-muted-foreground">· Pass: {quiz.passing_score}/{quiz.questionCount}</span>
               )}
               {quiz.badge && (
-                <span className={`text-xs font-semibold px-1.5 py-0.5 rounded-full ${isEarned ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-400'}`}>
+                <span className={`text-xs font-semibold px-1.5 py-0.5 rounded-full ${isEarned ? 'bg-yellow-100 dark:bg-yellow-950/50 text-yellow-700 dark:text-yellow-300' : 'bg-muted text-muted-foreground'}`}>
                   {isEarned ? '🏅 Earned' : '🏅 Not yet'}
                 </span>
               )}
@@ -138,44 +138,44 @@ function QuizHistoryCard({ quiz, earned }) {
         <div className="flex items-center gap-3 shrink-0">
           {quiz.bestScore !== null && (
             <span className={`text-sm font-black px-3 py-1 rounded-full ${
-              passed === true ? 'bg-green-100 text-green-700' : passed === false ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-600'}`}>
+              passed === true ? 'bg-green-100 dark:bg-green-950/50 text-green-700 dark:text-green-300' : passed === false ? 'bg-red-100 dark:bg-red-950/50 text-red-600 dark:text-red-300' : 'bg-muted text-foreground'}`}>
               {quiz.bestScore}%
             </span>
           )}
           {quiz.attemptCount === 0
-            ? <span className="text-xs text-gray-400">Not attempted</span>
-            : open ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+            ? <span className="text-xs text-muted-foreground">Not attempted</span>
+            : open ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
         </div>
       </button>
 
       {open && quiz.attempts.length > 0 && (
-        <div className="border-t border-gray-100 divide-y divide-gray-50">
+        <div className="border-t border-border divide-y divide-gray-50">
           {quiz.attempts.map((attempt, i) => {
             const attemptPassed = quiz.passing_score !== null
               ? attempt.score >= Math.round((quiz.passing_score / quiz.questionCount) * 100)
               : null
             return (
-              <div key={attempt.id} className="flex items-center justify-between px-5 py-3 bg-gray-50/50">
+              <div key={attempt.id} className="flex items-center justify-between px-5 py-3 bg-muted/50">
                 <div className="flex items-center gap-3">
-                  <span className="text-xs text-gray-400 font-medium w-6">#{quiz.attempts.length - i}</span>
+                  <span className="text-xs text-muted-foreground font-medium w-6">#{quiz.attempts.length - i}</span>
                   <div>
-                    <p className="text-xs font-semibold text-gray-700">
+                    <p className="text-xs font-semibold text-foreground">
                       {attempt.score}%
-                      <span className={`ml-2 font-bold ${attemptPassed === true ? 'text-green-600' : attemptPassed === false ? 'text-red-500' : ''}`}>
+                      <span className={`ml-2 font-bold ${attemptPassed === true ? 'text-green-600 dark:text-green-300' : attemptPassed === false ? 'text-red-500' : ''}`}>
                         {attemptPassed === true ? '✓ Pass' : attemptPassed === false ? '✗ Fail' : ''}
                       </span>
                     </p>
-                    <p className="text-xs text-gray-400">{formatDistanceToNow(new Date(attempt.completed_at), { addSuffix: true })}</p>
+                    <p className="text-xs text-muted-foreground">{formatDistanceToNow(new Date(attempt.completed_at), { addSuffix: true })}</p>
                   </div>
                 </div>
-                <div className="text-xs text-gray-400">{format(new Date(attempt.completed_at), 'MMM d, yyyy')}</div>
+                <div className="text-xs text-muted-foreground">{format(new Date(attempt.completed_at), 'MMM d, yyyy')}</div>
               </div>
             )
           })}
         </div>
       )}
       {open && quiz.attempts.length === 0 && (
-        <div className="px-5 py-4 text-sm text-gray-400 bg-gray-50 border-t border-gray-100">No attempts yet.</div>
+        <div className="px-5 py-4 text-sm text-muted-foreground bg-muted border-t border-border">No attempts yet.</div>
       )}
     </div>
   )
@@ -239,10 +239,10 @@ function ProgressTab({ classroomAssignments, achievements, classroomBadges, quiz
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
         {/* Donut: Assignment Overview */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-          <h3 className="font-bold text-gray-800 mb-4">Assignment Overview</h3>
+        <div className="bg-card rounded-2xl border border-border shadow-sm p-6">
+          <h3 className="font-bold text-foreground mb-4">Assignment Overview</h3>
           {total === 0 ? (
-            <p className="text-sm text-gray-400 text-center py-8">No assignments yet</p>
+            <p className="text-sm text-muted-foreground text-center py-8">No assignments yet</p>
           ) : (
             <ResponsiveContainer width="100%" height={220}>
               <PieChart>
@@ -257,10 +257,10 @@ function ProgressTab({ classroomAssignments, achievements, classroomBadges, quiz
         </div>
 
         {/* Bar: Lesson read progress */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-          <h3 className="font-bold text-gray-800 mb-4">Lesson Reading Progress</h3>
+        <div className="bg-card rounded-2xl border border-border shadow-sm p-6">
+          <h3 className="font-bold text-foreground mb-4">Lesson Reading Progress</h3>
           {!lessonBarData.length ? (
-            <p className="text-sm text-gray-400 text-center py-8">No lessons yet</p>
+            <p className="text-sm text-muted-foreground text-center py-8">No lessons yet</p>
           ) : (
             <ResponsiveContainer width="100%" height={220}>
               <BarChart data={lessonBarData} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
@@ -277,9 +277,9 @@ function ProgressTab({ classroomAssignments, achievements, classroomBadges, quiz
 
       {/* ── Quiz score bar ──────────────────────────────── */}
       {quizBarData.length > 0 && (
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-          <h3 className="font-bold text-gray-800 mb-1">Quiz Best Scores</h3>
-          <p className="text-xs text-gray-400 mb-5">Best score across all attempts per quiz</p>
+        <div className="bg-card rounded-2xl border border-border shadow-sm p-6">
+          <h3 className="font-bold text-foreground mb-1">Quiz Best Scores</h3>
+          <p className="text-xs text-muted-foreground mb-5">Best score across all attempts per quiz</p>
           <ResponsiveContainer width="100%" height={200}>
             <BarChart data={quizBarData} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
@@ -293,7 +293,7 @@ function ProgressTab({ classroomAssignments, achievements, classroomBadges, quiz
           {/* Passing score reference text per quiz */}
           <div className="flex flex-wrap gap-2 mt-3">
             {quizBarData.map((q, i) => q.passing !== null && (
-              <span key={i} className="text-xs bg-gray-50 border border-gray-200 px-2 py-1 rounded-full text-gray-500">
+              <span key={i} className="text-xs bg-muted border border-border px-2 py-1 rounded-full text-muted-foreground">
                 {q.name}: pass at {q.passing}%
               </span>
             ))}
@@ -302,11 +302,11 @@ function ProgressTab({ classroomAssignments, achievements, classroomBadges, quiz
       )}
 
       {/* ── Badges ─────────────────────────────────────── */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+      <div className="bg-card rounded-2xl border border-border shadow-sm p-6">
         <div className="flex items-center gap-2 mb-5">
           <Award className="w-5 h-5 text-yellow-500" />
-          <h3 className="font-bold text-gray-800">Badges</h3>
-          <span className="text-xs text-gray-400 ml-1">
+          <h3 className="font-bold text-foreground">Badges</h3>
+          <span className="text-xs text-muted-foreground ml-1">
             {achievements.length}/{classroomBadges.length || '?'} earned
           </span>
         </div>
@@ -318,7 +318,7 @@ function ProgressTab({ classroomAssignments, achievements, classroomBadges, quiz
         <div className="flex flex-col gap-3">
           <div className="flex items-center gap-2">
             <HelpCircle className="w-5 h-5 text-blockly-purple" />
-            <h3 className="font-bold text-gray-800">Quiz Details</h3>
+            <h3 className="font-bold text-foreground">Quiz Details</h3>
           </div>
           {quizAttemptHistory.map((quiz) => (
             <QuizHistoryCard key={quiz.quizId} quiz={quiz} earned={achievements} />
@@ -327,13 +327,13 @@ function ProgressTab({ classroomAssignments, achievements, classroomBadges, quiz
       )}
 
       {/* ── Lesson score list ───────────────────────────── */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+      <div className="bg-card rounded-2xl border border-border shadow-sm p-6">
         <div className="flex items-center gap-2 mb-5">
           <BookMarked className="w-5 h-5 text-blockly-purple" />
-          <h3 className="font-bold text-gray-800">Lesson Summary</h3>
+          <h3 className="font-bold text-foreground">Lesson Summary</h3>
         </div>
         {!allLessons.length ? (
-          <p className="text-sm text-gray-400 text-center py-6">No lessons assigned yet</p>
+          <p className="text-sm text-muted-foreground text-center py-6">No lessons assigned yet</p>
         ) : (
           <div className="flex flex-col gap-2">
             {allLessons.map((la) => {
@@ -343,22 +343,22 @@ function ProgressTab({ classroomAssignments, achievements, classroomBadges, quiz
 
               return (
                 <div key={la.id} className={`flex items-center gap-4 px-4 py-3 rounded-xl border ${
-                  la.status === 'completed' ? 'bg-green-50 border-green-100'
-                  : la.status === 'missing'  ? 'bg-red-50 border-red-100 opacity-75'
-                  : 'bg-white border-gray-100'}`}>
+                  la.status === 'completed' ? 'bg-green-50 dark:bg-green-950/50 border-green-100'
+                  : la.status === 'missing'  ? 'bg-red-50 dark:bg-red-950/50 border-red-100 opacity-75'
+                  : 'bg-card border-border'}`}>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-gray-800 truncate">{la.lesson?.title}</p>
+                    <p className="text-sm font-semibold text-foreground truncate">{la.lesson?.title}</p>
                     {la.due_date && (
-                      <p className="text-xs text-gray-400">{format(new Date(la.due_date), 'MMM d')}</p>
+                      <p className="text-xs text-muted-foreground">{format(new Date(la.due_date), 'MMM d')}</p>
                     )}
                   </div>
 
                   {/* Read progress */}
                   <div className="flex items-center gap-2 w-24">
-                    <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                    <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
                       <div className="h-full bg-blockly-purple rounded-full" style={{ width: `${pct}%` }} />
                     </div>
-                    <span className="text-xs text-gray-500 w-8 text-right">{pct}%</span>
+                    <span className="text-xs text-muted-foreground w-8 text-right">{pct}%</span>
                   </div>
 
                   {/* Quiz score */}
@@ -366,9 +366,9 @@ function ProgressTab({ classroomAssignments, achievements, classroomBadges, quiz
                     <span className={`text-xs font-bold px-2 py-0.5 rounded-full shrink-0 ${
                       attempt
                         ? (quiz.passing_score !== null && attempt.score >= Math.round((quiz.passing_score / (quiz.quiz_questions?.length || quiz.questions?.length || 1)) * 100))
-                          ? 'bg-green-100 text-green-700'
-                          : 'bg-red-100 text-red-600'
-                        : 'bg-gray-100 text-gray-400'
+                          ? 'bg-green-100 dark:bg-green-950/50 text-green-700 dark:text-green-300'
+                          : 'bg-red-100 dark:bg-red-950/50 text-red-600 dark:text-red-300'
+                        : 'bg-muted text-muted-foreground'
                     }`}>
                       {attempt ? `${attempt.score}%` : 'Quiz —'}
                     </span>
@@ -376,9 +376,9 @@ function ProgressTab({ classroomAssignments, achievements, classroomBadges, quiz
 
                   {/* Status */}
                   <span className={`text-xs font-bold shrink-0 ${
-                    la.status === 'completed' ? 'text-green-600'
+                    la.status === 'completed' ? 'text-green-600 dark:text-green-300'
                     : la.status === 'missing'  ? 'text-red-500'
-                    : 'text-gray-400'}`}>
+                    : 'text-muted-foreground'}`}>
                     {la.status === 'completed' ? '✓ Done'
                      : la.status === 'missing'  ? '✗ Missing'
                      : 'Pending'}
@@ -447,20 +447,20 @@ export default function StudentClassroomDetail() {
 
       {/* Banner */}
       {currentClassroom && (
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white rounded-2xl border border-gray-100 shadow-sm px-6 py-4 mb-2">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-card rounded-2xl border border-border shadow-sm px-6 py-4 mb-2">
           <div className="flex items-center gap-3">
-            <img src={teacher?.avatar_url || '/default-avatar.png'} alt="" className="w-10 h-10 rounded-full object-cover border border-gray-100" />
+            <img src={teacher?.avatar_url || '/default-avatar.png'} alt="" className="w-10 h-10 rounded-full object-cover border border-border" />
             <div>
-              <p className="text-xs text-gray-400">Teacher</p>
-              <p className="text-sm font-semibold text-gray-800">{teacher?.username}</p>
+              <p className="text-xs text-muted-foreground">Teacher</p>
+              <p className="text-sm font-semibold text-foreground">{teacher?.username}</p>
             </div>
           </div>
           <div className="flex flex-col gap-1 sm:w-52">
-            <div className="flex justify-between text-xs font-medium text-gray-500">
+            <div className="flex justify-between text-xs font-medium text-muted-foreground">
               <span>Lessons done</span>
               <span>{completedCnt}/{allLessons.length}</span>
             </div>
-            <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+            <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
               <div className="h-full bg-blockly-purple rounded-full transition-all duration-500"
                 style={{ width: allLessons.length ? `${(completedCnt/allLessons.length)*100}%` : '0%' }} />
             </div>
@@ -469,11 +469,11 @@ export default function StudentClassroomDetail() {
       )}
 
       {/* Tabs */}
-      <div className="flex gap-1 border-b border-gray-200 mb-5 overflow-x-auto">
+      <div className="flex gap-1 border-b border-border mb-5 overflow-x-auto">
         {TABS.map(({ key, label, icon: Icon }) => (
           <button key={key} onClick={() => setActiveTab(key)}
             className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-semibold whitespace-nowrap transition-colors relative
-              ${activeTab === key ? 'text-blockly-purple' : 'text-gray-500 hover:text-gray-700'}`}>
+              ${activeTab === key ? 'text-blockly-purple' : 'text-muted-foreground hover:text-foreground'}`}>
             <Icon className="w-3.5 h-3.5" />
             {label}
             {activeTab === key && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blockly-purple" />}
@@ -491,7 +491,7 @@ export default function StudentClassroomDetail() {
               {listToShow.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-20 gap-3 text-center">
                   <BookOpen className="w-8 h-8 text-gray-200" />
-                  <p className="text-sm text-gray-400">
+                  <p className="text-sm text-muted-foreground">
                     {activeTab === 'quizzes'    ? 'No quizzes assigned yet'
                     : activeTab === 'activities' ? 'No activities assigned yet'
                     : 'No lessons assigned yet'}
@@ -514,18 +514,18 @@ export default function StudentClassroomDetail() {
 
           {activeTab === 'members' && (
             <div className="flex flex-col gap-6">
-              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+              <div className="bg-card rounded-2xl border border-border shadow-sm p-6">
                 <div className="flex items-center gap-2 mb-5">
-                  <Users className="w-5 h-5 text-gray-500" />
-                  <h3 className="font-bold text-gray-800">
+                  <Users className="w-5 h-5 text-muted-foreground" />
+                  <h3 className="font-bold text-foreground">
                     Classmates
-                    <span className="ml-2 text-sm font-normal text-gray-400">
+                    <span className="ml-2 text-sm font-normal text-muted-foreground">
                       ({classroomMembers.length} student{classroomMembers.length !== 1 ? 's' : ''})
                     </span>
                   </h3>
                 </div>
                 {!classroomMembers.length ? (
-                  <p className="text-sm text-gray-400 text-center py-6">No other students yet</p>
+                  <p className="text-sm text-muted-foreground text-center py-6">No other students yet</p>
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {classroomMembers.map((enrollment) => {
@@ -534,14 +534,14 @@ export default function StudentClassroomDetail() {
                       const isMe = student.id === profile?.id
                       return (
                         <div key={enrollment.id}
-                          className={`flex items-center gap-3 p-3 rounded-xl border ${isMe ? 'border-blockly-purple/30 bg-blockly-purple/5' : 'border-gray-100 bg-gray-50'}`}>
-                          <img src={student.avatar_url || '/default-avatar.png'} alt={student.username} className="w-9 h-9 rounded-full object-cover border border-gray-200" />
+                          className={`flex items-center gap-3 p-3 rounded-xl border ${isMe ? 'border-blockly-purple/30 bg-blockly-purple/5' : 'border-border bg-muted'}`}>
+                          <img src={student.avatar_url || '/default-avatar.png'} alt={student.username} className="w-9 h-9 rounded-full object-cover border border-border" />
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-semibold text-gray-800 truncate">
+                            <p className="text-sm font-semibold text-foreground truncate">
                               {student.username}
                               {isMe && <span className="ml-1.5 text-xs text-blockly-purple">(you)</span>}
                             </p>
-                            <p className="text-xs text-gray-400">Joined {format(new Date(enrollment.enrolled_at), 'MMM d, yyyy')}</p>
+                            <p className="text-xs text-muted-foreground">Joined {format(new Date(enrollment.enrolled_at), 'MMM d, yyyy')}</p>
                           </div>
                         </div>
                       )

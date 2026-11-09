@@ -1,3 +1,4 @@
+import ThemeSelect from '../../components/common/ThemeSelect'
 import { useMemo, useRef, useState } from 'react'
 import BlocklyWorkspace from '@/components/editor/BlocklyWorkspace'
 import WorkspaceTools from '@/components/editor/WorkspaceTools'
@@ -28,9 +29,10 @@ export default function JavaScriptPractice() {
     setCode(example ? codeGeneratorService.generateCodeFromState(nextProject.state, 'main.js') : '')
     loading.current = false
   }
-  return <main className="h-screen flex flex-col bg-slate-100 text-slate-900">
-    <div className="shrink-0 p-4 bg-white border-b border-slate-200">
+  return <main className="h-screen flex flex-col bg-muted text-foreground">
+    <div className="shrink-0 p-4 bg-card border-b border-border">
       <div className="flex flex-wrap items-center gap-3">
+        <ThemeSelect compact />
         <h1 className="text-xl font-bold">JavaScript Practice</h1>
         <label htmlFor="practice-project">Project</label>
         <select id="practice-project" className="border rounded px-2 py-1" value={projectId} onChange={event => load(practiceProjects.find(project => project.id === event.target.value), true)}>
@@ -40,10 +42,10 @@ export default function JavaScriptPractice() {
         <button className="rounded border px-3 py-1" onClick={() => load(project, true)}>Show example</button>
       </div>
       <p className="mt-2">{project.task}</p>
-      <p className="mt-1 text-xs text-slate-600">The HTML and CSS are provided. Build the behavior in main.js. Practice storage stays with this example; practice APIs work offline.</p>
+      <p className="mt-1 text-xs text-foreground">The HTML and CSS are provided. Build the behavior in main.js. Practice storage stays with this example; practice APIs work offline.</p>
     </div>
     <div className="flex-1 min-h-0 flex flex-col md:flex-row gap-3 p-3">
-      <section aria-label="JavaScript blocks" className="flex flex-col flex-1 min-h-0 bg-white rounded border">
+      <section aria-label="JavaScript blocks" className="flex flex-col flex-1 min-h-0 bg-card rounded border">
         <WorkspaceTools workspace={workspace} />
         <div ref={workspace.blocklyDiv} className="blocklyDiv flex-1 min-h-0" />
       </section>

@@ -96,15 +96,15 @@ const CourseSelectionMenu = ({
                 leaveFrom="opacity-100 scale-100"
                 leaveTo="opacity-0 scale-95"
               >
-                <Dialog.Panel className="w-full max-w-2xl transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
+                <Dialog.Panel className="w-full max-w-2xl transform overflow-hidden rounded-2xl bg-card p-6 text-left align-middle shadow-xl transition-all">
                   <Dialog.Title
                     as="h3"
-                    className="text-lg font-medium leading-6 text-gray-900 flex justify-between items-center"
+                    className="text-lg font-medium leading-6 text-foreground flex justify-between items-center"
                   >
                     Select Your Course
                     <button
                       type="button"
-                      className="inline-flex justify-center rounded-md border border-transparent bg-gray-100 px-2 py-1 text-sm font-medium text-gray-900 hover:bg-gray-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-500 focus-visible:ring-offset-2"
+                      className="inline-flex justify-center rounded-md border border-transparent bg-muted px-2 py-1 text-sm font-medium text-foreground hover:bg-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-500 focus-visible:ring-offset-2"
                       onClick={onClose}
                     >
                       <X size={18} />
@@ -134,21 +134,21 @@ const CourseSelectionMenu = ({
                         {/* Right half: Content */}
                         <div className="w-1/2 p-4 flex flex-col justify-between">
                           <div>
-                            <h4 className="font-bold text-lg text-gray-800">
+                            <h4 className="font-bold text-lg text-foreground">
                               {course.title}
                             </h4>
-                            <p className="text-sm text-gray-600 mt-1">
+                            <p className="text-sm text-foreground mt-1">
                               {course.description}
                             </p>
                           </div>
                           {/* Optional: Add a button or indicator for active course */}
                           {isCourseCurrentlyActive(course.id) && (
-                            <span className="mt-2 text-xs font-semibold text-blue-600">
+                            <span className="mt-2 text-xs font-semibold text-blue-600 dark:text-blue-300">
                               (Current Course)
                             </span>
                           )}
                           {hasUserStartedCourse(course.id) && !isCourseCurrentlyActive(course.id) && (
-                            <div className="mt-2 flex items-center gap-2 text-slate-500">
+                            <div className="mt-2 flex items-center gap-2 text-muted-foreground">
                               <ChevronRightCircleIcon className="w-5 h-5" />
                               <span className="text-xs font-semibold">Switch to this course</span>
                             </div>
@@ -203,15 +203,15 @@ const CourseSelectionMenu = ({
                 leaveFrom="opacity-100 scale-100"
                 leaveTo="opacity-0 scale-95"
               >
-                <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
+                <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-card p-6 text-left align-middle shadow-xl transition-all">
                   <Dialog.Title
                     as="h3"
-                    className="text-lg font-medium leading-6 text-gray-900 flex justify-between items-center"
+                    className="text-lg font-medium leading-6 text-foreground flex justify-between items-center"
                   >
                     Select Your Starting Level for {selectedCourseForLevel?.title}
                     <button
                       type="button"
-                      className="inline-flex justify-center rounded-md border border-transparent bg-gray-100 px-2 py-1 text-sm font-medium text-gray-900 hover:bg-gray-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-500 focus-visible:ring-offset-2"
+                      className="inline-flex justify-center rounded-md border border-transparent bg-muted px-2 py-1 text-sm font-medium text-foreground hover:bg-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-500 focus-visible:ring-offset-2"
                       onClick={() => setIsLevelModalOpen(false)}
                     >
                       <X size={18} />
@@ -232,8 +232,8 @@ const CourseSelectionMenu = ({
                             onChange={() => handleLevelSelect(key)}
                             className="hidden peer"
                           />
-                          <span className={`capitalize px-4 py-3 font-bold text-center w-full rounded-lg border border-slate-200 bg-white shadow transition-all
-                            peer-checked:bg-blue-500 peer-checked:text-white peer-checked:border-blue-500 hover:bg-slate-100`}>
+                          <span className={`capitalize px-4 py-3 font-bold text-center w-full rounded-lg border border-border bg-card shadow transition-all
+                            peer-checked:bg-blue-500 peer-checked:text-white peer-checked:border-blue-500 hover:bg-muted`}>
                             {key}
                           </span>
                         </label>

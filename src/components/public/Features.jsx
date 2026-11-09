@@ -34,9 +34,9 @@ const Features = () => {
   ];
 
   return (
-    <section id="features" className="bg-white py-20 rounded-t-3xl">
+    <section id="features" className="bg-card py-20 rounded-t-3xl">
       <div className="mx-20 px-6 mt-10">
-        <h2 className="text-4xl md:text-5xl font-bold text-center text-gray-900 mb-4">
+        <h2 className="text-4xl md:text-5xl font-bold text-center text-foreground mb-4">
           Powerful Features
         </h2>
         <div className="w-24 h-2 bg-linear-to-r from-blockly-blue to-blockly-green rounded-full mx-auto mb-16"></div>
@@ -50,10 +50,10 @@ const Features = () => {
               <div className="text-blockly-blue mb-6">
                 {feature.icon}
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">
+              <h3 className="text-2xl font-bold text-foreground mb-4">
                 {feature.title}
               </h3>
-              <p className="text-gray-600">
+              <p className="text-foreground">
                 {feature.description}
               </p>
             </div>

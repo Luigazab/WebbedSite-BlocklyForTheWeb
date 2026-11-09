@@ -12,7 +12,7 @@ const lessonIcons = {
   lecture: <BookOpen className="w-5 h-5 text-blue-500" />,
   quiz: <ClipboardCheck className="w-5 h-5 text-red-500" />,
   tutorial: <MonitorPlay className="w-5 h-5 text-purple-500" />,
-  laboratory: <FlaskConical className="w-5 h-5 text-green-700" />,
+  laboratory: <FlaskConical className="w-5 h-5 text-green-700 dark:text-green-300" />,
 };
 
 export function LessonChip({ type, size = "md" }) {

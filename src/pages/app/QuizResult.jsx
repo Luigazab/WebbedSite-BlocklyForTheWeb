@@ -58,7 +58,7 @@ const QuizResult = ({
   const attemptNumber = totalAttempts > 0 ? activeAttemptIdx + 1 : 1
 
   return (
-    <div className="h-[93vh] w-full bg-slate-50 relative overflow-hidden flex">
+    <div className="h-[93vh] w-full bg-muted relative overflow-hidden flex">
       <div
         className="absolute inset-0 z-0"
         style={{
@@ -76,12 +76,12 @@ const QuizResult = ({
         {selectedQuestion === null ? (
           // ── Overview ──────────────────────────────────────────────────────
           <div className="space-y-4 p-4 max-w-2xl flex flex-col justify-center w-full h-full">
-            <div className="relative bg-white shadow mx-auto rounded-4xl space-y-4 border border-slate-200 w-full flex flex-col items-center">
+            <div className="relative bg-card shadow mx-auto rounded-4xl space-y-4 border border-border w-full flex flex-col items-center">
               {/* Back / finish button */}
               <div className="absolute left-6 top-6">
                 <button
                   onClick={onFinish}
-                  className="bg-slate-200/70 hover:bg-slate-300 p-2 rounded-lg transition-colors"
+                  className="bg-muted/70 hover:bg-slate-300 p-2 rounded-lg transition-colors"
                 >
                   <ArrowLeft size={25} />
                 </button>
@@ -89,7 +89,7 @@ const QuizResult = ({
 
               <div className="p-6 space-y-4 flex flex-col items-center w-full">
                 {/* Attempt label */}
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
                   Attempt {attemptNumber}
                   {totalAttempts > 1 && (
                     <span className="text-slate-300"> of {totalAttempts}</span>
@@ -126,7 +126,7 @@ const QuizResult = ({
 
                     {/* Centered score text */}
                     <div className="absolute inset-0 flex flex-col items-center justify-center">
-                      <p className="font-bold text-slate-400 text-2xl">
+                      <p className="font-bold text-muted-foreground text-2xl">
                         <span className="text-6xl text-violet-500">{score}</span>/{total}
                       </p>
                       <p className="text-center font-bold text-orange-500">Your score</p>
@@ -134,37 +134,37 @@ const QuizResult = ({
                   </div>
                 </div>
 
-                <h1 className="text-xl font-bold text-slate-500 text-center">
+                <h1 className="text-xl font-bold text-muted-foreground text-center">
                   Well done, you have completed the quiz! Here's how you did.
                 </h1>
-                <p className="bg-yellow-100 leading-tight rounded-full px-5 py-2 text-sm text-yellow-600 font-semibold">
+                <p className="bg-yellow-100 dark:bg-yellow-950/50 leading-tight rounded-full px-5 py-2 text-sm text-yellow-600 dark:text-yellow-300 font-semibold">
                   You answered {score} out of {total} questions correctly!
                 </p>
 
                 {/* Stats grid */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full pt-2">
                   <div className="flex flex-col items-center rounded-2xl p-5 shadow border border-violet-200">
-                    <span className="rounded-full bg-white border border-violet-300 shadow p-3 mb-2">
+                    <span className="rounded-full bg-card border border-violet-300 shadow p-3 mb-2">
                       <NotepadText size={26} className="text-violet-500" />
                     </span>
-                    <p className="text-sm font-semibold text-slate-400">Score</p>
-                    <p className="text-3xl font-bold text-violet-600">{percentage}%</p>
+                    <p className="text-sm font-semibold text-muted-foreground">Score</p>
+                    <p className="text-3xl font-bold text-violet-600 dark:text-violet-300">{percentage}%</p>
                   </div>
                   <div className="flex flex-col items-center rounded-2xl p-5 shadow border border-emerald-200">
-                    <span className="rounded-full bg-white border border-emerald-300 shadow p-3 mb-2">
+                    <span className="rounded-full bg-card border border-emerald-300 shadow p-3 mb-2">
                       <Clock size={26} className="text-emerald-500" />
                     </span>
-                    <p className="text-sm font-semibold text-slate-400">Time Taken</p>
-                    <p className="text-2xl font-bold text-emerald-600">
+                    <p className="text-sm font-semibold text-muted-foreground">Time Taken</p>
+                    <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-300">
                       {timeTaken != null ? formatTime(timeTaken) : '—'}
                     </p>
                   </div>
                   <div className="flex flex-col items-center rounded-2xl p-5 shadow border border-orange-200">
-                    <span className="rounded-full bg-white border border-orange-300 shadow p-3 mb-2">
+                    <span className="rounded-full bg-card border border-orange-300 shadow p-3 mb-2">
                       <CalendarDays size={26} className="text-orange-500" />
                     </span>
-                    <p className="text-sm font-semibold text-slate-400">Date Taken</p>
-                    <p className="text-xl font-bold text-orange-600">{result.startedAt ? formatDate(result.startedAt) : "—"}</p>
+                    <p className="text-sm font-semibold text-muted-foreground">Date Taken</p>
+                    <p className="text-xl font-bold text-orange-600 dark:text-orange-300">{result.startedAt ? formatDate(result.startedAt) : "—"}</p>
                   </div>
                 </div>
               </div>
@@ -192,18 +192,18 @@ const QuizResult = ({
             <div className="flex justify-between items-center">
               <button
                 onClick={() => setSelectedQuestion(null)}
-                className="bg-slate-200/70 hover:bg-slate-300 p-2 rounded-lg transition-colors"
+                className="bg-muted/70 hover:bg-slate-300 p-2 rounded-lg transition-colors"
               >
                 <ArrowLeft size={25} />
               </button>
-              <p className="font-extrabold text-2xl text-slate-700">
+              <p className="font-extrabold text-2xl text-foreground">
                 {String(selectedQuestion).padStart(2, '0')} of {String(total).padStart(2, '0')}
               </p>
             </div>
 
-            <div className="bg-white shadow p-8 mx-auto rounded-4xl space-y-6 border border-slate-200 w-full">
-              <p className="text-slate-400 font-bold text-lg text-center">Review Mode</p>
-              <h1 className="text-3xl font-bold text-slate-700 text-center">
+            <div className="bg-card shadow p-8 mx-auto rounded-4xl space-y-6 border border-border w-full">
+              <p className="text-muted-foreground font-bold text-lg text-center">Review Mode</p>
+              <h1 className="text-3xl font-bold text-foreground text-center">
                 {reviewQuestion?.text}
               </h1>
               <div className="space-y-4 pt-4">
@@ -217,7 +217,7 @@ const QuizResult = ({
                   if (isCorrect) {
                     style = 'border-2 border-emerald-400 bg-emerald-50'
                     label = (
-                      <span className="text-emerald-500 font-bold text-sm bg-emerald-200 px-3 py-1 rounded-full">
+                      <span className="text-emerald-500 font-bold text-sm bg-emerald-200 dark:bg-emerald-950/50 px-3 py-1 rounded-full">
                         Correct Answer
                       </span>
                     )
@@ -225,7 +225,7 @@ const QuizResult = ({
                   if (wasSelected && !isCorrect) {
                     style = 'border-2 border-red-400 bg-red-50'
                     label = (
-                      <span className="text-red-500 font-bold text-sm bg-red-200 px-3 py-1 rounded-full">
+                      <span className="text-red-500 font-bold text-sm bg-red-200 dark:bg-red-950/50 px-3 py-1 rounded-full">
                         Your Answer
                       </span>
                     )
@@ -239,10 +239,10 @@ const QuizResult = ({
                       <p
                         className={`text-lg font-bold ${
                           isCorrect
-                            ? 'text-emerald-800'
+                            ? 'text-emerald-800 dark:text-emerald-300'
                             : wasSelected
-                            ? 'text-red-800'
-                            : 'text-slate-500'
+                            ? 'text-red-800 dark:text-red-300'
+                            : 'text-muted-foreground'
                         }`}
                       >
                         {option.text}
@@ -258,7 +258,7 @@ const QuizResult = ({
       </div>
 
       {/* ── Desktop sidebar ───────────────────────────────────────────────── */}
-      <div className="w-1/3 xl:w-1/4 z-10 bg-sky-50/90 border-l border-slate-200 p-6 h-full hidden md:block">
+      <div className="w-1/3 xl:w-1/4 z-10 bg-sky-50/90 border-l border-border p-6 h-full hidden md:flow-root">
         <ResultSidebar
           totalQuestions={total}
           questions={questions}
@@ -290,7 +290,7 @@ const QuizResult = ({
           onClick={() => setShowMobileSidebar(false)}
         />
         <div
-          className={`absolute right-0 top-0 h-full w-[85%] max-w-sm bg-slate-50 shadow-2xl p-6 overflow-y-auto transition-transform duration-300 ${
+          className={`absolute right-0 top-0 h-full w-[85%] max-w-sm bg-muted shadow-2xl p-6 overflow-y-auto transition-transform duration-300 ${
             showMobileSidebar ? 'translate-x-0' : 'translate-x-full'
           }`}
         >

@@ -21,7 +21,7 @@ const VerifyEmail = () => {
           Didn't receive it? Resend confirmation email
         </button>
       ) : (
-        <p className="text-gray-500">Please check your inbox to proceed.</p>
+        <p className="text-muted-foreground">Please check your inbox to proceed.</p>
       )}
     </div>
   );

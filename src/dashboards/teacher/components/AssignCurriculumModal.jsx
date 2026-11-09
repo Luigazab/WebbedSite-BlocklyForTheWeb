@@ -44,21 +44,21 @@ export default function AssignCurriculumModal({
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto border-b-8 border-slate-400">
+      <div className="bg-card rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto border-b-8 border-slate-400">
 
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100">
+        <div className="flex items-center justify-between px-6 py-5 border-b border-border">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-blockly-blue/10 flex items-center justify-center">
               <GraduationCap className="w-5 h-5 text-blockly-blue" />
             </div>
 
             <div>
-              <h2 className="text-base font-bold text-slate-800">
+              <h2 className="text-base font-bold text-foreground">
                 Manage Courses
               </h2>
 
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-muted-foreground">
                 Select courses and arrange their teaching order
               </p>
             </div>
@@ -66,7 +66,7 @@ export default function AssignCurriculumModal({
 
           <button
             onClick={onClose}
-            className="p-2 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors!"
+            className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors!"
           >
             <X className="w-4 h-4" />
           </button>
@@ -74,26 +74,26 @@ export default function AssignCurriculumModal({
 
         {/* Classroom information */}
         {classroom && (
-          <div className="px-6 py-4 border-b border-slate-100 space-y-3">
+          <div className="px-6 py-4 border-b border-border space-y-3">
 
             {/* Name */}
             <div>
-              <p className="text-xs font-semibold text-slate-400">
+              <p className="text-xs font-semibold text-muted-foreground">
                 Classroom name
               </p>
 
-              <p className="text-sm font-semibold text-slate-700">
+              <p className="text-sm font-semibold text-foreground">
                 {classroom.name}
               </p>
             </div>
 
             {/* Description */}
             <div>
-              <p className="text-xs font-semibold text-slate-400">
+              <p className="text-xs font-semibold text-muted-foreground">
                 Description
               </p>
 
-              <p className="text-sm text-slate-500">
+              <p className="text-sm text-muted-foreground">
                 {classroom.description || 'No description'}
               </p>
             </div>
@@ -101,7 +101,7 @@ export default function AssignCurriculumModal({
             {/* Code + Created */}
             <div className="flex items-end justify-between">
               <div>
-                <p className="text-xs font-semibold text-slate-400">
+                <p className="text-xs font-semibold text-muted-foreground">
                   Class code
                 </p>
 
@@ -132,7 +132,7 @@ export default function AssignCurriculumModal({
                     type="button"
                     onClick={handleRegenerate}
                     title="Regenerate code"
-                    className="p-1.5 rounded-lg text-slate-400 hover:text-blockly-blue hover:bg-blockly-blue/5 transition-colors"
+                    className="p-1.5 rounded-lg text-muted-foreground hover:text-blockly-blue hover:bg-blockly-blue/5 transition-colors"
                   >
                     <RefreshCw className="w-3.5 h-3.5" />
                   </button>
@@ -140,11 +140,11 @@ export default function AssignCurriculumModal({
               </div>
 
               <div>
-                <p className="text-xs font-semibold text-slate-400">
+                <p className="text-xs font-semibold text-muted-foreground">
                   Created at
                 </p>
 
-                <p className="text-sm text-slate-400">
+                <p className="text-sm text-muted-foreground">
                   {formatDate(classroom.created_at)}
                 </p>
               </div>

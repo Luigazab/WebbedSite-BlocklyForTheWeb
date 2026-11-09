@@ -45,10 +45,10 @@ export default function StudentNavbar() {
         {tourId && (
           <button 
             onClick={handleHelpClick}
-            className="p-2 rounded-full hover:bg-gray-100 transition-colors group relative"
+            className="p-2 rounded-full hover:bg-muted transition-colors group relative"
             title="Show tour"
           >
-            <HelpCircle className="w-6 h-6 text-gray-600 group-hover:text-blockly-purple transition-colors" />
+            <HelpCircle className="w-6 h-6 text-foreground group-hover:text-blockly-purple transition-colors" />
             <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
               Show tour
             </span>

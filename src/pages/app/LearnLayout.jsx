@@ -48,22 +48,22 @@ export default function LearnLayout() {
   }
 
   return (
-    <div className="flex h-screen bg-slate-50 overflow-hidden">
+    <div className="flex h-screen bg-muted overflow-hidden">
       {!location.pathname.includes('/welcome') && !location.pathname.includes('/course-select') && (
         <StudentSidebar />
       )}
       <div className={`flex flex-col flex-1 transition-all duration-300 ${sidebarOpen ? 'ml-75' : 'ml-16'}`}>
-        <header className='flex justify-between items-center border-b border-slate-200 p-4 relative'> 
+        <header className='flex justify-between items-center border-b border-border p-4 relative'> 
           <div
             className={`flex flex-col justify-center items-center group ${location.pathname.startsWith('/student/learn/') ? 'cursor-pointer' : 'invisible pointer-events-none'}`}
             onClick={() => setIsCourseMenuOpen(true)}
           >
-            <img src="/svgcourse.svg" alt="" width={40} height={40} className='bg-slate-200 border border-slate-300 p-1 rounded-2xl group-hover:bg-slate-300 transition!'/>
-            <div className='text-[8px] tracking-tighter uppercase font-bold text-slate-600 group-hover:text-blockly-blue transition!'>
+            <img src="/svgcourse.svg" alt="" width={40} height={40} className='bg-muted border border-border p-1 rounded-2xl group-hover:bg-slate-300 transition!'/>
+            <div className='text-[8px] tracking-tighter uppercase font-bold text-foreground group-hover:text-blockly-blue transition!'>
               Course catalog
             </div>
           </div>
-          <h1 className='font-bold text-2xl leading-6 text-gray-800'>
+          <h1 className='font-bold text-2xl leading-6 text-foreground'>
             {activeCourseProgress?.courses?.title || 'Select Course'}
           </h1>
           <div className='flex items-center gap-4'>

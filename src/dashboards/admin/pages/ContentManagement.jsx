@@ -14,11 +14,11 @@ const TABS = [
 
 function PublishedBadge({ published }) {
   return published ? (
-    <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+    <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 px-2 py-0.5 rounded-full">
       <CheckCircle size={9} /> Published
     </span>
   ) : (
-    <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-gray-400 bg-gray-50 border border-gray-200 px-2 py-0.5 rounded-full">
+    <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-muted-foreground bg-muted border border-border px-2 py-0.5 rounded-full">
       <XCircle size={9} /> Draft
     </span>
   );
@@ -27,11 +27,11 @@ function PublishedBadge({ published }) {
 function ConfirmModal({ title, message, confirmLabel, confirmClass, onConfirm, onClose, loading }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={onClose}>
-      <div className="bg-white border border-gray-200 rounded-2xl w-full max-w-sm p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
-        <h2 className="text-gray-900 text-base font-semibold mb-2">{title}</h2>
-        <p className="text-gray-400 text-sm mb-6">{message}</p>
+      <div className="bg-card border border-border rounded-2xl w-full max-w-sm p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+        <h2 className="text-foreground text-base font-semibold mb-2">{title}</h2>
+        <p className="text-muted-foreground text-sm mb-6">{message}</p>
         <div className="flex gap-2">
-          <button onClick={onClose} className="flex-1 py-2.5 text-sm text-gray-500 bg-gray-50 rounded-lg hover:bg-gray-100">Cancel</button>
+          <button onClick={onClose} className="flex-1 py-2.5 text-sm text-muted-foreground bg-muted rounded-lg hover:bg-muted">Cancel</button>
           <button onClick={onConfirm} disabled={loading} className={`flex-1 py-2.5 text-sm font-medium rounded-lg transition-colors disabled:opacity-50 ${confirmClass}`}>
             {loading ? "…" : confirmLabel}
           </button>
@@ -46,20 +46,20 @@ function RowMenu({ item, tab, onTogglePublish, onDelete }) {
   const isPublished = item.is_published;
   return (
     <div className="relative">
-      <button onClick={() => setOpen((o) => !o)} className="w-7 h-7 flex items-center justify-center rounded-md hover:bg-gray-50 text-gray-400 hover:text-gray-700 transition-colors">
+      <button onClick={() => setOpen((o) => !o)} className="w-7 h-7 flex items-center justify-center rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">
         <MoreHorizontal size={15} />
       </button>
       {open && (
         <>
           <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 top-8 z-20 w-44 bg-white border border-gray-200 rounded-xl shadow-2xl py-1.5 text-sm">
+          <div className="absolute right-0 top-8 z-20 w-44 bg-card border border-border rounded-xl shadow-2xl py-1.5 text-sm">
             {tab !== "quizzes" && (
-              <button onClick={() => { onTogglePublish(item); setOpen(false); }} className={`w-full flex items-center gap-2.5 px-3 py-2 hover:bg-gray-50 text-left ${isPublished ? "text-amber-700" : "text-emerald-600"}`}>
+              <button onClick={() => { onTogglePublish(item); setOpen(false); }} className={`w-full flex items-center gap-2.5 px-3 py-2 hover:bg-muted text-left ${isPublished ? "text-amber-700 dark:text-amber-300" : "text-emerald-600 dark:text-emerald-300"}`}>
                 {isPublished ? <EyeOff size={13} /> : <Eye size={13} />}
                 {isPublished ? "Unpublish" : "Publish"}
               </button>
             )}
-            <div className="my-1 border-t border-gray-200" />
+            <div className="my-1 border-t border-border" />
             <button onClick={() => { onDelete(item); setOpen(false); }} className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-rose-50 text-rose-500 text-left">
               <Trash2 size={13} />
               Delete
@@ -163,28 +163,28 @@ export default function ContentManagement() {
 
       {/* Toolbar */}
       <div className="flex items-center gap-3">
-        <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-3 py-2.5 flex-1 max-w-72 focus-within:border-amber-500/30 transition-colors">
-          <Search size={13} className="text-gray-400 shrink-0" />
+        <div className="flex items-center gap-2 bg-card border border-border rounded-lg px-3 py-2.5 flex-1 max-w-72 focus-within:border-amber-500/30 transition-colors">
+          <Search size={13} className="text-muted-foreground shrink-0" />
           <input
             placeholder={`Search ${activeTab}...`}
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(0); }}
-            className="bg-transparent text-gray-700 text-sm placeholder:text-gray-300 outline-none flex-1"
+            className="bg-transparent text-foreground text-sm placeholder:text-gray-300 outline-none flex-1"
           />
-          {search && <button onClick={() => setSearch("")} className="text-gray-400 hover:text-gray-600"><X size={12} /></button>}
+          {search && <button onClick={() => setSearch("")} className="text-muted-foreground hover:text-foreground"><X size={12} /></button>}
         </div>
-        <button onClick={fetchItems} className="w-9 h-9 flex items-center justify-center rounded-lg bg-white border border-gray-200 text-gray-400 hover:text-gray-700 transition-colors">
+        <button onClick={fetchItems} className="w-9 h-9 flex items-center justify-center rounded-lg bg-card border border-border text-muted-foreground hover:text-foreground transition-colors">
           <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
         </button>
-         <div className="flex items-center gap-1 bg-white border border-gray-200 rounded-xl p-1 w-fit">
+         <div className="flex items-center gap-1 bg-card border border-border rounded-xl p-1 w-fit">
           {TABS.map(({ key, label, icon: Icon }) => (
             <button
               key={key}
               onClick={() => { setActiveTab(key); setPage(0); setSearch(""); }}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                 activeTab === key
-                  ? "bg-amber-50 text-amber-700 shadow-sm"
-                  : "text-gray-400 hover:text-gray-600"
+                  ? "bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
               }`}
             >
               <Icon size={14} />
@@ -192,69 +192,69 @@ export default function ContentManagement() {
             </button>
           ))}
         </div>
-        <p className="text-gray-400 text-xs ml-auto">{total.toLocaleString()} {activeTab}</p>
+        <p className="text-muted-foreground text-xs ml-auto">{total.toLocaleString()} {activeTab}</p>
       </div>
 
       {/* Table */}
-      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+      <div className="bg-card border border-border rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-gray-200">
-                <th className="text-left text-[11px] font-semibold text-gray-400 uppercase tracking-wider px-4 py-3">Title</th>
-                <th className="text-left text-[11px] font-semibold text-gray-400 uppercase tracking-wider px-4 py-3">Creator</th>
+              <tr className="border-b border-border">
+                <th className="text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-4 py-3">Title</th>
+                <th className="text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-4 py-3">Creator</th>
                 {activeTab !== "quizzes" && (
-                  <th className="text-left text-[11px] font-semibold text-gray-400 uppercase tracking-wider px-4 py-3">Status</th>
+                  <th className="text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-4 py-3">Status</th>
                 )}
                 {activeTab === "lessons" && (
-                  <th className="text-left text-[11px] font-semibold text-gray-400 uppercase tracking-wider px-4 py-3">Duration</th>
+                  <th className="text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-4 py-3">Duration</th>
                 )}
                 {activeTab === "tutorials" && (
-                  <th className="text-left text-[11px] font-semibold text-gray-400 uppercase tracking-wider px-4 py-3">Difficulty</th>
+                  <th className="text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-4 py-3">Difficulty</th>
                 )}
                 {activeTab === "quizzes" && (
-                  <th className="text-left text-[11px] font-semibold text-gray-400 uppercase tracking-wider px-4 py-3">Pass Score</th>
+                  <th className="text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-4 py-3">Pass Score</th>
                 )}
-                <th className="text-left text-[11px] font-semibold text-gray-400 uppercase tracking-wider px-4 py-3">Created</th>
+                <th className="text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-4 py-3">Created</th>
                 <th className="px-4 py-3" />
               </tr>
             </thead>
             <tbody>
               {loading
                 ? Array(8).fill(0).map((_, i) => (
-                    <tr key={i} className="border-b border-gray-100">
+                    <tr key={i} className="border-b border-border">
                       {Array(5).fill(0).map((_, j) => (
-                        <td key={j} className="px-4 py-3"><div className="h-3 bg-gray-50 rounded animate-pulse w-28" /></td>
+                        <td key={j} className="px-4 py-3"><div className="h-3 bg-muted rounded animate-pulse w-28" /></td>
                       ))}
                     </tr>
                   ))
                 : items.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-4 py-12 text-center text-gray-400 text-sm">No {activeTab} found</td>
+                    <td colSpan={6} className="px-4 py-12 text-center text-muted-foreground text-sm">No {activeTab} found</td>
                   </tr>
                 ) : items.map((item) => {
                   const diffColors = { beginner: "text-emerald-600", intermediate: "text-amber-600", advanced: "text-rose-500" };
                   return (
-                    <tr key={item.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                    <tr key={item.id} className="border-b border-border hover:bg-muted transition-colors">
                       <td className="px-4 py-3">
-                        <p className="text-gray-800 text-sm font-medium truncate max-w-[260px]">{item.title}</p>
+                        <p className="text-foreground text-sm font-medium truncate max-w-[260px]">{item.title}</p>
                       </td>
-                      <td className="px-4 py-3 text-gray-400 text-xs">@{item.profiles?.username || "—"}</td>
+                      <td className="px-4 py-3 text-muted-foreground text-xs">@{item.profiles?.username || "—"}</td>
                       {activeTab !== "quizzes" && (
                         <td className="px-4 py-3"><PublishedBadge published={item.is_published} /></td>
                       )}
                       {activeTab === "lessons" && (
-                        <td className="px-4 py-3 text-gray-400 text-xs">{item.estimated_duration ? `${item.estimated_duration}m` : "—"}</td>
+                        <td className="px-4 py-3 text-muted-foreground text-xs">{item.estimated_duration ? `${item.estimated_duration}m` : "—"}</td>
                       )}
                       {activeTab === "tutorials" && (
                         <td className="px-4 py-3">
-                          <span className={`text-xs capitalize ${diffColors[item.difficulty_level] || "text-gray-400"}`}>{item.difficulty_level}</span>
+                          <span className={`text-xs capitalize ${diffColors[item.difficulty_level] || "text-muted-foreground"}`}>{item.difficulty_level}</span>
                         </td>
                       )}
                       {activeTab === "quizzes" && (
-                        <td className="px-4 py-3 text-gray-400 text-xs">{item.passing_score ?? "—"}%</td>
+                        <td className="px-4 py-3 text-muted-foreground text-xs">{item.passing_score ?? "—"}%</td>
                       )}
-                      <td className="px-4 py-3 text-gray-400 text-xs">{timeAgo(item.created_at)}</td>
+                      <td className="px-4 py-3 text-muted-foreground text-xs">{timeAgo(item.created_at)}</td>
                       <td className="px-4 py-3">
                         <RowMenu item={item} tab={activeTab} onTogglePublish={handleTogglePublish} onDelete={handleDelete} />
                       </td>
@@ -266,14 +266,14 @@ export default function ContentManagement() {
         </div>
 
         {totalPages > 1 && (
-          <div className="flex items-center justify-end px-4 py-3 border-t border-gray-200 gap-1">
-            <button onClick={() => setPage((p) => Math.max(0, p - 1))} disabled={page === 0} className="px-3 py-1.5 text-xs text-gray-400 disabled:opacity-30 rounded-md hover:bg-gray-50">Prev</button>
+          <div className="flex items-center justify-end px-4 py-3 border-t border-border gap-1">
+            <button onClick={() => setPage((p) => Math.max(0, p - 1))} disabled={page === 0} className="px-3 py-1.5 text-xs text-muted-foreground disabled:opacity-30 rounded-md hover:bg-muted">Prev</button>
             {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
               const pg = page < 3 ? i : page - 2 + i;
               if (pg >= totalPages) return null;
-              return <button key={pg} onClick={() => setPage(pg)} className={`w-7 h-7 text-xs rounded-md ${pg === page ? "bg-amber-50 text-amber-700" : "text-gray-400 hover:bg-gray-50"}`}>{pg + 1}</button>;
+              return <button key={pg} onClick={() => setPage(pg)} className={`w-7 h-7 text-xs rounded-md ${pg === page ? "bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300" : "text-muted-foreground hover:bg-muted"}`}>{pg + 1}</button>;
             })}
-            <button onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))} disabled={page >= totalPages - 1} className="px-3 py-1.5 text-xs text-gray-400 disabled:opacity-30 rounded-md hover:bg-gray-50">Next</button>
+            <button onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))} disabled={page >= totalPages - 1} className="px-3 py-1.5 text-xs text-muted-foreground disabled:opacity-30 rounded-md hover:bg-muted">Next</button>
           </div>
         )}
       </div>

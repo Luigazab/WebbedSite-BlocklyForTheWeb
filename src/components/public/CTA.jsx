@@ -12,10 +12,10 @@ const CTA = () => {
           </p>
           
           <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
-            <button className="btn bg-white text-blockly-blue text-xl px-12 py-5 hover:bg-gray-100">
+            <button className="btn bg-card text-blockly-blue text-xl px-12 py-5 hover:bg-muted">
               Sign Up for BlocklyForWeb
             </button>
-            <button className="btn bg-transparent border-2 border-white text-white text-xl px-12 py-5 hover:bg-white/10">
+            <button className="btn bg-transparent border-2 border-white text-white text-xl px-12 py-5 hover:bg-card/10">
               View Demo Projects
             </button>
           </div>

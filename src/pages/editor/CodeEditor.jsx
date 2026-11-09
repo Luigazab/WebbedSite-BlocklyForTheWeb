@@ -16,10 +16,10 @@ export default function CodeEditor({
   const isHTML = activeTab === 'html'
 
   return (
-    <section className="relative flex min-h-0 w-full flex-col border-r border-slate-700 bg-[#052b5f] lg:w-[34%]">
+    <section className="relative flex min-h-0 w-full flex-col border-r border-border bg-card lg:w-[34%]">
 
       {/* Tabs */}
-      <div className="flex h-11 flex-shrink-0 border-b border-slate-700 bg-[#0f2745]">
+      <div className="flex h-11 flex-shrink-0 border-b border-border bg-card">
 
         <button
           onClick={() => setActiveTab('html')}
@@ -27,8 +27,8 @@ export default function CodeEditor({
             flex items-center gap-2 px-5
             font-semibold
             ${isHTML
-              ? 'bg-[#052b5f] text-white'
-              : 'text-slate-400 hover:text-white'
+              ? 'bg-card text-foreground'
+              : 'text-muted-foreground hover:text-foreground'
             }
           `}
         >
@@ -47,8 +47,8 @@ export default function CodeEditor({
             flex items-center gap-2 px-5
             font-semibold
             ${!isHTML
-              ? 'bg-[#052b5f] text-white'
-              : 'text-slate-400 hover:text-white'
+              ? 'bg-card text-foreground'
+              : 'text-muted-foreground hover:text-foreground'
             }
           `}
         >
@@ -67,7 +67,7 @@ export default function CodeEditor({
       <div className="relative min-h-0 flex-1">
 
         {/* Line numbers */}
-        <div className="pointer-events-none absolute left-0 top-0 z-10 w-12 pt-5 text-right font-mono text-xs text-slate-500">
+        <div className="pointer-events-none absolute left-0 top-0 z-10 w-12 pt-5 text-right font-mono text-xs text-muted-foreground">
 
           {Array.from({ length: 30 }).map((_, index) => (
             <div
@@ -101,9 +101,9 @@ export default function CodeEditor({
             font-mono
             text-sm
             leading-[19px]
-            text-slate-200
+            text-foreground
             outline-none
-            placeholder:text-slate-500
+            placeholder:text-muted-foreground
           "
           placeholder={
             isHTML
@@ -124,10 +124,10 @@ export default function CodeEditor({
           items-center
           justify-center
           border
-          border-slate-500
-          bg-[#061a36]
+          border-border
+          bg-card
           shadow-[2px_2px_0px_#020617]
-          hover:bg-[#0b2345]
+          hover:bg-card
         ">
           <MoreHorizontal size={18} />
         </button>
@@ -139,13 +139,13 @@ export default function CodeEditor({
             items-center
             gap-2
             border
-            border-slate-400
-            bg-[#061a36]
+            border-border
+            bg-card
             px-4
             py-2
             font-bold
             shadow-[2px_2px_0px_#020617]
-            hover:bg-[#0b2345]
+            hover:bg-card
           "
         >
 

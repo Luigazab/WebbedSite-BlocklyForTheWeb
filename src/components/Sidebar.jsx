@@ -31,21 +31,21 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }) => {
     <div 
       className={`${
         isCollapsed ? 'w-16' : 'w-64'
-      } bg-gray-50 border-r border-gray-300 transition-all duration-300 flex flex-col h-screen fixed left-0 top-0 z-40`}
+      } bg-muted border-r border-border transition-all duration-300 flex flex-col h-screen fixed left-0 top-0 z-40`}
     >
       {/* Logo and Menu Toggle */}
-      <div className="p-3 flex items-center justify-between border-b border-gray-200">
+      <div className="p-3 flex items-center justify-between border-b border-border">
         {!isCollapsed && (
           <img src="./anotherlogo.png" alt=""  className='h-10'/>
         )}
         <button
           onClick={() => setIsCollapsed(!isCollapsed)}
-          className="p-2 hover:bg-gray-200 rounded-lg transition-colors"
+          className="p-2 hover:bg-muted rounded-lg transition-colors"
         >
           {isCollapsed ? (
-            <ChevronRight className="w-5 h-5 text-gray-600" />
+            <ChevronRight className="w-5 h-5 text-foreground" />
           ) : (
-            <ChevronLeft className="w-5 h-5 text-gray-600" />
+            <ChevronLeft className="w-5 h-5 text-foreground" />
           )}
         </button>
       </div>
@@ -71,7 +71,7 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }) => {
               className={`flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-colors ${
                 active
                   ? 'bg-blockly-blue/10 text-blockly-blue'
-                  : 'text-gray-600 hover:bg-gray-100'
+                  : 'text-foreground hover:bg-muted'
               }`}
               title={isCollapsed ? item.label : ''}
             >
@@ -85,7 +85,7 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }) => {
       </nav>
 
       {/* Footer */}
-      <div className={`p-4 border-t border-gray-200 text-xs text-gray-500 ${isCollapsed ? 'text-center' : ''}`}>
+      <div className={`p-4 border-t border-border text-xs text-muted-foreground ${isCollapsed ? 'text-center' : ''}`}>
         {!isCollapsed && (
           <Link to="">
             <p className="mt-1">© 2026 WebbedSite</p>

@@ -1,3 +1,4 @@
+import ThemeSelect from '../common/ThemeSelect'
 import { Link, NavLink, useNavigate } from 'react-router';
 
 const Header = () => {
@@ -12,7 +13,7 @@ const Header = () => {
   return (
     <header className="sticky top-0 z-50">
       <div className="max-w-400 w-full font-bold mx-auto px-2 md:px-12 py-2 md:py-4">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           {/* Logo */}
           <a href="/" className="flex items-center space-x-3">
             <img src="/anotherlogo.png" alt="WebbedSite" className='w-38 p-0 translate-y-1' />
@@ -32,7 +33,8 @@ const Header = () => {
           </nav> */}
 
           {/* Get Started Button */}
-          <div className='flex items-center space-x-2'>
+          <div className='flex flex-wrap items-center justify-end gap-2'>
+          <ThemeSelect compact />
           <Link to="/login">
             <button className="btn btn-secondary">
                 Login

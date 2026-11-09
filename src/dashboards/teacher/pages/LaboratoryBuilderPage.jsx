@@ -1,3 +1,4 @@
+import { publishSavedLesson } from '../../../services/lessonPublicationService';
 import CaptureValidationPanel from '@/components/editor/CaptureValidationPanel'
 import { capturedTests, countChecks } from '@/utils/validation/generatedCodeChecks'
 import { validateTestCases, validateTutorialCode } from '@/utils/validation/tutorialCodeValidation'
@@ -57,6 +58,7 @@ const LaboratoryBuilderPage = ({ context = "teacher" }) => {
   const [lessonId, setLessonId] = useState(id || null);
   const [rubric, setRubric] = useState(DEFAULT_RUBRIC);
   const [passingScore, setPassingScore] = useState(75);
+  const [isPublished, setIsPublished] = useState(false);
   const [title, setTitle] = useState("");
   const [baseXp, setBaseXp] = useState("50");
   const [description, setDescription] = useState("");
@@ -128,6 +130,7 @@ const LaboratoryBuilderPage = ({ context = "teacher" }) => {
           blocks_json: file.blocks_json ?? null,
         })) : [makeFile()];
         setLessonId(data.id);
+        setIsPublished(Boolean(data.is_published));
         setRubric(data.laboratory?.rubric || DEFAULT_RUBRIC);
         setPassingScore(data.laboratory?.passing_score || 75);
         setTitle(data.title || "");
@@ -276,7 +279,7 @@ const LaboratoryBuilderPage = ({ context = "teacher" }) => {
     [courseTopics, selectedTopicId]
   );
 
-  const handleSave = async () => {
+  const handleSave = async (publish = false) => {
     if (!user?.id) return addToast("You must be signed in to save a laboratory.", "error");
     if (!title.trim()) return addToast("Laboratory title is required.", "error");
     if (!/^\d+$/.test(baseXp) || Number(baseXp) <= 0) return addToast("Base XP must be a positive whole number.", "error");
@@ -300,6 +303,7 @@ const LaboratoryBuilderPage = ({ context = "teacher" }) => {
         ? await updateLessonBase({ lessonId, topicId: selectedTopicId, title, baseXp: Number(baseXp) })
         : await createLessonBase({ topicId: selectedTopicId, authorId: user.id, title, type: "laboratory", baseXp: Number(baseXp) });
       setLessonId(lesson.id);
+      setIsPublished(false);
       await upsertLaboratoryContent({
         lessonId: lesson.id, rubric, passingScore,
         instruction: JSON.stringify({
@@ -315,6 +319,8 @@ const LaboratoryBuilderPage = ({ context = "teacher" }) => {
           codeValidation: Object.keys(expected).length ? { version: 1, expectedByFile: expected } : undefined,
         }),
       });
+      if (publish) await publishSavedLesson(lesson.id);
+      setIsPublished(publish);
       setExpectedByFile(expected);
       setTestDrafts({});
       addToast(isEditMode ? "Laboratory updated successfully." : "Laboratory saved successfully.", "success");
@@ -330,19 +336,19 @@ const LaboratoryBuilderPage = ({ context = "teacher" }) => {
   const htmlFiles = files.filter((file) => file.filename.endsWith(".html"));
 
   return (
-    <div className="flex flex-col h-screen bg-gray-100 ">
+    <div className="flex flex-col h-screen bg-muted ">
       <div className="backdrop-blur-md shrink-0 flex items-center gap-3 px-4 py-2.5 ">
         <Link to="/"><img src="/icon.png" alt="icon image" className='w-8 h-8' /></Link>
         <BackButton />
-        {lessonId && <details className="max-h-96 overflow-auto rounded-lg border bg-white p-2"><summary>Assessment settings</summary><AssessmentSettings lessonId={lessonId} /></details>}
+        {lessonId && <details className="max-h-96 overflow-auto rounded-lg border bg-card p-2"><summary>Assessment settings</summary><AssessmentSettings lessonId={lessonId} /></details>}
         {!isAdmin && !isEditMode && !classroomId && <p className="text-sm text-muted-foreground">Open a classroom to create a lesson for its topics. <Link to="/teacher/classrooms" className="underline">Choose classroom</Link></p>}
-        <span className="text-slate-500">/</span>
-        <span className="font-bold text-slate-700 truncate max-w-xs">
+        <span className="text-muted-foreground">/</span>
+        <span className="font-bold text-foreground truncate max-w-xs">
           {title || 'New Laboratory'}
         </span>
 
         {isAdmin && (
-          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">
+          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300">
             Master Content
           </span>
         )}
@@ -351,15 +357,17 @@ const LaboratoryBuilderPage = ({ context = "teacher" }) => {
           <Button variant='ghost'>
             <Sun size={20}/>Light Mode
           </Button>
-          <Button variant='primary' onClick={handleSave} disabled={saving}>
-            {saving ? 'Saving…' : 'Save Laboratory'}
+          <span className="mr-2 text-xs font-semibold">{isPublished ? 'Published' : 'Draft'}</span>
+          <Button variant='primary' onClick={() => handleSave(false)} disabled={saving}>
+            {saving ? 'Saving…' : 'Save Draft'}
           </Button>
+          <Button variant='primary' onClick={() => handleSave(true)} disabled={saving}>Publish</Button>
         </div>
       </div>
       <div className="flex flex-1 overflow-hidden px-3 gap-1.5 mb-4">
         <aside className={`${panelOpen ? `w-1/3 min-w-70` : `w-10`} max-w-sm shrink-0 h-full overflow-hidden`}>
-          <div className="flex flex-col h-full bg-white border border-border overflow-hidden rounded">
-            <div className={`shrink-0 flex justify-between py-1 ${panelOpen ? ` bg-slate-200` : ``}`}>
+          <div className="flex flex-col h-full bg-card border border-border overflow-hidden rounded">
+            <div className={`shrink-0 flex justify-between py-1 ${panelOpen ? ` bg-muted` : ``}`}>
               {panelOpen && (
                 <div className="flex items-center gap-2 mb-1 px-4">
                   <FlaskConical size={16} className="" />
@@ -376,7 +384,7 @@ const LaboratoryBuilderPage = ({ context = "teacher" }) => {
               <div className="border-b border-border">
                 <button
                   onClick={() => setMetaOpen((o) => !o)}
-                  className="w-full flex items-center justify-between px-4 py-3 text-xs font-bold text-slate-800 hover:bg-slate-100 transition-colors!"
+                  className="w-full flex items-center justify-between px-4 py-3 text-xs font-bold text-foreground hover:bg-muted transition-colors!"
                 >
                   <span className="flex items-center gap-1.5"><ListOrdered size={13} /> Laboratory Info</span>
                   {metaOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
@@ -385,15 +393,15 @@ const LaboratoryBuilderPage = ({ context = "teacher" }) => {
                 {metaOpen && (
                 <div className="px-4 pb-4">
                   <div>
-                    <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wide">Laboratory Title <span className='text-red-600 text-sm'>*</span></label>
+                    <label className="text-[11px] font-bold text-foreground uppercase tracking-wide">Laboratory Title <span className='text-red-600 dark:text-red-300 text-sm'>*</span></label>
                     <input type="text" value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Build a profile card" 
-                      className="w-full px-3 py-2 text-sm border border-border rounded focus:outline-none focus:ring-1 focus:ring-indigo-400 bg-white"
+                      className="w-full px-3 py-2 text-sm border border-border rounded focus:outline-none focus:ring-1 focus:ring-indigo-400 bg-card"
                     />
                   </div>
                   <div>
-                    <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wide">Topic <span className='text-red-600 text-sm'>*</span></label>
+                    <label className="text-[11px] font-bold text-foreground uppercase tracking-wide">Topic <span className='text-red-600 dark:text-red-300 text-sm'>*</span></label>
                     <select value={selectedTopicId} onChange={(event) => setSelectedTopicId(event.target.value)}
-                      className="w-full px-3 py-2 text-sm border border-border rounded focus:outline-none focus:ring-1 focus:ring-indigo-400 bg-white"
+                      className="w-full px-3 py-2 text-sm border border-border rounded focus:outline-none focus:ring-1 focus:ring-indigo-400 bg-card"
                     >
                       <option value="">{loadingTopics ? 'Loading topics...' : 'Select a topic'}</option>
                       {courseTopics.map((group) => (
@@ -406,25 +414,25 @@ const LaboratoryBuilderPage = ({ context = "teacher" }) => {
                     </select>
                   </div>
                   <div>
-                    <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wide">Base XP <span className='text-red-600 text-sm'>*</span></label>
+                    <label className="text-[11px] font-bold text-foreground uppercase tracking-wide">Base XP <span className='text-red-600 dark:text-red-300 text-sm'>*</span></label>
                     <input
                       type="number" min={1} step={1}
                       value={baseXp}
                       onChange={(e) => setBaseXp(e.target.value)}
-                      className="w-full px-3 py-2 text-sm border border-border rounded focus:outline-none focus:ring-1 focus:ring-indigo-400 bg-white"
+                      className="w-full px-3 py-2 text-sm border border-border rounded focus:outline-none focus:ring-1 focus:ring-indigo-400 bg-card"
                     />
                   </div>
                 </div>
                 )}
               </div>
               <div className="px-4 py-4 space-y-3">
-                <h3 className="text-xs font-bold text-slate-700 uppercase">
+                <h3 className="text-xs font-bold text-foreground uppercase">
                   Activity Content
                 </h3>
                 <div>
-                  <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wide">Instruction <span className='text-red-600 text-sm'>*</span></label>
+                  <label className="text-[11px] font-bold text-foreground uppercase tracking-wide">Instruction <span className='text-red-600 dark:text-red-300 text-sm'>*</span></label>
                   <textarea value={description} onChange={(event) => setDescription(event.target.value)} rows={5} placeholder="Explain what the final webpage should do or look like." 
-                    className="w-full px-3 py-2 text-sm border border-border rounded focus:outline-none focus:ring-1 focus:ring-indigo-400 bg-white resize-none leading-relaxed"
+                    className="w-full px-3 py-2 text-sm border border-border rounded focus:outline-none focus:ring-1 focus:ring-indigo-400 bg-card resize-none leading-relaxed"
                   />
                 </div>
                 <div className="rounded-xl border p-4 space-y-4">
@@ -456,7 +464,7 @@ const LaboratoryBuilderPage = ({ context = "teacher" }) => {
                     <Input id="reference-image" type="file" accept="image/*" onChange={handleImageChange} className="hidden"/>
                   </label>
                 </div>
-                <p className="text-xs text-slate-500">Capture saves all project files together. Review checks for the selected file below.</p>
+                <p className="text-xs text-muted-foreground">Capture saves all project files together. Review checks for the selected file below.</p>
                 <CaptureValidationPanel
                   key={activeFile?.filename}
                   filename={activeFile?.filename || ''}
@@ -485,7 +493,7 @@ const LaboratoryBuilderPage = ({ context = "teacher" }) => {
           </div>
         </aside>
         <main className="flex flex-1 overflow-hidden gap-1.5">
-          <section className="flex flex-col flex-1 bg-white border border-border rounded">
+          <section className="flex flex-col flex-1 bg-card border border-border rounded">
             <FileTabs files={files} activeFile={activeFileId} isLocal onFileChange={handleFileChange} onFileCreate={handleCreateFile} onFileDelete={handleDeleteFile} />
             <WorkspaceTools workspace={workspace} />
             <div ref={workspace.blocklyDiv} className="blocklyDiv flex-1 relative" />

@@ -1,21 +1,14 @@
 import { Calendar, ChevronRight } from "lucide-react";
 import { useLectureViewer } from "@/hooks/useLectureViewer";
-import CompleteSuccessModal from "../../components/app/CompleteSuccessModal";
-import { useState } from "react";
 import Loader from "../../components/layout/Loader";
 
-const LectureContent = ({ lessonId, onNext, onPrevious, navigation, preview = false }) => {
+const LectureContent = ({ lessonId, onNext, onPrevious, navigation, onCompleted, preview = false }) => {
   const { lecture, loading, completing, finishLecture } = useLectureViewer(lessonId);
-  const [showModal, setShowModal] = useState(false);
 
   const handleFinishClick = async () => {
     if (preview) { onNext?.("next"); return; }
-    if (await finishLecture()) setShowModal(true);
+    if (await finishLecture()) await onCompleted?.();
   };
-
-  const handleRemain = () => setShowModal(false);
-  const handleGoToTopic = () => { setShowModal(false); onNext?.("topic"); };
-  const handleGoToNext = () => { setShowModal(false); onNext?.("next"); };
 
   if (loading || !lecture) return <Loader />;
 
@@ -25,7 +18,7 @@ const LectureContent = ({ lessonId, onNext, onPrevious, navigation, preview = fa
         {lecture.title}
       </h1>
 
-      <div className="flex flex-wrap justify-between items-center gap-x-5 gap-y-2 py-2 text-sm text-slate-500">
+      <div className="flex flex-wrap justify-between items-center gap-x-5 gap-y-2 py-2 text-sm text-muted-foreground">
         <div className="flex items-center gap-1.5">
           <Calendar className="w-4 h-4" />
           <span>Posted {new Date(lecture.createdAt).toLocaleDateString()}</span>
@@ -34,16 +27,16 @@ const LectureContent = ({ lessonId, onNext, onPrevious, navigation, preview = fa
           <div className="flex items-center gap-2">
             <img
               src={lecture.author.avatarUrl || "/profile.svg"}
-              className="w-6 h-6 rounded-full object-cover border border-gray-200"
+              className="w-6 h-6 rounded-full object-cover border border-border"
               alt=""
             />
-            <span className="font-bold text-gray-700">{lecture.author.username}</span>
+            <span className="font-bold text-foreground">{lecture.author.username}</span>
           </div>
         )}
       </div>
 
       {lecture.lecture?.video_src && (
-        <div className="w-full aspect-video border-2 p-2 border-slate-200 rounded-2xl shadow bg-white">
+        <div className="w-full aspect-video border-2 p-2 border-border rounded-2xl shadow bg-card">
           <iframe
             className="w-full h-full rounded-2xl"
             src={lecture.lecture.video_src}
@@ -55,13 +48,13 @@ const LectureContent = ({ lessonId, onNext, onPrevious, navigation, preview = fa
       )}
 
       {lecture.lecture?.content && (
-        <div className="rounded-2xl p-8 bg-white shadow my-2 border border-slate-200">
+        <div className="rounded-2xl p-8 bg-card shadow my-2 border border-border">
           <div className="tiptap-content" dangerouslySetInnerHTML={{ __html: lecture.lecture.content }} />
         </div>
       )}
 
       {lecture.lecture?.file_url && (
-        <details className="rounded-2xl bg-white shadow border border-slate-200">
+        <details className="rounded-2xl bg-card shadow border border-border">
           <summary className="cursor-pointer flex items-center justify-between font-semibold px-4 py-2 transition-colors">
             <span className="p-4 font-bold tracking-widest">View Attached File</span>
             <ChevronRight className="w-4 h-4 transition-transform group-open:rotate-90" />
@@ -90,15 +83,7 @@ const LectureContent = ({ lessonId, onNext, onPrevious, navigation, preview = fa
         </button>
       </div>
 
-      <CompleteSuccessModal
-        isOpen={showModal}
-        onClose={handleRemain}
-        onRemain={handleRemain}
-        onSubmitToTopic={handleGoToTopic}
-        onSubmitToNext={navigation?.next ? handleGoToNext : handleGoToTopic}
-        title="Lecture Complete!"
-        message="Great job finishing this lecture. What would you like to do next?"
-      />
+
     </div>
   );
 };

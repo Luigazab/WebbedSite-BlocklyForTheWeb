@@ -44,11 +44,11 @@ export default function CourseXPProgress({ userId, lessonId }) {
 
   return (
     <div className="min-w-44">
-      <div className="flex items-center justify-between gap-2 text-xs font-semibold text-violet-700">
+      <div className="flex items-center justify-between gap-2 text-xs font-semibold text-violet-700 dark:text-violet-300">
         <span className="flex items-center gap-1"><Sparkles className="w-3.5 h-3.5" /> {summary.earnedXP} XP</span>
         <span>{percent}%</span>
       </div>
-      <div className="mt-1 h-1.5 rounded-full bg-violet-100 overflow-hidden">
+      <div className="mt-1 h-1.5 rounded-full bg-violet-100 dark:bg-violet-950/50 overflow-hidden">
         <div className="h-full rounded-full bg-violet-500 transition-all" style={{ width: `${percent}%` }} />
       </div>
     </div>

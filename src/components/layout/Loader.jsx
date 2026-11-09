@@ -30,7 +30,7 @@ const Loader = () => {
           <span className="animate-bounce   text-amber-400" style={{animationDelay:"1.1s"}}>{`/`}</span>
           <span className="animate-bounce   text-amber-400" style={{animationDelay:"1.2s"}}>{`>`}</span>
         </h1>
-        <h2 className="animate-pulse text-4xl font-bold text-amber-600 pt-8">Loading with efforts...</h2>
+        <h2 className="animate-pulse text-4xl font-bold text-amber-600 dark:text-amber-300 pt-8">Loading with efforts...</h2>
       </div>
     </PageWrapper>
   )

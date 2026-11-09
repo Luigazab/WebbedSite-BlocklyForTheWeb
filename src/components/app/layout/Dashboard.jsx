@@ -8,7 +8,7 @@ const Dashboard = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-muted">
       {/* Sidebar */}
       <Sidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
       
@@ -28,7 +28,7 @@ const Dashboard = () => {
       >
         <Navbar onMenuClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} />
         
-        <main className="pt-24 p-6 min-h-screen bg-slate-100">
+        <main className="pt-24 p-6 min-h-screen bg-muted">
           <Outlet />
         </main>
       </div>

@@ -20,6 +20,7 @@ import { toast } from 'sonner'
 import { getToolboxCategoryOptions } from '@/blockly/toolboxCategoryTree'
 import RemiGuide from '#components/tutorial/RemiGuide'
 import { useRemiHighlight } from '#hooks/useRemiHighlights'
+import ThemeSelect from '#components/common/ThemeSelect'
 
 const CATEGORY_OPTIONS = getToolboxCategoryOptions()
 const STATUS_STYLES = {
@@ -45,8 +46,8 @@ function StepPanel({
   )
 
   return (
-    <div className="flex flex-col h-full bg-white border border-border overflow-hidden rounded">
-      <div className={`shrink-0 flex justify-between py-1 ${panelOpen ? 'bg-slate-200' : ''}`}>
+    <div className="flex flex-col h-full bg-card border border-border overflow-hidden rounded">
+      <div className={`shrink-0 flex justify-between py-1 ${panelOpen ? 'bg-muted' : ''}`}>
         {panelOpen && (
           <div className="flex items-center gap-2 mb-1 px-4">
             <BookOpen size={16} />
@@ -64,7 +65,7 @@ function StepPanel({
         <div className="border-b border-border">
           <button
             onClick={() => setMetaOpen((o) => !o)}
-            className="w-full flex items-center justify-between px-4 py-3 text-xs font-bold text-slate-800 hover:bg-slate-100 transition-colors!"
+            className="w-full flex items-center justify-between px-4 py-3 text-xs font-bold text-foreground hover:bg-muted transition-colors!"
           >
             <span className="flex items-center gap-1.5"><ListOrdered size={13} /> Tutorial Info</span>
             {metaOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
@@ -72,25 +73,25 @@ function StepPanel({
           {metaOpen && (
             <div className="px-4 pb-4 flex flex-col gap-3">
               <div>
-                <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wide">
-                  Tutorial Title <span className="text-red-600 text-sm">*</span>
+                <label className="text-[11px] font-bold text-foreground uppercase tracking-wide">
+                  Tutorial Title <span className="text-red-600 dark:text-red-300 text-sm">*</span>
                 </label>
                 <input
                   type="text"
                   value={meta.title}
                   onChange={(e) => setMeta({ title: e.target.value })}
                   placeholder="e.g. Build a webpage from scratch"
-                  className="w-full px-3 py-2 text-sm border border-border rounded focus:outline-none focus:ring-1 focus:ring-indigo-400 bg-white"
+                  className="w-full px-3 py-2 text-sm border border-border rounded focus:outline-none focus:ring-1 focus:ring-indigo-400 bg-card"
                 />
               </div>
               <div>
-                <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wide">
-                  Topic <span className="text-red-600 text-sm">*</span>
+                <label className="text-[11px] font-bold text-foreground uppercase tracking-wide">
+                  Topic <span className="text-red-600 dark:text-red-300 text-sm">*</span>
                 </label>
                 <select
                   value={meta.topicId}
                   onChange={(e) => setMeta({ topicId: e.target.value })}
-                  className="w-full px-3 py-2 text-sm border border-border rounded focus:outline-none focus:ring-1 focus:ring-indigo-400 bg-white"
+                  className="w-full px-3 py-2 text-sm border border-border rounded focus:outline-none focus:ring-1 focus:ring-indigo-400 bg-card"
                 >
                   <option value="">{loadingTopics ? 'Loading topics...' : 'Select a topic'}</option>
                   {courseTopics.map((group) => (
@@ -103,14 +104,14 @@ function StepPanel({
                 </select>
               </div>
               <div>
-                <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wide">
-                  Base XP <span className="text-red-600 text-sm">*</span>
+                <label className="text-[11px] font-bold text-foreground uppercase tracking-wide">
+                  Base XP <span className="text-red-600 dark:text-red-300 text-sm">*</span>
                 </label>
                 <input
                   type="number" min={1} step={1}
                   value={meta.baseXp}
                   onChange={(e) => setMeta({ baseXp: e.target.value })}
-                  className="w-full px-3 py-2 text-sm border border-border rounded focus:outline-none focus:ring-1 focus:ring-indigo-400 bg-white"
+                  className="w-full px-3 py-2 text-sm border border-border rounded focus:outline-none focus:ring-1 focus:ring-indigo-400 bg-card"
                 />
               </div>
             </div>
@@ -120,12 +121,12 @@ function StepPanel({
         {/* Steps list — append-only, no reorder */}
         <div className="border-b border-border">
           <div className="flex items-center justify-between px-4 py-1">
-            <span className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-              <CircleDot size={13} /> Steps<span className="text-indigo-600">({steps.length})</span>
+            <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
+              <CircleDot size={13} /> Steps<span className="text-indigo-600 dark:text-indigo-300">({steps.length})</span>
             </span>
             <button
               onClick={onAddStep}
-              className="flex items-center gap-1 text-xs font-semibold text-indigo-600 hover:text-indigo-800 hover:bg-slate-200 p-1 transition-colors"
+              className="flex items-center gap-1 text-xs font-semibold text-indigo-600 dark:text-indigo-300 hover:text-indigo-800 hover:bg-muted p-1 transition-colors"
             >
               <PlusCircle size={14} /> Add Step
             </button>
@@ -136,7 +137,7 @@ function StepPanel({
               <div
                 key={step.id ?? `new-${idx}`}
                 className={`group flex items-start gap-1.5 rounded-xl transition-all ${
-                  idx === currentStepIndex ? 'bg-indigo-600 shadow-sm' : 'hover:bg-slate-100'
+                  idx === currentStepIndex ? 'bg-indigo-600 shadow-sm' : 'hover:bg-muted'
                 }`}
               >
                 <button
@@ -144,11 +145,11 @@ function StepPanel({
                   className="flex-1 text-left px-2 py-2.5 text-xs font-semibold flex items-start gap-2"
                 >
                   <span className={`shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black mt-0.5 ${
-                    idx === currentStepIndex ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-600'
+                    idx === currentStepIndex ? 'bg-card/20 text-white' : 'bg-muted text-foreground'
                   }`}>
                     {idx + 1}
                   </span>
-                  <span className={`line-clamp-2 leading-snug ${idx === currentStepIndex ? 'text-white' : 'text-slate-600'}`}>
+                  <span className={`line-clamp-2 leading-snug ${idx === currentStepIndex ? 'text-white' : 'text-foreground'}`}>
                     {step.instruction?.trim() || `Step ${idx + 1}`}
                   </span>
                 </button>
@@ -164,51 +165,51 @@ function StepPanel({
               </div>
             ))}
             {steps.length === 0 && (
-              <p className="text-center text-xs text-slate-400 py-3">Click "Add Step" to begin.</p>
+              <p className="text-center text-xs text-muted-foreground py-3">Click "Add Step" to begin.</p>
             )}
           </div>
         </div>
 
         {/* Current step editor */}
         <div className="px-4 py-4 flex flex-col gap-3">
-          <h3 className="text-xs font-bold text-slate-700 uppercase">
-            Step <span className="bg-indigo-50 text-indigo-600 px-1 rounded">{currentStepIndex + 1}</span> Content
+          <h3 className="text-xs font-bold text-foreground uppercase">
+            Step <span className="bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-300 px-1 rounded">{currentStepIndex + 1}</span> Content
           </h3>
 
           <div>
-            <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wide">
-              Instruction <span className="text-red-600 text-sm">*</span>
+            <label className="text-[11px] font-bold text-foreground uppercase tracking-wide">
+              Instruction <span className="text-red-600 dark:text-red-300 text-sm">*</span>
             </label>
             <textarea
               value={currentStep?.instruction ?? ''}
               onChange={(e) => onUpdateCurrentStep({ instruction: e.target.value })}
               placeholder="Tell students what to do in this step…"
               rows={5}
-              className="w-full px-3 py-2 text-sm border border-border rounded focus:outline-none focus:ring-1 focus:ring-indigo-400 bg-white resize-none leading-relaxed"
+              className="w-full px-3 py-2 text-sm border border-border rounded focus:outline-none focus:ring-1 focus:ring-indigo-400 bg-card resize-none leading-relaxed"
             />
           </div>
 
           <div>
-            <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wide flex items-center gap-1">
-              <Lightbulb size={11} /> Hint <span className="text-slate-400 lowercase font-normal">(optional)</span>
+            <label className="text-[11px] font-bold text-foreground uppercase tracking-wide flex items-center gap-1">
+              <Lightbulb size={11} /> Hint <span className="text-muted-foreground lowercase font-normal">(optional)</span>
             </label>
             <input
               type="text"
               value={currentStep?.hint ?? ''}
               onChange={(e) => onUpdateCurrentStep({ hint: e.target.value })}
               placeholder="Give a helpful nudge…"
-              className="w-full px-3 py-2 text-sm border border-border rounded focus:outline-none focus:ring-1 focus:ring-indigo-400 bg-white"
+              className="w-full px-3 py-2 text-sm border border-border rounded focus:outline-none focus:ring-1 focus:ring-indigo-400 bg-card"
             />
           </div>
-          <div className="bg-slate-50 rounded-xl p-3 border border-slate-200 space-y-2">
-            <p className="text-xs font-bold text-slate-700">Remi's pointer for this step</p>
+          <div className="bg-muted rounded-xl p-3 border border-border space-y-2">
+            <p className="text-xs font-bold text-foreground">Remi's pointer for this step</p>
             <select
               value={currentStep?.highlightCategoryPath ? JSON.stringify(currentStep.highlightCategoryPath) : ''}
               onChange={(e) => {
                 const path = e.target.value ? JSON.parse(e.target.value) : null
                 onUpdateCurrentStep({ highlightCategoryPath: path, highlightBlockType: null })
               }}
-              className="w-full px-3 py-2 text-sm border border-border rounded bg-white"
+              className="w-full px-3 py-2 text-sm border border-border rounded bg-card"
             >
               <option value="">No highlight</option>
               {CATEGORY_OPTIONS.map((c) => (
@@ -220,7 +221,7 @@ function StepPanel({
               <select
                 value={currentStep?.highlightBlockType ?? ''}
                 onChange={(e) => onUpdateCurrentStep({ highlightBlockType: e.target.value || null })}
-                className="w-full px-3 py-2 text-sm border border-border rounded bg-white"
+                className="w-full px-3 py-2 text-sm border border-border rounded bg-card"
               >
                 <option value="">Just highlight the category</option>
                 {selectedCategory.blockTypes.map((t) => (
@@ -248,13 +249,13 @@ function StepPanel({
           {/* Status checklist across all files */}
           {files.length > 1 && (
             <div className="space-y-1.5">
-              <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wide">Files in this step</p>
+              <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide">Files in this step</p>
               {files.map((f) => {
                 const status = getFileStatusForStep(f.filename, currentStepIndex)
                 const s = STATUS_STYLES[status]
                 return (
-                  <div key={f.filename} className="flex items-center justify-between text-xs px-2 py-1.5 rounded-lg border border-slate-100">
-                    <span className={`truncate font-semibold ${f.filename === activeFilename ? 'text-indigo-600' : 'text-slate-600'}`}>
+                  <div key={f.filename} className="flex items-center justify-between text-xs px-2 py-1.5 rounded-lg border border-border">
+                    <span className={`truncate font-semibold ${f.filename === activeFilename ? 'text-indigo-600 dark:text-indigo-300' : 'text-foreground'}`}>
                       {f.filename}
                     </span>
                     <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${s.cls}`}>{s.label}</span>
@@ -432,12 +433,12 @@ export default function TutorialBuilderPage({ context = "teacher" }) {
   )
 
   return (
-    <div className="relative flex flex-col h-screen bg-gray-100" inert={builder.saving ? true : undefined}>
+    <div className="relative flex flex-col h-screen bg-muted" inert={builder.saving ? true : undefined}>
       {builder.loading && (
-        <div className="absolute inset-0 z-50 flex items-center justify-center bg-white/95 backdrop-blur-sm">
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-card/95 backdrop-blur-sm">
           <div className="flex flex-col items-center gap-3">
             <div className="w-8 h-8 rounded-full border-4 border-indigo-200 border-t-indigo-600 animate-spin" />
-            <p className="text-sm text-slate-500 font-medium">Loading tutorial…</p>
+            <p className="text-sm text-muted-foreground font-medium">Loading tutorial…</p>
           </div>
         </div>
       )}
@@ -446,25 +447,25 @@ export default function TutorialBuilderPage({ context = "teacher" }) {
         <Link to="/"><img src="/icon.png" alt="icon" className="w-8 h-8" /></Link>
         <BackButton />
         {!isAdmin && !isEdit && !classroomId && <p className="text-sm text-muted-foreground">Open a classroom to create a lesson for its topics. <Link to="/teacher/classrooms" className="underline">Choose classroom</Link></p>}
-        <span className="text-slate-500">/</span>
-        <span className="font-bold text-slate-700 truncate max-w-xs">
+        <span className="text-muted-foreground">/</span>
+        <span className="font-bold text-foreground truncate max-w-xs">
           {builder.meta.title || 'New Tutorial'}
         </span>
         <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-          builder.isPublished ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'
+          builder.isPublished ? 'bg-emerald-100 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300' : 'bg-muted text-muted-foreground'
         }`}>
           {builder.isPublished ? 'Published' : 'Draft'}
         </span>
 
         {isAdmin && (
-          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">
+          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300">
             Master Content
           </span>
         )}
-        {builder.dirty && <span className="text-[10px] text-amber-600 font-semibold">Unsaved changes</span>}
+        {builder.dirty && <span className="text-[10px] text-amber-600 dark:text-amber-300 font-semibold">Unsaved changes</span>}
 
         <div className="ml-auto flex gap-1.5">
-          <Button variant="ghost"><Sun size={20} />Light Mode</Button>
+          <ThemeSelect compact iconOnly/>
           <Button variant="secondary" onClick={handleSave} disabled={builder.saving}>
             {builder.saving ? 'Saving…' : 'Save Draft'}
           </Button>
@@ -500,7 +501,7 @@ export default function TutorialBuilderPage({ context = "teacher" }) {
           />
         </div>
 
-        <div className="flex flex-col flex-1 h-full border border-border rounded bg-white overflow-hidden">
+        <div className="flex flex-col flex-1 h-full border border-border rounded bg-card overflow-hidden">
           <FileTabs
             files={builder.files.map((f) => ({ id: f.filename, filename: f.filename }))}
             activeFile={activeFilename}

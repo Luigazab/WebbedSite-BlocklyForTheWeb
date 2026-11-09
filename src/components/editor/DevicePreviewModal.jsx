@@ -19,7 +19,7 @@ const DevicePreviewModal = ({ isOpen, device, deviceSizes, generatedCode, onClos
             </button>
           </div>
           
-          <div className="bg-white shadow-2xl overflow-hidden rounded"
+          <div className="bg-card shadow-2xl overflow-hidden rounded"
             style={{
               width: `${deviceConfig.width * deviceConfig.scale}px`,
               height: `${deviceConfig.height * deviceConfig.scale}px`,

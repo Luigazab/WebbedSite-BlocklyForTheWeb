@@ -58,7 +58,7 @@ export default function LessonPage() {
       <PageWrapper title="Lesson">
         <div className="flex flex-col items-center justify-center py-20 gap-3">
           <AlertCircle className="w-8 h-8 text-red-400" />
-          <p className="text-gray-500">{error ?? 'Lesson not found.'}</p>
+          <p className="text-muted-foreground">{error ?? 'Lesson not found.'}</p>
           <button
             onClick={() => navigate(-1)}
             className="text-sm text-blockly-purple hover:underline"
@@ -78,14 +78,14 @@ export default function LessonPage() {
         {/* Back */}
         <button
           onClick={() => navigate(-1)}
-          className="flex items-center gap-2 text-sm text-gray-400 hover:text-gray-700 transition-colors w-fit"
+          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors w-fit"
         >
           <ChevronLeft className="w-4 h-4" />
           Back to Classroom
         </button>
 
         {/* Lesson header card */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-8 py-6 flex flex-col gap-3">
+        <div className="bg-card rounded-2xl border border-border shadow-sm px-8 py-6 flex flex-col gap-3">
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-2 flex-wrap">
@@ -99,19 +99,19 @@ export default function LessonPage() {
                   </span>
                 )}
                 {currentLesson.estimated_duration && (
-                  <span className="flex items-center gap-1 text-xs text-gray-400">
+                  <span className="flex items-center gap-1 text-xs text-muted-foreground">
                     <Clock className="w-3 h-3" />
                     {currentLesson.estimated_duration} min
                   </span>
                 )}
               </div>
-              <h1 className="text-2xl font-black text-gray-800 leading-snug">
+              <h1 className="text-2xl font-black text-foreground leading-snug">
                 {currentLesson.title}
               </h1>
             </div>
 
             {isCompleted && (
-              <div className="flex items-center gap-1.5 bg-green-50 text-green-600 text-xs font-semibold px-3 py-1.5 rounded-full shrink-0">
+              <div className="flex items-center gap-1.5 bg-green-50 dark:bg-green-950/50 text-green-600 dark:text-green-300 text-xs font-semibold px-3 py-1.5 rounded-full shrink-0">
                 <CheckCircle2 className="w-4 h-4" />
                 Completed
               </div>
@@ -120,15 +120,15 @@ export default function LessonPage() {
 
           {/* Teacher */}
           {currentLesson.teacher && (
-            <div className="flex items-center gap-2 pt-3 border-t border-gray-50">
+            <div className="flex items-center gap-2 pt-3 border-t border-border">
               <img
                 src={currentLesson.teacher.avatar_url || '/default-avatar.png'}
                 alt={currentLesson.teacher.username}
-                className="w-7 h-7 rounded-full object-cover border border-gray-100"
+                className="w-7 h-7 rounded-full object-cover border border-border"
               />
-              <span className="text-xs text-gray-400">
+              <span className="text-xs text-muted-foreground">
                 By{' '}
-                <span className="font-semibold text-gray-600">
+                <span className="font-semibold text-foreground">
                   {currentLesson.teacher.username}
                 </span>
               </span>
@@ -137,7 +137,7 @@ export default function LessonPage() {
         </div>
 
         {/* Lesson content — TipTap HTML */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-8 py-6">
+        <div className="bg-card rounded-2xl border border-border shadow-sm px-8 py-6">
           <div
             className="tiptap-content"
             dangerouslySetInnerHTML={{ __html: currentLesson.content }}
@@ -146,9 +146,9 @@ export default function LessonPage() {
 
         {/* Attachments */}
         {currentLesson.lesson_attachments?.length > 0 && (
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-6 py-5 flex flex-col gap-3">
-            <h3 className="font-bold text-gray-800 flex items-center gap-2 text-sm">
-              <Paperclip className="w-4 h-4 text-gray-400" />
+          <div className="bg-card rounded-2xl border border-border shadow-sm px-6 py-5 flex flex-col gap-3">
+            <h3 className="font-bold text-foreground flex items-center gap-2 text-sm">
+              <Paperclip className="w-4 h-4 text-muted-foreground" />
               Attachments
             </h3>
             <div className="flex flex-col gap-2">
@@ -227,17 +227,17 @@ function AttachmentItem({ attachment }) {
       href={attachment.file_url}
       target="_blank"
       rel="noopener noreferrer"
-      className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:border-blockly-purple hover:bg-blockly-purple/5 transition-all group"
+      className="flex items-center gap-3 p-3 border border-border rounded-lg hover:border-blockly-purple hover:bg-blockly-purple/5 transition-all group"
     >
-      <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center shrink-0 group-hover:bg-blockly-purple/10 transition-colors">
-        <Icon className="w-4 h-4 text-gray-500 group-hover:text-blockly-purple transition-colors" />
+      <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center shrink-0 group-hover:bg-blockly-purple/10 transition-colors">
+        <Icon className="w-4 h-4 text-muted-foreground group-hover:text-blockly-purple transition-colors" />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-gray-800 truncate group-hover:text-blockly-purple transition-colors">
+        <p className="text-sm font-semibold text-foreground truncate group-hover:text-blockly-purple transition-colors">
           {attachment.file_name}
         </p>
         {attachment.file_size && (
-          <p className="text-xs text-gray-400">{formatFileSize(attachment.file_size)}</p>
+          <p className="text-xs text-muted-foreground">{formatFileSize(attachment.file_size)}</p>
         )}
       </div>
     </a>

@@ -50,19 +50,19 @@ export default function TeacherClassrooms() {
   return (
     <div className='mx-auto w-full max-w-[1600px] p-4 sm:p-6 lg:p-8'>
       <PageHeader title="My Classrooms" description="Create and manage classrooms to track your student's progress" action={{icon:<Plus className='w-4 h-4'/>, label: 'New Classroom', onClick: () => setShowCreate(true)}} />
-      {metricsError && <p role="alert" className="text-sm text-red-700">Could not load classroom progress: {metricsError} <button className="underline" onClick={() => setMetricsRetry(value => value + 1)}>Retry</button></p>}
+      {metricsError && <p role="alert" className="text-sm text-red-700 dark:text-red-300">Could not load classroom progress: {metricsError} <button className="underline" onClick={() => setMetricsRetry(value => value + 1)}>Retry</button></p>}
       {loading ? (
         <div className="flex justify-center py-24">
           <Loader2 className="w-6 h-6 animate-spin text-gray-300" />
         </div>
       ) : teacherClassrooms.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-24 gap-5 text-center bg-gray-50 rounded-3xl">
+        <div className="flex flex-col items-center justify-center py-24 gap-5 text-center bg-muted rounded-3xl">
           <div className="w-16 h-16 rounded-2xl bg-blockly-blue/10 flex items-center justify-center">
             <GraduationCap className="w-8 h-8 text-blockly-blue" />
           </div>
           <div>
-            <p className="font-bold text-gray-800">No classrooms yet</p>
-            <p className="text-sm text-gray-400 mt-1">
+            <p className="font-bold text-foreground">No classrooms yet</p>
+            <p className="text-sm text-muted-foreground mt-1">
               Create your first classroom and share the join code with students.
             </p>
           </div>

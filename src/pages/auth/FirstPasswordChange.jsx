@@ -29,7 +29,7 @@ export default function FirstPasswordChange() {
     }
   }
   return (
-    <div className="min-h-screen z-12 bg-[url('/auth2_bg.avif')] bg-repeat bg-scroll">
+    <div className="min-h-screen z-12 bg-background bg-blend-multiply bg-[url('/auth2_bg.avif')] bg-repeat bg-scroll">
        <svg
         className="absolute inset-0 w-full h-full"
         xmlns="http://www.w3.org/2000/svg"
@@ -38,12 +38,12 @@ export default function FirstPasswordChange() {
           cx="50%"   // center horizontally
           cy="10%"   // center vertically
           r="60%"    // radius = half of viewport height/width
-          fill="white"
+          fill="var(--background)"
         />
       </svg>
       <main className="relative mx-auto max-w-lg p-8">
         <h1 className="text-2xl font-bold">Set your own password</h1>
-        <p className="my-4 text-slate-600">
+        <p className="my-4 text-foreground">
           Replace the temporary password supplied by your administrator before
           using your teacher account.
         </p>
@@ -68,9 +68,9 @@ export default function FirstPasswordChange() {
               />
             </label>
           ))}
-          <p className="text-sm text-slate-600">{PASSWORD_HELP}</p>
+          <p className="text-sm text-foreground">{PASSWORD_HELP}</p>
           {error && (
-            <p role="alert" className="text-red-700">
+            <p role="alert" className="text-red-700 dark:text-red-300">
               {error}
             </p>
           )}

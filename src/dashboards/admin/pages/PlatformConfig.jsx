@@ -20,8 +20,8 @@ const ACCENT_COLORS = [
 // ─── Reusable image card ────────────────────────────────────────────────────────
 function ImageCard({ src, label, onDelete, deleting }) {
   return (
-    <div className="group relative bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all">
-      <div className="aspect-square bg-gray-50 flex items-center justify-center p-2">
+    <div className="group relative bg-card border border-border rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all">
+      <div className="aspect-square bg-muted flex items-center justify-center p-2">
         <img
           src={src}
           alt={label || 'image'}
@@ -30,8 +30,8 @@ function ImageCard({ src, label, onDelete, deleting }) {
         />
       </div>
       {label && (
-        <div className="px-2 py-1.5 text-center border-t border-gray-100">
-          <p className="text-xs text-gray-600 truncate font-medium">{label}</p>
+        <div className="px-2 py-1.5 text-center border-t border-border">
+          <p className="text-xs text-foreground truncate font-medium">{label}</p>
         </div>
       )}
       <button
@@ -63,18 +63,18 @@ function UploadZone({ onFiles, accept = 'image/*', loading }) {
       onDrop={handleDrop}
       onClick={() => inputRef.current?.click()}
       className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all ${
-        dragging ? 'border-amber-400 bg-amber-50' : 'border-gray-200 hover:border-amber-300 hover:bg-gray-50'
+        dragging ? 'border-amber-400 bg-amber-50 dark:bg-amber-950/50' : 'border-border hover:border-amber-300 hover:bg-muted'
       }`}
     >
       <input ref={inputRef} type="file" multiple accept={accept} className="hidden"
         onChange={(e) => { const f = Array.from(e.target.files); if (f.length) onFiles(f); e.target.value = '' }} />
       {loading
         ? <Loader2 size={24} className="animate-spin text-amber-500 mx-auto mb-2" />
-        : <Upload size={24} className="text-gray-400 mx-auto mb-2" />}
-      <p className="text-sm font-semibold text-gray-600">
+        : <Upload size={24} className="text-muted-foreground mx-auto mb-2" />}
+      <p className="text-sm font-semibold text-foreground">
         {loading ? 'Uploading…' : 'Drop images here or click to browse'}
       </p>
-      <p className="text-xs text-gray-400 mt-1">PNG, JPG, SVG, WebP — up to 5 MB each</p>
+      <p className="text-xs text-muted-foreground mt-1">PNG, JPG, SVG, WebP — up to 5 MB each</p>
     </div>
   )
 }
@@ -140,20 +140,20 @@ function AvatarPresetsTab() {
   return (
     <div className="space-y-6">
       {/* Info banner */}
-      <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl p-4">
-        <AlertCircle size={16} className="text-amber-600 mt-0.5 shrink-0" />
+      <div className="flex items-start gap-3 bg-amber-50 dark:bg-amber-950/50 border border-amber-200 rounded-xl p-4">
+        <AlertCircle size={16} className="text-amber-600 dark:text-amber-300 mt-0.5 shrink-0" />
         <div>
-          <p className="text-sm font-semibold text-amber-800">Preset Avatar Pool</p>
-          <p className="text-xs text-amber-700 mt-0.5">
+          <p className="text-sm font-semibold text-amber-800 dark:text-amber-300">Preset Avatar Pool</p>
+          <p className="text-xs text-amber-700 dark:text-amber-300 mt-0.5">
             Students can choose from these images during profile setup.
-            The avatar picker reads from the <code className="bg-amber-100 px-1 rounded">avatar-pool</code> bucket.
+            The avatar picker reads from the <code className="bg-amber-100 dark:bg-amber-950/50 px-1 rounded">avatar-pool</code> bucket.
             Minimum recommended: 10–20 images for variety.
           </p>
         </div>
       </div>
 
       {error && (
-        <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-700">
+        <div className="flex items-center gap-2 bg-red-50 dark:bg-red-950/50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-700 dark:text-red-300">
           <AlertCircle size={14} /> {error}
         </div>
       )}
@@ -163,22 +163,22 @@ function AvatarPresetsTab() {
       {loading ? (
         <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-8 gap-3">
           {Array(8).fill(0).map((_, i) => (
-            <div key={i} className="aspect-square bg-gray-100 rounded-xl animate-pulse" />
+            <div key={i} className="aspect-square bg-muted rounded-xl animate-pulse" />
           ))}
         </div>
       ) : avatars.length === 0 ? (
-        <div className="text-center py-14 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+        <div className="text-center py-14 bg-muted rounded-xl border border-dashed border-border">
           <User size={36} className="text-gray-300 mx-auto mb-3" />
-          <p className="text-sm font-semibold text-gray-500">No preset avatars yet</p>
-          <p className="text-xs text-gray-400 mt-1">Upload images above to populate the pool</p>
+          <p className="text-sm font-semibold text-muted-foreground">No preset avatars yet</p>
+          <p className="text-xs text-muted-foreground mt-1">Upload images above to populate the pool</p>
         </div>
       ) : (
         <>
           <div className="flex items-center justify-between">
-            <p className="text-sm font-semibold text-gray-600">
+            <p className="text-sm font-semibold text-foreground">
               {avatars.length} preset avatar{avatars.length !== 1 ? 's' : ''} in pool
             </p>
-            <button onClick={load} className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-gray-700">
+            <button onClick={load} className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground">
               <RefreshCw size={12} /> Refresh
             </button>
           </div>
@@ -276,11 +276,11 @@ function BadgeLibraryTab() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-start gap-3 bg-indigo-50 border border-indigo-200 rounded-xl p-4">
-        <Award size={16} className="text-indigo-600 mt-0.5 shrink-0" />
+      <div className="flex items-start gap-3 bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-200 rounded-xl p-4">
+        <Award size={16} className="text-indigo-600 dark:text-indigo-300 mt-0.5 shrink-0" />
         <div>
-          <p className="text-sm font-semibold text-indigo-800">Badge Image Library</p>
-          <p className="text-xs text-indigo-700 mt-0.5">
+          <p className="text-sm font-semibold text-indigo-800 dark:text-indigo-300">Badge Image Library</p>
+          <p className="text-xs text-indigo-700 dark:text-indigo-300 mt-0.5">
             These images appear in the badge picker when teachers create quizzes or tutorials.
             Teachers borrow the image URL — they don't reuse these rows directly.
           </p>
@@ -288,7 +288,7 @@ function BadgeLibraryTab() {
       </div>
 
       {error && (
-        <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-700">
+        <div className="flex items-center gap-2 bg-red-50 dark:bg-red-950/50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-700 dark:text-red-300">
           <AlertCircle size={14} /> {error}
           <button onClick={() => setError('')} className="ml-auto"><X size={14} /></button>
         </div>
@@ -303,43 +303,43 @@ function BadgeLibraryTab() {
 
       {/* Add form */}
       {showForm && (
-        <div className="bg-white border border-indigo-200 rounded-2xl p-5 space-y-4 shadow-sm">
-          <h3 className="text-sm font-bold text-gray-800 flex items-center gap-2">
-            <Award size={14} className="text-indigo-600" /> New Badge Image
+        <div className="bg-card border border-indigo-200 rounded-2xl p-5 space-y-4 shadow-sm">
+          <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+            <Award size={14} className="text-indigo-600 dark:text-indigo-300" /> New Badge Image
           </h3>
           <div>
-            <label className="text-xs font-bold text-gray-600 mb-1">Badge Name *</label>
+            <label className="text-xs font-bold text-foreground mb-1">Badge Name *</label>
             <input
               type="text"
               value={form.title}
               onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
               placeholder="e.g. HTML Champion"
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+              className="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
             />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="text-xs font-bold text-gray-600 mb-1">Upload Image</label>
+              <label className="text-xs font-bold text-foreground mb-1">Upload Image</label>
               <UploadZone onFiles={handleFileSelect} loading={uploading} />
             </div>
             <div>
-              <label className="text-xs font-bold text-gray-600 mb-1">Or Paste Image URL</label>
+              <label className="text-xs font-bold text-foreground mb-1">Or Paste Image URL</label>
               <input
                 type="url"
                 value={form.icon_url}
                 onChange={e => setForm(f => ({ ...f, icon_url: e.target.value, file: null, preview: '' }))}
                 placeholder="https://example.com/badge.png"
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 h-10"
+                className="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 h-10"
               />
               {(form.preview || form.icon_url) && (
-                <div className="mt-3 flex items-center gap-3 p-3 bg-gray-50 rounded-xl border border-gray-200">
+                <div className="mt-3 flex items-center gap-3 p-3 bg-muted rounded-xl border border-border">
                   <img
                     src={form.preview || form.icon_url}
                     alt="preview"
-                    className="w-14 h-14 object-contain rounded-lg border border-gray-200 bg-white"
+                    className="w-14 h-14 object-contain rounded-lg border border-border bg-card"
                   />
-                  <p className="text-xs text-gray-500">{form.title || 'Preview'}</p>
+                  <p className="text-xs text-muted-foreground">{form.title || 'Preview'}</p>
                 </div>
               )}
             </div>
@@ -347,7 +347,7 @@ function BadgeLibraryTab() {
 
           <div className="flex gap-2 pt-1">
             <button onClick={() => { setShowForm(false); setForm({ title: '', icon_url: '', file: null, preview: '' }); setError('') }}
-              className="flex-1 py-2 text-sm font-semibold text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200">
+              className="flex-1 py-2 text-sm font-semibold text-foreground bg-muted rounded-xl hover:bg-muted">
               Cancel
             </button>
             <button onClick={handleSave} disabled={saving}
@@ -362,18 +362,18 @@ function BadgeLibraryTab() {
       {loading ? (
         <div className="grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-7 gap-3">
           {Array(7).fill(0).map((_, i) => (
-            <div key={i} className="aspect-square bg-gray-100 rounded-xl animate-pulse" />
+            <div key={i} className="aspect-square bg-muted rounded-xl animate-pulse" />
           ))}
         </div>
       ) : badges.length === 0 ? (
-        <div className="text-center py-14 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+        <div className="text-center py-14 bg-muted rounded-xl border border-dashed border-border">
           <Award size={36} className="text-gray-300 mx-auto mb-3" />
-          <p className="text-sm font-semibold text-gray-500">No badge images yet</p>
-          <p className="text-xs text-gray-400 mt-1">Add badge images above for teachers to choose from</p>
+          <p className="text-sm font-semibold text-muted-foreground">No badge images yet</p>
+          <p className="text-xs text-muted-foreground mt-1">Add badge images above for teachers to choose from</p>
         </div>
       ) : (
         <>
-          <p className="text-sm font-semibold text-gray-600">{badges.length} badge image{badges.length !== 1 ? 's' : ''} in library</p>
+          <p className="text-sm font-semibold text-foreground">{badges.length} badge image{badges.length !== 1 ? 's' : ''} in library</p>
           <div className="grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-7 gap-3">
             {badges.map(b => (
               <ImageCard
@@ -430,49 +430,49 @@ function CategoryForm({ initial, onSave, onCancel, saving, error }) {
   }
 
   return (
-    <div className="bg-white border border-gray-200 rounded-2xl p-5 space-y-4 shadow-sm">
-      <h3 className="text-sm font-bold text-gray-800">
+    <div className="bg-card border border-border rounded-2xl p-5 space-y-4 shadow-sm">
+      <h3 className="text-sm font-bold text-foreground">
         {isEdit ? `Edit "${initial.title}"` : 'New Category'}
       </h3>
 
       {error && (
-        <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-xl px-3 py-2 text-xs text-red-700">
+        <div className="flex items-center gap-2 bg-red-50 dark:bg-red-950/50 border border-red-200 rounded-xl px-3 py-2 text-xs text-red-700 dark:text-red-300">
           <AlertCircle size={12} /> {error}
         </div>
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="text-xs font-bold text-gray-600 mb-1">Title *</label>
+          <label className="text-xs font-bold text-foreground mb-1">Title *</label>
           <input type="text" value={form.title}
             onChange={e => setForm(p => ({ ...p, title: e.target.value }))}
             placeholder="e.g. HTML"
-            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400" />
+            className="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400" />
         </div>
         <div>
-          <label className="text-xs font-bold text-gray-600 mb-1">
-            ID (slug) {!isEdit && <span className="font-normal text-gray-400">— auto-generated if blank</span>}
+          <label className="text-xs font-bold text-foreground mb-1">
+            ID (slug) {!isEdit && <span className="font-normal text-muted-foreground">— auto-generated if blank</span>}
           </label>
           <input type="text" value={form.id}
             onChange={e => setForm(p => ({ ...p, id: slugify(e.target.value) }))}
             placeholder="html"
             disabled={isEdit}
-            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 disabled:bg-gray-50 disabled:text-gray-400 font-mono" />
+            className="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 disabled:bg-muted disabled:text-muted-foreground font-mono" />
         </div>
       </div>
 
       <div>
-        <label className="text-xs font-bold text-gray-600 mb-1">Description</label>
+        <label className="text-xs font-bold text-foreground mb-1">Description</label>
         <input type="text" value={form.description || ''}
           onChange={e => setForm(p => ({ ...p, description: e.target.value }))}
           placeholder="Short description of what students learn here"
-          className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400" />
+          className="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400" />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Color */}
         <div>
-          <label className="text-xs font-bold text-gray-600 mb-2">Accent Color</label>
+          <label className="text-xs font-bold text-foreground mb-2">Accent Color</label>
           <div className="flex items-center gap-2 flex-wrap">
             {ACCENT_COLORS.map(c => (
               <button key={c} type="button"
@@ -480,7 +480,7 @@ function CategoryForm({ initial, onSave, onCancel, saving, error }) {
                 className={`w-7 h-7 rounded-full transition-all border-2 ${form.color === c ? 'border-gray-800 scale-110' : 'border-transparent hover:scale-105'}`}
                 style={{ backgroundColor: c }} />
             ))}
-            <label className="flex items-center gap-1.5 text-xs text-gray-500 cursor-pointer">
+            <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer">
               <Palette size={12} />
               <input type="color" value={form.color}
                 onChange={e => setForm(p => ({ ...p, color: e.target.value }))}
@@ -490,42 +490,42 @@ function CategoryForm({ initial, onSave, onCancel, saving, error }) {
           </div>
           <div className="mt-2 flex items-center gap-2">
             <div className="w-5 h-5 rounded-full" style={{ backgroundColor: form.color }} />
-            <code className="text-xs text-gray-500">{form.color}</code>
+            <code className="text-xs text-muted-foreground">{form.color}</code>
           </div>
         </div>
 
         {/* Order */}
         <div>
-          <label className="text-xs font-bold text-gray-600 mb-1">Display Order</label>
+          <label className="text-xs font-bold text-foreground mb-1">Display Order</label>
           <input type="number" min={0} value={form.order_index}
             onChange={e => setForm(p => ({ ...p, order_index: parseInt(e.target.value) || 0 }))}
-            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400" />
+            className="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400" />
         </div>
       </div>
 
       {/* Icon */}
       <div>
-        <label className="text-xs font-bold text-gray-600 mb-1">Category Icon</label>
+        <label className="text-xs font-bold text-foreground mb-1">Category Icon</label>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <UploadZone onFiles={handleFileSelect} loading={uploading} />
-            <p className="text-xs text-gray-400 mt-1">Uploads to <code>tutorial_images</code> bucket</p>
+            <p className="text-xs text-muted-foreground mt-1">Uploads to <code>tutorial_images</code> bucket</p>
           </div>
           <div className="flex flex-col gap-2">
             <input type="url" value={form.icon_url}
               onChange={e => { setForm(p => ({ ...p, icon_url: e.target.value })); setFile(null); setPreview(e.target.value) }}
               placeholder="Or paste image URL…"
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400" />
+              className="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400" />
             {(preview) && (
-              <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl border border-gray-200">
+              <div className="flex items-center gap-3 p-3 bg-muted rounded-xl border border-border">
                 <div className="w-12 h-12 rounded-lg flex items-center justify-center" style={{ backgroundColor: form.color + '22' }}>
                   <img src={preview} alt="preview"
                     className="w-9 h-9 object-contain"
                     onError={e => e.target.style.display = 'none'} />
                 </div>
                 <div>
-                  <p className="text-xs font-semibold text-gray-700">{form.title || 'Preview'}</p>
-                  <p className="text-xs text-gray-400">Category icon</p>
+                  <p className="text-xs font-semibold text-foreground">{form.title || 'Preview'}</p>
+                  <p className="text-xs text-muted-foreground">Category icon</p>
                 </div>
               </div>
             )}
@@ -535,7 +535,7 @@ function CategoryForm({ initial, onSave, onCancel, saving, error }) {
 
       <div className="flex gap-2 pt-1">
         <button onClick={onCancel}
-          className="flex-1 py-2.5 text-sm font-semibold text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200">
+          className="flex-1 py-2.5 text-sm font-semibold text-foreground bg-muted rounded-xl hover:bg-muted">
           Cancel
         </button>
         <button onClick={handleSubmit} disabled={saving || uploading}
@@ -627,11 +627,11 @@ function LearnCategoriesTab() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-start gap-3 bg-emerald-50 border border-emerald-200 rounded-xl p-4">
-        <BookOpen size={16} className="text-emerald-600 mt-0.5 shrink-0" />
+      <div className="flex items-start gap-3 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 rounded-xl p-4">
+        <BookOpen size={16} className="text-emerald-600 dark:text-emerald-300 mt-0.5 shrink-0" />
         <div>
-          <p className="text-sm font-semibold text-emerald-800">Learn Page Categories</p>
-          <p className="text-xs text-emerald-700 mt-0.5">
+          <p className="text-sm font-semibold text-emerald-800 dark:text-emerald-300">Learn Page Categories</p>
+          <p className="text-xs text-emerald-700 dark:text-emerald-300 mt-0.5">
             Categories organize lessons on the student Learn page.
             Use the order controls to arrange how they appear.
           </p>
@@ -639,7 +639,7 @@ function LearnCategoriesTab() {
       </div>
 
       {error && (
-        <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-700">
+        <div className="flex items-center gap-2 bg-red-50 dark:bg-red-950/50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-700 dark:text-red-300">
           <AlertCircle size={14} /> {error}
           <button onClick={() => setError('')} className="ml-auto"><X size={14} /></button>
         </div>
@@ -666,14 +666,14 @@ function LearnCategoriesTab() {
       {loading ? (
         <div className="space-y-3">
           {Array(3).fill(0).map((_, i) => (
-            <div key={i} className="h-20 bg-gray-100 rounded-2xl animate-pulse" />
+            <div key={i} className="h-20 bg-muted rounded-2xl animate-pulse" />
           ))}
         </div>
       ) : categories.length === 0 ? (
-        <div className="text-center py-14 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+        <div className="text-center py-14 bg-muted rounded-xl border border-dashed border-border">
           <Layers size={36} className="text-gray-300 mx-auto mb-3" />
-          <p className="text-sm font-semibold text-gray-500">No categories yet</p>
-          <p className="text-xs text-gray-400 mt-1">Create your first Learn category above</p>
+          <p className="text-sm font-semibold text-muted-foreground">No categories yet</p>
+          <p className="text-xs text-muted-foreground mt-1">Create your first Learn category above</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -688,7 +688,7 @@ function LearnCategoriesTab() {
                   error={error}
                 />
               ) : (
-                <div className="bg-white border border-gray-200 rounded-2xl p-4 flex items-center gap-4 shadow-sm hover:shadow-md transition-all">
+                <div className="bg-card border border-border rounded-2xl p-4 flex items-center gap-4 shadow-sm hover:shadow-md transition-all">
                   {/* Color dot + icon */}
                   <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0"
                     style={{ backgroundColor: cat.color + '22', border: `2px solid ${cat.color}44` }}>
@@ -700,11 +700,11 @@ function LearnCategoriesTab() {
                   {/* Info */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <p className="font-bold text-gray-800 truncate">{cat.title}</p>
-                      <code className="text-xs text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded font-mono shrink-0">{cat.id}</code>
+                      <p className="font-bold text-foreground truncate">{cat.title}</p>
+                      <code className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded font-mono shrink-0">{cat.id}</code>
                     </div>
                     {cat.description && (
-                      <p className="text-xs text-gray-400 mt-0.5 truncate">{cat.description}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5 truncate">{cat.description}</p>
                     )}
                   </div>
 
@@ -715,11 +715,11 @@ function LearnCategoriesTab() {
                   {/* Order controls */}
                   <div className="flex flex-col gap-0.5 shrink-0">
                     <button onClick={() => moveOrder(cat, -1)} disabled={idx === 0}
-                      className="p-0.5 text-gray-400 hover:text-gray-700 disabled:opacity-20">
+                      className="p-0.5 text-muted-foreground hover:text-foreground disabled:opacity-20">
                       <ChevronUp size={14} />
                     </button>
                     <button onClick={() => moveOrder(cat, 1)} disabled={idx === categories.length - 1}
-                      className="p-0.5 text-gray-400 hover:text-gray-700 disabled:opacity-20">
+                      className="p-0.5 text-muted-foreground hover:text-foreground disabled:opacity-20">
                       <ChevronDown size={14} />
                     </button>
                   </div>
@@ -727,11 +727,11 @@ function LearnCategoriesTab() {
                   {/* Actions */}
                   <div className="flex items-center gap-1 shrink-0">
                     <button onClick={() => { setEditing(cat.id); setError('') }}
-                      className="p-2 rounded-lg hover:bg-amber-50 text-gray-400 hover:text-amber-600 transition-colors">
+                      className="p-2 rounded-lg hover:bg-amber-50 text-muted-foreground hover:text-amber-600 transition-colors">
                       <Edit2 size={14} />
                     </button>
                     <button onClick={() => handleDelete(cat)} disabled={deleting === cat.id}
-                      className="p-2 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors disabled:opacity-50">
+                      className="p-2 rounded-lg hover:bg-red-50 text-muted-foreground hover:text-red-500 transition-colors disabled:opacity-50">
                       {deleting === cat.id
                         ? <Loader2 size={14} className="animate-spin" />
                         : <Trash2 size={14} />}
@@ -765,8 +765,8 @@ export default function PlatformConfig() {
 
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-extrabold text-gray-800">Platform Configuration</h1>
-        <p className="text-sm text-gray-500 mt-1">Manage shared image libraries and learn page structure</p>
+        <h1 className="text-2xl font-extrabold text-foreground">Platform Configuration</h1>
+        <p className="text-sm text-muted-foreground mt-1">Manage shared image libraries and learn page structure</p>
       </div>
 
       {/* Tab bar */}
@@ -777,30 +777,30 @@ export default function PlatformConfig() {
             onClick={() => setActiveTab(key)}
             className={`flex items-center gap-3 px-4 py-3.5 rounded-2xl border text-left transition-all! ${
               activeTab === key
-                ? 'border-emerald-400 bg-emerald-50 shadow-sm'
-                : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm'
+                ? 'border-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 shadow-sm'
+                : 'border-border bg-card hover:border-border hover:shadow-sm'
             }`}
           >
             <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
-              activeTab === key ? 'bg-emerald-400 text-white' : 'bg-gray-100 text-gray-500'
+              activeTab === key ? 'bg-emerald-400 text-white' : 'bg-muted text-muted-foreground'
             }`}>
               <Icon size={16} />
             </div>
             <div className="min-w-0">
-              <p className={`text-sm font-bold ${activeTab === key ? 'text-emerald-800' : 'text-gray-700'}`}>
+              <p className={`text-sm font-bold ${activeTab === key ? 'text-emerald-800 dark:text-emerald-300' : 'text-foreground'}`}>
                 {label}
               </p>
-              <p className={`text-xs ${activeTab === key ? 'text-emerald-600' : 'text-gray-400'}`}>{desc}</p>
+              <p className={`text-xs ${activeTab === key ? 'text-emerald-600 dark:text-emerald-300' : 'text-muted-foreground'}`}>{desc}</p>
             </div>
           </button>
         ))}
       </div>
 
       {/* Tab content card */}
-      <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
-        <div className="flex items-center gap-2 mb-6 pb-4 border-b border-gray-100">
+      <div className="bg-card border border-border rounded-2xl p-6 shadow-sm">
+        <div className="flex items-center gap-2 mb-6 pb-4 border-b border-border">
           {active && <active.icon size={16} className="text-amber-500" />}
-          <h2 className="font-bold text-gray-800">{active?.label}</h2>
+          <h2 className="font-bold text-foreground">{active?.label}</h2>
         </div>
 
         {activeTab === 'avatars'    && <AvatarPresetsTab />}

@@ -4,15 +4,17 @@ export default function BackButton({ message = "Go back", fallback = "/" }) {
   const navigate = useNavigate();
 
   const handleBack = () => {
-    if (window.history.length > 1) {
+    // Browser history length includes forward entries and unrelated sites.
+    // React Router records this app's current history position in `idx`.
+    if (Number.isInteger(window.history.state?.idx) && window.history.state.idx > 0) {
       navigate(-1);
     } else {
-      navigate(fallback);
+      navigate(fallback, { replace: true });
     }
   };
 
   return (
-    <button onClick={handleBack} className="p-1 font-semibold text-slate-700 hover:text-slate-800 hover:bg-slate-200 transition-colors!">
+    <button type="button" onClick={handleBack} className="p-1 font-semibold text-foreground hover:text-foreground hover:bg-muted transition-colors!">
       {message}
     </button>
   );

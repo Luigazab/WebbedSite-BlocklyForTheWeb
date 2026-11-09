@@ -53,11 +53,11 @@ export default function CourseAssign({
 
       {/* Header */}
       <div className="flex items-center justify-between">
-        <label className="font-semibold text-slate-700">
+        <label className="font-semibold text-foreground">
           Courses ({selected.length}/{maxCourses})
         </label>
 
-        <span className="text-xs text-slate-400">
+        <span className="text-xs text-muted-foreground">
           Click to add · order = sequence
         </span>
       </div>
@@ -77,7 +77,7 @@ export default function CourseAssign({
               className={`flex items-start gap-3 rounded-xl border px-3 py-3 text-left transition-colors ${
                 active
                   ? 'border-blockly-blue/60 bg-blockly-blue/10'
-                  : 'border-slate-200 bg-white hover:border-blockly-blue/40'
+                  : 'border-border bg-card hover:border-blockly-blue/40'
               }`}
             >
               {/* Number */}
@@ -85,7 +85,7 @@ export default function CourseAssign({
                 className={`mt-0.5 grid size-6 shrink-0 place-items-center rounded-md font-mono text-[11px] font-semibold ${
                   active
                     ? 'bg-blockly-blue text-white'
-                    : 'bg-slate-100 text-slate-400'
+                    : 'bg-muted text-muted-foreground'
                 }`}
               >
                 {active ? index + 1 : '+'}
@@ -93,11 +93,11 @@ export default function CourseAssign({
 
               {/* Course info */}
               <span className="min-w-0 flex flex-col">
-                <span className="truncate text-sm font-medium text-slate-700">
+                <span className="truncate text-sm font-medium text-foreground">
                   {course.title}
                 </span>
 
-                <span className="mt-0.5 font-mono text-[11px] text-slate-400">
+                <span className="mt-0.5 font-mono text-[11px] text-muted-foreground">
                   {course.slug}
                 </span>
               </span>
@@ -108,7 +108,7 @@ export default function CourseAssign({
 
       {/* Selected / ordered courses */}
       {selectedCourses.length > 0 && (
-        <ul className="divide-y divide-slate-100 overflow-hidden rounded-xl border border-slate-200">
+        <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border">
           {selectedCourses.map((course, index) => (
             <li
               key={course.id}
@@ -118,7 +118,7 @@ export default function CourseAssign({
                 C{index + 1}
               </span>
 
-              <span className="min-w-0 flex-1 truncate text-sm text-slate-700">
+              <span className="min-w-0 flex-1 truncate text-sm text-foreground">
                 {course.title}
               </span>
 
@@ -127,7 +127,7 @@ export default function CourseAssign({
                   type="button"
                   onClick={() => moveCourse(index, -1)}
                   disabled={disabled || index === 0}
-                  className="grid size-6 place-items-center rounded-md border border-slate-200 text-xs text-slate-600 disabled:opacity-30"
+                  className="grid size-6 place-items-center rounded-md border border-border text-xs text-foreground disabled:opacity-30"
                   aria-label={`Move ${course.title} up`}
                 >
                   ↑
@@ -137,7 +137,7 @@ export default function CourseAssign({
                   type="button"
                   onClick={() => moveCourse(index, 1)}
                   disabled={disabled || index === selectedCourses.length - 1}
-                  className="grid size-6 place-items-center rounded-md border border-slate-200 text-xs text-slate-600 disabled:opacity-30"
+                  className="grid size-6 place-items-center rounded-md border border-border text-xs text-foreground disabled:opacity-30"
                   aria-label={`Move ${course.title} down`}
                 >
                   ↓
