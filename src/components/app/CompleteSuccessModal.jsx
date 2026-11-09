@@ -2,6 +2,7 @@ import { Dialog, Transition } from "@headlessui/react";
 import { Fragment, useState } from "react";
 import { Award, ArrowRight } from "lucide-react";
 import RewardAnimation from "./RewardAnimation";
+import { Button } from "#components/ui/button";
 
 export default function CompleteSuccessModal({
   isOpen,
@@ -16,7 +17,7 @@ export default function CompleteSuccessModal({
   const [imageFailed, setImageFailed] = useState(false);
   return (
     <Transition appear show={isOpen} as={Fragment}>
-      <Dialog onClose={onExit} className="relative z-[100]">
+      <Dialog onClose={onExit} className="relative z-999">
         <Transition.Child
           as={Fragment}
           enter="transition-opacity duration-[250ms] motion-reduce:duration-0"
@@ -26,7 +27,7 @@ export default function CompleteSuccessModal({
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <div className="fixed inset-0 overflow-y-auto bg-gradient-to-b from-violet-50 via-white to-amber-50">
+          <div className="fixed inset-0 overflow-y-auto bg-background backdrop-blur-sm">
             <Dialog.Panel className="flex min-h-dvh w-full flex-col items-center justify-center px-6 py-10 text-center">
               <div className="relative flex h-64 w-64 items-center justify-center sm:h-80 sm:w-80">
                 <RewardAnimation
@@ -50,7 +51,7 @@ export default function CompleteSuccessModal({
                   </div>
                 )}
               </div>
-              <p className="mb-3 text-sm font-bold uppercase tracking-widest text-violet-600 dark:text-violet-300">
+              <p className="mb-3 text-sm font-bold uppercase tracking-widest text-success dark:text-violet-300">
                 {badge ? "Topic badge earned" : "You did it!"}
               </p>
               <Dialog.Title className="max-w-xl text-3xl font-extrabold text-foreground sm:text-5xl">
@@ -64,31 +65,37 @@ export default function CompleteSuccessModal({
                   +{earnedXp} XP earned
                 </p>
               )}
-              <div className="mt-10 flex w-full max-w-md flex-col gap-3 sm:flex-row">
+              <div className="mt-10 flex items-center w-full max-w-md flex-col gap-3 sm:flex-row">
                 {badge ? (
-                  <button
-                    autoFocus
+                  <Button
+                    autoFocus 
                     onClick={onExit}
-                    className="w-full rounded-xl bg-violet-600 px-6 py-4 font-bold text-white hover:bg-violet-700"
+                    variant="success"
+                    size="xl"
+                    className="w-full"
                   >
                     Awesome!
-                  </button>
+                  </Button>
                 ) : (
                   <>
-                    <button
+                    <Button
                       onClick={onExit}
-                      className="flex-1 rounded-xl border border-border bg-card px-5 py-4 font-semibold text-foreground hover:bg-muted"
+                      variant="primary"
+                      size="xl"
+                      className="flex-1"
                     >
                       Exit to classroom
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                       autoFocus
                       onClick={onContinue}
-                      className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-violet-600 px-5 py-4 font-bold text-white hover:bg-violet-700"
+                      variant="success"
+                      size="xl"
+                      className="flex-1"
                     >
                       {lastLesson ? "Back to classroom" : "Continue"}
                       <ArrowRight size={18} />
-                    </button>
+                    </Button>
                   </>
                 )}
               </div>
