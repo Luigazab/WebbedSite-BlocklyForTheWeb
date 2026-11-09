@@ -1,13 +1,10 @@
+import RoleLayout from '#components/shared/RoleLayout'
 import { lazy } from 'react'
 const SettingsPage = lazy(() => import('../components/shared/SettingsPage'))
 const ReportsPage = lazy(() => import('../components/shared/ReportsPage'))
 import { Navigate } from 'react-router'
-const TeacherLayout = lazy(() => import('../dashboards/teacher/TeacherLayout'))
 const TeacherHome = lazy(() => import('../dashboards/teacher/pages/TeacherHome'))
 const TeacherClassrooms = lazy(() => import('../dashboards/teacher/pages/TeacherClassroom'))
-// import FeedbackPage from '../dashboards/teacher/pages/FeedbackPage'
-// import SettingsPage from '../components/shared/SettingsPage'
-// import ProfilePage from '../components/shared/ProfilePage'
 const EditorLayout = lazy(() => import('../components/layout/EditorLayout'))
 const BlockEditor = lazy(() => import('../components/shared/BlockEditor'))
 const ContentManagement = lazy(() => import('@/dashboards/teacher/pages/ContentManagement'))
@@ -27,7 +24,7 @@ const LessonLayout = lazy(() => import('../components/layout/LessonLayout'))
 const LegacyLessonRedirect = lazy(() => import('../components/layout/LegacyLessonRedirect'))
 export const teacherRoutes = [
   {
-    element: <TeacherLayout />,
+    element: <RoleLayout role="teacher" />,
     children: [
       { path: 'courses', element: <CoursesLibrary readOnly /> },
       { path: 'courses/:id', element: <CourseDetail readOnly /> },

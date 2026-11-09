@@ -18,11 +18,12 @@ const LessonPage = lazy(() => import('../pages/app/LessonPage'))
 const LessonLayout = lazy(() => import('../components/layout/LessonLayout'))
 const LegacyLessonRedirect = lazy(() => import('../components/layout/LegacyLessonRedirect'))
 import { Navigate } from 'react-router'
+import RoleLayout from '#components/shared/RoleLayout'
 const StudentClassroomHub = lazy(() => import('@/dashboards/student/pages/StudentClassroomHub'))
 const StudentClassrooms = lazy(() => import('@/dashboards/student/pages/StudentClassrooms'))
 export const studentRoutes = [
   {
-    element: <StudentLayout />,
+    element: <RoleLayout role="student" />,
     children: [
       { index: true,                                        element: <StudentHome />              },
       { path: 'projects',                                   element: <ProjectsPage />             },

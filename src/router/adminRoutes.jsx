@@ -1,7 +1,7 @@
+import RoleLayout from '#components/shared/RoleLayout'
 import { lazy } from 'react'
 const ReportsPage = lazy(() => import('../components/shared/ReportsPage'))
 import { Navigate } from 'react-router'
-const AdminLayout = lazy(() => import('../dashboards/admin/AdminLayout'))
 const AdminHome = lazy(() => import('../dashboards/admin/pages/AdminHome'))
 const UserManagement = lazy(() => import('../dashboards/admin/pages/UserManagement'))
 const UserEngagement = lazy(() => import('../dashboards/admin/pages/UserEngagement'))
@@ -18,7 +18,7 @@ const TutorialBuilderPage = lazy(() => import('@/dashboards/teacher/pages/Tutori
 const LaboratoryBuilderPage = lazy(() => import('@/dashboards/teacher/pages/LaboratoryBuilderPage'))
 export const adminRoutes = [
   {
-    element: <AdminLayout />,
+    element: <RoleLayout role="admin" />,
     children: [
       { index: true, element: <AdminHome /> },
       { path: 'users', element: <UserManagement /> },
