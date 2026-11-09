@@ -1,5 +1,6 @@
 
 import { createLearningToolbox } from './learningToolbox.js'
+import { listItemPreset } from './htmlListPresets.js'
 
 export const legacyToolboxConfig = {
   kind: 'categoryToolbox',
@@ -68,9 +69,12 @@ export const legacyToolboxConfig = {
       name: 'Text',
       colour: '#4a90e2',
       contents: [
+        { kind: 'block', type: 'html_plain_text' },
         { kind: 'block', type: 'heading' },
         { kind: 'block', type: 'paragraph' },
-        { kind: 'block', type: 'span' },
+        { kind: 'block', type: 'span', inputs: { CONTENT: { block: {
+          type: 'html_plain_text', fields: { TEXT: '' },
+        } } } },
         { kind: 'block', type: 'a_tag' },
         { kind: 'block', type: 'strong' },
         { kind: 'block', type: 'em' },
@@ -91,8 +95,18 @@ export const legacyToolboxConfig = {
       contents: [
         { kind: 'block', type: 'class' },
         { kind: 'block', type: 'id' },
-        { kind: 'block', type: 'body_style' },
+        { kind: 'block', type: 'body_style', inputs: { body_style: {
+          shadow: { type: 'inline_style_text', fields: { CSS: '' } },
+        } } },
+        { kind: 'block', type: 'inline_style_group' },
+        { kind: 'block', type: 'inline_style_text' },
         { kind: 'block', type: 'extra_attributes' },
+        { kind: 'block', type: 'html_global_attribute' },
+        { kind: 'block', type: 'html_data_attribute' },
+        { kind: 'block', type: 'html_aria_attribute' },
+        { kind: 'block', type: 'html_boolean_attribute' },
+        { kind: 'block', type: 'html_custom_attribute' },
+
       ]
     },
     {
@@ -151,12 +165,14 @@ export const legacyToolboxConfig = {
       name: 'Lists',
       colour: '#ff6b6b',
       contents: [
-        { kind: 'block', type: 'li' },
-        { kind: 'block', type: 'ul' },
-        { kind: 'block', type: 'ol' },
-        { kind: 'block', type: 'select' },
+        { kind: 'block', ...listItemPreset() },
+        { kind: 'block', type: 'ul', inputs: { CONTENT: { block: listItemPreset() } } },
+        { kind: 'block', type: 'ol', inputs: { CONTENT: { block: listItemPreset() } } },
+        { kind: 'block', type: 'select', inputs: { CONTENT: { block: { type: 'option' } } } },
         { kind: 'block', type: 'option' },
-        { kind: 'block', type: 'html_dl' },
+        { kind: 'block', type: 'html_dl', inputs: { CONTENT: { block: {
+          type: 'html_dt', next: { block: { type: 'html_dd' } },
+        } } } },
         { kind: 'block', type: 'html_dt' },
         { kind: 'block', type: 'html_dd' },
       ]
@@ -441,6 +457,8 @@ export const legacyToolboxConfig = {
         row: 'internalCSS'
       },
       contents: [
+        { kind: 'block', type: 'inline_style_group' },
+        { kind: 'block', type: 'inline_style_text' },
         {
           kind: 'category',
           name: 'Text',
@@ -586,7 +604,7 @@ export const legacyToolboxConfig = {
         {
           kind: 'category',
           name: 'Lists',
-          colour: '#34A853',
+          colour: '#4285F4',
           contents: [
             { kind: 'block', type: 'internal_list_style_type' },
             { kind: 'block', type: 'internal_list_style_position' },
@@ -597,7 +615,7 @@ export const legacyToolboxConfig = {
         {
           kind: 'category',
           name: 'Tables',
-          colour: '#34A853',
+          colour: '#4285F4',
           contents: [
             { kind: 'block', type: 'internal_border_collapse' },
             { kind: 'block', type: 'internal_border_spacing' },
@@ -639,7 +657,7 @@ export const legacyToolboxConfig = {
       kind: 'toolboxlabel',
       name: 'JavaScript',
       colour: '#000000',
-      cssconfig: { label: 'customLabel' },
+      cssconfig: { label: 'customLabel', row: 'javascriptCat' },
     },
     { kind: 'sep' },
  
@@ -980,180 +998,3 @@ export const legacyToolboxConfig = {
 };
 
 export const toolboxConfig = createLearningToolbox(legacyToolboxConfig, { level: 'full' })
-
-// export const toolboxConfig = {
-//   kind: 'categoryToolbox',
-//   contents: [
-//     // ========== HTML SECTION ==========
-//     {
-//       kind: 'sep'
-//     },
-//     {
-//       kind: 'category',
-//       name: 'HTML',
-//       colour: '#f16529',
-//       cssconfig: {
-//         row: 'htmlCategory'
-//       },
-//       contents:[
-//         {
-//           kind: 'toolboxlabel',
-//           name: 'HTML',
-//           colour: '#000000',
-//           cssconfig: {
-//             label: 'customLabel'
-//           }
-//         },
-//         {
-//           kind: 'category',
-//           name: 'Document',
-//           colour: '#5C81A6',
-//           contents: [
-//             { kind: 'block', type: 'html_boilerplate' },
-//             { kind: 'block', type: 'html_head' },
-//             { kind: 'block', type: 'html_body' },
-//           ]
-//         },
-//         {
-//           kind: 'category',
-//           name: 'Head Elements',
-//           colour: '#8B5CF6',
-//           contents: [
-//             { kind: 'block', type: 'html_title' },
-//             { kind: 'block', type: 'html_meta' },
-//             { kind: 'block', type: 'html_link' },
-//             { kind: 'block', type: 'html_style' }
-//           ]
-//         },
-//         {
-//           kind: 'category',
-//           name: 'Layout',
-//           colour: '#10B981',
-//           contents: [
-//             { kind: 'block', type: 'html_div' },
-//             { kind: 'block', type: 'html_section' },
-//             { kind: 'block', type: 'html_header' },
-//             { kind: 'block', type: 'html_footer' },
-//             { kind: 'block', type: 'html_nav' },
-//             { kind: 'block', type: 'html_main' }
-//           ]
-//         },
-//         {
-//           kind: 'category',
-//           name: 'Text',
-//           colour: '#F59E0B',
-//           contents: [
-//             { kind: 'block', type: 'html_heading' },
-//             { kind: 'block', type: 'html_paragraph' },
-//             { kind: 'block', type: 'html_text' },
-//             { kind: 'block', type: 'html_span' }
-//           ]
-//         },
-//         {
-//           kind: 'category',
-//           name: 'Media',
-//           colour: '#EC4899',
-//           contents: [
-//             { kind: 'block', type: 'html_image' },
-//             { kind: 'block', type: 'html_video' }
-//           ]
-//         },
-//         {
-//           kind: 'category',
-//           name: 'Interactive',
-//           colour: '#3B82F6',
-//           contents: [
-//             { kind: 'block', type: 'html_link_element' },
-//             { kind: 'block', type: 'html_button' },
-//             { kind: 'block', type: 'html_input' }
-//           ]
-//         },
-//         {
-//           kind: 'category',
-//           name: 'Lists',
-//           colour: '#6366F1',
-//           contents: [
-//             { kind: 'block', type: 'html_list' },
-//             { kind: 'block', type: 'html_list_item' }
-//           ]
-//         },
-//       ]
-//     },
-//     // ========== CSS SECTION ==========
-//     {
-//       kind: 'sep'
-//     },
-//     {
-//       kind: 'category',
-//       name: 'CSS',
-//       colour: '#29a8e0',
-//       cssconfig: {
-//         row: 'cssCategory'
-//       },
-//       contents: [
-//         {
-//           kind: 'toolboxlabel',
-//           name: 'CSS',
-//           colour: '#000000',
-//           cssconfig: {
-//             label: 'customLabel',
-//           }
-//         },
-//         {
-//           kind: 'category',
-//           name: 'CSS Rules',
-//           colour: '#E11D48',
-//           contents: [
-//             { kind: 'block', type: 'css_rule' }
-//           ]
-//         },
-//         {
-//           kind: 'category',
-//           name: 'Typography',
-//           colour: '#FB7185',
-//           contents: [
-//             { kind: 'block', type: 'css_color' },
-//             { kind: 'block', type: 'css_background' },
-//             { kind: 'block', type: 'css_font_size' },
-//             { kind: 'block', type: 'css_font_family' },
-//             { kind: 'block', type: 'css_text_align' }
-//           ]
-//         },
-//         {
-//           kind: 'category',
-//           name: 'Box Model',
-//           colour: '#A855F7',
-//           contents: [
-//             { kind: 'block', type: 'css_margin' },
-//             { kind: 'block', type: 'css_padding' },
-//             { kind: 'block', type: 'css_border' },
-//             { kind: 'block', type: 'css_border_radius' },
-//             { kind: 'block', type: 'css_width' },
-//             { kind: 'block', type: 'css_height' }
-//           ]
-//         },
-//         {
-//           kind: 'category',
-//           name: 'Layout',
-//           colour: '#14B8A6',
-//           contents: [
-//             { kind: 'block', type: 'css_display' },
-//             { kind: 'block', type: 'css_flexbox' },
-//             { kind: 'block', type: 'css_position' }
-//           ]
-//         },
-//         {
-//           kind: 'category',
-//           name: 'Custom',
-//           colour: '#64748B',
-//           contents: [
-//             { kind: 'block', type: 'css_custom' }
-//           ]
-//         },
-//       ]
-//     },
-//     {
-//       kind: 'sep'
-//     }
-//   ]
-// };

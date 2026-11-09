@@ -32,9 +32,10 @@ export function createLearningToolbox(base, { filename = 'index.html', level = '
       const lesson = { kind: 'category', name: 'This Lesson', colour: '#7C3AED', contents: [...new Set([...javascriptLessons, 'js_string_val', 'js_number_val', 'js_boolean_val', 'js_get_var'])].map(type => ({ kind: 'block', type })) }
       categories = level === 'lesson' ? [lesson] : [lesson, ...categories]
     }
-    contents.push({ kind: 'category', name: 'JavaScript', colour: '#996600', expanded: true, contents: categories })
+    contents.push({ kind: 'category', name: 'JavaScript', colour: '#996600', cssConfig: {row: 'javascriptCat'},  expanded: true, contents: categories })
     if (extension === 'html') contents.push({ kind: 'category', name: 'File Links', colour: 160, contents: ['link_css_file', 'script_js_file', 'link_to_page'].map(type => ({ kind: 'block', type })) })
   }
+  contents.unshift({ kind: 'search', name: 'Search', contents: [] })
   return { kind: 'categoryToolbox', contents }
 }
 

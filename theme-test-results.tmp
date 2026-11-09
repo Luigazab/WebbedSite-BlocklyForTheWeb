@@ -1,0 +1,1099 @@
+
+> webbedsite@0.0.0 test
+> node --test tests/*.test.mjs
+
+TAP version 13
+# Subtest: service adapters authenticate an active account
+ok 1 - service adapters authenticate an active account
+  ---
+  duration_ms: 2.4385
+  type: 'test'
+  ...
+# Subtest: service adapters reject a banned account despite a valid access token
+ok 2 - service adapters reject a banned account despite a valid access token
+  ---
+  duration_ms: 2.0111
+  type: 'test'
+  ...
+# Subtest: service adapters enforce the administrator-assigned password change
+ok 3 - service adapters enforce the administrator-assigned password change
+  ---
+  duration_ms: 0.2647
+  type: 'test'
+  ...
+# Subtest: service adapters fail closed when the profile is unavailable
+ok 4 - service adapters fail closed when the profile is unavailable
+  ---
+  duration_ms: 0.3144
+  type: 'test'
+  ...
+# Subtest: invalid tokens cannot reach privileged account lookups
+ok 5 - invalid tokens cannot reach privileged account lookups
+  ---
+  duration_ms: 0.3492
+  type: 'test'
+  ...
+# Subtest: rubric scoring validates all criterion limits and totals
+ok 6 - rubric scoring validates all criterion limits and totals
+  ---
+  duration_ms: 2.0719
+  type: 'test'
+  ...
+# Subtest: only completed quiz evidence contributes and raw counts become percentages
+ok 7 - only completed quiz evidence contributes and raw counts become percentages
+  ---
+  duration_ms: 1.3159
+  type: 'test'
+  ...
+# Subtest: pending labs are unscored and lecture completion is not a grade
+ok 8 - pending labs are unscored and lecture completion is not a grade
+  ---
+  duration_ms: 2.2789
+  type: 'test'
+  ...
+# Subtest: CSV export quotes values and neutralizes spreadsheet formula prefixes
+ok 9 - CSV export quotes values and neutralizes spreadsheet formula prefixes
+  ---
+  duration_ms: 0.3337
+  type: 'test'
+  ...
+# Subtest: unchecked login is isolated from a remembered session in another tab, including logout and refresh
+ok 10 - unchecked login is isolated from a remembered session in another tab, including logout and refresh
+  ---
+  duration_ms: 2.1252
+  type: 'test'
+  ...
+# Subtest: persistence restores remembered sessions in a new tab and retains the selected mode across token writes
+ok 11 - persistence restores remembered sessions in a new tab and retains the selected mode across token writes
+  ---
+  duration_ms: 0.3956
+  type: 'test'
+  ...
+# Subtest: global logout removes an older remembered copy of the same recovery account while preserving other accounts
+ok 12 - global logout removes an older remembered copy of the same recovery account while preserving other accounts
+  ---
+  duration_ms: 0.421
+  type: 'test'
+  ...
+# Subtest: auth subscription is synchronous, handles sign-out, and unregisters on cleanup
+ok 13 - auth subscription is synchronous, handles sign-out, and unregisters on cleanup
+  ---
+  duration_ms: 27.3397
+  type: 'test'
+  ...
+# Subtest: late profile responses cannot resurrect a signed-out account
+ok 14 - late profile responses cannot resurrect a signed-out account
+  ---
+  duration_ms: 30.9309
+  type: 'test'
+  ...
+# Subtest: initial profile failures retain authentication and expose a retryable profile error
+ok 15 - initial profile failures retain authentication and expose a retryable profile error
+  ---
+  duration_ms: 0.8755
+  type: 'test'
+  ...
+# Subtest: recovery sessions bypass profile loading and remain in recovery until logout
+ok 16 - recovery sessions bypass profile loading and remain in recovery until logout
+  ---
+  duration_ms: 15.9806
+  type: 'test'
+  ...
+# Subtest: login profile failure revokes the temporary attempt without replacing persistence or the working session
+ok 17 - login profile failure revokes the temporary attempt without replacing persistence or the working session
+  ---
+  duration_ms: 1.1865
+  type: 'test'
+  ...
+# Subtest: successful login installs the requested persistence only after its profile loads
+ok 18 - successful login installs the requested persistence only after its profile loads
+  ---
+  duration_ms: 1.5598
+  type: 'test'
+  ...
+# Subtest: incorrect old passwords cannot update a password or replace the active session
+ok 19 - incorrect old passwords cannot update a password or replace the active session
+  ---
+  duration_ms: 1.0247
+  type: 'test'
+  ...
+# Subtest: settings password changes screen the new password, send current_password, and revoke the verifier session
+ok 20 - settings password changes screen the new password, send current_password, and revoke the verifier session
+  ---
+  duration_ms: 0.4916
+  type: 'test'
+  ...
+# Subtest: password policy rejects short and oversized UTF-8 values consistently
+ok 21 - password policy rejects short and oversized UTF-8 values consistently
+  ---
+  duration_ms: 0.3966
+  type: 'test'
+  ...
+# Subtest: breach screening sends only a padded five-character hash-prefix request and rejects a known match
+ok 22 - breach screening sends only a padded five-character hash-prefix request and rejects a known match
+  ---
+  duration_ms: 74.6513
+  type: 'test'
+  ...
+# Subtest: screening fails closed when the breach provider is unavailable
+ok 23 - screening fails closed when the breach provider is unavailable
+  ---
+  duration_ms: 5.1263
+  type: 'test'
+  ...
+# Subtest: admin endpoint rejects missing/invalid authentication and forged admin metadata before mutations
+ok 24 - admin endpoint rejects missing/invalid authentication and forged admin metadata before mutations
+  ---
+  duration_ms: 2.8373
+  type: 'test'
+  ...
+# Subtest: admin password errors return an error status without reporting success
+ok 25 - admin password errors return an error status without reporting success
+  ---
+  duration_ms: 1.4578
+  type: 'test'
+  ...
+# Subtest: all administrator account operations reject non-admins and prevent self-lockout
+ok 26 - all administrator account operations reject non-admins and prevent self-lockout
+  ---
+  duration_ms: 3.7402
+  type: 'test'
+  ...
+# Subtest: admin creation validates role and applies the authorized server role after screening
+ok 27 - admin creation validates role and applies the authorized server role after screening
+  ---
+  duration_ms: 1.7866
+  type: 'test'
+  ...
+# Subtest: password completion clears the session before login navigation; a failed update keeps recovery active
+ok 28 - password completion clears the session before login navigation; a failed update keeps recovery active
+  ---
+  duration_ms: 289.7659
+  type: 'test'
+  ...
+# Subtest: screening endpoint requires a valid project key before inspecting passwords
+ok 29 - screening endpoint requires a valid project key before inspecting passwords
+  ---
+  duration_ms: 0.5908
+  type: 'test'
+  ...
+# Subtest: classroom enrollment sends only the join code to the authenticated database boundary
+ok 30 - classroom enrollment sends only the join code to the authenticated database boundary
+  ---
+  duration_ms: 183.0584
+  type: 'test'
+  ...
+# Subtest: the reset route has Auth layout ancestry and a real outlet child
+ok 31 - the reset route has Auth layout ancestry and a real outlet child
+  ---
+  duration_ms: 5168.7836
+  type: 'test'
+  ...
+# Subtest: BackButton follows router history, never submits forms, and replaces a direct-entry fallback
+ok 32 - BackButton follows router history, never submits forms, and replaces a direct-entry fallback
+  ---
+  duration_ms: 1029.2521
+  type: 'test'
+  ...
+# Subtest: capture panel renders initial and expected actions, readable checks and manual option without block classes
+ok 33 - capture panel renders initial and expected actions, readable checks and manual option without block classes
+  ---
+  duration_ms: 924.6323
+  type: 'test'
+  ...
+# Subtest: expected capture is disabled until starting work is available
+ok 34 - expected capture is disabled until starting work is available
+  ---
+  duration_ms: 83.4594
+  type: 'test'
+  ...
+# Subtest: visual picker finds generated element checks and cannot run authored script
+ok 35 - visual picker finds generated element checks and cannot run authored script
+  ---
+  duration_ms: 92.8118
+  type: 'test'
+  ...
+# Subtest: a stale deployment chunk reloads once within the cooldown window
+ok 36 - a stale deployment chunk reloads once within the cooldown window
+  ---
+  duration_ms: 1.2516
+  type: 'test'
+  ...
+# Subtest: curriculum follows saved course order and topic order
+ok 37 - curriculum follows saved course order and topic order
+  ---
+  duration_ms: 2.1967
+  type: 'test'
+  ...
+# Subtest: teachers can configure draft lessons while students see published lessons
+ok 38 - teachers can configure draft lessons while students see published lessons
+  ---
+  duration_ms: 7.006
+  type: 'test'
+  ...
+# Subtest: lesson tags distinguish required core and each optional practice level
+ok 39 - lesson tags distinguish required core and each optional practice level
+  ---
+  duration_ms: 0.3829
+  type: 'test'
+  ...
+# Subtest: student card counts required lessons in open topics only
+ok 40 - student card counts required lessons in open topics only
+  ---
+  duration_ms: 2.4362
+  type: 'test'
+  ...
+# Subtest: empty flow has no lessons yet
+ok 41 - empty flow has no lessons yet
+  ---
+  duration_ms: 1.2485
+  type: 'test'
+  ...
+# Blockly.Workspace.getAllVariables was deprecated in v12 and will be deleted in v13.
+# Use Blockly.Workspace.getVariableMap().getAllVariables instead.
+# Subtest: reusable JavaScript survives saving and reopening with the same browser and submission output
+ok 42 - reusable JavaScript survives saving and reopening with the same browser and submission output
+  ---
+  duration_ms: 96.2052
+  type: 'test'
+  ...
+# Subtest: html/beginner: references regenerate and validate in the submission runtime
+ok 43 - html/beginner: references regenerate and validate in the submission runtime
+  ---
+  duration_ms: 33.1383
+  type: 'test'
+  ...
+# Subtest: html/intermediate: references regenerate and validate in the submission runtime
+ok 44 - html/intermediate: references regenerate and validate in the submission runtime
+  ---
+  duration_ms: 16.5551
+  type: 'test'
+  ...
+# Subtest: html/advanced: references regenerate and validate in the submission runtime
+ok 45 - html/advanced: references regenerate and validate in the submission runtime
+  ---
+  duration_ms: 22.4671
+  type: 'test'
+  ...
+# Subtest: css/beginner: references regenerate and validate in the submission runtime
+ok 46 - css/beginner: references regenerate and validate in the submission runtime
+  ---
+  duration_ms: 21.2826
+  type: 'test'
+  ...
+# Subtest: css/intermediate: references regenerate and validate in the submission runtime
+ok 47 - css/intermediate: references regenerate and validate in the submission runtime
+  ---
+  duration_ms: 18.3414
+  type: 'test'
+  ...
+# Subtest: css/advanced: references regenerate and validate in the submission runtime
+ok 48 - css/advanced: references regenerate and validate in the submission runtime
+  ---
+  duration_ms: 11.5518
+  type: 'test'
+  ...
+# Subtest: javascript/beginner: references regenerate and validate in the submission runtime
+ok 49 - javascript/beginner: references regenerate and validate in the submission runtime
+  ---
+  duration_ms: 58.7331
+  type: 'test'
+  ...
+# Subtest: javascript/intermediate: references regenerate and validate in the submission runtime
+ok 50 - javascript/intermediate: references regenerate and validate in the submission runtime
+  ---
+  duration_ms: 148.7324
+  type: 'test'
+  ...
+# Subtest: javascript/advanced: references regenerate and validate in the submission runtime
+ok 51 - javascript/advanced: references regenerate and validate in the submission runtime
+  ---
+  duration_ms: 65.0378
+  type: 'test'
+  ...
+# Subtest: generated JavaScript curriculum pages contain their required interactive elements
+ok 52 - generated JavaScript curriculum pages contain their required interactive elements
+  ---
+  duration_ms: 254.0406
+  type: 'test'
+  ...
+# Subtest: temporary-password replacement verifies, updates, and only then clears the requirement
+ok 53 - temporary-password replacement verifies, updates, and only then clears the requirement
+  ---
+  duration_ms: 110.4539
+  type: 'test'
+  ...
+# Subtest: an incorrect temporary password cannot update or clear the requirement
+ok 54 - an incorrect temporary password cannot update or clear the requirement
+  ---
+  duration_ms: 2.3412
+  type: 'test'
+  ...
+# Subtest: a failed password update cannot clear the requirement
+ok 55 - a failed password update cannot clear the requirement
+  ---
+  duration_ms: 3.1078
+  type: 'test'
+  ...
+# Subtest: ordinary accounts cannot invoke the first-password endpoint
+ok 56 - ordinary accounts cannot invoke the first-password endpoint
+  ---
+  duration_ms: 3.8094
+  type: 'test'
+  ...
+# Subtest: expired sessions cannot reach password verification
+ok 57 - expired sessions cannot reach password verification
+  ---
+  duration_ms: 1.4554
+  type: 'test'
+  ...
+# Subtest: HTML capture checks only changed content and accepts alternative generated formatting
+ok 58 - HTML capture checks only changed content and accepts alternative generated formatting
+  ---
+  duration_ms: 21.1523
+  type: 'test'
+  ...
+# Subtest: HTML additions, removals, attributes and repeated siblings validate actual source nodes
+ok 59 - HTML additions, removals, attributes and repeated siblings validate actual source nodes
+  ---
+  duration_ms: 9.9331
+  type: 'test'
+  ...
+# Subtest: CSS checks bind values to selectors, respect importance, context, and removed properties
+ok 60 - CSS checks bind values to selectors, respect importance, context, and removed properties
+  ---
+  duration_ms: 6.2853
+  type: 'test'
+  ...
+# Subtest: inline and embedded CSS are validated as CSS instead of raw fragments
+ok 61 - inline and embedded CSS are validated as CSS instead of raw fragments
+  ---
+  duration_ms: 3.0919
+  type: 'test'
+  ...
+# Subtest: recapture replaces automatic checks while retaining manual tests
+ok 62 - recapture replaces automatic checks while retaining manual tests
+  ---
+  duration_ms: 1.2664
+  type: 'test'
+  ...
+# Subtest: no changes and deferred JavaScript never fall back to exact code equality
+ok 63 - no changes and deferred JavaScript never fall back to exact code equality
+  ---
+  duration_ms: 0.7663
+  type: 'test'
+  ...
+# Subtest: disabled checks are ignored and generated check shape is validated
+ok 64 - disabled checks are ignored and generated check shape is validated
+  ---
+  duration_ms: 0.5919
+  type: 'test'
+  ...
+# Subtest: an explicit starting snapshot overrides prior submissions but preserves this step drafts
+ok 65 - an explicit starting snapshot overrides prior submissions but preserves this step drafts
+  ---
+  duration_ms: 1.5617
+  type: 'test'
+  ...
+# Subtest: trusted authoring requires starts and active checks for captured publication
+ok 66 - trusted authoring requires starts and active checks for captured publication
+  ---
+  duration_ms: 46.3432
+  type: 'test'
+  ...
+# Blockly.Workspace.getAllVariables was deprecated in v12 and will be deleted in v13.
+# Use Blockly.Workspace.getVariableMap().getAllVariables instead.
+# Subtest: style toolbox shadow accepts typing, replacement, and restores typed CSS after save/load
+ok 67 - style toolbox shadow accepts typing, replacement, and restores typed CSS after save/load
+  ---
+  duration_ms: 125.0311
+  type: 'test'
+  ...
+# Subtest: inline style accepts typed CSS or mixed declarations, escapes once, and persists
+ok 68 - inline style accepts typed CSS or mixed declarations, escapes once, and persists
+  ---
+  duration_ms: 40.3713
+  type: 'test'
+  ...
+# Subtest: CSS holder removal keeps its child and undo restores the connection
+ok 69 - CSS holder removal keeps its child and undo restores the connection
+  ---
+  duration_ms: 226.1591
+  type: 'test'
+  ...
+# Subtest: holder combines attributes inside an element and escapes values
+ok 70 - holder combines attributes inside an element and escapes values
+  ---
+  duration_ms: 69.3778
+  type: 'test'
+  ...
+# Subtest: legacy one-slot data loads; zero slots and custom attributes generate correctly
+ok 71 - legacy one-slot data loads; zero slots and custom attributes generate correctly
+  ---
+  duration_ms: 25.9171
+  type: 'test'
+  ...
+# Subtest: removing a connected slot can be undone and redone without losing its block
+ok 72 - removing a connected slot can be undone and redone without losing its block
+  ---
+  duration_ms: 132.9827
+  type: 'test'
+  ...
+# Blockly.Workspace.getAllVariables was deprecated in v12 and will be deleted in v13.
+# Use Blockly.Workspace.getVariableMap().getAllVariables instead.
+# Subtest: JSON toolbox starters contain the right editable children and generate HTML
+ok 73 - JSON toolbox starters contain the right editable children and generate HTML
+  ---
+  duration_ms: 169.8573
+  type: 'test'
+  ...
+# Subtest: append preserves children, attributes, parent siblings, and save/load
+ok 74 - append preserves children, attributes, parent siblings, and save/load
+  ---
+  duration_ms: 101.9716
+  type: 'test'
+  ...
+# Subtest: one undo removes an added child; redo restores it
+ok 75 - one undo removes an added child; redo restores it
+  ---
+  duration_ms: 162.3843
+  type: 'test'
+  ...
+# Subtest: plain text starts empty, escapes HTML, and survives saving inside a standalone li
+ok 76 - plain text starts empty, escapes HTML, and survives saving inside a standalone li
+  ---
+  duration_ms: 16.9363
+  type: 'test'
+  ...
+# Blockly.Workspace.getAllVariables was deprecated in v12 and will be deleted in v13.
+# Use Blockly.Workspace.getVariableMap().getAllVariables instead.
+# Subtest: table cells generate spans, optional scope, attributes and content after saving
+ok 77 - table cells generate spans, optional scope, attributes and content after saving
+  ---
+  duration_ms: 106.6145
+  type: 'test'
+  ...
+# Subtest: optional spans can be cleared, reject invalid values, and load old numeric fields
+ok 78 - optional spans can be cleared, reject invalid values, and load old numeric fields
+  ---
+  duration_ms: 17.5656
+  type: 'test'
+  ...
+# Subtest: column groups emit span only without children; column span is preserved
+ok 79 - column groups emit span only without children; column span is preserved
+  ---
+  duration_ms: 8.338
+  type: 'test'
+  ...
+# Blockly.Workspace.getAllVariables was deprecated in v12 and will be deleted in v13.
+# Use Blockly.Workspace.getVariableMap().getAllVariables instead.
+# Subtest: mixed heading content preserves exact spacing and blocks unsafe collapsing
+not ok 80 - mixed heading content preserves exact spacing and blocks unsafe collapsing
+  ---
+  duration_ms: 114.663
+  type: 'test'
+  location: 'C:\\Users\\Luisha Gail\\Desktop\\WebbedSite\\tests\\htmlTextModes.test.mjs:12:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+    
+    + '<h1>Hello <span>World</span>\n</h1>\n'
+    - '<h1>Hello <span>World</span></h1>'
+                                   ^
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: '<h1>Hello <span>World</span></h1>'
+  actual: |-
+    <h1>Hello <span>World</span>
+    </h1>
+    
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///C:/Users/Luisha%20Gail/Desktop/WebbedSite/tests/htmlTextModes.test.mjs:23:12)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.start (node:internal/test_runner/test:944:17)
+    startSubtestAfterBootstrap (node:internal/test_runner/harness:296:17)
+  ...
+# Subtest: switching modes and undo/redo preserve text and connections
+not ok 81 - switching modes and undo/redo preserve text and connections
+  ---
+  duration_ms: 109.9761
+  type: 'test'
+  location: 'C:\\Users\\Luisha Gail\\Desktop\\WebbedSite\\tests\\htmlTextModes.test.mjs:35:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+    
+    + '<p>Hello &amp; goodbye</p>\n'
+    - '<p>Hello &amp; goodbye</p>'
+                                 ^
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: '<p>Hello &amp; goodbye</p>'
+  actual: |-
+    <p>Hello &amp; goodbye</p>
+    
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///C:/Users/Luisha%20Gail/Desktop/WebbedSite/tests/htmlTextModes.test.mjs:41:12)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: legacy text blocks and all supported types load with their text intact
+ok 82 - legacy text blocks and all supported types load with their text intact
+  ---
+  duration_ms: 63.7486
+  type: 'test'
+  ...
+# Blockly.Workspace.getAllVariables was deprecated in v12 and will be deleted in v13.
+# Use Blockly.Workspace.getVariableMap().getAllVariables instead.
+# Blockly.Workspace.getAllVariables was deprecated in v12 and will be deleted in v13.
+# Use Blockly.Workspace.getVariableMap().getAllVariables instead.
+# Subtest: all palette and compatibility types load, with no deprecated default entries
+ok 83 - all palette and compatibility types load, with no deprecated default entries
+  ---
+  duration_ms: 66.5489
+  type: 'test'
+  ...
+# Subtest: the browser-compatible worker bundle accepts all six serialized practice projects
+ok 84 - the browser-compatible worker bundle accepts all six serialized practice projects
+  ---
+  duration_ms: 509.4083
+  type: 'test'
+  ...
+# Subtest: beginner and lesson palettes are smaller; files and old lesson references stay usable
+ok 85 - beginner and lesson palettes are smaller; files and old lesson references stay usable
+  ---
+  duration_ms: 1.13
+  type: 'test'
+  ...
+# Subtest: literals escape text, inline script endings, and negative powers
+ok 86 - literals escape text, inline script endings, and negative powers
+  ---
+  duration_ms: 29.2736
+  type: 'test'
+  ...
+# Blockly.Workspace.getVariableById was deprecated in v12 and will be deleted in v13.
+# Use Blockly.Workspace.getVariableMap().getVariableById instead.
+# Subtest: native definitions stay inside HTML scripts and variables share custom declarations
+ok 87 - native definitions stay inside HTML scripts and variables share custom declarations
+  ---
+  duration_ms: 204.6985
+  type: 'test'
+  ...
+# Subtest: native and custom functions with the same name retain separate call bindings
+ok 88 - native and custom functions with the same name retain separate call bindings
+  ---
+  duration_ms: 15.3191
+  type: 'test'
+  ...
+# Subtest: variable-sized blocks retain values and extra state after save/load
+ok 89 - variable-sized blocks retain values and extra state after save/load
+  ---
+  duration_ms: 15.6437
+  type: 'test'
+  ...
+# Subtest: context and syntax checks reject illegal code without execution
+ok 90 - context and syntax checks reject illegal code without execution
+  ---
+  duration_ms: 18.3424
+  type: 'test'
+  ...
+# Subtest: preview limits loops including single-statement and labeled loops, while exported source stays clean
+ok 91 - preview limits loops including single-statement and labeled loops, while exported source stays clean
+  ---
+  duration_ms: 22.1978
+  type: 'test'
+  ...
+# Subtest: counter: five clicks render 5
+ok 92 - counter: five clicks render 5
+  ---
+  duration_ms: 147.9871
+  type: 'test'
+  ...
+# Subtest: theme: two clicks restore the original theme
+ok 93 - theme: two clicks restore the original theme
+  ---
+  duration_ms: 92.3447
+  type: 'test'
+  ...
+# Subtest: form: invalid and valid email feedback, focus, and prevented submission
+ok 94 - form: invalid and valid email feedback, focus, and prevented submission
+  ---
+  duration_ms: 110.0722
+  type: 'test'
+  ...
+# Subtest: search: cards filter by input, ignore case, and recover from zero results
+ok 95 - search: cards filter by input, ignore case, and recover from zero results
+  ---
+  duration_ms: 103.8394
+  type: 'test'
+  ...
+# Subtest: preference: isolated practice storage survives reruns and restores dark theme
+ok 96 - preference: isolated practice storage survives reruns and restores dark theme
+  ---
+  duration_ms: 164.491
+  type: 'test'
+  ...
+# Subtest: API: cards render, HTTP failures show feedback, and retry recovers
+ok 97 - API: cards render, HTTP failures show feedback, and retry recovers
+  ---
+  duration_ms: 124.5862
+  type: 'test'
+  ...
+# Subtest: renaming a declaration updates references while preserving local shadowing and legacy IDs
+ok 98 - renaming a declaration updates references while preserving local shadowing and legacy IDs
+  ---
+  duration_ms: 4.349
+  type: 'test'
+  ...
+# Subtest: optional slices and removed array values remain composable
+ok 99 - optional slices and removed array values remain composable
+  ---
+  duration_ms: 12.2708
+  type: 'test'
+  ...
+# Subtest: serialized invalid names are rejected instead of silently changing submitted work
+ok 100 - serialized invalid names are rejected instead of silently changing submitted work
+  ---
+  duration_ms: 0.5903
+  type: 'test'
+  ...
+# Subtest: legacy qualified references and function calls preserve their serialized names
+ok 101 - legacy qualified references and function calls preserve their serialized names
+  ---
+  duration_ms: 5.6699
+  type: 'test'
+  ...
+# Subtest: constant reassignment is rejected but changing an item in a constant array is allowed
+ok 102 - constant reassignment is rejected but changing an item in a constant array is allowed
+  ---
+  duration_ms: 7.1009
+  type: 'test'
+  ...
+# Subtest: practice storage persists separately per project and rejects oversized or foreign messages
+ok 103 - practice storage persists separately per project and rejects oversized or foreign messages
+  ---
+  duration_ms: 1.3519
+  type: 'test'
+  ...
+# Subtest: preview actual loop guard stops an infinite loop and renders syntax failures as feedback
+ok 104 - preview actual loop guard stops an infinite loop and renders syntax failures as feedback
+  ---
+  duration_ms: 93.5722
+  type: 'test'
+  ...
+# Subtest: page dialogs resolve answers through their callback without native browser dialogs
+ok 105 - page dialogs resolve answers through their callback without native browser dialogs
+  ---
+  duration_ms: 45.6385
+  type: 'test'
+  ...
+# Subtest: named listener references can be removed and once listeners run once
+ok 106 - named listener references can be removed and once listeners run once
+  ---
+  duration_ms: 39.7514
+  type: 'test'
+  ...
+# Subtest: timer and animation IDs compose with cancellation blocks
+ok 107 - timer and animation IDs compose with cancellation blocks
+  ---
+  duration_ms: 4.6188
+  type: 'test'
+  ...
+# Subtest: splice inserts connected items and returns the removed values
+ok 108 - splice inserts connected items and returns the removed values
+  ---
+  duration_ms: 7.7776
+  type: 'test'
+  ...
+# Subtest: lecture: draft saves do not publish, published content is saved before exposure
+ok 109 - lecture: draft saves do not publish, published content is saved before exposure
+  ---
+  duration_ms: 3.3039
+  type: 'test'
+  ...
+# Subtest: lecture: failed publication retains draft ID and releases saving state
+ok 110 - lecture: failed publication retains draft ID and releases saving state
+  ---
+  duration_ms: 1.3488
+  type: 'test'
+  ...
+# Subtest: quiz: draft saves do not publish, published content is saved before exposure
+ok 111 - quiz: draft saves do not publish, published content is saved before exposure
+  ---
+  duration_ms: 1.5713
+  type: 'test'
+  ...
+# Subtest: quiz: failed publication retains draft ID and releases saving state
+ok 112 - quiz: failed publication retains draft ID and releases saving state
+  ---
+  duration_ms: 0.3653
+  type: 'test'
+  ...
+# Subtest: provided dotLottie files contain playable animations
+ok 113 - provided dotLottie files contain playable animations
+  ---
+  duration_ms: 37.2514
+  type: 'test'
+  ...
+# Subtest: lesson links and old bookmarks preserve their classroom context
+ok 114 - lesson links and old bookmarks preserve their classroom context
+  ---
+  duration_ms: 1.9783
+  type: 'test'
+  ...
+# Subtest: student lesson viewers match a dedicated layout outside the dashboard
+ok 115 - student lesson viewers match a dedicated layout outside the dashboard
+  ---
+  duration_ms: 362.1699
+  type: 'test'
+  ...
+# Subtest: teacher previews also match a dedicated layout and old URLs redirect
+ok 116 - teacher previews also match a dedicated layout and old URLs redirect
+  ---
+  duration_ms: 181.9019
+  type: 'test'
+  ...
+# Subtest: email landing resolves post before classroom and handles deleted targets
+ok 117 - email landing resolves post before classroom and handles deleted targets
+  ---
+  duration_ms: 1.4275
+  type: 'test'
+  ...
+# Subtest: login return path rejects external URLs and unrelated destinations
+ok 118 - login return path rejects external URLs and unrelated destinations
+  ---
+  duration_ms: 0.8463
+  type: 'test'
+  ...
+# Subtest: email escapes user content and links to the authenticated notification entry
+ok 119 - email escapes user content and links to the authenticated notification entry
+  ---
+  duration_ms: 1.9195
+  type: 'test'
+  ...
+# Subtest: saving a local multi-file project reuses defaults and retries without duplicate filenames
+ok 120 - saving a local multi-file project reuses defaults and retries without duplicate filenames
+  ---
+  duration_ms: 3.8232
+  type: 'test'
+  ...
+# Subtest: a failed migration preserves local source and never deletes populated remote work
+ok 121 - a failed migration preserves local source and never deletes populated remote work
+  ---
+  duration_ms: 1.0682
+  type: 'test'
+  ...
+# Subtest: uploads screenshot before saving its URL to the requested project
+ok 122 - uploads screenshot before saving its URL to the requested project
+  ---
+  duration_ms: 10.0972
+  type: 'test'
+  ...
+# Subtest: a denied upload leaves the previous project URL intact
+ok 123 - a denied upload leaves the previous project URL intact
+  ---
+  duration_ms: 1.1008
+  type: 'test'
+  ...
+# Subtest: a rejected project update cleans up the unused screenshot
+ok 124 - a rejected project update cleans up the unused screenshot
+  ---
+  duration_ms: 0.6141
+  type: 'test'
+  ...
+# Subtest: zero updated projects is a failure rather than a false success
+ok 125 - zero updated projects is a failure rather than a false success
+  ---
+  duration_ms: 0.4298
+  type: 'test'
+  ...
+# Subtest: only the expected opaque frame and capture token can supply a screenshot
+ok 126 - only the expected opaque frame and capture token can supply a screenshot
+  ---
+  duration_ms: 0.2973
+  type: 'test'
+  ...
+# Subtest: quiz timer round-trips saved seconds without changing duration
+ok 127 - quiz timer round-trips saved seconds without changing duration
+  ---
+  duration_ms: 21.1921
+  type: 'test'
+  ...
+# Subtest: blank and zero timers remain unlimited; either field may be omitted
+ok 128 - blank and zero timers remain unlimited; either field may be omitted
+  ---
+  duration_ms: 1.3532
+  type: 'test'
+  ...
+# Subtest: invalid timer parts cannot be persisted
+ok 129 - invalid timer parts cannot be persisted
+  ---
+  duration_ms: 0.6224
+  type: 'test'
+  ...
+# Subtest: composition expansion keeps following blocks and does not mutate saved versions
+ok 130 - composition expansion keeps following blocks and does not mutate saved versions
+  ---
+  duration_ms: 6.8841
+  type: 'test'
+  ...
+# Subtest: nested or malformed compositions fail before loading a workspace
+ok 131 - nested or malformed compositions fail before loading a workspace
+  ---
+  duration_ms: 1.2229
+  type: 'test'
+  ...
+# Subtest: System follows device changes; explicit choices do not
+ok 132 - System follows device changes; explicit choices do not
+  ---
+  duration_ms: 3.2484
+  type: 'test'
+  ...
+# Subtest: Saved preferences survive reload; other tabs synchronize
+ok 133 - Saved preferences survive reload; other tabs synchronize
+  ---
+  duration_ms: 0.5275
+  type: 'test'
+  ...
+# Subtest: Invalid values and disabled storage remain usable
+ok 134 - Invalid values and disabled storage remain usable
+  ---
+  duration_ms: 0.7022
+  type: 'test'
+  ...
+# Subtest: Pre-render bootstrap and React controller agree in every preference/device combination
+ok 135 - Pre-render bootstrap and React controller agree in every preference/device combination
+  ---
+  duration_ms: 21.6128
+  type: 'test'
+  ...
+# Subtest: HTML requirements allow extra elements and reject wrong content
+ok 136 - HTML requirements allow extra elements and reject wrong content
+  ---
+  duration_ms: 40.5583
+  type: 'test'
+  ...
+# Subtest: attribute checks and invalid selectors fail correctly
+ok 137 - attribute checks and invalid selectors fail correctly
+  ---
+  duration_ms: 4.6859
+  type: 'test'
+  ...
+# Subtest: code equality preserves meaningful string whitespace
+ok 138 - code equality preserves meaningful string whitespace
+  ---
+  duration_ms: 0.3213
+  type: 'test'
+  ...
+# Subtest: steps are ordered and start from prior expected per file
+ok 139 - steps are ordered and start from prior expected per file
+  ---
+  duration_ms: 1.1444
+  type: 'test'
+  ...
+# Blockly.Workspace.getAllVariables was deprecated in v12 and will be deleted in v13.
+# Use Blockly.Workspace.getVariableMap().getAllVariables instead.
+# Subtest: empty tests enforce source equality even with captured workspace JSON
+ok 140 - empty tests enforce source equality even with captured workspace JSON
+  ---
+  duration_ms: 52.9353
+  type: 'test'
+  ...
+# Subtest: flexible objectives accept equivalent HTML from different blocks and text mode
+ok 141 - flexible objectives accept equivalent HTML from different blocks and text mode
+  ---
+  duration_ms: 7.0771
+  type: 'test'
+  ...
+# Subtest: trusted Blockly generation ignores supplied code, validates fields, and rejects unknown blocks
+ok 142 - trusted Blockly generation ignores supplied code, validates fields, and rejects unknown blocks
+  ---
+  duration_ms: 5.2535
+  type: 'test'
+  ...
+# Subtest: all file objectives run and duplicate or missing files fail
+ok 143 - all file objectives run and duplicate or missing files fail
+  ---
+  duration_ms: 6.9539
+  type: 'test'
+  ...
+# Subtest: server generation preserves JavaScript comparisons and HTML in strings, and CSS fields
+ok 144 - server generation preserves JavaScript comparisons and HTML in strings, and CSS fields
+  ---
+  duration_ms: 22.1279
+  type: 'test'
+  ...
+# Subtest: preview resolves quoted local file links and keeps literal replacement characters
+ok 145 - preview resolves quoted local file links and keeps literal replacement characters
+  ---
+  duration_ms: 1.2714
+  type: 'test'
+  ...
+# Subtest: clearing captures or deleting files discards their pending test drafts
+ok 146 - clearing captures or deleting files discards their pending test drafts
+  ---
+  duration_ms: 0.985
+  type: 'test'
+  ...
+# Subtest: both modes reject steps with no configured objectives
+ok 147 - both modes reject steps with no configured objectives
+  ---
+  duration_ms: 0.3353
+  type: 'test'
+  ...
+# Subtest: publication rejects empty references, impossible selectors and empty required structures
+ok 148 - publication rejects empty references, impossible selectors and empty required structures
+  ---
+  duration_ms: 1.2026
+  type: 'test'
+  ...
+# Subtest: shared HTML parser does not run scripts and supports attributes and selectors
+ok 149 - shared HTML parser does not run scripts and supports attributes and selectors
+  ---
+  duration_ms: 3.0749
+  type: 'test'
+  ...
+# Subtest: navigation carries submitted additions and preserves unsaved drafts when going back
+ok 150 - navigation carries submitted additions and preserves unsaved drafts when going back
+  ---
+  duration_ms: 2.2496
+  type: 'test'
+  ...
+# Subtest: code-only legacy rows do not erase starting blocks and text expectations are normalized
+ok 151 - code-only legacy rows do not erase starting blocks and text expectations are normalized
+  ---
+  duration_ms: 0.8802
+  type: 'test'
+  ...
+# Subtest: opaque preview messages must come from the exact frame and have valid shapes
+ok 152 - opaque preview messages must come from the exact frame and have valid shapes
+  ---
+  duration_ms: 0.7746
+  type: 'test'
+  ...
+# Subtest: HTTP submission rejects forged output, runs flexible objectives and saves canonical source
+not ok 153 - HTTP submission rejects forged output, runs flexible objectives and saves canonical source
+  ---
+  duration_ms: 47.3189
+  type: 'test'
+  location: 'C:\\Users\\Luisha Gail\\Desktop\\WebbedSite\\tests\\tutorialSubmission.test.mjs:135:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+    
+    + '<h1>Welcome</h1>\n'
+    - '  <h1>Welcome</h1>\n'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: |-
+      <h1>Welcome</h1>
+    
+  actual: |-
+    <h1>Welcome</h1>
+    
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///C:/Users/Luisha%20Gail/Desktop/WebbedSite/tests/tutorialSubmission.test.mjs:143:10)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: text submissions use the same objectives without requiring blocks
+ok 154 - text submissions use the same objectives without requiring blocks
+  ---
+  duration_ms: 4.0753
+  type: 'test'
+  ...
+# Subtest: captured reference workspaces regenerate stale stored source before validation
+ok 155 - captured reference workspaces regenerate stale stored source before validation
+  ---
+  duration_ms: 3.6536
+  type: 'test'
+  ...
+# Subtest: preview checks validate without recording submissions or progress
+ok 156 - preview checks validate without recording submissions or progress
+  ---
+  duration_ms: 6.368
+  type: 'test'
+  ...
+# Subtest: HTTP authentication and malformed requests fail before any save
+ok 157 - HTTP authentication and malformed requests fail before any save
+  ---
+  duration_ms: 2.6018
+  type: 'test'
+  ...
+# Subtest: authoring sends one complete definition, regenerates references, and rejects empty publication
+not ok 158 - authoring sends one complete definition, regenerates references, and rejects empty publication
+  ---
+  duration_ms: 3.7302
+  type: 'test'
+  location: 'C:\\Users\\Luisha Gail\\Desktop\\WebbedSite\\tests\\tutorialSubmission.test.mjs:175:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+    
+    + '<h1>Welcome</h1>\n'
+    - '  <h1>Welcome</h1>\n'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: |-
+      <h1>Welcome</h1>
+    
+  actual: |-
+    <h1>Welcome</h1>
+    
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///C:/Users/Luisha%20Gail/Desktop/WebbedSite/tests/tutorialSubmission.test.mjs:180:10)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: registration carries a permitted role and works before email confirmation without a public profile insert
+ok 159 - registration carries a permitted role and works before email confirmation without a public profile insert
+  ---
+  duration_ms: 104.0155
+  type: 'test'
+  ...
+# Subtest: ignores coordinates, IDs, and harmless top-level extras
+ok 160 - ignores coordinates, IDs, and harmless top-level extras
+  ---
+  duration_ms: 1.5841
+  type: 'test'
+  ...
+# Subtest: rejects the correct block in the wrong parent
+ok 161 - rejects the correct block in the wrong parent
+  ---
+  duration_ms: 1.3743
+  type: 'test'
+  ...
+# Subtest: requires configured expected blocks
+ok 162 - requires configured expected blocks
+  ---
+  duration_ms: 0.18
+  type: 'test'
+  ...
+# Subtest: does not reuse one block for two required copies
+ok 163 - does not reuse one block for two required copies
+  ---
+  duration_ms: 0.222
+  type: 'test'
+  ...
+1..163
+# tests 163
+# suites 0
+# pass 159
+# fail 4
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 51972.6324

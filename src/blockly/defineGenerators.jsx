@@ -1,4 +1,6 @@
-const escapeAttribute = value => String(value ?? '').replaceAll('&','&amp;').replaceAll('\"','&quot;').replaceAll('<','&lt;');
+import { defineAttributeGenerators, escapeAttribute } from './htmlAttributes.js';
+import { cellSpanAttributes } from './htmlTableFields.js';
+import { defineTextModeGenerators } from './htmlTextModes.js';
 import { javascriptGenerator } from 'blockly/javascript';
 import { inlineScript } from './jsSupport.js';
 
@@ -7,6 +9,11 @@ const II = '    ' // two levels
  
 
 export const defineGenerators = () => {
+  javascriptGenerator.forBlock['html_plain_text'] = function(block) {
+    const text = String(block.getFieldValue('TEXT') ?? '')
+      .replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+    return text ? `${text}` : '';
+  };
   const INDENT = '  ';
 
   // =============================================================================
@@ -203,14 +210,21 @@ export const defineGenerators = () => {
 
   javascriptGenerator.forBlock['ol'] = function(block) {
     const attributes = javascriptGenerator.valueToCode(block, 'attributes', 0) || '';
+    const start = block.getFieldValue('START');
+    const startAttribute = start && start !== '1' ? ` start="${start}"` : '';
+    const type = block.getFieldValue('TYPE');
+    const typeAttribute = ['a', 'A', 'i', 'I'].includes(type) ? ` type="${type}"` : ''; 
+    const reverse = block.getFieldValue('REVERSED') === 'TRUE' ? ` reversed`: '';
     const content = javascriptGenerator.statementToCode(block, 'CONTENT');
-    return `${INDENT}<ol${attributes}>\n${content}${INDENT}</ol>\n`;
+    return `${INDENT}<ol${typeAttribute}${startAttribute}${reverse}${attributes}>\n${content}${INDENT}</ol>\n`;
   };
 
   javascriptGenerator.forBlock['li'] = function(block) {
     const attributes = javascriptGenerator.valueToCode(block, 'attributes', 0) || '';
+    const value = block.getFieldValue('VALUE');
+    const valueAttribute = value && value !== '1' ? ` value="${value}"` : '';
     const content = javascriptGenerator.statementToCode(block, 'CONTENT');
-    return `${INDENT}${INDENT}<li${attributes}>${content}</li>\n`;
+    return `${INDENT}${INDENT}<li ${valueAttribute}${attributes}>${content}</li>\n`;
   };
 
   // =============================================================================
@@ -232,13 +246,15 @@ export const defineGenerators = () => {
   javascriptGenerator.forBlock['th'] = function(block) {
     const attributes = javascriptGenerator.valueToCode(block, 'attributes', 0) || '';
     const content = javascriptGenerator.statementToCode(block, 'CONTENT');
-    return `${INDENT}${INDENT}${INDENT}<th${attributes}>\n${content}${INDENT}${INDENT}${INDENT}</th>\n`;
+    const scope = block.getFieldValue('SCOPE');
+    const scopeAttribute = ['row', 'col', 'rowgroup', 'colgroup'].includes(scope) ? ` scope="${scope}"` : '';
+    return `${INDENT}${INDENT}${INDENT}<th${cellSpanAttributes(block)}${scopeAttribute}${attributes}>\n${content}${INDENT}${INDENT}${INDENT}</th>\n`;
   };
 
   javascriptGenerator.forBlock['td'] = function(block) {
     const attributes = javascriptGenerator.valueToCode(block, 'attributes', 0) || '';
     const content = javascriptGenerator.statementToCode(block, 'CONTENT');
-    return `${INDENT}${INDENT}${INDENT}<td${attributes}>\n${content}${INDENT}${INDENT}${INDENT}</td>\n`;
+    return `${INDENT}${INDENT}${INDENT}<td${cellSpanAttributes(block)}${attributes}>\n${content}${INDENT}${INDENT}${INDENT}</td>\n`;
   };
   // =============================================================================
   // LISTS (additional)
@@ -386,7 +402,8 @@ export const defineGenerators = () => {
   javascriptGenerator.forBlock['html_colgroup'] = (block) => {
     const attrs   = javascriptGenerator.valueToCode(block, 'attributes', 0) || ''
     const content = javascriptGenerator.statementToCode(block, 'CONTENT')
-    return `${II}<colgroup${attrs}>\n${content}${II}</colgroup>\n`
+    const span = content.trim() ? '' : ` span="${block.getFieldValue('SPAN')}"`
+    return `${II}<colgroup${span}${attrs}>\n${content}${II}</colgroup>\n`
   }
  
   javascriptGenerator.forBlock['html_col'] = (block) => {
@@ -543,23 +560,21 @@ export const defineGenerators = () => {
   // =============================================================================
 
   javascriptGenerator.forBlock['class'] = function(block) {
-    const code = ` class="${block.getFieldValue('NAME')}"`;
+    const code = ` class="${escapeAttribute(block.getFieldValue('NAME'))}"`;
     return [code, javascriptGenerator.ORDER_ATOMIC];
   };
 
   javascriptGenerator.forBlock['id'] = function(block) {
-    const code = ` id="${block.getFieldValue('NAME')}"`;
+    const code = ` id="${escapeAttribute(block.getFieldValue('NAME'))}"`;
     return [code, javascriptGenerator.ORDER_ATOMIC];
   };
 
   javascriptGenerator.forBlock['body_style'] = function(block) {
     const inner = javascriptGenerator.valueToCode(block, 'body_style', javascriptGenerator.ORDER_ATOMIC) || '';
-    const code = ` style="${inner}"`;
+    const code = ` style="${escapeAttribute(inner)}"`;
     return [code, javascriptGenerator.ORDER_ATOMIC];
   };
 
-  javascriptGenerator.forBlock['extra_attributes'] = function(block) {
-    const code = javascriptGenerator.valueToCode(block, 'body_style', javascriptGenerator.ORDER_ATOMIC) || '';
-    return [code, javascriptGenerator.ORDER_ATOMIC];
-  };
+  defineAttributeGenerators();
+  defineTextModeGenerators();
 };

@@ -1,7 +1,22 @@
+import { defineAttributeBlocks } from './htmlAttributes.js';
+import { defineListControls } from './htmlListControls.js';
+import { optionalSpanField } from './htmlTableFields.js';
+import { defineTextModes } from './htmlTextModes.js';
 import { Blockly } from './core.js';
 import "@blockly/block-plus-minus";
 
 export const defineBlocks = () => {
+  Blockly.Blocks['html_plain_text'] = {
+    init: function() {
+      this.appendDummyInput()
+          .appendField('text')
+          .appendField(new Blockly.FieldTextInput(''), 'TEXT');
+      this.setPreviousStatement(true, 'body_element');
+      this.setNextStatement(true, 'body_element');
+      this.setColour('#4a90e2');
+      this.setTooltip('Write plain text without an HTML element. Leave empty for no text.');
+    }
+  };
   // =============================================================================
   // CATEGORY: PAGE STRUCTURE
   // =============================================================================
@@ -514,7 +529,15 @@ export const defineBlocks = () => {
   Blockly.Blocks['ol'] = {
     init: function() {
       this.appendValueInput('attributes')
-          .appendField('<ol')
+          .appendField('<ol type="')
+          .appendField(new Blockly.FieldDropdown([
+            ['1', '1'], ['a', 'a'], ['A', 'A'],
+            ['i', 'i'], ['I', 'I'],
+          ]), 'TYPE')
+          .appendField('" start="')
+          .appendField(optionalSpanField(1, 1000), 'START')
+          .appendField('reverse')
+          .appendField(new Blockly.FieldCheckbox('FALSE'), 'REVERSED')
           .setCheck('attributes');
       this.appendDummyInput()
           .appendField('>');
@@ -532,7 +555,9 @@ export const defineBlocks = () => {
   Blockly.Blocks['li'] = {
     init: function() {
       this.appendValueInput('attributes')
-          .appendField('<li')
+          .appendField('<li value="')
+          .appendField(optionalSpanField(1, 1000), 'VALUE')
+          .appendField('"')
           .setCheck('attributes');
       this.appendDummyInput()
           .appendField('>');
@@ -549,8 +574,13 @@ export const defineBlocks = () => {
   Blockly.Blocks['select'] = {
     init: function() {
       this.appendValueInput('attributes')
-          .appendField('<select')
-          .setCheck('attributes');
+          .appendField('<select name="')
+          .appendField(new Blockly.FieldTextInput(''), 'NAME')
+          .appendField('size').appendField(optionalSpanField(1,1000), 'SIZE')
+          .setCheck('attributes')
+          .appendField('autocomplete').appendField(new Blockly.FieldCheckbox('FALSE'),'AUTOCOMPLETE')
+          .appendField('multiple').appendField(new Blockly.FieldCheckbox('FALSE'),'MULTIPLE')
+          .appendField('required').appendField(new Blockly.FieldCheckbox('FALSE'),'REQUIRED');
       this.appendDummyInput()
           .appendField('>');
       this.appendStatementInput('CONTENT')
@@ -622,7 +652,16 @@ export const defineBlocks = () => {
   Blockly.Blocks['th'] = {
     init: function() {
       this.appendValueInput('attributes')
-          .appendField('<th')
+          .appendField('<th colspan="')
+          .appendField(optionalSpanField(1, 1000), 'COLSPAN')
+          .appendField('" rowspan="')
+          .appendField(optionalSpanField(0, 65534), 'ROWSPAN')
+          .appendField('" scope="')
+          .appendField(new Blockly.FieldDropdown([
+            ['auto (omit)', 'auto'], ['row', 'row'], ['col', 'col'],
+            ['rowgroup', 'rowgroup'], ['colgroup', 'colgroup'],
+          ]), 'SCOPE')
+          .appendField('"')
           .setCheck('attributes');
       this.appendDummyInput()
           .appendField('>')
@@ -640,7 +679,11 @@ export const defineBlocks = () => {
   Blockly.Blocks['td'] = {
     init: function() {
       this.appendValueInput('attributes')
-          .appendField('<td')
+          .appendField('<td colspan="')
+          .appendField(optionalSpanField(1, 1000), 'COLSPAN')
+          .appendField('" rowspan="')
+          .appendField(optionalSpanField(0, 65534), 'ROWSPAN')
+          .appendField('"')
           .setCheck('attributes');
       this.appendDummyInput()
           .appendField('>')
@@ -1043,14 +1086,17 @@ export const defineBlocks = () => {
  
   Blockly.Blocks['html_colgroup'] = {
     init: function () {
-      this.appendValueInput('attributes').appendField('<colgroup').setCheck('attributes')
+      this.appendValueInput('attributes')
+          .appendField('<colgroup span="')
+          .appendField(new Blockly.FieldNumber(1, 1, 1000, 1), 'SPAN')
+          .appendField('"').setCheck('attributes')
       this.appendDummyInput().appendField('>')
       this.appendStatementInput('CONTENT').setCheck('body_element')
       this.appendDummyInput().appendField('</colgroup>')
       this.setPreviousStatement(true, 'body_element')
       this.setNextStatement(true, 'body_element')
       this.setColour('#9B59B6')
-      this.setTooltip('Groups table columns for shared styling')
+      this.setTooltip('Groups table columns for shared styling. Span is used only when there are no column children.')
     },
   }
  
@@ -1058,7 +1104,7 @@ export const defineBlocks = () => {
     init: function () {
       this.appendValueInput('attributes')
           .appendField('<col span="')
-          .appendField(new Blockly.FieldNumber(1, 1), 'SPAN')
+          .appendField(new Blockly.FieldNumber(1, 1, 1000, 1), 'SPAN')
           .appendField('"')
           .setCheck('attributes')
       this.appendDummyInput().appendField('>')
@@ -1460,19 +1506,18 @@ export const defineBlocks = () => {
       this.setInputsInline(true)
       this.setOutput(true, 'attributes');
       this.setColour("#F5B945");
-      this.setTooltip("Id attribute for html elements");
+      this.setTooltip("Inline CSS style for an HTML element");
     }
   };
-  Blockly.Blocks['extra_attributes'] = {
-    init: function() {
-      this.appendValueInput('body_style')
-          .setCheck('attributes');
-      this.appendDummyInput()
-      this.setInputsInline(true)
-      this.setOutput(true, 'attributes');
-      this.setColour("#F5B945");
-      this.setTooltip("Id attribute for html elements");
-    }
-  };
+  defineAttributeBlocks();
+  defineListControls();
+  defineTextModes();
+  for (const type of ['table', 'tr', 'td', 'th', 'html_thead', 'html_tbody', 'html_tfoot', 'html_colgroup', 'html_col', 'html_caption']) {
+    const init = Blockly.Blocks[type].init;
+    Blockly.Blocks[type].init = function() {
+      init.call(this);
+      this.setInputsInline(true);
+    };
+  }
 
 };

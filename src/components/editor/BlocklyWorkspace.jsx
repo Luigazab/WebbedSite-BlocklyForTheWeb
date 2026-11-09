@@ -1,7 +1,8 @@
 // components/BlocklyWorkspace.jsx
 import { useRef, useEffect, useState, useCallback } from 'react';
 import * as Blockly from 'blockly/core';
-import Theme from '@blockly/theme-modern';
+import { workspaceTheme } from '../../blockly/workspaceTheme';
+import { useTheme } from '../../hooks/useTheme';
 import { javascriptGenerator } from 'blockly/javascript';
 import { legacyToolboxConfig } from '../../blockly/toolboxConfig';
 import { createLearningToolbox } from '../../blockly/learningToolbox';
@@ -20,6 +21,7 @@ const BlocklyWorkspace = ({
   lessonBlocks = [],
   initialPalette = 'beginner',
 }) => {
+  const { resolvedTheme } = useTheme();
   const blocklyDiv = useRef(null);
   const workspace = useRef(null);
   const [isInitialized, setIsInitialized] = useState(false);
@@ -58,7 +60,7 @@ const BlocklyWorkspace = ({
       
       workspace.current = Blockly.inject(blocklyDiv.current, {
         toolbox: createLearningToolbox(legacyToolboxConfig, { filename, level: palette, lessonBlocks }),
-        theme: Theme,
+        theme: workspaceTheme(resolvedTheme),
         renderer: 'custom_renderer',
         zoom: {
           controls: true,
@@ -131,6 +133,10 @@ const BlocklyWorkspace = ({
     setIssues(showWorkspaceDiagnostics(workspace.current, filename));
     return () => cancelAnimationFrame(resizeFrame);
   }, [filename, palette, JSON.stringify(lessonBlocks), isInitialized]);
+
+  useEffect(() => {
+    workspace.current?.setTheme(workspaceTheme(resolvedTheme));
+  }, [resolvedTheme, isInitialized]);
 
   const toggleToolbox = useCallback((visible) => {
     if (!workspace.current) return;
