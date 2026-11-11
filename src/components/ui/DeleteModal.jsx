@@ -16,7 +16,7 @@ const DeleteModal = ({isOpen, onClose, onConfirm, title = 'Delete Item', message
         </div>
 
         <div className="justify-center items-center flex">
-          <p className="text-foreground font-semibold leading-relaxed">{message}</p>
+          <p className="whitespace-pre-line text-foreground font-semibold leading-relaxed">{message}</p>
         </div>
 
         <div className="flex gap-3">

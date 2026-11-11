@@ -20,6 +20,8 @@ import StudentProgressModal from '../components/StudentProgressModal';
 import ClassroomCurriculum from '../../../components/classroom/ClassroomCurriculum';
 import CourseTopicsModal from '../components/CourseTopicsModal';
 import TopicProgressionModal from '../components/TopicProgressionModal';
+import DeleteModal from '#components/ui/DeleteModal';
+import { supabase } from '@/supabaseClient';
 
 const dropdownItems = [
   {title: 'Lecture',    icon:BookOpen,        to:'/teacher/lecture/create'   },
@@ -46,6 +48,8 @@ export default function ClassroomDetail() {
   const [showAssignModal, setShowAssignModal] = useState(false)
   const [topicGroup, setTopicGroup] = useState(null)
   const [progressionTopic, setProgressionTopic] = useState(null)
+  const [topicToDelete, setTopicToDelete] = useState(null)
+  const [deletingTopic, setDeletingTopic] = useState(false)
 
   const { currentClassroom, detailLoading, error: classroomError, classroomPosts, fetchClassroomDetail, fetchClassroomPosts, handleCreatePost, handleLikePost, handleCommentOnPost, fetchMoreClassroomPosts, handleRegenerateCode, hasMorePosts, postsLoading } = useClassroom();
 
@@ -64,6 +68,22 @@ export default function ClassroomDetail() {
 
   const refreshClassroom = async () => {
     await Promise.all([fetchClassroomCurriculum(classroomId), fetchOverview(classroomId)])
+  }
+
+  const deleteTopic = async () => {
+    if (!topicToDelete) return
+    setDeletingTopic(true)
+    try {
+      const { error } = await supabase.from('topics').delete()
+        .eq('id', topicToDelete.id).eq('classroom_id', classroomId)
+      if (error) throw error
+      setTopicToDelete(null)
+      await refreshClassroom()
+    } catch (error) {
+      window.alert(error.message || 'Could not delete the topic.')
+    } finally {
+      setDeletingTopic(false)
+    }
   }
 
   const onAssignSubmit = async ({ course_ids }) => {
@@ -207,6 +227,7 @@ export default function ClassroomDetail() {
             {!curriculumLoading && <ClassroomCurriculum onTopicPublicationChanged={refreshClassroom}
               classroomId={classroomId} courses={classroomCourses} topics={topics} teacher
               lessonCompletion={lessonCompletion} onEditTopics={setTopicGroup}
+              onDeleteTopic={setTopicToDelete}
               onConfigureTopic={setProgressionTopic} onUnlockTopic={handleUnlockTopic}
               onSelectLesson={(lesson, topic) => setSelectedLesson({ lesson, topic, classroomId })}
             />}
@@ -278,6 +299,9 @@ export default function ClassroomDetail() {
       />}
 
       {topicGroup && <CourseTopicsModal key={topicGroup.courseId} classroomId={classroomId} group={topicGroup} onClose={() => setTopicGroup(null)} onSaved={refreshClassroom} />}
+      <DeleteModal isOpen={Boolean(topicToDelete)} onClose={() => !deletingTopic && setTopicToDelete(null)}
+        onConfirm={deleteTopic} loading={deletingTopic} title="Delete Topic" confirmText="Delete Topic"
+        message={'Are you sure you want to delete? Deleting will also remove the following:\n• Lessons under this topic\n• Student progress (if the topic is cloned/created in a classroom).'} />
       {progressionTopic && <TopicProgressionModal key={progressionTopic.id} classroomId={classroomId} topic={progressionTopic} topics={topics} courses={classroomCourses} onClose={() => setProgressionTopic(null)} onSaved={refreshClassroom} />}
 
       {showAssignModal && (

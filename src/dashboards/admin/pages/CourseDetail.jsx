@@ -1,3 +1,4 @@
+import StatCard from '../../../components/common/StatCard';
 import TopicPublicationButton from '../../../components/shared/TopicPublicationButton';
 import TopicSettingsModal from '../../../components/shared/TopicSettingsModal';
 import ClassroomBadgesPanel from '../../teacher/components/ClassroomBadgesPanel';
@@ -7,7 +8,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/supabaseClient";
 import { AppBreadcrumb } from "#components/common/breadcrumb";
 import { Button } from "#components/ui/button";
-import { Plus, ChevronDown, Settings2, Trash2 } from "lucide-react";
+import { Plus, ChevronDown, Settings2, Trash2, Layers, BookOpen, Users, Calendar } from "lucide-react";
 import { LessonTypeBadge } from "#components/common/LessonChip";
 import { lessonTypeMeta } from "#lib/lesson-type";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "#components/ui/dropdown-menu";
@@ -176,7 +177,7 @@ export default function CourseDetail({ readOnly = false }) {
       id: topic.id,
       title: topic.title,
       dialogTitle: 'Delete Topic',
-      message: `Are you sure you want to delete topic "${topic.title}" and all its lessons? This action cannot be undone.`,
+      message: 'Are you sure you want to delete? Deleting will also remove the following:\n• Lessons under this topic\n• Student progress (if the topic is cloned/created in a classroom).',
       confirmText: 'Delete Topic',
     });
     setDeleteModalOpen(true);
@@ -283,14 +284,14 @@ export default function CourseDetail({ readOnly = false }) {
           {course.title}
         </h1>
         <p className="mt-3 max-w-2xl text-pretty text-muted-foreground">{course.description}</p>
-        <div className="mt-6 flex flex-wrap gap-8 text-sm">
-          <Stat label="Topics" value={course.topics.length} />
-          <Stat
+        <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <StatCard icon={Layers} label="Topics" value={course.topics.length} />
+          <StatCard icon={BookOpen}
             label="Lessons"
             value={course.topics.reduce((n, t) => n + t.lessons.length, 0)}
           />
-          <Stat label="Enrolled" value={course.enrollments.toLocaleString()} />
-          <Stat label="Created" value={course.updatedAt} />
+          <StatCard icon={Users} label="Enrolled" value={course.enrollments.toLocaleString()} />
+          <StatCard icon={Calendar} label="Created" value={course.updatedAt} />
         </div>
       </header>
 
@@ -541,15 +542,6 @@ export default function CourseDetail({ readOnly = false }) {
           loading={deleteLoading}
         />
       )}
-    </div>
-  );
-}
-
-function Stat({ label, value }) {
-  return (
-    <div>
-      <p className="text-[10px] uppercase tracking-widest font-semibold text-muted-foreground">{label}</p>
-      <p className="mt-1 font-display text-xl font-extrabold">{value}</p>
     </div>
   );
 }

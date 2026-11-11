@@ -8,9 +8,7 @@ import { codeGeneratorService } from "@/services/codeGenerator.service";
 import { useUIStore } from "@/store/uiStore";
 import { useAuthStore } from "@/store/authStore";
 import { getOwnSubmissions, submitLaboratory, copyLearningProject } from "@/services/studentReviewService";
-import { validateWorkspaceStructure } from "@/utils/validation/workspaceStructure";
-import { validateTutorialCode } from "@/utils/validation/tutorialCodeValidation";
-import { ArrowLeft, CheckCircle2, FlaskConical, Image, XCircle } from "lucide-react";
+import { ArrowLeft, FlaskConical, Image } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 
@@ -26,7 +24,7 @@ const parseLabInstruction = (value) => {
   }
 };
 
-const LaboratoryViewer = ({ lesson, onNext, onBack, navigation, onCompleted, preview = false }) => {
+const LaboratoryViewer = ({ lesson, onBack, onCompleted, preview = false }) => {
   const navigate = useNavigate();
   const addToast = useUIStore((state) => state.addToast);
   const profile = useAuthStore((state) => state.profile);
@@ -39,11 +37,13 @@ const LaboratoryViewer = ({ lesson, onNext, onBack, navigation, onCompleted, pre
   const [previewFileId, setPreviewFileId] = useState(starterFiles.find((file) => file.filename.endsWith(".html"))?.id ?? starterFiles[0]?.id ?? null);
   const [filesWithCode, setFilesWithCode] = useState(starterFiles.map((file) => ({ id: file.id, filename: file.filename, generatedCode: "" })));
   const [generatedCode, setGeneratedCode] = useState("");
+  const [mobileTab, setMobileTab] = useState("instructions");
   const [responsive, setResponsive] = useState(true);
   const [selectedDevice, setSelectedDevice] = useState("desktop");
-  const [validationState, setValidationState] = useState("idle");
   const [submission, setSubmission] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const [saveMessage, setSaveMessage] = useState("");
+  const [saveError, setSaveError] = useState(false);
   const submittingRef = useRef(false);
   const requestRef = useRef(crypto.randomUUID());
   const isLoadingRef = useRef(false);
@@ -52,6 +52,7 @@ const LaboratoryViewer = ({ lesson, onNext, onBack, navigation, onCompleted, pre
     filename: files.find(f => f.id === activeFileId)?.filename || 'index.html',
     onWorkspaceChange: (wsRef) => {
       if (isLoadingRef.current) return;
+      setSaveMessage("");
       const file = files.find((item) => item.id === activeFileId);
       if (!file) return;
       const code = codeGeneratorService.generateCode(wsRef, file.filename);
@@ -137,53 +138,11 @@ const LaboratoryViewer = ({ lesson, onNext, onBack, navigation, onCompleted, pre
     defineFileReferenceBlocks(updated);
   };
 
-  const checkObjectives = () => {
-    if (lab.codeValidation?.version === 1) {
-      const failures = [];
-      for (const [filename, expected] of Object.entries(lab.codeValidation.expectedByFile ?? {})) {
-        const file = files.find(item => item.filename === filename);
-        if (!file) { failures.push(`Add ${filename}.`); continue; }
-        const code = file.id === activeFileId && workspace.getWorkspace()
-          ? codeGeneratorService.generateCode(workspace.getWorkspace(), filename)
-          : codeGeneratorService.generateCodeFromState(file.blocks_json, filename);
-        failures.push(...validateTutorialCode(code, expected.code, expected.testCases).failures.map(message => `${filename}: ${message}`));
-      }
-      return { passed: failures.length === 0, failures };
-    }
-    const expectedFile = files.find(file => file.filename === (lab.expectedFilename || files[0]?.filename));
-    const state = expectedFile?.id === activeFileId ? workspace.getWorkspaceState?.() : expectedFile?.blocks_json;
-    const structure = validateWorkspaceStructure(state, lab.expectedBlocks);
-    if (!structure.passed) return structure;
-    const checks = [];
-    if (lab.requiredSelector) checks.push(lab.requiredText
-      ? { type: 'htmlText', selector: lab.requiredSelector, value: lab.requiredText, message: `Put “${lab.requiredText}” in ${lab.requiredSelector}.` }
-      : { type: 'htmlExists', selector: lab.requiredSelector, message: `Add a ${lab.requiredSelector} element.` });
-    if (lab.requiredCode) checks.push({ type: 'codeIncludes', value: lab.requiredCode, message: `Include ${lab.requiredCode} in the output.` });
-    if (!checks.length) return structure;
-    const outputFiles = files.map(file => ({
-      filename: file.filename,
-      generatedCode: file.id === activeFileId && workspace.getWorkspace()
-        ? codeGeneratorService.generateCode(workspace.getWorkspace(), file.filename)
-        : codeGeneratorService.generateCodeFromState(file.blocks_json, file.filename),
-    }));
-    const output = codeGeneratorService.combineFilesForPreview(outputFiles, 'index.html');
-    return validateTutorialCode(output, '', checks);
-  };
-
-  const checkWork = async () => {
-    if (!lab.expectedBlocks && !lab.codeValidation?.expectedByFile) {
-      addToast("No validator was saved for this laboratory yet.", "error");
-      return;
-    }
-    const result = checkObjectives();
-    const passed = result.passed;
-    setValidationState(passed ? "passed" : "failed");
-    addToast(passed ? "Objective checks passed. Your teacher can now review your design." : result.failures.join(' • '), passed ? "success" : "error");
-  };
-
   const submitWork = async (draft = false) => {
     if (preview || !profile?.id || submittingRef.current || (submission?.is_final && submission.review_status !== "needs_revision")) return;
     submittingRef.current = true; setSubmitting(true);
+    setSaveMessage("");
+    setSaveError(false);
     try {
       const snapshot = flushActiveFile().map(file => ({
         filename: file.filename, blocks_json: file.blocks_json,
@@ -191,11 +150,17 @@ const LaboratoryViewer = ({ lesson, onNext, onBack, navigation, onCompleted, pre
       }));
       const saved = await submitLaboratory({ lessonId: lesson.id, files: snapshot, requestKey: requestRef.current, draft });
       requestRef.current = crypto.randomUUID();
-      if (!draft) { try { await copyLearningProject(lesson.id); } catch (error) { addToast(`Submitted successfully. Project copy could not be saved: ${error.message}`, "error"); } }
       setSubmission(saved);
-      if (draft) addToast('Draft saved.', 'success');
-      else await onCompleted?.();
-    } catch (error) { addToast(error.message || 'Could not submit your laboratory.', 'error'); throw error; }
+      if (draft) setSaveMessage('Project progress saved. Your teacher cannot view or grade this draft yet. Remember to submit it when you are ready.');
+      else {
+        setSaveMessage('Project submitted for grading. Your teacher can now review it.');
+        try { await copyLearningProject(lesson.id); } catch (error) { console.error('Project copy could not be saved:', error); }
+        await onCompleted?.();
+      }
+    } catch (error) {
+      setSaveError(true);
+      setSaveMessage(error.message || (draft ? 'Could not save your progress. Try again.' : 'Could not submit your project. Try again.'));
+    }
     finally { submittingRef.current = false; setSubmitting(false); }
   };
 
@@ -214,27 +179,37 @@ const LaboratoryViewer = ({ lesson, onNext, onBack, navigation, onCompleted, pre
           <p className="truncate text-sm font-black text-foreground">{lesson?.title || "Laboratory"}</p>
           <p className="truncate text-xs text-muted-foreground">{lesson?.topic?.title}</p>
         </div>
-        <button onClick={checkWork} className="rounded-xl bg-emerald-500 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-400">
-          Check Work
-        </button>
-        {!preview && <button disabled={submitting || (submission?.is_final && submission.review_status !== "needs_revision")} onClick={() => submitWork(false).catch(() => {})} className="rounded-xl bg-sky-600 px-4 py-2 text-xs font-bold text-white disabled:opacity-50">{submitting ? 'Submitting…' : submission?.review_status === 'needs_revision' ? 'Resubmit for review' : submission?.is_final ? 'Submitted' : 'Submit for grading'}</button>}
-        {!preview && <button disabled={submitting || (submission?.is_final && submission.review_status !== "needs_revision")} onClick={() => submitWork(true).catch(() => {})} className="rounded border px-3 py-2 text-xs disabled:opacity-50">Save draft</button>}
-        <button onClick={() => onNext?.(navigation?.next ? "next" : "topic")} className="rounded-xl border px-4 py-2 text-xs font-bold text-foreground hover:bg-muted">
-          Continue
-        </button>
+        {!preview && <button disabled={submitting || (submission?.is_final && submission.review_status !== "needs_revision")} onClick={() => submitWork(true)} className="rounded-xl border bg-card px-4 py-2 text-xs font-bold text-foreground disabled:opacity-50">{submitting ? 'Saving…' : 'Save progress / draft'}</button>}
+        {!preview && <button disabled={submitting || (submission?.is_final && submission.review_status !== "needs_revision")} onClick={() => submitWork(false)} className="rounded-xl bg-sky-600 px-4 py-2 text-xs font-bold text-white disabled:opacity-50">{submitting ? 'Submitting…' : submission?.review_status === 'needs_revision' ? 'Resubmit for grading' : submission?.is_final ? 'Submitted for grading' : 'Submit for grading'}</button>}
       <ThemeSelect compact />
       </header>
+      {saveMessage && <div role={saveError ? 'alert' : 'status'} aria-live="polite" className={`shrink-0 border-b px-4 py-3 text-sm font-medium ${saveError ? 'border-red-200 bg-red-50 text-red-900 dark:bg-red-950/60 dark:text-red-100' : submission?.is_final ? 'border-emerald-200 bg-emerald-50 text-emerald-900 dark:bg-emerald-950/60 dark:text-emerald-100' : 'border-sky-200 bg-sky-50 text-sky-900 dark:bg-sky-950/60 dark:text-sky-100'}`}>{saveMessage}</div>}
 
-      <div className="flex flex-1 overflow-hidden">
-        <aside className="w-80 shrink-0 overflow-y-auto border-r bg-card p-4 space-y-4">
-          {submission && <div className="rounded-xl border border-sky-200 bg-sky-50 dark:bg-sky-950/50 p-4 text-sm"><p className="font-bold">{submission.graded_at ? `${submission.review_status === "needs_revision" ? "Needs revision" : "Passed"}: ${submission.score}%` : submission.is_final ? 'Awaiting teacher review' : 'Draft saved'}</p>{submission.feedback && <p className="mt-2 whitespace-pre-wrap">{submission.feedback}</p>}</div>}
+      <nav aria-label="Learning panels" role="tablist" className="flex shrink-0 border-b bg-card md:hidden">
+        {[['instructions', 'Instructions'], ['editor', 'Editor'], ['preview', 'Preview']].map(([tab, label]) => (
+          <button
+            key={tab}
+            type="button"
+            role="tab"
+            aria-selected={mobileTab === tab}
+            onClick={() => setMobileTab(tab)}
+            className={`flex-1 border-b-2 px-2 py-3 text-xs font-semibold ${mobileTab === tab ? 'border-primary text-primary' : 'border-transparent text-muted-foreground'}`}
+          >
+            {label}
+          </button>
+        ))}
+      </nav>
+
+      <div className="flex flex-1 min-h-0 overflow-hidden">
+        <aside className={`${mobileTab === 'instructions' ? 'flex flex-col' : 'hidden'} w-full shrink-0 overflow-y-auto bg-card p-4 space-y-4 md:flex md:w-80 md:border-r`}>
+          {submission && <div className="rounded-xl border border-sky-200 bg-sky-50 dark:bg-sky-950/50 p-4 text-sm"><p className="font-bold">{submission.graded_at ? `${submission.review_status === "needs_revision" ? "Needs revision" : "Passed"}: ${submission.score}%` : submission.is_final ? 'Submitted for grading · Awaiting teacher review' : 'Draft saved'}</p>{!submission.is_final && <p className="mt-2">Your teacher cannot view or grade this draft yet. Remember to submit it when you are ready.</p>}{submission.feedback && <p className="mt-2 whitespace-pre-wrap">{submission.feedback}</p>}</div>}
           <div className="rounded-xl border p-4">
             <div className="mb-2 flex items-center gap-2 text-sm font-bold text-foreground">
               <FlaskConical className="size-4 text-emerald-500" /> Challenge
             </div>
             <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground">{lab.description || "Complete the laboratory activity."}</p>
           </div>
-          <div className="rounded-xl border p-4 text-sm"><h2 className="font-bold">Grading rubric · Pass: {submission?.passing_score_snapshot ?? lesson?.laboratory?.passing_score ?? 75}%</h2>{(submission?.rubric_snapshot ?? lesson?.laboratory?.rubric ?? []).map(c => <p key={c.id} className="mt-2">{c.label}: {c.max} points</p>)}<p className="mt-3 text-xs text-foreground">Objective checks are practice feedback. Your teacher grades the submitted project.</p></div>
+          <div className="rounded-xl border p-4 text-sm"><h2 className="font-bold">Grading rubric · Pass: {submission?.passing_score_snapshot ?? lesson?.laboratory?.passing_score ?? 75}%</h2>{(submission?.rubric_snapshot ?? lesson?.laboratory?.rubric ?? []).map(c => <p key={c.id} className="mt-2">{c.label}: {c.max} points</p>)}<p className="mt-3 text-xs text-foreground">Your teacher grades this project after you submit it.</p></div>
           {lab.referenceImageUrl && (
             <div className="rounded-xl border p-4 space-y-2">
               <div className="flex items-center gap-2 text-sm font-bold text-foreground">
@@ -243,24 +218,15 @@ const LaboratoryViewer = ({ lesson, onNext, onBack, navigation, onCompleted, pre
               <img src={lab.referenceImageUrl} alt="Expected laboratory result" className="w-full rounded-lg border object-contain" />
             </div>
           )}
-          {validationState !== "idle" && (
-            <div className={`rounded-xl border p-4 text-sm font-semibold ${validationState === "passed" ? "border-emerald-200 bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300" : "border-red-200 bg-red-50 dark:bg-red-950/50 text-red-700 dark:text-red-300"}`}>
-              {validationState === "passed" ? (
-                <span className="flex items-center gap-2"><CheckCircle2 className="size-4" /> Your blocks match the validator.</span>
-              ) : (
-                <span className="flex items-center gap-2"><XCircle className="size-4" /> Keep working, then check again.</span>
-              )}
-            </div>
-          )}
         </aside>
 
-        <main className="flex flex-1 overflow-hidden">
-          <section className="flex flex-col flex-1 bg-card border-r">
+        <main className={`${mobileTab === 'instructions' ? 'hidden' : 'flex'} flex-1 min-h-0 overflow-hidden md:flex`}>
+          <section className={`${mobileTab === 'editor' ? 'flex' : 'hidden'} min-w-0 flex-1 flex-col bg-card md:flex md:border-r`}>
             <FileTabs files={files} activeFile={activeFileId} isLocal={false} onFileChange={handleFileChange} onFileCreate={createFile} onFileDelete={deleteFile} />
             <WorkspaceTools workspace={workspace} />
           <div ref={workspace.blocklyDiv} className="blocklyDiv flex-1" />
           </section>
-          <section className="w-[28rem] overflow-hidden">
+          <section className={`${mobileTab === 'preview' ? 'flex' : 'hidden'} min-w-0 w-full overflow-hidden md:flex md:w-[28rem] md:shrink-0`}>
             <PreviewPane
               storageScope={`laboratory:${lesson?.id || 'preview'}`}
             generatedCode={generatedCode}

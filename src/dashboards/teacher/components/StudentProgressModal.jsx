@@ -9,16 +9,21 @@ const tabs = [{ id: 'activities', label: 'Activities', icon: BookOpen }, { id: '
 const date = value => value ? new Date(value).toLocaleString() : '—'
 const attemptScore = (attempt, quiz) => attempt.score == null ? 'No score yet' : attempt.percentage != null ? `${Math.round(attempt.percentage)}%` : (attempt.score_total || quiz?.question_count) ? `${attempt.score} / ${attempt.score_total || quiz.question_count} correct` : `${attempt.score}%`
 
-export default function StudentProgressModal({ classroomId, student, onClose, onGraded }) {
+export default function StudentProgressModal({ classroomId, student, initialTab = 'activities', submissionId = null, lessonId = null, onClose, onGraded }) {
   const [review, setReview] = useState(null)
   const [error, setError] = useState('')
-  const [activeTab, setActiveTab] = useState('activities')
+  const [activeTab, setActiveTab] = useState(initialTab)
   const [retry, setRetry] = useState(0)
   useEffect(() => {
     let cancelled = false
     getStudentReview(classroomId, student.studentId).then(data => { if (!cancelled) setReview(data) }).catch(err => { if (!cancelled) setError(err.message) })
     return () => { cancelled = true }
   }, [classroomId, student.studentId, retry])
+  useEffect(() => {
+    if (!review || activeTab !== 'submissions' || (!submissionId && !lessonId)) return
+    const target = document.getElementById(`review-${submissionId || lessonId}`)
+    target?.scrollIntoView({ block: 'nearest' })
+  }, [review, activeTab, submissionId, lessonId])
   const lessons = review?.lessons ?? []
   const submissions = review?.submissions ?? []
   const published = lessons.filter(lesson => lesson.is_published)
@@ -42,7 +47,7 @@ export default function StudentProgressModal({ classroomId, student, onClose, on
           {activeTab === 'quizzes' && <div className="space-y-4">{lessons.filter(lesson => lesson.type === 'quiz').map(lesson => <article key={lesson.id} className="rounded-xl border p-4"><h3 className="font-bold">{lesson.title}</h3><p className="text-xs text-muted-foreground">{lesson.topic_title} · {lesson.attempts.length} attempts</p>{!lesson.attempts.length ? <p className="mt-3 text-sm text-muted-foreground">No attempts yet.</p> : <table className="mt-3 w-full text-left text-sm"><thead className="text-xs text-muted-foreground"><tr><th className="py-2">Attempt</th><th>Score</th><th>Status</th><th>Finished</th></tr></thead><tbody className="divide-y">{lesson.attempts.map((attempt, index) => <tr key={attempt.id}><td className="py-3">#{index + 1}{attempt.answers?.length > 0 && <details className="mt-2"><summary className="cursor-pointer text-sky-800 dark:text-sky-300">Answers</summary>{attempt.answers.map((answer,i) => <p key={i} className="my-2 max-w-sm text-xs">{answer.question}<br />{answer.selected || 'Unanswered'} · {answer.correct ? 'Correct' : 'Incorrect'}</p>)}</details>}</td><td>{attemptScore(attempt, lesson.quiz)}</td><td className="capitalize">{attempt.status?.replace('_', ' ') ?? 'Unknown'}</td><td>{date(attempt.finished_at)}</td></tr>)}</tbody></table>}</article>)}{!lessons.some(lesson => lesson.type === 'quiz') && <Empty text="No quiz lessons in this classroom." />}</div>}
           {activeTab === 'submissions' && <div className="space-y-4">{lessons.filter(lesson => ['tutorial','laboratory'].includes(lesson.type)).map(lesson => {
             const work = submissions.filter(submission => submission.lesson_id === lesson.id && (lesson.type !== 'tutorial' || submission.is_final))
-            return <article key={lesson.id} className="rounded-xl border p-4"><h3 className="font-bold">{lesson.title}</h3><p className="mb-3 text-xs capitalize text-muted-foreground">{lesson.type} · {lesson.topic_title}</p>{work.length ? work.map(submission => <SubmissionReview key={submission.id} submission={submission} readOnly={lesson.type !== 'laboratory'} onSaved={updated => { setReview(previous => ({...previous,submissions:previous.submissions.map(row => row.id===updated.id?updated:row)}));onGraded?.() }} />) : <p className="text-sm text-muted-foreground">{lesson.progress?.is_completed ? 'Completed previously. No saved submission is available for this work.' : 'No submitted work yet.'}</p>}</article>
+            return <article key={lesson.id} id={`review-${lesson.id}`} className="rounded-xl border p-4"><h3 className="font-bold">{lesson.title}</h3><p className="mb-3 text-xs capitalize text-muted-foreground">{lesson.type} · {lesson.topic_title}</p>{work.length ? work.map(submission => <div key={submission.id} id={`review-${submission.id}`}><SubmissionReview submission={submission} readOnly={lesson.type !== 'laboratory'} onSaved={updated => { setReview(previous => ({...previous,submissions:previous.submissions.map(row => row.id===updated.id?updated:row)}));onGraded?.() }} /></div>) : <p className="text-sm text-muted-foreground">{lesson.progress?.is_completed ? 'Completed previously. No saved submission is available for this work.' : 'No submitted work yet.'}</p>}</article>
           })}{!lessons.some(lesson => ['tutorial','laboratory'].includes(lesson.type)) && <Empty text="No tutorials or laboratories in this classroom." />}</div>}
         </div>
       </>}

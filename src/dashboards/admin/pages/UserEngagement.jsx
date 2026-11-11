@@ -1,3 +1,4 @@
+import StatCard from '../../../components/common/StatCard';
 import { useState, useEffect } from "react";
 import {
   BookOpen, Layout, FolderKanban, GraduationCap,
@@ -10,32 +11,18 @@ import {
 } from "recharts";
 import { supabase } from "../../../supabaseClient";
 
-function MetricCard({ label, value, icon: Icon, sub, color = "amber", loading }) {
+function MetricCard({ value, color = "amber", ...props }) {
   const colors = {
-    amber:   { ring: "ring-amber-200",  bg: "bg-amber-50",   icon: "text-amber-500"   },
-    sky:     { ring: "ring-sky-200",    bg: "bg-sky-50",     icon: "text-sky-500"     },
-    violet:  { ring: "ring-violet-200", bg: "bg-violet-50",  icon: "text-violet-500"  },
-    emerald: { ring: "ring-emerald-200",bg: "bg-emerald-50", icon: "text-emerald-600" },
-    rose:    { ring: "ring-rose-200",   bg: "bg-rose-50",    icon: "text-rose-500"    },
-    orange:  { ring: "ring-orange-200", bg: "bg-orange-50",  icon: "text-orange-500"  },
-    teal:    { ring: "ring-teal-200",   bg: "bg-teal-50",    icon: "text-teal-600"    },
-    indigo:  { ring: "ring-indigo-200", bg: "bg-indigo-50",  icon: "text-indigo-500"  },
+    amber: "bg-amber-500/10 text-amber-700 dark:text-amber-300",
+    sky: "bg-sky-500/10 text-sky-700 dark:text-sky-300",
+    violet: "bg-violet-500/10 text-violet-700 dark:text-violet-300",
+    emerald: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
+    rose: "bg-rose-500/10 text-rose-700 dark:text-rose-300",
+    orange: "bg-orange-500/10 text-orange-700 dark:text-orange-300",
+    teal: "bg-teal-500/10 text-teal-700 dark:text-teal-300",
+    indigo: "bg-indigo-500/10 text-indigo-700 dark:text-indigo-300",
   };
-  const c = colors[color];
-  return (
-    <div className={`bg-card border border-border rounded-xl p-5 ring-1 ${c.ring} hover:border-border transition-all`}>
-      <div className={`w-10 h-10 rounded-xl ${c.bg} flex items-center justify-center mb-4`}>
-        <Icon size={18} className={c.icon} />
-      </div>
-      {loading ? (
-        <div className="h-8 w-16 bg-muted rounded animate-pulse mb-1" />
-      ) : (
-        <p className="text-foreground text-3xl font-bold tracking-tight tabular-nums">{value?.toLocaleString() ?? "—"}</p>
-      )}
-      <p className="text-muted-foreground text-sm mt-1">{label}</p>
-      {sub && <p className="text-muted-foreground text-xs mt-0.5">{sub}</p>}
-    </div>
-  );
+  return <StatCard {...props} value={value?.toLocaleString() ?? "—"} iconClassName={colors[color]} />;
 }
 
 const CustomTooltip = ({ active, payload, label }) => {

@@ -234,7 +234,7 @@ function TeacherLayout({ data }) {
               <ActivityRow
                 key={q.id}
                 as={Link}
-                to={`/teacher/classrooms/${q.classroom_id}?tab=gradebook&student=${q.student_id}`}
+                to={`/teacher/classrooms/${q.classroom_id}?tab=gradebook&student=${q.student_id}&submission=${q.id}`}
                 name={q.username}
                 title={q.title}
                 meta={`${q.username} · ${formatDate(q.submitted_at)}`}
@@ -628,7 +628,6 @@ export default function StaffDashboard({ analytics = false }) {
                 key={stat.label}
                 {...stat}
                 value={data.counts?.[stat.label] ?? "0"}
-                iconVariant="badge"
               />
             ))}
           </section>

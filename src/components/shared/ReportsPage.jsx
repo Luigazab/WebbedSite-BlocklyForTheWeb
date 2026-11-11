@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback, useMemo } from "react";
 import { supabase } from "../../supabaseClient";
 import { useAuthStore } from "../../store/authStore";
 import { Button } from "#components/ui/button";
+import StatCard from "../common/StatCard";
 import { 
   AlertCircle, 
   CheckCircle2, 
@@ -160,8 +161,11 @@ export default function ReportsPage({ manage = false }) {
     );
   }, [reports]);
 
+  const totalMatching = filteredReports.length;
+  const activeFilters = Boolean(search || filter !== "all" || category !== "all");
+
   return (
-    <main className="wide-container">
+    <main className="wide-container flex flex-col gap-6">
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-6">
         <div>
@@ -176,26 +180,23 @@ export default function ReportsPage({ manage = false }) {
           </p>
         </div>
 
-        {/* Quick Summary Pill Counters */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
-          {STATUSES.map((st) => (
-            <button
-              key={st}
-              onClick={() => setFilter(filter === st ? "all" : st)}
-              className={`text-xs px-2.5 py-1 rounded-full border transition-all ${
-                filter === st
-                  ? "bg-foreground text-background font-semibold border-foreground"
-                  : "bg-muted/50 border-border text-muted-foreground hover:bg-muted"
-              }`}
-            >
-              <span className="capitalize">{st.replace("_", " ")}</span>{" "}
-              <span className="font-mono text-[11px] opacity-75">
-                ({statusCounts[st] || 0})
-              </span>
-            </button>
-          ))}
-        </div>
       </div>
+
+      <section aria-label="Report status summary" className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        {STATUSES.map((st) => {
+          const selected = filter === st;
+          const meta = STATUS_META[st];
+          const Icon = meta.icon;
+          return (
+            <button key={st} type="button" aria-pressed={selected}
+              onClick={() => setFilter(selected ? "all" : st)}
+              className="min-w-0 rounded-2xl text-left focus-visible:outline-2 focus-visible:outline-ring">
+              <StatCard label={meta.label} value={statusCounts[st] || 0} icon={Icon}
+                iconClassName={meta.color} className={`transition-colors hover:bg-muted/50 ${selected ? "border-primary ring-2 ring-primary/20" : ""}`} />
+            </button>
+          );
+        })}
+      </section>
 
       {/* Global Error Banner */}
       {error && (
@@ -404,6 +405,13 @@ export default function ReportsPage({ manage = false }) {
           Refresh
         </Button>
       </div>
+
+      {!loading && (
+        <p aria-live="polite" className="-mt-3 text-xs text-muted-foreground">
+          Showing <span className="font-semibold text-foreground">{totalMatching}</span> of {reports.length} reports
+          {activeFilters && <button type="button" onClick={() => { setSearch(""); setFilter("all"); setCategory("all"); }} className="ml-2 font-semibold text-primary hover:underline">Clear filters</button>}
+        </p>
+      )}
 
       {/* Reports List */}
       {loading ? (

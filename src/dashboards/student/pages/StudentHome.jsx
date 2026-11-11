@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Globe, CodeXml, BookOpenText, LandPlot, EarthLockIcon, Loader2 } from 'lucide-react'
+import { Globe, CodeXml, BookOpenText, LandPlot, EarthLockIcon, Loader2, Sparkles } from 'lucide-react'
 import RecentProjectCard from '../components/RecentProjectCard'
 import ProjectCard from '../components/ProjectCard'
 import { useNavigate } from 'react-router'
@@ -8,13 +8,19 @@ import TourSpotlight from '../../../components/tour/TourSpotlight'
 import { homeTourSteps } from '../tours/homeTour'
 import { projectService } from '../../../services/project.service'
 import Carousel from '../../../components/layout/Carousel'
+import { useAuthStore } from '../../../store/authStore'
+import { xpService } from '../../../services/xpService'
+import { supabase } from '../../../supabaseClient'
 
 const StudentHome = () => {
   const navigate = useNavigate()
+  const userId = useAuthStore((state) => state.user?.id)
   const { startTour, activeTour, isVisible } = useTour()
   
   const [recentProjects, setRecentProjects] = useState([])
   const [loadingProjects, setLoadingProjects] = useState(true)
+  const [earnedXP, setEarnedXP] = useState(null)
+  const [xpError, setXpError] = useState('')
 
   const projectTypes = [
     { icon: CodeXml, title: 'Create', color: 'bg-blockly-blue/90', to: 'editor', tourId: 'create-button' },
@@ -22,6 +28,27 @@ const StudentHome = () => {
     { icon: LandPlot, title: 'Explore', color: 'bg-blockly-green/90', to: 'docs', tourId: 'explore-button' },
     { icon: EarthLockIcon, title: 'Join', color: 'bg-blockly-purple/90', to: 'classrooms', tourId: 'join-button' },
   ]
+
+  useEffect(() => {
+    if (!userId) return undefined
+    let active = true
+    const refresh = async () => {
+      try {
+        const logs = await xpService.getUserXPLogs(userId)
+        if (active) {
+          setEarnedXP(logs.reduce((total, log) => total + Number(log.xp_earned || 0), 0))
+          setXpError('')
+        }
+      } catch (error) {
+        if (active) setXpError(error.message || 'Could not load XP.')
+      }
+    }
+    refresh()
+    const channel = supabase.channel(`student-home-xp:${userId}`)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'user_xp_logs', filter: `user_id=eq.${userId}` }, refresh)
+      .subscribe()
+    return () => { active = false; supabase.removeChannel(channel) }
+  }, [userId])
 
   useEffect(() => {
     const fetchRecentProjects = async () => {
@@ -77,6 +104,16 @@ const StudentHome = () => {
           </div>
         </div>
       </div>
+
+      <section aria-label="Experience points" className="mb-8 flex items-center gap-4 rounded-2xl border border-violet-300/40 bg-violet-500/10 p-5">
+        <span className="rounded-xl bg-violet-500/15 p-3 text-violet-700 dark:text-violet-300"><Sparkles aria-hidden="true" /></span>
+        <div>
+          <p className="text-sm font-semibold text-foreground">Experience points</p>
+          <p className="text-2xl font-bold tabular-nums text-violet-700 dark:text-violet-300">{earnedXP === null ? 'Loading…' : `${earnedXP.toLocaleString()} XP`}</p>
+          <p className="text-xs text-muted-foreground">Earn XP by completing learning activities.</p>
+          {xpError && <p role="alert" className="text-xs text-red-700 dark:text-red-300">{xpError}</p>}
+        </div>
+      </section>
 
       {/* Create New Project */}
       <section className="mb-8">

@@ -1,3 +1,4 @@
+import StatCard from '../common/StatCard';
 import { useEffect, useState, useMemo } from "react";
 import { supabase } from "../../supabaseClient";
 import { useAuthStore } from "../../store/authStore";
@@ -161,76 +162,18 @@ export default function MyProgress({ classroomId }) {
         <>
           {/* Top Metric Cards */}
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <div className="rounded-2xl border border-border bg-card p-4 shadow-xs">
-              <div className="flex items-center justify-between text-muted-foreground mb-2">
-                <span className="text-xs font-semibold">Curriculum Done</span>
-                <BookOpen className="size-4 text-primary" />
-              </div>
-              <div className="flex items-baseline gap-2">
-                <span className="text-2xl font-display font-extrabold text-foreground">
-                  {summary.completionPercent}%
-                </span>
-                <span className="text-xs text-muted-foreground">
-                  ({summary.completedCount}/{summary.publishedCount} lessons)
-                </span>
-              </div>
-              <div className="mt-3 h-1.5 w-full rounded-full bg-muted overflow-hidden">
-                <div
-                  className="h-full rounded-full bg-primary transition-all duration-500"
-                  style={{ width: `${summary.completionPercent}%` }}
-                />
-              </div>
-            </div>
-
-            <div className="rounded-2xl border border-border bg-card p-4 shadow-xs">
-              <div className="flex items-center justify-between text-muted-foreground mb-2">
-                <span className="text-xs font-semibold">Average Score</span>
-                <Flame className="size-4 text-amber-500" />
-              </div>
-              <div className="flex items-baseline gap-2">
-                <span className="text-2xl font-display font-extrabold text-foreground">
-                  {summary.avgScore != null ? `${summary.avgScore}%` : "—"}
-                </span>
-                <span className="text-xs text-muted-foreground">across attempts</span>
-              </div>
-              <p className="mt-3 text-[11px] text-muted-foreground">
-                Graded quizzes & laboratory rubrics
-              </p>
-            </div>
-
-            <div className="rounded-2xl border border-border bg-card p-4 shadow-xs">
-              <div className="flex items-center justify-between text-muted-foreground mb-2">
-                <span className="text-xs font-semibold">Assessments Passed</span>
-                <CheckCircle2 className="size-4 text-emerald-500" />
-              </div>
-              <div className="flex items-baseline gap-2">
-                <span className="text-2xl font-display font-extrabold text-foreground">
-                  {summary.passedCheckpoints}
-                </span>
-                <span className="text-xs text-muted-foreground">
-                  of {summary.totalCheckpoints} checkpoints
-                </span>
-              </div>
-              <p className="mt-3 text-[11px] text-muted-foreground">
-                Required for tier promotion
-              </p>
-            </div>
-
-            <div className="rounded-2xl border border-border bg-card p-4 shadow-xs">
-              <div className="flex items-center justify-between text-muted-foreground mb-2">
-                <span className="text-xs font-semibold">Badges Earned</span>
-                <Trophy className="size-4 text-violet-500" />
-              </div>
-              <div className="flex items-baseline gap-2">
-                <span className="text-2xl font-display font-extrabold text-foreground">
-                  {summary.badgesCount}
-                </span>
-                <span className="text-xs text-muted-foreground">achievements</span>
-              </div>
-              <p className="mt-3 text-[11px] text-muted-foreground">
-                Classroom honors & milestones
-              </p>
-            </div>
+            <StatCard label="Curriculum Done" value={summary.completionPercent + "%"}
+              sub={summary.completedCount + "/" + summary.publishedCount + " lessons"}
+              icon={BookOpen} progress={summary.completionPercent} />
+            <StatCard label="Average Score" value={summary.avgScore != null ? summary.avgScore + "%" : "—"}
+              sub="Across attempts · Graded quizzes & laboratory rubrics" icon={Flame}
+              iconClassName="bg-amber-500/10 text-amber-700 dark:text-amber-300" />
+            <StatCard label="Assessments Passed" value={summary.passedCheckpoints}
+              sub={"Of " + summary.totalCheckpoints + " checkpoints · Required for tier promotion"} icon={CheckCircle2}
+              iconClassName="bg-emerald-500/10 text-emerald-700 dark:text-emerald-300" />
+            <StatCard label="Badges Earned" value={summary.badgesCount}
+              sub="Achievements · Classroom honors & milestones" icon={Trophy}
+              iconClassName="bg-violet-500/10 text-violet-700 dark:text-violet-300" />
           </div>
 
           {/* Section 1: Course Mastery & Tier Checkpoints */}

@@ -1,7 +1,7 @@
 // Wraps every page — handles the content area padding and scroll
 export default function PageWrapper({ title, subtitle, actions, children }) {
   return (
-    <div className="flex flex-col min-h-full p-6 gap-6 max-w-6xl mx-auto">
+    <div className="flex flex-col min-h-full p-0 md:p-6 gap-6 max-w-6xl mx-auto">
       {(title || actions) && (
         <div className="flex items-start justify-between">
           <div>

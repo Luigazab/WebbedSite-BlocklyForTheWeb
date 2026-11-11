@@ -19,7 +19,7 @@ import { useWebsiteThumbnail } from '../../hooks/useWebsiteThumbnail'
 import EditorTour, { useAutoStartEditorTour } from '../tour/EditorTour'
 import { toast } from 'sonner'
 import * as Blockly from 'blockly/core'
-import { Blocks, Eye, Play, GripVertical } from 'lucide-react'
+import { Play, GripVertical } from 'lucide-react'
 
 const BlockEditor = () => {
   const { id } = useParams()
@@ -30,7 +30,7 @@ const BlockEditor = () => {
   const pendingProjectRef = useRef(null)
   const savingProjectRef = useRef(false)
 
-  const [mobileTab, setMobileTab] = useState('workspace') // 'workspace' | 'preview'
+  const [mobileTab, setMobileTab] = useState('editor') // 'instructions' | 'editor' | 'preview'
 
   const containerRef = useRef(null)
   const [isDragging, setIsDragging] = useState(false)
@@ -116,7 +116,7 @@ const BlockEditor = () => {
   // Resize Blockly whenever switching tabs or window size changes
   const handleTabSwitch = useCallback((tab) => {
     setMobileTab(tab)
-    if (tab === 'workspace' && workspace.getWorkspace()) {
+    if (tab === 'editor' && workspace.getWorkspace()) {
       setTimeout(() => {
         const ws = workspace.getWorkspace()
         if (ws) Blockly.svgResize(ws)
@@ -494,33 +494,38 @@ const BlockEditor = () => {
         onLoad={() => setShowLoadModal(true)}
         projectTitle={projectTitle}
       />
-      <div className="flex items-center justify-between border-b border-border bg-sidebar px-3 pb-1.5 md:hidden shrink-0">
-        <div className="flex rounded-lg bg-muted p-1 border border-border">
+      <nav aria-label="Learning panels" role="tablist" className="flex items-center gap-2 border-b border-border bg-card px-3 md:hidden shrink-0">
+        <div className="flex min-w-0 flex-1">
           <button
-            onClick={() => handleTabSwitch('workspace')}
-            className={`flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-md transition-all ${
-              mobileTab === 'workspace'
-                ? 'bg-primary text-primary-foreground shadow-xs'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
+            type="button"
+            role="tab"
+            aria-selected={mobileTab === 'instructions'}
+            onClick={() => handleTabSwitch('instructions')}
+            className={`flex-1 border-b-2 px-2 py-3 text-xs font-semibold ${mobileTab === 'instructions' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground'}`}
           >
-            <Blocks className="size-3.5" />
-            Blocks
+            Instructions
           </button>
           <button
-            onClick={() => handleTabSwitch('preview')}
-            className={`flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-md transition-all ${
-              mobileTab === 'preview'
-                ? 'bg-primary text-primary-foreground shadow-xs'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
+            type="button"
+            role="tab"
+            aria-selected={mobileTab === 'editor'}
+            onClick={() => handleTabSwitch('editor')}
+            className={`flex-1 border-b-2 px-2 py-3 text-xs font-semibold ${mobileTab === 'editor' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground'}`}
           >
-            <Eye className="size-3.5" />
+            Editor
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={mobileTab === 'preview'}
+            onClick={() => handleTabSwitch('preview')}
+            className={`flex-1 border-b-2 px-2 py-3 text-xs font-semibold ${mobileTab === 'preview' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground'}`}
+          >
             Preview
           </button>
         </div>
 
-        {mobileTab === 'workspace' && (
+        {mobileTab === 'editor' && (
           <button
             onClick={handleMobileRunAndPreview}
             className="flex items-center gap-1 px-3 py-1 text-xs font-semibold rounded-md bg-emerald-600 text-white shadow active:scale-95 transition-transform"
@@ -529,20 +534,26 @@ const BlockEditor = () => {
             Run & View
           </button>
         )}
-      </div>
+      </nav>
 
       <div
         ref={containerRef}
         style={{ '--workspace-width': `${workspaceWidth}%` }}
         className="flex flex-col px-1 pb-1.5 gap-0 md:px-3 md:flex-row flex-1 min-h-0 overflow-hidden relative"
       >
+        <section className={`${mobileTab === 'instructions' ? 'flex' : 'hidden'} flex-1 flex-col overflow-y-auto rounded border border-border bg-card p-4 md:hidden`} aria-label="Project instructions">
+          <h2 className="mb-2 text-xs font-bold uppercase tracking-wide text-muted-foreground">Project instructions</h2>
+          <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground">{projectDescription || 'No instructions were added for this project.'}</p>
+          <button type="button" onClick={() => handleTabSwitch('editor')} className="mt-5 self-start rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">Open editor</button>
+        </section>
+
         {isDragging && (
           <div className="fixed inset-0 z-50 cursor-col-resize select-none bg-transparent" />
         )}
 
         <div
           className={`flex-col h-full rounded shadow border border-border bg-card overflow-hidden transition-none min-w-0 ${
-            mobileTab === 'workspace'
+            mobileTab === 'editor'
               ? 'flex flex-2/5 w-full md:flex-none md:w-[var(--workspace-width)]'
               : 'hidden md:flex md:flex-none md:w-[var(--workspace-width)]'
           }`}

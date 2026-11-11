@@ -433,7 +433,7 @@ export default function SubmissionReview({
 
           {/* Teacher Feedback Textarea */}
           <div>
-            <label className="text-xs font-semibold text-foreground block mb-1.5">
+            <label className="text-xs font-semibold text-foreground mb-1.5">
               Evaluation Notes & Student Feedback
             </label>
             <textarea

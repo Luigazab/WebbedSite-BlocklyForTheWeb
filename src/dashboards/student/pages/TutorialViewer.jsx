@@ -64,6 +64,10 @@ export default function TutorialViewer({ tutorialIdOverride = null, preview = fa
   const [previewFileId,  setPreviewFileId]  = useState(null)
   const [responsive,     setResponsive]     = useState(true)
   const [selectedDevice, setSelectedDevice] = useState('desktop')
+  const [mobileTab, setMobileTab] = useState('instructions')
+  const [highlightTarget, setHighlightTarget] = useState(null)
+  const [stepFeedback, setStepFeedback] = useState(null)
+  const [checkingStep, setCheckingStep] = useState(false)
 
   // pendingLoad: undefined = nothing queued, null = clear ws, object = load state
   const [pendingLoad, setPendingLoad] = useState(undefined)
@@ -76,6 +80,7 @@ export default function TutorialViewer({ tutorialIdOverride = null, preview = fa
     lessonBlocks: lessonBlockTypes(steps[currentStep]),
     onWorkspaceChange: (wsRef) => {
       if (isLoadingRef.current) return
+      setStepFeedback(null)
       const file = stepFiles.find((f) => f.id === activeFileId)
       if (!file) return
       const code = codeGeneratorService.generateCode(wsRef, file.filename)
@@ -169,6 +174,7 @@ export default function TutorialViewer({ tutorialIdOverride = null, preview = fa
   // ── Set up files for a step, queue workspace load ─────────────────────────
   const applyStepFiles = useCallback((step) => {
     if (!step) return
+    setStepFeedback(null)
 
     const rawFiles = resolveStudentStepFiles(step, stepsRef.current, savedSubmissions.current, stepDrafts.current)
     defineFileReferenceBlocks(rawFiles)
@@ -239,10 +245,10 @@ export default function TutorialViewer({ tutorialIdOverride = null, preview = fa
         ...solution, expected_code: codeGeneratorService.generateCodeFromState(solution.expected_blocks_json, solution.filename),
       })
       const result = validateTutorialStep({ files: snapshotFiles(), expected, mode: tutorial?.type, fileDefinitions: tutorial?.type === 'text' ? tutorial.text_tutorial_step_files ?? [] : tutorial?.block_tutorial_step_files ?? [] })
-      if (!result.passed) addToast(result.failures.join(' • '), 'error')
+      if (!result.passed) setStepFeedback({ kind: 'invalid', messages: result.failures })
       return result.passed
     } catch (error) {
-      addToast(error.message || 'Could not read the current workspace.', 'error')
+      setStepFeedback({ kind: 'error', messages: [error.message || 'Could not read the current workspace. Try again.'] })
       return false
     }
   }
@@ -252,12 +258,14 @@ export default function TutorialViewer({ tutorialIdOverride = null, preview = fa
     const next = currentStep + 1
     if (next >= steps.length) return
     savingSubmission.current = true
+    setCheckingStep(true)
+    setStepFeedback({ kind: 'saving', messages: ['Your answer passed the local checks. Saving this step…'] })
     try {
       await saveProgress()
       setCurrentStep(next)
       applyStepFiles(steps[next])
-    } catch (error) { addToast(error.message || 'Could not save your work.', 'error') }
-    finally { savingSubmission.current = false }
+    } catch (error) { setStepFeedback({ kind: 'error', messages: [error.message || 'Could not save your work. Try again.'] }) }
+    finally { savingSubmission.current = false; setCheckingStep(false) }
   }
 
   const handlePrev = () => {
@@ -272,12 +280,14 @@ export default function TutorialViewer({ tutorialIdOverride = null, preview = fa
   const handleFinish = async () => {
     if (savingSubmission.current || !validateCurrentStep()) return
     savingSubmission.current = true
+    setCheckingStep(true)
+    setStepFeedback({ kind: 'saving', messages: ['Your answer passed the local checks. Submitting your tutorial…'] })
     try {
       await saveProgress(true)
       if (!preview) await onCompleted?.()
       else handleBack()
-    } catch (error) { addToast(error.message || 'Could not submit your tutorial.', 'error') }
-    finally { savingSubmission.current = false }
+    } catch (error) { setStepFeedback({ kind: 'error', messages: [error.message || 'Could not submit your tutorial. Try again.'] }) }
+    finally { savingSubmission.current = false; setCheckingStep(false) }
   }
   // ── Preview helpers ────────────────────────────────────────────────────────
   const runCode = () => {
@@ -296,7 +306,8 @@ export default function TutorialViewer({ tutorialIdOverride = null, preview = fa
   const getCurrentFileCode = () => filesWithCode.find((f) => f.id === activeFileId)?.generatedCode || ''
   const getPreviewFileName = () => stepFiles.find((f) => f.id === previewFileId)?.filename || ''
 
-  useRemiHighlight(workspace.getWorkspace, steps[currentStep]?.highlight_category_path, steps[currentStep]?.highlight_block_type, workspace.isInitialized)
+  const updateHighlightTarget = useCallback((target) => setHighlightTarget(target), [])
+  useRemiHighlight(workspace.getWorkspace, steps[currentStep]?.highlight_category_path, steps[currentStep]?.highlight_block_type, workspace.isInitialized, updateHighlightTarget)
 
   const difficultyMeta = DIFFICULTY_META[tutorial?.difficulty_level] ?? DIFFICULTY_META.beginner
 
@@ -373,11 +384,44 @@ export default function TutorialViewer({ tutorialIdOverride = null, preview = fa
         </div>
       </div>
 
+      {stepFeedback && (
+        <div role="status" aria-live="polite" className={`mx-3 mb-2 rounded-lg border px-4 py-2 text-xs ${stepFeedback.kind === 'saving' ? 'border-sky-300 bg-sky-50 text-sky-900 dark:bg-sky-950/50 dark:text-sky-100' : 'border-amber-300 bg-amber-50 text-amber-900 dark:bg-amber-950/50 dark:text-amber-100'}`}>
+          <strong>{stepFeedback.kind === 'invalid' ? 'Step not ready yet' : stepFeedback.kind === 'saving' ? 'Checking your work' : 'Could not continue'}</strong>
+          <span className="ml-2">{stepFeedback.messages.join(' • ')}</span>
+        </div>
+      )}
+
+      <nav aria-label="Learning panels" className="flex shrink-0 border-b bg-card md:hidden" role="tablist">
+        {[['instructions', 'Instructions'], ['editor', 'Editor'], ['preview', 'Preview']].map(([tab, label]) => (
+          <button
+            key={tab}
+            type="button"
+            role="tab"
+            aria-selected={mobileTab === tab}
+            onClick={() => setMobileTab(tab)}
+            className={`flex-1 border-b-2 px-2 py-3 text-xs font-semibold ${mobileTab === tab ? 'border-primary text-primary' : 'border-transparent text-muted-foreground'}`}
+          >
+            {label}
+          </button>
+        ))}
+      </nav>
+
       {/* ── Editor body ──────────────────────────────────────────────── */}
-      <div className="flex flex-col md:flex-row flex-1 overflow-hidden px-3 gap-1.5 mb-4">
+      <div className="flex flex-col md:flex-row flex-1 min-h-0 overflow-hidden px-3 gap-1.5 mb-4">
+
+        <section className={`${mobileTab === 'instructions' ? 'flex' : 'hidden'} flex-col w-full overflow-y-auto rounded border border-border bg-card p-4 md:hidden`} aria-label="Current instructions">
+          <p className="mb-2 text-xs font-bold uppercase tracking-wide text-muted-foreground">Step {currentStep + 1} instructions</p>
+          <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground">{steps[currentStep]?.instruction_text || 'Follow the instructions for this step.'}</p>
+          {steps[currentStep]?.hint && <details className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm dark:border-amber-900 dark:bg-amber-950/40">
+            <summary className="cursor-pointer font-semibold text-amber-700 dark:text-amber-300">Need a hint?</summary>
+            <p className="mt-2 whitespace-pre-wrap text-amber-800 dark:text-amber-200">{steps[currentStep].hint}</p>
+          </details>}
+          {stepFeedback && <div role="status" className={`mt-4 rounded-lg border p-3 text-sm ${stepFeedback.kind === 'saving' ? 'border-sky-300 bg-sky-50 dark:bg-sky-950/40' : 'border-amber-300 bg-amber-50 dark:bg-amber-950/40'}`}><strong>{stepFeedback.kind === 'invalid' ? 'Step not ready yet' : stepFeedback.kind === 'saving' ? 'Checking your work' : 'Could not continue'}</strong><ul className="mt-1 list-disc pl-5">{stepFeedback.messages.map((message, index) => <li key={index}>{message}</li>)}</ul></div>}
+          <button type="button" onClick={() => setMobileTab('editor')} className="mt-5 self-start rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">Open editor</button>
+        </section>
 
         {/* Blockly workspace — blocklyDiv MUST always be in the DOM */}
-        <div className="flex flex-col md:w-2/3 h-full overflow-hidden bg-card rounded shadow border border-border">
+        <div className={`${mobileTab === 'editor' ? 'flex' : 'hidden'} flex-col md:w-2/3 min-h-0 h-full overflow-hidden bg-card rounded shadow border border-border md:flex`}>
           <FileTabs
             files={stepFiles}
             activeFile={activeFileId}
@@ -391,13 +435,14 @@ export default function TutorialViewer({ tutorialIdOverride = null, preview = fa
           <div ref={workspace.blocklyDiv} className={`blocklyDiv flex-1 ${tutorial?.type === 'text' ? 'hidden' : ''}`} />
           {tutorial?.type === 'text' && <textarea aria-label={`Code for ${getCurrentFileName()}`} spellCheck={false} className="flex-1 resize-none p-4 font-mono text-sm" value={stepFiles.find(file => file.id === activeFileId)?.code ?? ''} onChange={event => {
             const code = event.target.value
+            setStepFeedback(null)
             setStepFiles(files => files.map(file => file.id === activeFileId ? { ...file, code } : file))
             setFilesWithCode(files => files.map(file => file.id === activeFileId ? { ...file, generatedCode: code } : file))
           }} />}
         </div>
 
         {/* Preview pane */}
-        <div className="flex-1 h-full overflow-hidden">
+        <div className={`${mobileTab === 'preview' ? 'flex' : 'hidden'} flex-1 min-w-0 h-full overflow-hidden md:flex`}>
           <PreviewPane
             storageScope={`tutorial:${tutorial?.id || 'preview'}`}
             generatedCode={generatedCode}
@@ -427,6 +472,9 @@ export default function TutorialViewer({ tutorialIdOverride = null, preview = fa
           onNext={handleNext}
           onPrev={handlePrev}
           onFinish={handleFinish}
+          targetElement={highlightTarget}
+          feedback={stepFeedback}
+          busy={checkingStep}
         />
       )}
 

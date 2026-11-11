@@ -52,7 +52,7 @@ export default function StudentClassroomHub() {
 
   return <PageWrapper>
     <TopicBadgeCelebrations key={`${profile.id}:${classroomId}`} userId={profile.id} classroomId={classroomId} />
-    <section className="relative overflow-hidden rounded-3xl border border-border border-b-4 border-b-slate-400 shadow bg-[url('/classroom_bg.png')] bg-cover p-8 text-sky-800 dark:text-sky-300">
+    <section className="relative overflow-hidden rounded-3xl border border-border border-b-4 border-b-slate-400 shadow bg-[url('/classroom_bg.png')] dark:bg-[url('/class_banner_dark.png')] bg-cover p-8 text-sky-800 dark:text-sky-300">
       <div className="relative flex flex-wrap items-end justify-between gap-6">
         <div className="max-w-2xl">
           <h1 className="text-3xl font-semibold leading-tight tracking-tight text-balance md:text-4xl">

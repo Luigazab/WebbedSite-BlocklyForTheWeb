@@ -225,7 +225,9 @@ export default function CoursesLibrary({ readOnly = false }) {
             Course Library
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Manage course templates that teachers can preview and clone into classrooms.
+            {readOnly
+              ? "Browse and preview course templates available to use in your classrooms."
+              : "Manage course templates that teachers can preview and clone into classrooms."}
           </p>
         </div>
 
@@ -288,7 +290,9 @@ export default function CoursesLibrary({ readOnly = false }) {
           <p className="mt-1 text-sm text-muted-foreground max-w-sm">
             {searchTerm
               ? `We couldn't find anything matching "${searchTerm}". Try a different keyword.`
-              : "Get started by creating your very first course template."}
+              : readOnly
+                ? "There are no course templates available yet."
+                : "Get started by creating your very first course template."}
           </p>
           {searchTerm ? (
             <Button variant="formalPlain" size="sm" onClick={() => setSearchTerm("")} className="mt-4">

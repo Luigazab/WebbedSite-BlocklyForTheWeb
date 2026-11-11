@@ -5,7 +5,7 @@ import * as Blockly from 'blockly/core'
  * Highlights a toolbox category (expanding nested ones along the way) and,
  * optionally, selects a specific block inside that category's flyout.
  */
-export function useRemiHighlight(getWorkspace, categoryPath, blockType, ready = true) {
+export function useRemiHighlight(getWorkspace, categoryPath, blockType, ready = true, onTargetChange) {
   const highlightedDivRef = useRef(null)
 
   useEffect(() => {
@@ -17,6 +17,7 @@ export function useRemiHighlight(getWorkspace, categoryPath, blockType, ready = 
     let cancelled = false
 
     const clear = () => {
+      onTargetChange?.(null)
       highlightedDivRef.current?.classList.remove('remi-highlight')
       if (highlightedDivRef.current) highlightedDivRef.current.style.outline = ''
       highlightedDivRef.current = null
@@ -50,6 +51,7 @@ export function useRemiHighlight(getWorkspace, categoryPath, blockType, ready = 
       div.classList.add('remi-highlight')
       div.style.outline = '3px solid #a855f7'
       highlightedDivRef.current = div
+      onTargetChange?.(div)
       div.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' })
     }
 
@@ -60,10 +62,12 @@ export function useRemiHighlight(getWorkspace, categoryPath, blockType, ready = 
       setTimeout(() => {
         if (cancelled) return
         const flyoutWs = ws.getFlyout?.()?.getWorkspace?.()
-        flyoutWs?.getBlocksByType?.(blockType, false)?.[0]?.select?.()
+        const highlightedBlock = flyoutWs?.getBlocksByType?.(blockType, false)?.[0]
+        highlightedBlock?.select?.()
+        if (highlightedBlock?.getSvgRoot?.()) onTargetChange?.(highlightedBlock.getSvgRoot())
       }, 150)
     }
 
     return () => { cancelled = true; clear() }
-  }, [getWorkspace, JSON.stringify(categoryPath), blockType, ready])
+  }, [getWorkspace, JSON.stringify(categoryPath), blockType, ready, onTargetChange])
 }

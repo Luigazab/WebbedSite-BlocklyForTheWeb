@@ -19,6 +19,7 @@ export default function ClassroomCurriculum({
   lessonCompletion = {},
   onTopicPublicationChanged,
   onEditTopics,
+  onDeleteTopic,
   onConfigureTopic,
   onSelectLesson,
   onUnlockTopic,
@@ -129,6 +130,7 @@ export default function ClassroomCurriculum({
                           </h4>
                         </div>
                         {teacher ? (
+                          <div className="flex items-center gap-2">
                           <span className="text-xs text-muted-foreground">
                             {!topic.isPublished
                               ? "Hidden from students"
@@ -136,6 +138,11 @@ export default function ClassroomCurriculum({
                                 ? "Open to students"
                                 : "Locked"}
                           </span>
+                          <button type="button" className="text-xs font-semibold text-destructive hover:underline"
+                            aria-label={`Delete topic ${topic.title}`} onClick={() => onDeleteTopic?.(topic)}>
+                            Delete
+                          </button>
+                          </div>
                         ) : (
                           <div
                             className="w-40 max-w-full text-xs"

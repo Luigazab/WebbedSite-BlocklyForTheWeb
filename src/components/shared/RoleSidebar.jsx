@@ -46,6 +46,7 @@ const navigation = {
   teacher: [
     ["", "Home", Home],
     ["/classrooms", "Classrooms", GraduationCap],
+    ["/courses", "Course Library", BookOpen],
     ["/projects", "My Projects", Folders],
   ],
   student: [
