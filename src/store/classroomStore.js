@@ -1,4 +1,4 @@
-import { archiveClassroom as archiveClassroomService, commentOnClassroomPost, createClassroomPost, createClassroom as createClassroomService, createMilestone as createMilestoneService, deleteClassroom as deleteClassroomService, getClassroomDetail, getClassroomMilestones, getClassroomPosts, getStudentClassroom, getTeacherClassrooms, joinClassroom as joinClassroomService, leaveClassroom as leaveClassroomService, likeClassroomPost, refreshMilestoneProgress as refreshMilestoneProgressService, regenerateJoinCode, removeStudent as removeStudentService, updateClassroom } from '@/services/classroomService'
+import { setClassroomActive, commentOnClassroomPost, createClassroomPost, createClassroom as createClassroomService, createMilestone as createMilestoneService, deleteClassroom as deleteClassroomService, getClassroomDetail, getClassroomMilestones, getClassroomPosts, getStudentClassroom, getTeacherClassrooms, joinClassroom as joinClassroomService, leaveClassroom as leaveClassroomService, likeClassroomPost, refreshMilestoneProgress as refreshMilestoneProgressService, regenerateJoinCode, removeStudent as removeStudentService, updateClassroom } from '@/services/classroomService'
 import { create } from 'zustand'
 
 const PAGE_SIZE = 20
@@ -57,22 +57,22 @@ export const useClassroomStore = create((set, get) => ({
   },
 
 
-  archiveClassroom: async (classroomId) => {
+  setClassroomActive: async (classroomId, isActive, teacherId) => {
     set({ actionLoading: true })
     try {
-      await archiveClassroomService(classroomId)
+      await setClassroomActive(classroomId, isActive, teacherId)
       set((s) => ({
-        teacherClassrooms: s.teacherClassrooms.filter((c) => c.id !== classroomId),
+        teacherClassrooms: s.teacherClassrooms.map((c) => c.id === classroomId ? { ...c, is_active: isActive } : c),
       }))
     } finally {
       set({ actionLoading: false })
     }
   },
 
-  deleteClassroom: async (classroomId) => {
+  deleteClassroom: async (classroomId, teacherId) => {
     set({ actionLoading: true })
     try {
-      await deleteClassroomService(classroomId)
+      await deleteClassroomService(classroomId, teacherId)
       set((s) => ({
         teacherClassrooms: s.teacherClassrooms.filter((c) => c.id !== classroomId),
       }))

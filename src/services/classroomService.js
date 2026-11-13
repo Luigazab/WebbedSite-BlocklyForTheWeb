@@ -79,7 +79,6 @@ export async function getTeacherClassrooms(teacherId) {
       classroom_milestones ( id, title, target_score, current_score )
     `)
     .eq('teacher_id', teacherId)
-    .eq('is_active', true)
     .order('created_at', { ascending: false })
 
   if (error) throw error
@@ -129,20 +128,26 @@ export async function getClassroomListMetrics(classroomIds) {
   }
 
 
-export async function archiveClassroom(classroomId) {
+export async function setClassroomActive(classroomId, isActive, teacherId) {
   const { error } = await supabase
     .from('classrooms')
-    .update({ is_active: false })
+    .update({ is_active: isActive })
     .eq('id', classroomId)
+    .eq('teacher_id', teacherId)
+    .select('id')
+    .single()
 
   if (error) throw error
 }
 
-export async function deleteClassroom(classroomId) {
+export async function deleteClassroom(classroomId, teacherId) {
   const { error } = await supabase
     .from('classrooms')
     .delete()
     .eq('id', classroomId)
+    .eq('teacher_id', teacherId)
+    .select('id')
+    .single()
 
   if (error) throw error
 }

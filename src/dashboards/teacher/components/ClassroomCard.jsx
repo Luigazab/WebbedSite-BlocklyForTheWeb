@@ -1,106 +1,52 @@
-import { useCopyCode } from "@/utils/copyCode";
-import { Archive, Pencil } from "lucide-react";
-import { useNavigate } from "react-router";
+import { useCopyCode } from '@/utils/copyCode'
+import { Archive, ArrowRight, GraduationCap, Pencil, RotateCcw, Trash2, Users } from 'lucide-react'
+import { Link } from 'react-router'
 
-export default function ClassroomCard({ classroom, onArchive, averageProgress, pendingSubmissions, onEdit }) {
-  const navigate = useNavigate();
-  const {copied, copyCode} = useCopyCode()
-
-  const handleEdit = (e) => {
-    e.stopPropagation()
-    onEdit()
-  }
-
-  const handleArchive = (e) => {
-    e.stopPropagation()
-    onArchive()
-  }
+export default function ClassroomCard({ classroom, onArchive, onRestore, onDelete, averageProgress, pendingSubmissions, onEdit }) {
+  const { copied, copyCode } = useCopyCode()
+  const inactive = classroom.is_active === false
 
   return (
-    <div
-      onClick={() => navigate(`/teacher/classrooms/${classroom.id}`)}
-      className="group relative flex flex-col overflow-hidden cursor-pointer rounded-2xl shadow border-b-4 border-b-slate-400 border border-border bg-card p-6 transition-all! duration-300 hover:-translate-y-0.5 hover:border-primary/50"
-    >
-      <div className="relative">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          {copied
-            ? <button onClick={(e) => (e.stopPropagation(), copyCode(classroom.join_code || ''))} title="copy join code" className="rounded-md bg-green-500/15 px-2 py-1 font-mono text-[11px] font-extrabold tracking-widest text-green-500">
-                Code copied
-              </button>
-            : <button onClick={(e) => (e.stopPropagation(), copyCode(classroom.join_code || ''))} title="copy join code" className="rounded-md bg-primary/15 px-2 py-1 font-mono text-[11px] font-extrabold tracking-widest text-primary">
-                {classroom.join_code || "N/A"}
-              </button>
-          }
-          
-          <span className="text-xs text-muted-foreground">
-            <button onClick={handleEdit} className="p-1.5 rounded-md bg-background hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors!" title="Edit classroom">
-              <Pencil size={16} />
-            </button>
-            <button onClick={handleArchive} className="p-1.5 rounded-md bg-background hover:bg-red-100 text-muted-foreground hover:text-red-600 transition-colors!" title="Archive classroom">
-              <Archive size={16} />
-            </button>
+    <article className="group relative flex flex-col overflow-hidden rounded-2xl border border-border bg-card transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-lg">
+      <div className={`h-1.5 w-full transition-all duration-300 group-hover:h-2 ${inactive ? 'bg-slate-400' : 'bg-primary'}`} />
+      <div className="flex flex-1 flex-col p-6">
+        <div className="flex items-center justify-between gap-3">
+          <span className={`rounded-md px-2.5 py-1 text-xs font-bold ${inactive ? 'bg-muted text-muted-foreground' : 'bg-primary/10 text-primary'}`}>
+            {inactive ? 'Inactive' : 'Active'}
           </span>
-        </div>
-
-        {/* Title */}
-        <h4 className="mt-5 font-display text-lg font-extrabold leading-tight text-balance">
-          {classroom.name || "Unnamed Classroom"}
-        </h4>
-        <span className="text-xs text-muted-foreground">
-          {classroom.description || "No section"}
-        </span>
-
-        {/* Stats */}
-        <div className="mt-5 flex items-center justify-between text-xs">
-          <span className="text-muted-foreground">
-            {classroom.member_count || 0} students
-          </span>
-          <span className="font-mono text-primary">
-            {averageProgress == null ? '—' : `${averageProgress}%`}
-          </span>
-        </div>
-
-        {/* Progress bar */}
-        <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
-          <div
-            className="h-full rounded-full bg-primary"
-            style={{ width: `${averageProgress || 0}%` }}
-          />
-        </div>
-
-        {/* Avatars + Pending */}
-        <div className="mt-5 flex items-center justify-between">
-          <div className="flex -space-x-1.5">
-            {Array.isArray(classroom?.students) &&
-            classroom.students.slice(0, 4).map((student, i) => (
-              <div
-                key={student.id || i}
-                className="grid size-7 place-items-center rounded-full border-2 border-card bg-muted font-bold text-muted-foreground"
-                style={{ zIndex: 10 - i }}
-              >
-                {student.avatar_url ? (
-                  <img
-                    src={student.avatar_url}
-                    alt={student.username}
-                    className="rounded-full"
-                  />
-                ) : (
-                  student.username?.[0]?.toUpperCase() || "S"
-                )}
-              </div>
-            ))}
-            {classroom.member_count > 4 && (
-              <div className="grid size-7 place-items-center rounded-full border-2 border-card bg-primary/20 text-[10px] font-medium text-primary">
-                +{classroom.member_count - 4}
-              </div>
-            )}
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 rounded-lg border border-border bg-background/90 p-1 shadow-xs">
+              <button type="button" onClick={onEdit} className="rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground" title="Edit classroom" aria-label={`Edit ${classroom.name}`}><Pencil size={14} /></button>
+              {inactive ? (
+                <button type="button" onClick={onRestore} className="rounded-md p-1 text-muted-foreground hover:bg-primary/10 hover:text-primary" title="Restore classroom" aria-label={`Restore ${classroom.name}`}><RotateCcw size={14} /></button>
+              ) : (
+                <button type="button" onClick={onArchive} className="rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground" title="Archive classroom" aria-label={`Archive ${classroom.name}`}><Archive size={14} /></button>
+              )}
+              <button type="button" onClick={onDelete} className="rounded-md p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive" title="Delete classroom" aria-label={`Delete ${classroom.name}`}><Trash2 size={14} /></button>
+            </div>
+            <div className="grid size-10 place-items-center rounded-xl border border-border bg-primary/10 text-primary"><GraduationCap size={20} /></div>
           </div>
-          <span className="text-xs text-warning">
-            {pendingSubmissions == null ? '— pending' : `${pendingSubmissions} pending`}
-          </span>
         </div>
+
+        <Link to={`/teacher/classrooms/${classroom.id}`} className="mt-4 flex-1">
+          <h2 className="font-display text-lg font-bold leading-tight text-foreground transition-colors group-hover:text-primary">{classroom.name || 'Unnamed Classroom'}</h2>
+          <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-muted-foreground">{classroom.description || 'No description provided.'}</p>
+        </Link>
+
+        <div className="mt-6 flex items-center justify-between border-t border-border pt-4 text-xs text-muted-foreground">
+          <span className="flex items-center gap-1"><Users className="size-3.5" /><strong className="font-semibold text-foreground">{classroom.member_count || 0}</strong> students</span>
+          {inactive ? (
+            <Link to={`/teacher/classrooms/${classroom.id}`} className="flex items-center gap-1 font-semibold text-primary">View <ArrowRight className="size-3.5" /></Link>
+          ) : (
+            <span><strong className="font-semibold text-foreground">{averageProgress == null ? '—' : `${averageProgress}%`}</strong> progress · {pendingSubmissions == null ? '—' : pendingSubmissions} pending</span>
+          )}
+        </div>
+        {!inactive && (
+          <button type="button" onClick={() => copyCode(classroom.join_code || '')} className="mt-3 self-start rounded-md bg-muted px-2.5 py-1 font-mono text-xs font-semibold tracking-wide text-muted-foreground hover:text-primary" title="Copy join code">
+            {copied ? 'Code copied' : `Join code: ${classroom.join_code || 'N/A'}`}
+          </button>
+        )}
       </div>
-    </div>
-  );
+    </article>
+  )
 }

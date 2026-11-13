@@ -10,7 +10,7 @@ export function useClassroom() {
     if (!profile?.id) return
     try {
       await store.fetchTeacherClassrooms(profile.id)
-    } catch (err) {
+    } catch {
       toast.error('Failed to load classrooms')
     }
   }
@@ -39,7 +39,7 @@ export function useClassroom() {
 
   const handleArchiveClassroom = async (classroomId, name) => {
     try {
-      await store.archiveClassroom(classroomId)
+      await store.setClassroomActive(classroomId, false, profile.id)
       toast.success(`"${name}" has been archived.`)
     } catch (err) {
       toast.error(err.message || 'Failed to archive classroom.')
@@ -47,12 +47,22 @@ export function useClassroom() {
     }
   }
 
+  const handleRestoreClassroom = async (classroomId, name) => {
+    try {
+      await store.setClassroomActive(classroomId, true, profile.id)
+      toast.success(`"${name}" is active again.`)
+    } catch (err) {
+      toast.error(err.message || 'Failed to restore classroom.')
+      throw err
+    }
+  }
+
   const handleDeleteClassroom = async (classroomId, name) => {
     try {
-      await store.deleteClassroom(classroomId)
+      await store.deleteClassroom(classroomId, profile.id)
       toast.success(`"${name}" has been deleted`)
     } catch (err) {
-      toast.error('Failed to delete classroom')
+      toast.error(err.message || 'Failed to delete classroom')
       throw err
     }
   }
@@ -82,7 +92,7 @@ export function useClassroom() {
     if (!profile?.id) return
     try {
       await store.fetchStudentClassroom(profile.id)
-    } catch (err) {
+    } catch {
       toast.error('Failed to load your classroom')
     }
   }
@@ -111,7 +121,7 @@ export function useClassroom() {
   const fetchClassroomDetail = async (classroomId) => {
     try {
       await store.fetchClassroomDetail(classroomId, profile?.id)
-    } catch (err) {
+    } catch {
       toast.error('Failed to load classroom')
     }
   }
@@ -119,7 +129,7 @@ export function useClassroom() {
   const fetchClassroomPosts = async (classroomId) => {
     try {
       await store.fetchClassroomPosts(classroomId)
-    } catch (err) {
+    } catch {
       toast.error('Failed to load activity feed')
     }
   }
@@ -127,7 +137,7 @@ export function useClassroom() {
   const fetchMoreClassroomPosts = async (classroomId) => {
     try {
       await store.fetchMoreClassroomPosts(classroomId)
-    } catch (err) {
+    } catch {
       toast.error('Failed to load more posts')
     }
   }
@@ -144,7 +154,7 @@ export function useClassroom() {
   const handleLikePost = async (postId) => {
     try {
       await store.likePost(postId, profile.id)
-    } catch (err) {
+    } catch {
       toast.error('Failed to update like')
     }
   }
@@ -162,7 +172,7 @@ export function useClassroom() {
   const fetchMilestones = async (classroomId) => {
     try {
       return await store.fetchMilestones(classroomId)
-    } catch (err) {
+    } catch {
       toast.error('Failed to load milestones')
     }
   }
@@ -202,6 +212,7 @@ export function useClassroom() {
     handleCreateClassroom,
     handleUpdateClassroom,
     handleArchiveClassroom,
+    handleRestoreClassroom,
     handleDeleteClassroom,
     handleRegenerateCode,
     handleRemoveStudent,
